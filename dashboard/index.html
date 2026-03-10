@@ -651,6 +651,7 @@
     let sb = null;
     let currentUser = null;
     let currentCliente = null;
+    let currentProfile = null;
     let pollingInterval = null;
 
     async function initApp() {
@@ -663,7 +664,7 @@
         const { data: { session } } = await sb.auth.getSession();
         if (session?.user) {
           currentUser = session.user;
-          await loadCliente();
+          await loadProfile();
         }
       } catch (err) {
         document.getElementById('login-error').textContent = 'Erro ao conectar ao servidor.';
@@ -694,10 +695,47 @@
       }
 
       currentUser = data.user;
-      await loadCliente();
+      await loadProfile();
     }
 
-    async function loadCliente() {
+    async function loadProfile() {
+      // Tentar carregar perfil da tabela usuarios
+      const { data: profile } = await sb.from('usuarios')
+        .select('*')
+        .eq('auth_id', currentUser.id)
+        .eq('ativo', true)
+        .single();
+
+      if (profile) {
+        currentProfile = profile;
+
+        // Super admin deve ir para /admin
+        if (profile.role === 'super_admin') {
+          window.location.href = '/admin';
+          return;
+        }
+
+        // admin_cliente ou operador: carregar cliente pelo perfil
+        if (profile.cliente_id) {
+          const { data: cliente } = await sb.from('clientes')
+            .select('*')
+            .eq('id', profile.cliente_id)
+            .eq('ativo', true)
+            .single();
+
+          if (cliente) {
+            currentCliente = cliente;
+            showDashboard();
+            return;
+          }
+        }
+      }
+
+      // Fallback: buscar cliente pelo user_id (compatibilidade)
+      await loadClienteLegado();
+    }
+
+    async function loadClienteLegado() {
       const { data, error } = await sb.from('clientes')
         .select('*')
         .eq('user_id', currentUser.id)

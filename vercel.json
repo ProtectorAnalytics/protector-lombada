@@ -2,12 +2,21 @@
   "version": 2,
   "builds": [
     { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "dashboard/**", "use": "@vercel/static" }
+    { "src": "dashboard/**", "use": "@vercel/static" },
+    { "src": "admin/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/config", "dest": "/api/config.js" },
     { "src": "/api/captura", "dest": "/api/captura.js" },
     { "src": "/api/cron-limpeza", "dest": "/api/cron-limpeza.js" },
+    { "src": "/api/admin/clientes", "dest": "/api/admin/clientes.js" },
+    { "src": "/api/admin/cameras", "dest": "/api/admin/cameras.js" },
+    { "src": "/api/admin/usuarios", "dest": "/api/admin/usuarios.js" },
+    { "src": "/api/admin/emails", "dest": "/api/admin/emails.js" },
+    { "src": "/api/admin/veiculos", "dest": "/api/admin/veiculos.js" },
+    { "src": "/api/admin/dashboard", "dest": "/api/admin/dashboard.js" },
+    { "src": "/admin", "dest": "/admin/index.html" },
+    { "src": "/admin/(.*)", "dest": "/admin/$1" },
     { "src": "/(.*)", "dest": "/dashboard/$1" }
   ],
   "crons": [

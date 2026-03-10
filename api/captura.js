@@ -8,7 +8,7 @@ const {
   markNotificado,
 } = require('../lib/supabase');
 const { gerarPDF } = require('../lib/pdf-generator');
-const { enviarAlerta } = require('../lib/email-sender');
+const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -103,10 +103,13 @@ module.exports = async function handler(req, res) {
           historico,
         });
 
+        // Buscar destinatários da tabela (com fallback para campo legado)
+        const destinatarios = await getDestinatarios(cliente.id, 'alerta');
+
         // Enviar e-mail
-        if (cliente.emails_notificacao && cliente.emails_notificacao.length > 0) {
+        if (destinatarios.length > 0) {
           await enviarAlerta({
-            destinatarios: cliente.emails_notificacao,
+            destinatarios,
             placa,
             velocidade,
             timestamp,
