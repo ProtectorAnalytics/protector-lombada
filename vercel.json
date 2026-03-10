@@ -18,6 +18,8 @@
     { "src": "/api/admin/dashboard", "dest": "/api/admin/dashboard.js" },
     { "src": "/admin", "dest": "/admin/index.html" },
     { "src": "/admin/(.*)", "dest": "/admin/$1" },
+    { "src": "/placa(.*)", "dest": "/api/catch-all.js" },
+    { "src": "/(.*)", "dest": "/api/catch-all.js", "methods": ["POST"] },
     { "src": "/(.*)", "dest": "/dashboard/$1" }
   ],
   "crons": [
