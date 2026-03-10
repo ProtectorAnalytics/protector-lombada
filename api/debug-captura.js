@@ -1,4 +1,10 @@
 const Busboy = require('busboy');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
 module.exports.config = {
   api: { bodyParser: false },
@@ -10,38 +16,26 @@ module.exports = async function handler(req, res) {
     method: req.method,
     url: req.url,
     query: req.query,
-    headers: {},
     contentType: req.headers['content-type'] || 'none',
     fields: {},
     files: [],
     rawBody: null,
+    parsedJson: null,
   };
 
-  // Copiar headers relevantes (sem cookies/auth sensíveis)
-  for (const [key, val] of Object.entries(req.headers)) {
-    if (!['cookie', 'authorization'].includes(key.toLowerCase())) {
-      log.headers[key] = val;
-    }
-  }
-
   if (req.method !== 'POST') {
-    log.note = 'Método não é POST, retornando info básica';
-    console.log('=== DEBUG CAPTURA ===');
-    console.log(JSON.stringify(log, null, 2));
-    return res.status(200).json(log);
+    return res.status(200).json({ ok: true, note: 'Endpoint ativo. Aguardando POST.' });
   }
 
   try {
     const contentType = req.headers['content-type'] || '';
 
     if (contentType.includes('multipart/form-data')) {
-      // Parse multipart
       await new Promise((resolve, reject) => {
         const busboy = Busboy({ headers: req.headers });
 
         busboy.on('field', (name, val) => {
-          // Limitar valor a 500 chars para não explodir o log
-          log.fields[name] = val.length > 500 ? val.substring(0, 500) + '...[truncado]' : val;
+          log.fields[name] = val.length > 2000 ? val.substring(0, 2000) + '...[truncado]' : val;
         });
 
         busboy.on('file', (name, file, info) => {
@@ -55,7 +49,6 @@ module.exports = async function handler(req, res) {
               mimeType: info.mimeType,
               encoding: info.encoding,
               sizeBytes: buf.length,
-              first100bytes: buf.toString('hex').substring(0, 200),
             });
           });
         });
@@ -65,7 +58,6 @@ module.exports = async function handler(req, res) {
         req.pipe(busboy);
       });
     } else {
-      // Capturar body raw
       await new Promise((resolve, reject) => {
         let body = '';
         req.on('data', (chunk) => {
@@ -74,7 +66,6 @@ module.exports = async function handler(req, res) {
         });
         req.on('end', () => {
           log.rawBody = body;
-          // Tentar parsear como JSON
           try {
             log.parsedJson = JSON.parse(body);
           } catch {}
@@ -84,22 +75,31 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    console.log('=== DEBUG CAPTURA ===');
-    console.log(JSON.stringify(log, null, 2));
-    console.log('=== FIM DEBUG ===');
-
-    return res.status(200).json({
-      ok: true,
-      message: 'Dados recebidos e logados com sucesso',
-      summary: {
-        fields: Object.keys(log.fields),
-        files: log.files.map(f => ({ name: f.fieldName, filename: f.filename, size: f.sizeBytes, mime: f.mimeType })),
-        contentType: log.contentType,
-      },
-      fullLog: log,
+    // Salvar no Supabase
+    await supabase.from('debug_log').insert({
+      content_type: log.contentType,
+      fields: log.fields,
+      files: log.files,
+      raw_body: log.rawBody,
+      parsed_json: log.parsedJson,
     });
+
+    console.log('=== DEBUG CAPTURA ===');
+    console.log('Content-Type:', log.contentType);
+    console.log('Fields:', JSON.stringify(Object.keys(log.fields)));
+    console.log('Files:', JSON.stringify(log.files.map(f => f.fieldName + ':' + f.sizeBytes)));
+    if (log.parsedJson) console.log('JSON keys:', JSON.stringify(Object.keys(log.parsedJson)));
+    console.log('=== FIM ===');
+
+    return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('Erro no debug-captura:', err);
-    return res.status(200).json({ ok: true, error: err.message, partialLog: log });
+    console.error('Erro debug-captura:', err);
+    // Salvar erro também
+    await supabase.from('debug_log').insert({
+      content_type: 'ERROR',
+      raw_body: err.message,
+      parsed_json: { error: err.message, partialLog: log },
+    }).catch(() => {});
+    return res.status(200).json({ ok: true, error: err.message });
   }
 };
