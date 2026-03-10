@@ -8,6 +8,7 @@
   "routes": [
     { "src": "/api/config", "dest": "/api/config.js" },
     { "src": "/api/captura", "dest": "/api/captura.js" },
+    { "src": "/api/debug-captura", "dest": "/api/debug-captura.js" },
     { "src": "/api/cron-limpeza", "dest": "/api/cron-limpeza.js" },
     { "src": "/api/admin/clientes", "dest": "/api/admin/clientes.js" },
     { "src": "/api/admin/cameras", "dest": "/api/admin/cameras.js" },
