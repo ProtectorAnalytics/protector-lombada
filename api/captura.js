@@ -5,6 +5,7 @@ const {
   uploadPhoto,
   findVeiculo,
   getPassagensByPlaca,
+  updateCameraLastSeen,
   markNotificado,
 } = require('../lib/supabase');
 const { gerarPDF } = require('../lib/pdf-generator');
@@ -41,14 +42,29 @@ module.exports = async function handler(req, res) {
     // Parsear body (JSON ou multipart)
     const dados = await parseBody(req);
 
+    // Normalizar formato AlarmInfoPlate (câmeras LPR)
+    let normalized = dados;
+    if (dados.AlarmInfoPlate) {
+      const alarm = dados.AlarmInfoPlate;
+      const plate = alarm.result?.PlateResult || {};
+      normalized = {
+        placa: plate.license || '',
+        velocidade: plate.speed || 0,
+        imageBase64: plate.imageFile || '',
+        pixels: plate.confidence || 0,
+        tipo_veiculo: plate.type || '',
+        cor_veiculo: String(plate.carColor || ''),
+      };
+    }
+
     // Extrair campos
-    const placa = (dados.plate || dados.placa || '').toUpperCase().trim();
-    const velocidade = parseInt(dados.speed || dados.velocidade || '0', 10);
-    const timestamp = dados.time || dados.timestamp || new Date().toISOString();
-    const pixels = parseInt(dados.pixels || '0', 10);
-    const tipoVeiculo = dados.vehicleType || dados.tipo_veiculo || '';
-    const corVeiculo = dados.vehicleColor || dados.cor_veiculo || '';
-    const imageBase64 = dados.imageBase64 || dados.image || dados.foto || '';
+    const placa = (normalized.plate || normalized.placa || '').toUpperCase().trim();
+    const velocidade = parseInt(normalized.speed || normalized.velocidade || '0', 10);
+    const timestamp = normalized.time || normalized.timestamp || new Date().toISOString();
+    const pixels = parseInt(normalized.pixels || '0', 10);
+    const tipoVeiculo = normalized.vehicleType || normalized.tipo_veiculo || '';
+    const corVeiculo = normalized.vehicleColor || normalized.cor_veiculo || '';
+    const imageBase64 = normalized.imageBase64 || normalized.image || normalized.foto || '';
 
     if (!placa) {
       return res.status(400).json({ error: 'Placa não fornecida' });
@@ -84,6 +100,9 @@ module.exports = async function handler(req, res) {
       timestamp,
       notificado: false,
     });
+
+    // Atualizar last_seen da câmera
+    await updateCameraLastSeen(camera.id, captura.id);
 
     // Verificar se precisa notificar
     if (velocidade > cliente.limite_velocidade) {
