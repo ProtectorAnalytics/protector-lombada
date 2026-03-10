@@ -8,7 +8,6 @@
   "routes": [
     { "src": "/api/config", "dest": "/api/config.js" },
     { "src": "/api/captura", "dest": "/api/captura.js" },
-    { "src": "/api/debug-captura", "dest": "/api/debug-captura.js" },
     { "src": "/api/heartbeat", "dest": "/api/heartbeat.js" },
     { "src": "/api/cron-limpeza", "dest": "/api/cron-limpeza.js" },
     { "src": "/api/test-captura", "dest": "/api/test-captura.js" },
@@ -22,7 +21,6 @@
     { "src": "/admin", "dest": "/admin/index.html" },
     { "src": "/admin/(.*)", "dest": "/admin/$1" },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
-    { "src": "/(.*)", "dest": "/api/catch-all.js", "methods": ["POST"] },
     { "src": "/(.*)", "dest": "/dashboard/$1" }
   ],
   "crons": [
