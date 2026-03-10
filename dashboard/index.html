@@ -162,47 +162,132 @@
     }
 
     .main-layout {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 20px;
-      padding: 20px 24px;
-      max-height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px 24px;
+      height: calc(100vh - 56px);
       overflow: hidden;
+    }
+
+    .top-section {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 16px;
     }
 
     .content-area {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
+    }
+
+    /* Recent Cards */
+    .recent-cards {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    .recent-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
       overflow: hidden;
+    }
+
+    .recent-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .recent-card.alerta {
+      border-left: 3px solid var(--red);
+    }
+
+    .recent-card .rc-placa {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    .recent-card .rc-vel {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .recent-card .rc-vel.green { color: var(--green); }
+    .recent-card .rc-vel.orange { color: var(--orange); }
+    .recent-card .rc-vel.red { color: var(--red); }
+
+    .recent-card .rc-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .recent-card .rc-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .recent-card .rc-badge.alert-badge {
+      background: rgba(255, 23, 68, 0.15);
+      color: var(--red);
+    }
+
+    .recent-card .rc-badge.ok-badge {
+      background: rgba(0, 200, 83, 0.15);
+      color: var(--green);
+    }
+
+    /* Bottom section */
+    .bottom-section {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
     }
 
     /* Stats Cards */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      gap: 10px;
     }
 
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 16px;
+      padding: 12px;
       text-align: center;
     }
 
     .stat-card .label {
       color: var(--text-secondary);
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
     .stat-card .value {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
-      margin: 4px 0;
+      margin: 2px 0;
     }
 
     .stat-card .value.orange { color: var(--accent); }
@@ -211,7 +296,7 @@
 
     .stat-card .unit {
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12px;
     }
 
     /* Filters */
@@ -283,15 +368,16 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
     }
 
     .table-header {
       display: grid;
-      grid-template-columns: 120px 120px 1fr 50px;
-      padding: 10px 16px;
+      grid-template-columns: 110px 100px 1fr 50px;
+      padding: 8px 14px;
       background: var(--bg-secondary);
       border-bottom: 1px solid var(--border);
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--text-secondary);
@@ -305,12 +391,12 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 120px 120px 1fr 50px;
-      padding: 10px 16px;
+      grid-template-columns: 110px 100px 1fr 50px;
+      padding: 7px 14px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: background 0.15s;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     .table-row:hover { background: rgba(255, 107, 0, 0.05); }
@@ -350,7 +436,7 @@
     .sidebar {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       overflow-y: auto;
     }
 
@@ -358,19 +444,19 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 16px;
+      padding: 14px;
     }
 
     .sidebar-card h3 {
       color: var(--accent);
-      font-size: 14px;
+      font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .chart-container {
-      height: 180px;
+      height: 140px;
       position: relative;
     }
 
@@ -508,12 +594,13 @@
     }
 
     /* Responsive */
+    @media (max-width: 1200px) {
+      .recent-cards { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 900px) {
-      .main-layout {
-        grid-template-columns: 1fr;
-        max-height: unset;
-        overflow: auto;
-      }
+      .main-layout { height: auto; overflow: auto; }
+      .top-section, .bottom-section { grid-template-columns: 1fr; }
+      .recent-cards { grid-template-columns: repeat(2, 1fr); }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .filters-row { flex-direction: column; align-items: stretch; }
       .filters-row input { width: 100%; }
@@ -551,87 +638,103 @@
     </div>
 
     <div class="main-layout">
-      <div class="content-area">
-        <!-- Stats -->
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="label">Passagens Hoje</div>
-            <div class="value orange" id="stat-total">0</div>
-            <div class="unit">veículos</div>
+      <!-- TOP: Stats + Sidebar Chart -->
+      <div class="top-section">
+        <div class="content-area">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="label">Passagens Hoje</div>
+              <div class="value orange" id="stat-total">0</div>
+              <div class="unit">veículos</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Alertas Hoje</div>
+              <div class="value red" id="stat-alertas">0</div>
+              <div class="unit">acima do limite</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Vel. Máxima Hoje</div>
+              <div class="value red" id="stat-maxvel">0</div>
+              <div class="unit">km/h</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Limite Configurado</div>
+              <div class="value green" id="stat-limite">30</div>
+              <div class="unit">km/h</div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="label">Alertas Hoje</div>
-            <div class="value red" id="stat-alertas">0</div>
-            <div class="unit">acima do limite</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Vel. Máxima Hoje</div>
-            <div class="value red" id="stat-maxvel">0</div>
-            <div class="unit">km/h</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Limite Configurado</div>
-            <div class="value green" id="stat-limite">30</div>
-            <div class="unit">km/h</div>
+
+          <!-- Status das Câmeras -->
+          <div id="cameras-status" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+
+          <!-- 6 Recent Cards -->
+          <div class="recent-cards" id="recent-cards">
+            <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>
           </div>
         </div>
 
-        <!-- Status das Câmeras -->
-        <div id="cameras-status" style="display:flex;gap:12px;padding:0;margin-bottom:16px;flex-wrap:wrap"></div>
-
-        <!-- Filters -->
-        <div class="filters-row">
-          <div>
-            <label>Data Inicial</label><br>
-            <input type="date" id="filter-date-start">
-          </div>
-          <div>
-            <label>Data Final</label><br>
-            <input type="date" id="filter-date-end">
-          </div>
-          <div>
-            <label>Placa</label><br>
-            <input type="text" id="filter-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
-          </div>
-          <div>
-            <label>Vel. Min</label><br>
-            <input type="number" id="filter-vel-min" placeholder="0" min="0" style="width:70px">
-          </div>
-          <div>
-            <label>Vel. Max</label><br>
-            <input type="number" id="filter-vel-max" placeholder="999" min="0" style="width:70px">
-          </div>
-          <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
-          <button class="btn-clear" onclick="clearFilters()">Limpar</button>
-        </div>
-
-        <!-- Table -->
-        <div class="table-container">
-          <div class="table-header">
-            <div>Placa</div>
-            <div>Velocidade</div>
-            <div>Data / Hora</div>
-            <div>Alerta</div>
-          </div>
-          <div class="table-body" id="table-body">
-            <div class="table-empty">Carregando...</div>
+        <!-- Sidebar top: Chart -->
+        <div class="sidebar">
+          <div class="sidebar-card">
+            <h3>Passagens por Hora (Hoje)</h3>
+            <div class="chart-container">
+              <canvas id="chart-hourly"></canvas>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Sidebar -->
-      <div class="sidebar">
-        <div class="sidebar-card">
-          <h3>Passagens por Hora (Hoje)</h3>
-          <div class="chart-container">
-            <canvas id="chart-hourly"></canvas>
+      <!-- BOTTOM: Filters + Table + Ranking -->
+      <div class="bottom-section">
+        <div style="display:flex;flex-direction:column;gap:10px;min-height:0">
+          <!-- Filters -->
+          <div class="filters-row">
+            <div>
+              <label>Data Inicial</label><br>
+              <input type="date" id="filter-date-start">
+            </div>
+            <div>
+              <label>Data Final</label><br>
+              <input type="date" id="filter-date-end">
+            </div>
+            <div>
+              <label>Placa</label><br>
+              <input type="text" id="filter-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
+            </div>
+            <div>
+              <label>Vel. Min</label><br>
+              <input type="number" id="filter-vel-min" placeholder="0" min="0" style="width:70px">
+            </div>
+            <div>
+              <label>Vel. Max</label><br>
+              <input type="number" id="filter-vel-max" placeholder="999" min="0" style="width:70px">
+            </div>
+            <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
+            <button class="btn-clear" onclick="clearFilters()">Limpar</button>
+          </div>
+
+          <!-- Table -->
+          <div class="table-container">
+            <div class="table-header">
+              <div>Placa</div>
+              <div>Velocidade</div>
+              <div>Data / Hora</div>
+              <div>Alerta</div>
+            </div>
+            <div class="table-body" id="table-body">
+              <div class="table-empty">Carregando...</div>
+            </div>
           </div>
         </div>
-        <div class="sidebar-card">
-          <h3>Top 8 Placas (15 dias)</h3>
-          <ul class="ranking-list" id="ranking-list">
-            <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
-          </ul>
+
+        <!-- Sidebar bottom: Ranking -->
+        <div class="sidebar">
+          <div class="sidebar-card">
+            <h3>Top 8 Placas (15 dias)</h3>
+            <ul class="ranking-list" id="ranking-list">
+              <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -790,11 +893,50 @@
     async function loadAll() {
       await Promise.all([
         loadStats(),
+        loadRecentCards(),
         loadCapturas(),
         loadHourlyChart(),
         loadRanking(),
         loadCamerasStatus(),
       ]);
+    }
+
+    // ============================================
+    // RECENT CARDS (6 últimas capturas)
+    // ============================================
+    async function loadRecentCards() {
+      const { data, error } = await sb.from('capturas')
+        .select('*')
+        .eq('cliente_id', currentCliente.id)
+        .order('timestamp', { ascending: false })
+        .limit(6);
+
+      const container = document.getElementById('recent-cards');
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Nenhuma captura recente</div>';
+        return;
+      }
+
+      const limite = currentCliente.limite_velocidade;
+      container.innerHTML = data.map(c => {
+        const isAlert = c.velocidade > limite;
+        const velClass = c.velocidade <= limite ? 'green'
+          : c.velocidade <= limite + 20 ? 'orange' : 'red';
+        const ts = new Date(c.timestamp);
+        const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const data_str = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+        return `<div class="recent-card ${isAlert ? 'alerta' : ''}" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
+          <div class="rc-badge ${isAlert ? 'alert-badge' : 'ok-badge'}">${isAlert ? 'ALERTA' : 'OK'}</div>
+          <div class="rc-placa">${c.placa}</div>
+          <div class="rc-vel ${velClass}">${c.velocidade} <span style="font-size:14px">km/h</span></div>
+          <div class="rc-info">
+            ${hora} &middot; ${data_str}<br>
+            ${c.tipo_veiculo || '---'} &middot; ${c.cor_veiculo || '---'}
+          </div>
+        </div>`;
+      }).join('');
     }
 
     // ============================================
