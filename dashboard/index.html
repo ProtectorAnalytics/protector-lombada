@@ -527,6 +527,7 @@
     <div class="login-box">
       <h1>PROTECTOR</h1>
       <div class="subtitle">Lombada Educativa</div>
+      <div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">v1.2.0 &middot; build 2026.03.10</div>
       <input type="email" id="login-email" placeholder="E-mail">
       <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()">ENTRAR</button>
@@ -539,6 +540,7 @@
     <div class="topbar">
       <div class="brand">
         <h2>PROTECTOR</h2>
+        <span style="color:var(--text-muted);font-size:11px">v1.2.0</span>
         <span id="topbar-cliente">Lombada Educativa</span>
       </div>
       <div class="user-info">
@@ -573,6 +575,9 @@
             <div class="unit">km/h</div>
           </div>
         </div>
+
+        <!-- Status das Câmeras -->
+        <div id="cameras-status" style="display:flex;gap:12px;padding:0;margin-bottom:16px;flex-wrap:wrap"></div>
 
         <!-- Filters -->
         <div class="filters-row">
@@ -788,6 +793,7 @@
         loadCapturas(),
         loadHourlyChart(),
         loadRanking(),
+        loadCamerasStatus(),
       ]);
     }
 
@@ -812,6 +818,49 @@
       document.getElementById('stat-total').textContent = total;
       document.getElementById('stat-alertas').textContent = alertas;
       document.getElementById('stat-maxvel').textContent = maxVel;
+    }
+
+    // ============================================
+    // STATUS DAS CÂMERAS
+    // ============================================
+    function cameraStatus(lastSeen) {
+      if (!lastSeen) return { status: 'offline', label: 'Sem conexão', color: '#ef4444' };
+      const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
+      if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
+      if (mins < 5) return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
+      if (mins < 15) return { status: 'alerta', label: `Há ${Math.floor(mins)} min`, color: '#facc15' };
+      if (mins < 60) return { status: 'offline', label: `Há ${Math.floor(mins)} min`, color: '#ef4444' };
+      if (mins < 1440) return { status: 'offline', label: `Há ${Math.floor(mins / 60)}h`, color: '#ef4444' };
+      return { status: 'offline', label: `Há ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
+    }
+
+    async function loadCamerasStatus() {
+      try {
+        const { data: cameras, error } = await sb.from('cameras')
+          .select('id, nome, last_seen, ativa')
+          .eq('cliente_id', currentCliente.id)
+          .eq('ativa', true);
+
+        if (error || !cameras) return;
+
+        const container = document.getElementById('cameras-status');
+        if (!cameras.length) {
+          container.innerHTML = '';
+          return;
+        }
+
+        container.innerHTML = cameras.map(cam => {
+          const st = cameraStatus(cam.last_seen);
+          const title = cam.last_seen ? new Date(cam.last_seen).toLocaleString('pt-BR') : 'Nunca conectou';
+          return `<div title="${title}" style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-card, #16213e);border-radius:8px;font-size:0.9rem;border:1px solid ${st.color}30">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80"></span>
+            <strong>${cam.nome}</strong>
+            <span style="color:${st.color}">${st.label}</span>
+          </div>`;
+        }).join('');
+      } catch (err) {
+        console.error('Erro ao carregar status das câmeras:', err);
+      }
     }
 
     // ============================================

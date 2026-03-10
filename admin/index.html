@@ -245,6 +245,7 @@
     <div class="login-box">
       <h1>PROTECTOR</h1>
       <div class="subtitle">Lombada Educativa</div>
+      <div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">v1.2.0 &middot; build 2026.03.10</div>
       <div class="badge">PAINEL ADMIN</div>
       <input type="email" id="login-email" placeholder="E-mail">
       <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
@@ -258,6 +259,7 @@
     <div class="topbar">
       <div class="brand">
         <h2>PROTECTOR</h2>
+        <span style="color:var(--text-muted);font-size:11px">v1.2.0</span>
         <span class="admin-badge">ADMIN</span>
       </div>
       <div class="user-info">
@@ -284,13 +286,15 @@
           <div class="stats-row">
             <div class="stat-card"><div class="label">Clientes Ativos</div><div class="value blue" id="s-clientes">0</div></div>
             <div class="stat-card"><div class="label">Câmeras Ativas</div><div class="value green" id="s-cameras">0</div></div>
+            <div class="stat-card"><div class="label">Câmeras Online</div><div class="value" id="s-cameras-online" style="color:#4ade80">0</div></div>
+            <div class="stat-card"><div class="label">Câmeras Offline</div><div class="value" id="s-cameras-offline" style="color:#ef4444">0</div></div>
             <div class="stat-card"><div class="label">Capturas Hoje</div><div class="value orange" id="s-capturas">0</div></div>
             <div class="stat-card"><div class="label">Alertas Hoje</div><div class="value red" id="s-alertas">0</div></div>
           </div>
           <div class="page-title" style="font-size:18px">Clientes <span class="count" id="dash-clientes-count">0</span></div>
           <table class="data-table" id="dash-clientes-table">
-            <thead><tr><th>Nome</th><th>Cidade</th><th>Câmeras</th><th>Capturas</th><th>Status</th></tr></thead>
-            <tbody id="dash-clientes-body"><tr><td colspan="5" class="table-empty">Carregando...</td></tr></tbody>
+            <thead><tr><th>Nome</th><th>Cidade</th><th>Câmeras</th><th>Online</th><th>Capturas</th><th>Status</th></tr></thead>
+            <tbody id="dash-clientes-body"><tr><td colspan="6" class="table-empty">Carregando...</td></tr></tbody>
           </table>
         </div>
 
@@ -329,8 +333,8 @@
               <span></span>
               <button class="btn btn-primary btn-sm" onclick="openCameraModal()">+ Nova Câmera</button>
             </div>
-            <table class="data-table"><thead><tr><th>Nome</th><th>Token</th><th>Status</th><th>Criado</th><th>Ações</th></tr></thead>
-              <tbody id="cameras-body"><tr><td colspan="5" class="table-empty">Carregando...</td></tr></tbody>
+            <table class="data-table"><thead><tr><th>Nome</th><th>Conexão</th><th>Token</th><th>Status</th><th>Criado</th><th>Ações</th></tr></thead>
+              <tbody id="cameras-body"><tr><td colspan="6" class="table-empty">Carregando...</td></tr></tbody>
             </table>
           </div>
 
@@ -574,22 +578,30 @@ async function loadDashboard() {
     const data = await api('/dashboard');
     document.getElementById('s-clientes').textContent = data.stats.clientes_ativos;
     document.getElementById('s-cameras').textContent = data.stats.cameras_ativas;
+    document.getElementById('s-cameras-online').textContent = data.stats.cameras_online;
+    document.getElementById('s-cameras-offline').textContent = data.stats.cameras_offline;
     document.getElementById('s-capturas').textContent = data.stats.capturas_hoje;
     document.getElementById('s-alertas').textContent = data.stats.alertas_hoje;
     document.getElementById('dash-clientes-count').textContent = data.clientes.length;
 
+    const statusPorCliente = data.status_por_cliente || {};
     const tbody = document.getElementById('dash-clientes-body');
     if (!data.clientes.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhum cliente cadastrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Nenhum cliente cadastrado</td></tr>';
       return;
     }
-    tbody.innerHTML = data.clientes.map(c => `<tr style="cursor:pointer" onclick="openClienteDetail('${c.id}')">
+    tbody.innerHTML = data.clientes.map(c => {
+      const st = statusPorCliente[c.id] || { online: 0, total: 0 };
+      const statusColor = st.total === 0 ? 'var(--text-muted)' : (st.online === st.total ? '#4ade80' : (st.online > 0 ? '#facc15' : '#ef4444'));
+      return `<tr style="cursor:pointer" onclick="openClienteDetail('${c.id}')">
       <td><strong>${esc(c.nome)}</strong></td>
       <td>${esc(c.cidade_uf || '')}</td>
       <td>${c.cameras?.[0]?.count || 0}</td>
+      <td><span style="color:${statusColor};font-weight:600">${st.online}/${st.total}</span></td>
       <td>${c.capturas?.[0]?.count || 0}</td>
       <td>${c.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
   } catch (err) {
     console.error('Dashboard error:', err);
   }
@@ -741,12 +753,27 @@ async function loadCameras(clienteId) {
   } catch (err) { console.error(err); }
 }
 
+function cameraStatus(lastSeen) {
+  if (!lastSeen) return { status: 'offline', label: 'Sem conexão', color: '#ef4444' };
+  const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
+  if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
+  if (mins < 5) return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
+  if (mins < 15) return { status: 'alerta', label: `Há ${Math.floor(mins)} min`, color: '#facc15' };
+  if (mins < 60) return { status: 'offline', label: `Há ${Math.floor(mins)} min`, color: '#ef4444' };
+  if (mins < 1440) return { status: 'offline', label: `Há ${Math.floor(mins / 60)}h`, color: '#ef4444' };
+  return { status: 'offline', label: `Há ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
+}
+
 function renderCameras() {
   const tbody = document.getElementById('cameras-body');
-  if (!camerasData.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhuma câmera</td></tr>'; return; }
+  if (!camerasData.length) { tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Nenhuma câmera</td></tr>'; return; }
 
-  tbody.innerHTML = camerasData.map(c => `<tr>
+  tbody.innerHTML = camerasData.map(c => {
+    const st = cameraStatus(c.last_seen);
+    const lastSeenTitle = c.last_seen ? new Date(c.last_seen).toLocaleString('pt-BR') : 'Nunca conectou';
+    return `<tr>
     <td><strong>${esc(c.nome)}</strong></td>
+    <td title="${lastSeenTitle}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80;margin-right:6px;vertical-align:middle"></span>${st.label}</td>
     <td class="token-cell">${c.token}<button class="copy-btn" onclick="copyText('${c.token}')" title="Copiar token">&#128203;</button></td>
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
     <td>${fmtDate(c.criado_em)}</td>
@@ -754,7 +781,8 @@ function renderCameras() {
       <button class="btn btn-ghost btn-sm" onclick="openCameraModal(camerasData.find(x=>x.id==='${c.id}'))">Editar</button>
       ${c.ativa ? `<button class="btn btn-danger btn-sm" onclick="toggleCamera('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCamera('${c.id}',true)">Ativar</button>`}
     </td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 }
 
 function openCameraModal(camera = null) {
