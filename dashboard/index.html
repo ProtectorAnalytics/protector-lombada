@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protector Lombada Educativa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-card: #16213e;
+      --bg-input: #0d1b2a;
+      --accent: #FF6B00;
+      --accent-hover: #FF8C33;
+      --text-primary: #e0e0e0;
+      --text-secondary: #888;
+      --text-muted: #555;
+      --border: #2a2a4a;
+      --green: #00c853;
+      --orange: #ff9800;
+      --red: #ff1744;
+      --red-dark: #CC0000;
+    }
+
+    body {
+      font-family: 'Barlow Condensed', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* ===== LOGIN ===== */
+    #login-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+    }
+
+    .login-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      width: 380px;
+      text-align: center;
+    }
+
+    .login-box h1 {
+      color: var(--accent);
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .login-box .subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .login-box input:focus {
+      border-color: var(--accent);
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+
+    .login-box button:hover { background: var(--accent-hover); }
+
+    .login-error {
+      color: var(--red);
+      font-size: 14px;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    /* ===== DASHBOARD ===== */
+    #dashboard-screen { display: none; }
+
+    .topbar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .topbar .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar .brand h2 {
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .topbar .brand span {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .topbar .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .topbar .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .topbar .btn-logout:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      padding: 20px 24px;
+      max-height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    /* Stats Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-card .label {
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 4px 0;
+    }
+
+    .stat-card .value.orange { color: var(--accent); }
+    .stat-card .value.red { color: var(--red); }
+    .stat-card .value.green { color: var(--green); }
+
+    .stat-card .unit {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Filters */
+    .filters-row {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filters-row label {
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .filters-row input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 6px 10px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      width: 130px;
+      outline: none;
+    }
+
+    .filters-row input:focus { border-color: var(--accent); }
+
+    .filters-row input[type="text"] { width: 100px; }
+
+    .btn-filter, .btn-clear {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-filter {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-filter:hover { background: var(--accent-hover); }
+
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .btn-clear:hover { border-color: var(--text-secondary); }
+
+    /* Table */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-header {
+      display: grid;
+      grid-template-columns: 120px 120px 1fr 50px;
+      padding: 10px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .table-body {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 120px 120px 1fr 50px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 15px;
+    }
+
+    .table-row:hover { background: rgba(255, 107, 0, 0.05); }
+
+    .table-row .placa {
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .table-row .vel {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .table-row .vel.green { color: var(--green); }
+    .table-row .vel.orange { color: var(--orange); }
+    .table-row .vel.red { color: var(--red); }
+
+    .table-row .datetime {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .table-row .notif {
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .table-empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .sidebar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .sidebar-card h3 {
+      color: var(--accent);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .chart-container {
+      height: 180px;
+      position: relative;
+    }
+
+    .ranking-list {
+      list-style: none;
+    }
+
+    .ranking-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .ranking-item:last-child { border-bottom: none; }
+
+    .ranking-item .pos {
+      color: var(--accent);
+      font-weight: 700;
+      width: 24px;
+    }
+
+    .ranking-item .placa {
+      font-weight: 600;
+      flex: 1;
+      letter-spacing: 1px;
+    }
+
+    .ranking-item .count {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h3 {
+      color: var(--accent);
+      font-size: 20px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .modal-close:hover { color: var(--text-primary); }
+
+    .modal-photo {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: var(--bg-input);
+      min-height: 200px;
+    }
+
+    .modal-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .modal-field {
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border-radius: 6px;
+    }
+
+    .modal-field .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .modal-field .value {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .modal-field .value.red { color: var(--red); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Loading indicator */
+    .loading-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 8px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+        max-height: unset;
+        overflow: auto;
+      }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .filters-row { flex-direction: column; align-items: stretch; }
+      .filters-row input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LOGIN ===== -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h1>PROTECTOR</h1>
+      <div class="subtitle">Lombada Educativa</div>
+      <input type="email" id="login-email" placeholder="E-mail">
+      <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()">ENTRAR</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="dashboard-screen">
+    <div class="topbar">
+      <div class="brand">
+        <h2>PROTECTOR</h2>
+        <span id="topbar-cliente">Lombada Educativa</span>
+      </div>
+      <div class="user-info">
+        <span id="topbar-email"></span>
+        <span class="loading-dot" id="polling-dot" title="Atualizando..."></span>
+        <button class="btn-logout" onclick="doLogout()">Sair</button>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="content-area">
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="label">Passagens Hoje</div>
+            <div class="value orange" id="stat-total">0</div>
+            <div class="unit">veículos</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Alertas Hoje</div>
+            <div class="value red" id="stat-alertas">0</div>
+            <div class="unit">acima do limite</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Vel. Máxima Hoje</div>
+            <div class="value red" id="stat-maxvel">0</div>
+            <div class="unit">km/h</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Limite Configurado</div>
+            <div class="value green" id="stat-limite">30</div>
+            <div class="unit">km/h</div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-row">
+          <div>
+            <label>Data Inicial</label><br>
+            <input type="date" id="filter-date-start">
+          </div>
+          <div>
+            <label>Data Final</label><br>
+            <input type="date" id="filter-date-end">
+          </div>
+          <div>
+            <label>Placa</label><br>
+            <input type="text" id="filter-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
+          </div>
+          <div>
+            <label>Vel. Min</label><br>
+            <input type="number" id="filter-vel-min" placeholder="0" min="0" style="width:70px">
+          </div>
+          <div>
+            <label>Vel. Max</label><br>
+            <input type="number" id="filter-vel-max" placeholder="999" min="0" style="width:70px">
+          </div>
+          <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
+          <button class="btn-clear" onclick="clearFilters()">Limpar</button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <div class="table-header">
+            <div>Placa</div>
+            <div>Velocidade</div>
+            <div>Data / Hora</div>
+            <div>Alerta</div>
+          </div>
+          <div class="table-body" id="table-body">
+            <div class="table-empty">Carregando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-card">
+          <h3>Passagens por Hora (Hoje)</h3>
+          <div class="chart-container">
+            <canvas id="chart-hourly"></canvas>
+          </div>
+        </div>
+        <div class="sidebar-card">
+          <h3>Top 8 Placas (15 dias)</h3>
+          <ul class="ranking-list" id="ranking-list">
+            <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL ===== -->
+  <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Detalhes da Captura</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <img class="modal-photo" id="modal-photo" alt="Foto do veículo" style="display:none">
+      <div class="modal-details" id="modal-details"></div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // CONFIG - Carregado automaticamente do servidor
+    // ============================================
+    let sb = null;
+    let currentUser = null;
+    let currentCliente = null;
+    let pollingInterval = null;
+
+    async function initApp() {
+      try {
+        const resp = await fetch('/api/config');
+        const cfg = await resp.json();
+        sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+        // Verificar sessão existente
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user) {
+          currentUser = session.user;
+          await loadCliente();
+        }
+      } catch (err) {
+        document.getElementById('login-error').textContent = 'Erro ao conectar ao servidor.';
+        console.error('Erro init:', err);
+      }
+    }
+
+    initApp();
+
+    // ============================================
+    // AUTH
+    // ============================================
+    async function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorEl = document.getElementById('login-error');
+      errorEl.textContent = '';
+
+      if (!email || !password) {
+        errorEl.textContent = 'Preencha e-mail e senha.';
+        return;
+      }
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        errorEl.textContent = 'E-mail ou senha incorretos.';
+        return;
+      }
+
+      currentUser = data.user;
+      await loadCliente();
+    }
+
+    async function loadCliente() {
+      const { data, error } = await sb.from('clientes')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('ativo', true)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('login-error').textContent = 'Nenhum cliente vinculado a este usuário.';
+        await sb.auth.signOut();
+        return;
+      }
+
+      currentCliente = data;
+      showDashboard();
+    }
+
+    async function doLogout() {
+      clearInterval(pollingInterval);
+      await sb.auth.signOut();
+      currentUser = null;
+      currentCliente = null;
+      document.getElementById('dashboard-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    // Sessão verificada automaticamente pelo initApp()
+
+    // ============================================
+    // DASHBOARD
+    // ============================================
+    function showDashboard() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard-screen').style.display = 'block';
+      document.getElementById('topbar-cliente').textContent = currentCliente.nome;
+      document.getElementById('topbar-email').textContent = currentUser.email;
+      document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
+
+      // Set default date filters to today
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById('filter-date-start').value = today;
+      document.getElementById('filter-date-end').value = today;
+
+      loadAll();
+      pollingInterval = setInterval(loadAll, 30000);
+    }
+
+    async function loadAll() {
+      await Promise.all([
+        loadStats(),
+        loadCapturas(),
+        loadHourlyChart(),
+        loadRanking(),
+      ]);
+    }
+
+    // ============================================
+    // STATS
+    // ============================================
+    async function loadStats() {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const { data, error } = await sb.from('capturas')
+        .select('velocidade, notificado')
+        .eq('cliente_id', currentCliente.id)
+        .gte('timestamp', todayStart.toISOString());
+
+      if (error || !data) return;
+
+      const total = data.length;
+      const alertas = data.filter(c => c.velocidade > currentCliente.limite_velocidade).length;
+      const maxVel = data.length > 0 ? Math.max(...data.map(c => c.velocidade)) : 0;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-alertas').textContent = alertas;
+      document.getElementById('stat-maxvel').textContent = maxVel;
+    }
+
+    // ============================================
+    // CAPTURAS TABLE
+    // ============================================
+    async function loadCapturas() {
+      const dateStart = document.getElementById('filter-date-start').value;
+      const dateEnd = document.getElementById('filter-date-end').value;
+      const placa = document.getElementById('filter-placa').value.toUpperCase().trim();
+      const velMin = parseInt(document.getElementById('filter-vel-min').value) || 0;
+      const velMax = parseInt(document.getElementById('filter-vel-max').value) || 999;
+
+      let query = sb.from('capturas')
+        .select('*')
+        .eq('cliente_id', currentCliente.id)
+        .order('timestamp', { ascending: false })
+        .limit(200);
+
+      if (dateStart) {
+        query = query.gte('timestamp', dateStart + 'T00:00:00');
+      }
+      if (dateEnd) {
+        query = query.lte('timestamp', dateEnd + 'T23:59:59');
+      }
+      if (placa) {
+        query = query.ilike('placa', `%${placa}%`);
+      }
+      if (velMin > 0) {
+        query = query.gte('velocidade', velMin);
+      }
+      if (velMax < 999) {
+        query = query.lte('velocidade', velMax);
+      }
+
+      const { data, error } = await query;
+      const tbody = document.getElementById('table-body');
+
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
+        return;
+      }
+
+      const limite = currentCliente.limite_velocidade;
+      tbody.innerHTML = data.map(c => {
+        const velClass = c.velocidade <= limite ? 'green'
+          : c.velocidade <= limite + 20 ? 'orange' : 'red';
+        const ts = new Date(c.timestamp);
+        const dt = ts.toLocaleDateString('pt-BR') + ' ' + ts.toLocaleTimeString('pt-BR');
+        const notifIcon = c.notificado ? '&#9993;' : '';
+
+        return `<div class="table-row" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
+          <div class="placa">${c.placa}</div>
+          <div class="vel ${velClass}">${c.velocidade} km/h</div>
+          <div class="datetime">${dt}</div>
+          <div class="notif">${notifIcon}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function applyFilters() { loadCapturas(); }
+
+    function clearFilters() {
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById('filter-date-start').value = today;
+      document.getElementById('filter-date-end').value = today;
+      document.getElementById('filter-placa').value = '';
+      document.getElementById('filter-vel-min').value = '';
+      document.getElementById('filter-vel-max').value = '';
+      loadCapturas();
+    }
+
+    // ============================================
+    // MODAL
+    // ============================================
+    async function openModal(captura) {
+      const modal = document.getElementById('modal');
+      const photo = document.getElementById('modal-photo');
+      const details = document.getElementById('modal-details');
+      const limite = currentCliente.limite_velocidade;
+
+      // Photo
+      if (captura.foto_path) {
+        const { data } = await sb.storage.from('capturas-fotos')
+          .createSignedUrl(captura.foto_path, 300);
+        if (data?.signedUrl) {
+          photo.src = data.signedUrl;
+          photo.style.display = 'block';
+        } else {
+          photo.style.display = 'none';
+        }
+      } else {
+        photo.style.display = 'none';
+      }
+
+      const ts = new Date(captura.timestamp);
+      const velClass = captura.velocidade > limite ? 'red' : '';
+
+      details.innerHTML = `
+        <div class="modal-field">
+          <div class="label">Placa</div>
+          <div class="value">${captura.placa}</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Velocidade</div>
+          <div class="value ${velClass}">${captura.velocidade} km/h</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Data</div>
+          <div class="value">${ts.toLocaleDateString('pt-BR')}</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Hora</div>
+          <div class="value">${ts.toLocaleTimeString('pt-BR')}</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Tipo Veículo</div>
+          <div class="value">${captura.tipo_veiculo || '---'}</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Cor Veículo</div>
+          <div class="value">${captura.cor_veiculo || '---'}</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Pixels LPR</div>
+          <div class="value">${captura.pixels || '---'}</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Notificado</div>
+          <div class="value">${captura.notificado ? 'Sim' : 'Não'}</div>
+        </div>
+      `;
+
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      document.getElementById('modal-photo').src = '';
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ============================================
+    // HOURLY CHART (Canvas)
+    // ============================================
+    async function loadHourlyChart() {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const { data } = await sb.from('capturas')
+        .select('timestamp')
+        .eq('cliente_id', currentCliente.id)
+        .gte('timestamp', todayStart.toISOString());
+
+      // Count per hour
+      const hours = new Array(24).fill(0);
+      if (data) {
+        data.forEach(c => {
+          const h = new Date(c.timestamp).getHours();
+          hours[h]++;
+        });
+      }
+
+      drawBarChart('chart-hourly', hours);
+    }
+
+    function drawBarChart(canvasId, data) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      const maxVal = Math.max(...data, 1);
+      const barWidth = (w - 40) / 24;
+      const chartHeight = h - 30;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Bars
+      data.forEach((val, i) => {
+        const barH = (val / maxVal) * (chartHeight - 10);
+        const x = 30 + i * barWidth;
+        const y = chartHeight - barH;
+
+        ctx.fillStyle = val > 0 ? '#FF6B00' : '#2a2a4a';
+        ctx.fillRect(x + 1, y, barWidth - 2, barH);
+
+        // Hour labels (every 3 hours)
+        if (i % 3 === 0) {
+          ctx.fillStyle = '#666';
+          ctx.font = '10px Barlow Condensed';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${i}h`, x + barWidth / 2, h - 5);
+        }
+
+        // Value on top
+        if (val > 0) {
+          ctx.fillStyle = '#ccc';
+          ctx.font = '9px Barlow Condensed';
+          ctx.textAlign = 'center';
+          ctx.fillText(val, x + barWidth / 2, y - 3);
+        }
+      });
+
+      // Y axis line
+      ctx.strokeStyle = '#2a2a4a';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(28, 0);
+      ctx.lineTo(28, chartHeight);
+      ctx.lineTo(w, chartHeight);
+      ctx.stroke();
+    }
+
+    // ============================================
+    // RANKING
+    // ============================================
+    async function loadRanking() {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 15);
+
+      const { data } = await sb.from('capturas')
+        .select('placa')
+        .eq('cliente_id', currentCliente.id)
+        .gte('timestamp', cutoff.toISOString());
+
+      if (!data || data.length === 0) {
+        document.getElementById('ranking-list').innerHTML =
+          '<li class="ranking-item" style="color:var(--text-muted)">Sem dados</li>';
+        return;
+      }
+
+      // Count by plate
+      const counts = {};
+      data.forEach(c => {
+        counts[c.placa] = (counts[c.placa] || 0) + 1;
+      });
+
+      // Sort and take top 8
+      const sorted = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+
+      document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => `
+        <li class="ranking-item">
+          <span class="pos">${i + 1}.</span>
+          <span class="placa">${item[0]}</span>
+          <span class="count">${item[1]} passagens</span>
+        </li>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
