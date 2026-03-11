@@ -322,6 +322,7 @@
 
           <div class="tabs">
             <button class="tab-btn active" onclick="showTab('cameras')">Câmeras</button>
+            <button class="tab-btn" onclick="showTab('notificacao')">Notificação PDF</button>
             <button class="tab-btn" onclick="showTab('emails')">E-mails</button>
             <button class="tab-btn" onclick="showTab('veiculos')">Veículos</button>
             <button class="tab-btn" onclick="showTab('usuarios-cli')">Usuários</button>
@@ -336,6 +337,72 @@
             <table class="data-table"><thead><tr><th>Nome</th><th>Conexão</th><th>Token</th><th>Status</th><th>Criado</th><th>Ações</th></tr></thead>
               <tbody id="cameras-body"><tr><td colspan="6" class="table-empty">Carregando...</td></tr></tbody>
             </table>
+          </div>
+
+          <!-- Tab: Notificação PDF -->
+          <div class="tab-panel" id="tab-notificacao">
+            <div style="max-width:680px">
+              <div style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:16px;border-left:3px solid var(--accent)">
+                <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Configuração do PDF</div>
+                <div style="font-size:12px;color:var(--text-secondary)">Personalize o conteúdo da notificação orientativa gerada para este cliente.</div>
+              </div>
+
+              <div class="form-group">
+                <label>Título do PDF</label>
+                <input id="f-pdf-titulo" placeholder="NOTIFICAÇÃO ORIENTATIVA">
+              </div>
+              <div class="form-group">
+                <label>Subtítulo / Descrição da Infração</label>
+                <input id="f-pdf-subtitulo" placeholder="Transitar em velocidade superior à máxima permitida">
+              </div>
+              <div class="form-group">
+                <label>Texto do Rodapé (opcional)</label>
+                <input id="f-pdf-rodape" placeholder="Ex: Administração do Condomínio - Gestão 2026">
+              </div>
+              <div class="form-group">
+                <label>URL da Logo no PDF (opcional)</label>
+                <input id="f-pdf-logo" placeholder="https://exemplo.com/logo.png">
+              </div>
+
+              <div style="margin-top:12px;margin-bottom:8px">
+                <button class="btn btn-primary" onclick="savePdfConfig()">Salvar Configuração PDF</button>
+              </div>
+
+              <div style="border-top:1px solid var(--border);margin:20px 0"></div>
+
+              <div style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:16px;border-left:3px solid var(--green)">
+                <div style="font-size:13px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Notificação Automática por E-mail</div>
+                <div style="font-size:12px;color:var(--text-secondary)">Configure até 3 e-mails para receber automaticamente a advertência dos veículos que passaram acima da velocidade limite.</div>
+              </div>
+
+              <div class="form-group" style="margin-bottom:16px">
+                <label>Status da Notificação Automática</label>
+                <select id="f-notif-ativa" style="max-width:260px">
+                  <option value="true">Ativa - Enviar automaticamente</option>
+                  <option value="false">Desativada</option>
+                </select>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+                <div class="form-group" style="margin:0">
+                  <label>E-mail 1 (principal)</label>
+                  <input type="email" id="f-notif-email1" placeholder="email@condominio.com.br">
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label>E-mail 2 (opcional)</label>
+                  <input type="email" id="f-notif-email2" placeholder="sindico@condominio.com.br">
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label>E-mail 3 (opcional)</label>
+                  <input type="email" id="f-notif-email3" placeholder="administracao@condominio.com.br">
+                </div>
+              </div>
+
+              <div class="form-error" id="f-notif-error"></div>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-primary" onclick="saveNotifConfig()">Salvar Notificação</button>
+              </div>
+            </div>
           </div>
 
           <!-- Tab: E-mails -->
@@ -741,6 +808,7 @@ async function openClienteDetail(id) {
   loadEmails(id);
   loadVeiculos(id);
   loadUsuariosCli(id);
+  loadNotifConfig();
 }
 
 // ============================================
@@ -910,6 +978,80 @@ async function deleteEmail(id) {
     await api('/emails?id=' + id, 'DELETE');
     toast('Destinatário removido!');
     loadEmails();
+  } catch (err) { toast(err.message, true); }
+}
+
+// ============================================
+// NOTIFICAÇÃO PDF CONFIG
+// ============================================
+function loadNotifConfig() {
+  const c = currentDetailCliente;
+  if (!c) return;
+  document.getElementById('f-pdf-titulo').value = c.pdf_titulo || 'NOTIFICAÇÃO ORIENTATIVA';
+  document.getElementById('f-pdf-subtitulo').value = c.pdf_subtitulo || 'Transitar em velocidade superior à máxima permitida';
+  document.getElementById('f-pdf-rodape').value = c.pdf_rodape || '';
+  document.getElementById('f-pdf-logo').value = c.pdf_logo_url || '';
+  document.getElementById('f-notif-ativa').value = c.notif_auto_ativa ? 'true' : 'false';
+
+  const emails = c.notif_emails || [];
+  document.getElementById('f-notif-email1').value = emails[0] || '';
+  document.getElementById('f-notif-email2').value = emails[1] || '';
+  document.getElementById('f-notif-email3').value = emails[2] || '';
+  document.getElementById('f-notif-error').textContent = '';
+}
+
+async function savePdfConfig() {
+  try {
+    await api('/clientes', 'PUT', {
+      id: currentDetailCliente.id,
+      pdf_titulo: document.getElementById('f-pdf-titulo').value.trim() || 'NOTIFICAÇÃO ORIENTATIVA',
+      pdf_subtitulo: document.getElementById('f-pdf-subtitulo').value.trim() || 'Transitar em velocidade superior à máxima permitida',
+      pdf_rodape: document.getElementById('f-pdf-rodape').value.trim(),
+      pdf_logo_url: document.getElementById('f-pdf-logo').value.trim(),
+    });
+    // Update local cache
+    currentDetailCliente.pdf_titulo = document.getElementById('f-pdf-titulo').value.trim();
+    currentDetailCliente.pdf_subtitulo = document.getElementById('f-pdf-subtitulo').value.trim();
+    currentDetailCliente.pdf_rodape = document.getElementById('f-pdf-rodape').value.trim();
+    currentDetailCliente.pdf_logo_url = document.getElementById('f-pdf-logo').value.trim();
+    toast('Configuração do PDF salva!');
+  } catch (err) { toast(err.message, true); }
+}
+
+async function saveNotifConfig() {
+  const emails = [
+    document.getElementById('f-notif-email1').value.trim(),
+    document.getElementById('f-notif-email2').value.trim(),
+    document.getElementById('f-notif-email3').value.trim(),
+  ].filter(e => e);
+
+  const ativa = document.getElementById('f-notif-ativa').value === 'true';
+  const errEl = document.getElementById('f-notif-error');
+  errEl.textContent = '';
+
+  if (ativa && emails.length === 0) {
+    errEl.textContent = 'Informe pelo menos 1 e-mail para ativar a notificação automática.';
+    return;
+  }
+
+  // Validate emails
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  for (const e of emails) {
+    if (!emailRegex.test(e)) {
+      errEl.textContent = `E-mail inválido: ${e}`;
+      return;
+    }
+  }
+
+  try {
+    await api('/clientes', 'PUT', {
+      id: currentDetailCliente.id,
+      notif_auto_ativa: ativa,
+      notif_emails: emails,
+    });
+    currentDetailCliente.notif_auto_ativa = ativa;
+    currentDetailCliente.notif_emails = emails;
+    toast('Configuração de notificação salva!');
   } catch (err) { toast(err.message, true); }
 }
 

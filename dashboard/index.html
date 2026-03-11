@@ -1033,8 +1033,44 @@
           </div>
         </div>
 
-        <!-- Sidebar bottom: Ranking -->
+        <!-- Sidebar bottom: Ranking + Widgets -->
         <div class="sidebar">
+          <!-- Indicadores Rapidos -->
+          <div class="sidebar-card" id="sidebar-indicators">
+            <h3>Indicadores do Dia</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Vel. Média</div>
+                <div style="font-size:22px;font-weight:700;color:var(--accent)" id="ind-vel-media">--</div>
+                <div style="font-size:10px;color:var(--text-muted)">km/h</div>
+              </div>
+              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Conformidade</div>
+                <div style="font-size:22px;font-weight:700" id="ind-conformidade">--</div>
+                <div style="font-size:10px;color:var(--text-muted)">dentro do limite</div>
+              </div>
+              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Hora Pico</div>
+                <div style="font-size:22px;font-weight:700;color:var(--orange)" id="ind-hora-pico">--</div>
+                <div style="font-size:10px;color:var(--text-muted)">maior fluxo</div>
+              </div>
+              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Reincidentes</div>
+                <div style="font-size:22px;font-weight:700;color:var(--red)" id="ind-reincidentes">--</div>
+                <div style="font-size:10px;color:var(--text-muted)">placas +2 alertas</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas ultimos 7 dias mini chart -->
+          <div class="sidebar-card">
+            <h3>Alertas - Últimos 7 Dias</h3>
+            <div style="height:80px;position:relative">
+              <canvas id="chart-alerts-7d"></canvas>
+            </div>
+          </div>
+
+          <!-- Ranking -->
           <div class="sidebar-card">
             <h3>Top 10 Placas (15 dias)</h3>
             <ul class="ranking-list" id="ranking-list">
@@ -1200,6 +1236,8 @@
         loadHourlyChart(),
         loadRanking(),
         loadCamerasStatus(),
+        loadIndicators(),
+        loadAlerts7d(),
       ]);
     }
 
@@ -1985,6 +2023,165 @@
         }
       }
       chartAnimFrame = requestAnimationFrame(animate);
+    }
+
+    // ============================================
+    // SIDEBAR INDICATORS
+    // ============================================
+    async function loadIndicators() {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const { data } = await sb.from('capturas')
+        .select('placa, velocidade, timestamp')
+        .eq('cliente_id', currentCliente.id)
+        .gte('timestamp', todayStart.toISOString());
+
+      if (!data || data.length === 0) {
+        document.getElementById('ind-vel-media').textContent = '--';
+        document.getElementById('ind-conformidade').textContent = '--';
+        document.getElementById('ind-hora-pico').textContent = '--';
+        document.getElementById('ind-reincidentes').textContent = '0';
+        return;
+      }
+
+      const limite = currentCliente.limite_velocidade;
+
+      // Velocidade média
+      const avg = Math.round(data.reduce((s, c) => s + c.velocidade, 0) / data.length);
+      const avgEl = document.getElementById('ind-vel-media');
+      avgEl.textContent = avg;
+      avgEl.style.color = avg > limite ? 'var(--red)' : 'var(--accent)';
+
+      // Conformidade
+      const dentro = data.filter(c => c.velocidade <= limite).length;
+      const pct = Math.round((dentro / data.length) * 100);
+      const confEl = document.getElementById('ind-conformidade');
+      confEl.textContent = pct + '%';
+      confEl.style.color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+
+      // Hora pico
+      const hourCounts = new Array(24).fill(0);
+      data.forEach(c => { hourCounts[new Date(c.timestamp).getHours()]++; });
+      const peakHour = hourCounts.indexOf(Math.max(...hourCounts));
+      document.getElementById('ind-hora-pico').textContent = `${peakHour}h`;
+
+      // Reincidentes (placas com 2+ alertas hoje)
+      const alertsByPlaca = {};
+      data.filter(c => c.velocidade > limite).forEach(c => {
+        alertsByPlaca[c.placa] = (alertsByPlaca[c.placa] || 0) + 1;
+      });
+      const reincidentes = Object.values(alertsByPlaca).filter(c => c >= 2).length;
+      document.getElementById('ind-reincidentes').textContent = reincidentes;
+    }
+
+    // ============================================
+    // ALERTS 7-DAY MINI CHART
+    // ============================================
+    async function loadAlerts7d() {
+      const days = [];
+      const labels = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        days.push(d);
+        labels.push(d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''));
+      }
+
+      const startDate = days[0].toISOString();
+      const { data } = await sb.from('capturas')
+        .select('velocidade, timestamp')
+        .eq('cliente_id', currentCliente.id)
+        .gt('velocidade', currentCliente.limite_velocidade)
+        .gte('timestamp', startDate);
+
+      const counts = new Array(7).fill(0);
+      if (data) {
+        data.forEach(c => {
+          const ts = new Date(c.timestamp);
+          ts.setHours(0, 0, 0, 0);
+          for (let i = 0; i < 7; i++) {
+            if (ts.getTime() === days[i].getTime()) {
+              counts[i]++;
+              break;
+            }
+          }
+        });
+      }
+
+      drawMiniAreaChart('chart-alerts-7d', counts, labels);
+    }
+
+    function drawMiniAreaChart(canvasId, data, labels) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      const maxVal = Math.max(...data, 1);
+      const pad = { top: 8, bottom: 16, left: 4, right: 4 };
+      const chartW = w - pad.left - pad.right;
+      const chartH = h - pad.top - pad.bottom;
+      const stepX = chartW / (data.length - 1);
+
+      const pts = data.map((val, i) => ({
+        x: pad.left + i * stepX,
+        y: pad.top + chartH - (val / maxVal) * chartH
+      }));
+
+      // Area
+      const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
+      grad.addColorStop(0, 'rgba(220, 38, 38, 0.25)');
+      grad.addColorStop(1, 'rgba(220, 38, 38, 0.02)');
+
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pad.top + chartH);
+      pts.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.lineTo(pts[pts.length - 1].x, pad.top + chartH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // Dots + values
+      pts.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#dc2626';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        if (data[i] > 0) {
+          ctx.fillStyle = '#1e293b';
+          ctx.font = 'bold 8px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText(data[i], p.x, p.y - 7);
+        }
+      });
+
+      // Labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '8px Inter';
+      ctx.textAlign = 'center';
+      labels.forEach((lbl, i) => {
+        ctx.fillText(lbl, pts[i].x, h - 2);
+      });
     }
 
     // ============================================

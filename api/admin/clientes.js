@@ -32,7 +32,8 @@ module.exports = async function handler(req, res) {
       const { profile } = await autenticar(req, ['super_admin']);
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
 
-      const { nome, local_via, cidade_uf, cep, endereco, limite_velocidade, cnpj, telefone, contato_nome } = body;
+      const { nome, local_via, cidade_uf, cep, endereco, limite_velocidade, cnpj, telefone, contato_nome,
+              pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, notif_auto_ativa, notif_emails } = body;
 
       if (!nome || !local_via || !cidade_uf) {
         return res.status(400).json({ error: 'Campos obrigatórios: nome, local_via, cidade_uf' });
@@ -50,6 +51,12 @@ module.exports = async function handler(req, res) {
           cnpj: cnpj || null,
           telefone: telefone || null,
           contato_nome: contato_nome || null,
+          pdf_titulo: pdf_titulo || 'NOTIFICAÇÃO ORIENTATIVA',
+          pdf_subtitulo: pdf_subtitulo || 'Transitar em velocidade superior à máxima permitida',
+          pdf_rodape: pdf_rodape || null,
+          pdf_logo_url: pdf_logo_url || null,
+          notif_auto_ativa: notif_auto_ativa || false,
+          notif_emails: notif_emails || [],
           ativo: true,
         })
         .select()
