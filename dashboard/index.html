@@ -1065,8 +1065,8 @@
           <!-- Alertas ultimos 7 dias mini chart -->
           <div class="sidebar-card">
             <h3>Alertas - Últimos 7 Dias</h3>
-            <div style="height:100px;position:relative;overflow:hidden">
-              <canvas id="chart-alerts-7d"></canvas>
+            <div style="height:90px;position:relative">
+              <canvas id="chart-alerts-7d" style="width:100%;height:100%"></canvas>
             </div>
           </div>
 
@@ -2126,7 +2126,7 @@
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       const maxVal = Math.max(...data, 1);
-      const pad = { top: 8, bottom: 16, left: 4, right: 4 };
+      const pad = { top: 18, bottom: 18, left: 8, right: 8 };
       const chartW = w - pad.left - pad.right;
       const chartH = h - pad.top - pad.bottom;
       const stepX = chartW / (data.length - 1);
@@ -2136,73 +2136,79 @@
         y: pad.top + chartH - (val / maxVal) * chartH
       }));
 
-      // Smooth spline helper
-      function drawSpline(points) {
-        if (points.length < 2) return;
-        ctx.moveTo(points[0].x, points[0].y);
+      // Catmull-Rom spline (same as hourly chart - no overshoot)
+      const tension = 0.35;
+      function catmullRom(points) {
+        const segs = [];
         for (let i = 0; i < points.length - 1; i++) {
-          const cp = (points[i + 1].x - points[i].x) * 0.4;
-          ctx.bezierCurveTo(
-            points[i].x + cp, points[i].y,
-            points[i + 1].x - cp, points[i + 1].y,
-            points[i + 1].x, points[i + 1].y
-          );
+          const p0 = points[Math.max(i - 1, 0)];
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const p3 = points[Math.min(i + 2, points.length - 1)];
+          segs.push({
+            p1, p2,
+            cp1: { x: p1.x + (p2.x - p0.x) * tension, y: p1.y + (p2.y - p0.y) * tension },
+            cp2: { x: p2.x - (p3.x - p1.x) * tension, y: p2.y - (p3.y - p1.y) * tension }
+          });
         }
+        return segs;
       }
 
-      // Area
+      const segments = catmullRom(pts);
+
+      // Area fill
       const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
       grad.addColorStop(0, 'rgba(220, 38, 38, 0.25)');
-      grad.addColorStop(1, 'rgba(220, 38, 38, 0.02)');
+      grad.addColorStop(0.5, 'rgba(220, 38, 38, 0.08)');
+      grad.addColorStop(1, 'rgba(220, 38, 38, 0.01)');
 
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pad.top + chartH);
       ctx.lineTo(pts[0].x, pts[0].y);
-      for (let i = 0; i < pts.length - 1; i++) {
-        const cp = (pts[i + 1].x - pts[i].x) * 0.4;
-        ctx.bezierCurveTo(
-          pts[i].x + cp, pts[i].y,
-          pts[i + 1].x - cp, pts[i + 1].y,
-          pts[i + 1].x, pts[i + 1].y
-        );
-      }
+      segments.forEach(s => {
+        ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
+      });
       ctx.lineTo(pts[pts.length - 1].x, pad.top + chartH);
       ctx.closePath();
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Line
+      // Line stroke
       ctx.beginPath();
-      drawSpline(pts);
+      ctx.moveTo(pts[0].x, pts[0].y);
+      segments.forEach(s => {
+        ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
+      });
       ctx.strokeStyle = '#dc2626';
       ctx.lineWidth = 2;
       ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
       ctx.stroke();
 
       // Dots + values
       pts.forEach((p, i) => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#dc2626';
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
         if (data[i] > 0) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#dc2626';
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
           ctx.fillStyle = '#1e293b';
-          ctx.font = 'bold 8px Inter';
+          ctx.font = 'bold 9px Inter';
           ctx.textAlign = 'center';
-          ctx.fillText(data[i], p.x, p.y - 7);
+          ctx.fillText(data[i], p.x, p.y - 8);
         }
       });
 
-      // Labels
+      // Day labels
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '8px Inter';
+      ctx.font = '9px Inter';
       ctx.textAlign = 'center';
       labels.forEach((lbl, i) => {
-        ctx.fillText(lbl, pts[i].x, h - 2);
+        ctx.fillText(lbl, pts[i].x, h - 4);
       });
     }
 
