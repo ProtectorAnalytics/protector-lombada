@@ -203,13 +203,32 @@
       background: #fef2f2;
     }
 
+    .topbar .btn-veiculos {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .topbar .btn-veiculos:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(4,107,210,0.25);
+    }
+
     .main-layout {
       display: flex;
       flex-direction: column;
       gap: 12px;
       padding: 12px 20px;
-      min-height: calc(100vh - 64px);
-      overflow: visible;
+      height: calc(100vh - 64px);
+      overflow: hidden;
     }
 
     .top-section {
@@ -502,7 +521,55 @@
 
     .table-body {
       flex: 1;
-      overflow-y: auto;
+      overflow: hidden;
+    }
+
+    .table-pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-input);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .table-pagination .pg-info {
+      font-weight: 500;
+    }
+    .table-pagination .pg-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .table-pagination .pg-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .table-pagination .pg-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .table-pagination .pg-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .table-pagination .pg-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .table-pagination .pg-current {
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 0 6px;
     }
 
     .table-row {
@@ -885,94 +952,7 @@
       color: var(--red);
     }
 
-    /* ===== VEICULOS SECTION ===== */
-    .veiculos-section {
-      padding: 16px 24px 24px;
-    }
-
-    .veiculos-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .veiculos-header h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .btn-add-veiculo {
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-add-veiculo:hover {
-      background: var(--accent-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(4,107,210,0.25);
-    }
-
-    .veiculos-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 10px;
-    }
-
-    .veiculo-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .veiculo-card:hover {
-      border-color: var(--accent);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .veiculo-card .placa {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--accent);
-      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
-    }
-
-    .veiculo-card .info {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-
-    .veiculo-card .btn-remove {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--red);
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .veiculo-card .btn-remove:hover {
-      background: #fef2f2;
-      border-color: var(--red);
-    }
+    /* veiculos-section removed - managed via modal */
 
     /* ===== MODAL VEICULOS ===== */
     .vm-overlay {
@@ -1259,6 +1239,7 @@
       </div>
       <div class="user-info">
         <span id="topbar-email"></span>
+        <button class="btn-veiculos" id="btn-topbar-veiculos" onclick="abrirModalVeiculo()" style="display:none">Veiculos</button>
         <span class="loading-dot" id="polling-dot" title="Atualizando..."></span>
         <button class="btn-logout" onclick="doLogout()">Sair</button>
       </div>
@@ -1366,6 +1347,10 @@
             <div class="table-body" id="table-body">
               <div class="table-empty">Carregando...</div>
             </div>
+            <div class="table-pagination" id="table-pagination" style="display:none">
+              <span class="pg-info" id="pg-info"></span>
+              <div class="pg-controls" id="pg-controls"></div>
+            </div>
           </div>
         </div>
 
@@ -1417,71 +1402,60 @@
       </div>
     </div>
 
-    <!-- ===== VEICULOS ===== -->
-    <div class="veiculos-section">
-      <div class="veiculos-header">
-        <h3>Veiculos Cadastrados <span id="veiculos-count" style="font-size:12px;color:var(--text-muted);font-weight:400"></span></h3>
-        <button class="btn-add-veiculo" onclick="toggleVeiculoForm()">+ Novo Veiculo</button>
+  </div>
+
+  <!-- ===== MODAL VEICULOS ===== -->
+  <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
+    <div class="vm-box">
+      <div class="vm-header">
+        <h3 id="vm-title">Veiculos</h3>
+        <button class="modal-close" onclick="fecharModalVeiculo()">&times;</button>
+      </div>
+      <div class="vm-tabs">
+        <button class="vm-tab active" id="vm-tab-cadastrar" onclick="vmSwitchTab('cadastrar')">Cadastrar</button>
+        <button class="vm-tab" id="vm-tab-consultar" onclick="vmSwitchTab('consultar')">Consultar</button>
       </div>
 
-      <!-- Modal Veiculos -->
-      <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
-        <div class="vm-box">
-          <div class="vm-header">
-            <h3 id="vm-title">Veiculos</h3>
-            <button class="modal-close" onclick="fecharModalVeiculo()">&times;</button>
+      <!-- Tab Cadastrar -->
+      <div class="vm-body" id="vm-body-cadastrar">
+        <div class="vm-field">
+          <label>Placa *</label>
+          <input type="text" id="vf-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
+        </div>
+        <div class="vm-field">
+          <label>Nome do Morador</label>
+          <input type="text" id="vf-morador" placeholder="Nome completo">
+        </div>
+        <div class="vm-field">
+          <label>Unidade</label>
+          <input type="text" id="vf-unidade" placeholder="Ex: Bloco A - Apt 101">
+        </div>
+        <div class="vm-row">
+          <div class="vm-field">
+            <label>Marca / Modelo</label>
+            <input type="text" id="vf-marca" placeholder="Ex: Honda Civic">
           </div>
-          <div class="vm-tabs">
-            <button class="vm-tab active" id="vm-tab-cadastrar" onclick="vmSwitchTab('cadastrar')">Cadastrar</button>
-            <button class="vm-tab" id="vm-tab-consultar" onclick="vmSwitchTab('consultar')">Consultar</button>
-          </div>
-
-          <!-- Tab Cadastrar -->
-          <div class="vm-body" id="vm-body-cadastrar">
-            <div class="vm-field">
-              <label>Placa *</label>
-              <input type="text" id="vf-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
-            </div>
-            <div class="vm-field">
-              <label>Nome do Morador</label>
-              <input type="text" id="vf-morador" placeholder="Nome completo">
-            </div>
-            <div class="vm-field">
-              <label>Unidade</label>
-              <input type="text" id="vf-unidade" placeholder="Ex: Bloco A - Apt 101">
-            </div>
-            <div class="vm-row">
-              <div class="vm-field">
-                <label>Marca / Modelo</label>
-                <input type="text" id="vf-marca" placeholder="Ex: Honda Civic">
-              </div>
-              <div class="vm-field">
-                <label>Cor</label>
-                <input type="text" id="vf-cor" placeholder="Ex: Prata">
-              </div>
-            </div>
-            <div class="vm-actions">
-              <button class="vm-btn-cancel" onclick="fecharModalVeiculo()">Cancelar</button>
-              <button class="vm-btn-primary" onclick="salvarVeiculo()">Cadastrar Veiculo</button>
-            </div>
-            <div class="vm-error" id="vf-error"></div>
-          </div>
-
-          <!-- Tab Consultar -->
-          <div class="vm-body" id="vm-body-consultar" style="display:none">
-            <div class="vm-search-box">
-              <input type="text" id="vm-busca-placa" placeholder="Digite a placa..." maxlength="7" onkeydown="if(event.key==='Enter')buscarVeiculo()">
-              <button onclick="buscarVeiculo()">Buscar</button>
-            </div>
-            <div class="vm-result" id="vm-result">
-              <div class="vm-result-empty">Digite uma placa para verificar se esta cadastrada</div>
-            </div>
+          <div class="vm-field">
+            <label>Cor</label>
+            <input type="text" id="vf-cor" placeholder="Ex: Prata">
           </div>
         </div>
+        <div class="vm-actions">
+          <button class="vm-btn-cancel" onclick="fecharModalVeiculo()">Cancelar</button>
+          <button class="vm-btn-primary" onclick="salvarVeiculo()">Cadastrar Veiculo</button>
+        </div>
+        <div class="vm-error" id="vf-error"></div>
       </div>
 
-      <div class="veiculos-grid" id="veiculos-grid">
-        <div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Carregando veiculos...</div>
+      <!-- Tab Consultar -->
+      <div class="vm-body" id="vm-body-consultar" style="display:none">
+        <div class="vm-search-box">
+          <input type="text" id="vm-busca-placa" placeholder="Digite a placa..." maxlength="7" onkeydown="if(event.key==='Enter')buscarVeiculo()">
+          <button onclick="buscarVeiculo()">Buscar</button>
+        </div>
+        <div class="vm-result" id="vm-result">
+          <div class="vm-result-empty">Digite uma placa para verificar se esta cadastrada</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1693,6 +1667,7 @@
       document.getElementById('dashboard-screen').style.display = 'block';
       document.getElementById('topbar-cliente').textContent = currentCliente.nome;
       document.getElementById('topbar-email').textContent = currentUser.email;
+      document.getElementById('btn-topbar-veiculos').style.display = '';
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
       const today = new Date().toISOString().slice(0, 10);
@@ -1904,30 +1879,61 @@
 
       const { data, error } = await query;
       const tbody = document.getElementById('table-body');
+      const pgEl = document.getElementById('table-pagination');
 
       if (error || !data || data.length === 0) {
         tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
         lastCapturas = [];
+        pgEl.style.display = 'none';
         return;
       }
 
       lastCapturas = data;
-      const limite = currentCliente.limite_velocidade;
+      allThumbUrls = {};
+      currentPage = 1;
 
-      // Get thumbnail URLs (batch)
-      const thumbUrls = await Promise.all(
+      // Get thumbnail URLs (batch for first 50)
+      const thumbResults = await Promise.all(
         data.slice(0, 50).map(c => getPhotoUrl(c.foto_path))
       );
+      data.slice(0, 50).forEach((c, i) => { allThumbUrls[i] = thumbResults[i]; });
 
-      tbody.innerHTML = data.map((c, i) => {
+      renderPage();
+    }
+
+    const ROWS_PER_PAGE = 14;
+    let currentPage = 1;
+    let allThumbUrls = {};
+
+    async function renderPage() {
+      const data = lastCapturas;
+      if (!data || data.length === 0) return;
+
+      const tbody = document.getElementById('table-body');
+      const pgEl = document.getElementById('table-pagination');
+      const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
+      const start = (currentPage - 1) * ROWS_PER_PAGE;
+      const end = Math.min(start + ROWS_PER_PAGE, data.length);
+      const pageData = data.slice(start, end);
+      const limite = currentCliente.limite_velocidade;
+
+      // Load thumbs for current page if not cached
+      const needThumb = pageData.map((c, i) => start + i).filter(idx => idx < 50 && !(idx in allThumbUrls));
+      if (needThumb.length > 0) {
+        const results = await Promise.all(needThumb.map(idx => getPhotoUrl(data[idx].foto_path)));
+        needThumb.forEach((idx, i) => { allThumbUrls[idx] = results[i]; });
+      }
+
+      tbody.innerHTML = pageData.map((c, pi) => {
+        const globalIdx = start + pi;
         const velClass = c.velocidade <= limite ? 'green'
           : c.velocidade <= limite + 20 ? 'orange' : 'red';
         const ts = new Date(c.timestamp);
         const dt = ts.toLocaleDateString('pt-BR') + ' ' + ts.toLocaleTimeString('pt-BR');
         const isAlert = c.velocidade > limite;
 
-        const thumbHtml = i < 50 && thumbUrls[i]
-          ? `<img class="row-thumb" src="${thumbUrls[i]}" alt="" loading="lazy">`
+        const thumbHtml = globalIdx < 50 && allThumbUrls[globalIdx]
+          ? `<img class="row-thumb" src="${allThumbUrls[globalIdx]}" alt="" loading="lazy">`
           : `<div class="row-no-thumb">&#128663;</div>`;
 
         return `<div class="table-row" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
@@ -1938,6 +1944,39 @@
           <div style="text-align:center;font-size:12px;font-weight:600;color:${isAlert ? 'var(--red)' : 'var(--green)'}">${isAlert ? 'ALERTA' : 'OK'}</div>
         </div>`;
       }).join('');
+
+      // Pagination controls
+      if (totalPages > 1) {
+        pgEl.style.display = 'flex';
+        document.getElementById('pg-info').textContent = `${start + 1}-${end} de ${data.length} registros`;
+
+        let btns = '';
+        btns += `<button class="pg-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>&laquo;</button>`;
+        btns += `<button class="pg-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&lsaquo;</button>`;
+
+        // Show max 5 page numbers
+        let pgStart = Math.max(1, currentPage - 2);
+        let pgEnd = Math.min(totalPages, pgStart + 4);
+        if (pgEnd - pgStart < 4) pgStart = Math.max(1, pgEnd - 4);
+
+        for (let p = pgStart; p <= pgEnd; p++) {
+          btns += `<button class="pg-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+        }
+
+        btns += `<button class="pg-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>&rsaquo;</button>`;
+        btns += `<button class="pg-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>&raquo;</button>`;
+
+        document.getElementById('pg-controls').innerHTML = btns;
+      } else {
+        pgEl.style.display = 'none';
+      }
+    }
+
+    function goToPage(page) {
+      const totalPages = Math.ceil(lastCapturas.length / ROWS_PER_PAGE);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderPage();
     }
 
     function applyFilters() { loadCapturas(); }
@@ -1980,30 +2019,10 @@
     }
 
     function renderVeiculos() {
-      const grid = document.getElementById('veiculos-grid');
-      const countEl = document.getElementById('veiculos-count');
-      const canEdit = currentProfile && ['super_admin', 'admin_cliente'].includes(currentProfile.role);
-
-      // Show/hide add button based on role
-      const addBtn = document.querySelector('.btn-add-veiculo');
-      if (addBtn) addBtn.style.display = canEdit ? '' : 'none';
-
-      countEl.textContent = `(${veiculosList.length})`;
-
-      if (veiculosList.length === 0) {
-        grid.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Nenhum veiculo cadastrado.' + (canEdit ? ' Clique em "+ Novo Veiculo" para adicionar.' : '') + '</div>';
-        return;
-      }
-
-      grid.innerHTML = veiculosList.map(v => `
-        <div class="veiculo-card">
-          <div>
-            <div class="placa">${v.placa}</div>
-            <div class="info">${[v.nome_morador, v.unidade, v.marca, v.cor].filter(Boolean).join(' | ') || 'Sem informacoes adicionais'}</div>
-          </div>
-          ${canEdit ? `<button class="btn-remove" onclick="removerVeiculo('${v.id}', '${v.placa}')">Remover</button>` : ''}
-        </div>
-      `).join('');
+      // Veiculos are now managed via the modal popup
+      // Update topbar button badge
+      const btn = document.getElementById('btn-topbar-veiculos');
+      if (btn) btn.textContent = `Veiculos (${veiculosList.length})`;
     }
 
     function toggleVeiculoForm() {
