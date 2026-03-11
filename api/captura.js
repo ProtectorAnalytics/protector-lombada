@@ -1,4 +1,5 @@
 const Busboy = require('busboy');
+const sharp = require('sharp');
 const {
   findCameraByToken,
   findCameraBySerial,
@@ -134,11 +135,21 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Placa nao fornecida' });
     }
 
-    // Decodificar foto
+    // Decodificar e comprimir foto (~415KB -> ~60-80KB)
     let fotoBuffer = null;
     if (imageBase64) {
       const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      fotoBuffer = Buffer.from(base64Clean, 'base64');
+      const rawBuffer = Buffer.from(base64Clean, 'base64');
+      if (rawBuffer.length > 100) {
+        try {
+          fotoBuffer = await sharp(rawBuffer)
+            .resize(1280, null, { withoutEnlargement: true })
+            .jpeg({ quality: 70 })
+            .toBuffer();
+        } catch {
+          fotoBuffer = rawBuffer; // fallback: usar original se sharp falhar
+        }
+      }
     }
 
     // Upload da foto ao Storage
