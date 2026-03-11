@@ -135,8 +135,8 @@
       background: #FFFFFF;
       border-bottom: 1px solid var(--border);
       padding: 10px 28px;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
       box-shadow: var(--shadow-md);
       position: sticky;
@@ -148,7 +148,6 @@
     .topbar .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
     }
 
     .topbar .brand img {
@@ -158,20 +157,21 @@
       filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
     }
 
-    .topbar .brand .brand-text {
+    .topbar .brand-center {
       display: flex;
       flex-direction: column;
+      align-items: center;
       line-height: 1.3;
     }
 
-    .topbar .brand h2 {
+    .topbar .brand-center h2 {
       color: var(--accent);
       font-size: 18px;
       font-weight: 700;
-      letter-spacing: 0.3px;
+      letter-spacing: 1px;
     }
 
-    .topbar .brand span {
+    .topbar .brand-center span {
       color: var(--text-secondary);
       font-size: 13px;
     }
@@ -919,10 +919,10 @@
     <div class="topbar">
       <div class="brand">
         <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Logo">
-        <div class="brand-text">
-          <h2>PROTECTOR TRAFFIC CONTROL</h2>
-          <span id="topbar-cliente">Lombada Educativa</span>
-        </div>
+      </div>
+      <div class="brand-center">
+        <h2>PROTECTOR TRAFFIC CONTROL</h2>
+        <span id="topbar-cliente">Lombada Educativa</span>
       </div>
       <div class="user-info">
         <span id="topbar-email"></span>
