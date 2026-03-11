@@ -871,7 +871,7 @@ function drawAdminChart7d(alertas7d) {
   const data = alertas7d.map(a => a.count);
   const labels = alertas7d.map(a => a.dia);
   const maxVal = Math.max(...data, 1);
-  const pad = { top: 12, bottom: 20, left: 6, right: 6 };
+  const pad = { top: 18, bottom: 18, left: 8, right: 8 };
   const chartW = w - pad.left - pad.right;
   const chartH = h - pad.top - pad.bottom;
   const stepX = chartW / (data.length - 1);
@@ -881,38 +881,66 @@ function drawAdminChart7d(alertas7d) {
     y: pad.top + chartH - (val / maxVal) * chartH
   }));
 
+  // Catmull-Rom spline (smooth curves, no overshoot)
+  const tension = 0.35;
+  function catmullRom(points) {
+    const segs = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(i - 1, 0)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(i + 2, points.length - 1)];
+      segs.push({
+        p1, p2,
+        cp1: { x: p1.x + (p2.x - p0.x) * tension, y: p1.y + (p2.y - p0.y) * tension },
+        cp2: { x: p2.x - (p3.x - p1.x) * tension, y: p2.y - (p3.y - p1.y) * tension }
+      });
+    }
+    return segs;
+  }
+
+  const segments = catmullRom(pts);
+
   // Area fill
   const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
   grad.addColorStop(0, 'rgba(255, 23, 68, 0.25)');
-  grad.addColorStop(1, 'rgba(255, 23, 68, 0.02)');
+  grad.addColorStop(0.5, 'rgba(255, 23, 68, 0.08)');
+  grad.addColorStop(1, 'rgba(255, 23, 68, 0.01)');
 
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pad.top + chartH);
-  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[0].x, pts[0].y);
+  segments.forEach(s => {
+    ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
+  });
   ctx.lineTo(pts[pts.length - 1].x, pad.top + chartH);
   ctx.closePath();
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Line
+  // Line stroke
   ctx.beginPath();
-  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.moveTo(pts[0].x, pts[0].y);
+  segments.forEach(s => {
+    ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
+  });
   ctx.strokeStyle = '#ff1744';
   ctx.lineWidth = 2;
   ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
   ctx.stroke();
 
   // Dots + values
   pts.forEach((p, i) => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff1744';
-    ctx.fill();
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
     if (data[i] > 0) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff1744';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
       ctx.fillStyle = '#1e293b';
       ctx.font = 'bold 9px Inter, sans-serif';
       ctx.textAlign = 'center';
