@@ -2136,6 +2136,20 @@
         y: pad.top + chartH - (val / maxVal) * chartH
       }));
 
+      // Smooth spline helper
+      function drawSpline(points) {
+        if (points.length < 2) return;
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const cp = (points[i + 1].x - points[i].x) * 0.4;
+          ctx.bezierCurveTo(
+            points[i].x + cp, points[i].y,
+            points[i + 1].x - cp, points[i + 1].y,
+            points[i + 1].x, points[i + 1].y
+          );
+        }
+      }
+
       // Area
       const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
       grad.addColorStop(0, 'rgba(220, 38, 38, 0.25)');
@@ -2143,7 +2157,15 @@
 
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pad.top + chartH);
-      pts.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.lineTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < pts.length - 1; i++) {
+        const cp = (pts[i + 1].x - pts[i].x) * 0.4;
+        ctx.bezierCurveTo(
+          pts[i].x + cp, pts[i].y,
+          pts[i + 1].x - cp, pts[i + 1].y,
+          pts[i + 1].x, pts[i + 1].y
+        );
+      }
       ctx.lineTo(pts[pts.length - 1].x, pad.top + chartH);
       ctx.closePath();
       ctx.fillStyle = grad;
@@ -2151,7 +2173,7 @@
 
       // Line
       ctx.beginPath();
-      pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      drawSpline(pts);
       ctx.strokeStyle = '#dc2626';
       ctx.lineWidth = 2;
       ctx.lineJoin = 'round';
