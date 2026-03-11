@@ -61,6 +61,63 @@ module.exports = async function handler(req, res) {
       .order('timestamp', { ascending: false })
       .limit(10);
 
+    // Top 10 placas com mais infrações (últimos 15 dias)
+    const quinzeDiasAtras = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: topPlacasRaw } = await supabase
+      .from('capturas')
+      .select('placa, velocidade, cliente_id, clientes(nome, limite_velocidade)')
+      .gte('timestamp', quinzeDiasAtras);
+
+    // Filtrar apenas as que estão acima do limite e agrupar
+    const placaCounts = {};
+    const capturasHojeList = [];
+    if (topPlacasRaw) {
+      topPlacasRaw.forEach(c => {
+        const limite = c.clientes?.limite_velocidade || 30;
+        if (c.velocidade > limite) {
+          if (!placaCounts[c.placa]) {
+            placaCounts[c.placa] = { placa: c.placa, count: 0, cliente: c.clientes?.nome || '---', maxVel: 0 };
+          }
+          placaCounts[c.placa].count++;
+          if (c.velocidade > placaCounts[c.placa].maxVel) placaCounts[c.placa].maxVel = c.velocidade;
+        }
+      });
+    }
+    const topPlacas = Object.values(placaCounts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Alertas últimos 7 dias (por dia)
+    const alertas7d = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      const dEnd = new Date(d);
+      dEnd.setDate(dEnd.getDate() + 1);
+      alertas7d.push({
+        data: d.toISOString().slice(0, 10),
+        dia: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
+      });
+    }
+    // Query alerts for 7 days
+    const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    seteDiasAtras.setHours(0, 0, 0, 0);
+    const { data: alertas7dRaw } = await supabase
+      .from('capturas')
+      .select('timestamp, notificado')
+      .eq('notificado', true)
+      .gte('timestamp', seteDiasAtras.toISOString());
+
+    if (alertas7dRaw) {
+      alertas7dRaw.forEach(c => {
+        const dia = new Date(c.timestamp).toISOString().slice(0, 10);
+        const entry = alertas7d.find(a => a.data === dia);
+        if (entry) entry.count = (entry.count || 0) + 1;
+      });
+    }
+    alertas7d.forEach(a => { if (!a.count) a.count = 0; });
+
     return res.status(200).json({
       stats: {
         clientes_ativos: clientesRes.count || 0,
@@ -74,6 +131,8 @@ module.exports = async function handler(req, res) {
       clientes: clientesListRes.data || [],
       status_por_cliente: statusPorCliente,
       ultimas_capturas: ultimasCapturas || [],
+      top_placas: topPlacas,
+      alertas_7d: alertas7d,
     });
   } catch (err) {
     if (err.status) return res.status(err.status).json({ error: err.error });
