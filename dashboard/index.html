@@ -115,8 +115,6 @@
       margin-top: 8px;
     }
 
-    .login-box form { display: contents; }
-
     .login-box button:hover {
       background: var(--accent-hover);
       transform: translateY(-1px);
@@ -1315,21 +1313,17 @@
       <img class="login-logo" src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Protector Sistemas">
       <h1>PROTECTOR TRAFFIC CONTROL</h1>
       <div class="subtitle">Lombada Educativa Inteligente</div>
-      <form id="login-form" onsubmit="event.preventDefault(); doLogin();" autocomplete="on">
-        <input type="email" id="login-email" placeholder="E-mail" autocomplete="email">
-        <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password">
-        <button type="submit">ENTRAR</button>
-      </form>
+      <input type="email" id="login-email" placeholder="E-mail">
+      <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()">ENTRAR</button>
       <div class="login-error" id="login-error"></div>
       <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:13px;text-decoration:none;">Esqueci minha senha</a>
 
       <!-- Formulario de recuperacao (oculto por padrao) -->
       <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
         <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperacao:</div>
-        <form onsubmit="event.preventDefault(); doResetPassword();">
-          <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado" autocomplete="email">
-          <button type="submit" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERACAO</button>
-        </form>
+        <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado">
+        <button onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERACAO</button>
         <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;"></div>
         <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
       </div>
@@ -1699,7 +1693,9 @@
     function showResetPassword(e) {
       e.preventDefault();
       document.getElementById('reset-password-form').style.display = 'block';
-      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('login-email').style.display = 'none';
+      document.getElementById('login-password').style.display = 'none';
+      document.querySelector('.login-box button[onclick="doLogin()"]').style.display = 'none';
       document.querySelector('a[onclick="showResetPassword(event)"]').style.display = 'none';
       document.getElementById('login-error').textContent = '';
     }
@@ -1707,7 +1703,9 @@
     function hideResetPassword(e) {
       e.preventDefault();
       document.getElementById('reset-password-form').style.display = 'none';
-      document.getElementById('login-form').style.display = '';
+      document.getElementById('login-email').style.display = '';
+      document.getElementById('login-password').style.display = '';
+      document.querySelector('.login-box button[onclick="doLogin()"]').style.display = '';
       document.querySelector('a[onclick="showResetPassword(event)"]').style.display = '';
       document.getElementById('reset-message').textContent = '';
     }
