@@ -1,265 +1,305 @@
-# Manual do Usuario — Protector Lombada Educativa
-
-**Sistema de Monitoramento de Velocidade para Condominios**
-
----
-
-## SUMARIO
-
-1. [O que e o Protector Lombada?](#1-o-que-e-o-protector-lombada)
-2. [Primeiro Acesso ao Dashboard](#2-primeiro-acesso-ao-dashboard)
-3. [Tela de Login](#3-tela-de-login)
-4. [Painel Principal](#4-painel-principal)
-5. [Cards de Estatisticas](#5-cards-de-estatisticas)
-6. [Filtros de Busca](#6-filtros-de-busca)
-7. [Tabela de Capturas](#7-tabela-de-capturas)
-8. [Detalhes da Captura (Modal)](#8-detalhes-da-captura-modal)
-9. [Grafico de Passagens por Hora](#9-grafico-de-passagens-por-hora)
-10. [Ranking de Placas](#10-ranking-de-placas)
-11. [Notificacoes por E-mail](#11-notificacoes-por-e-mail)
-12. [Relatorio PDF](#12-relatorio-pdf)
-13. [Perguntas Frequentes](#13-perguntas-frequentes)
+# Manual do Usuario - Protector Traffic Control
+## Lombada Educativa Inteligente
+### Versao 1.0.0 | Marco 2026
 
 ---
 
-## 1. O que e o Protector Lombada?
+## Bem-vindo ao Protector Traffic Control
 
-O **Protector Lombada Educativa** e um sistema que monitora a velocidade dos veiculos que passam pelas lombadas educativas do seu condominio.
-
-**O que ele faz:**
-- Registra automaticamente cada veiculo que passa pela lombada
-- Detecta a placa, velocidade e tira uma foto
-- Se o veiculo estiver acima do limite de velocidade, envia um **alerta por e-mail** com um **relatorio em PDF**
-- Permite acompanhar tudo em tempo real pelo **painel web (dashboard)**
-
-**Como funciona:**
-A camera instalada na lombada detecta o veiculo, mede a velocidade e envia os dados automaticamente para o sistema. Voce nao precisa fazer nada — tudo e automatico.
+O **Protector Traffic Control** e o sistema de monitoramento de velocidade para condominios e vias privadas. Atraves do dashboard web, voce pode acompanhar em tempo real os veiculos que passam pela lombada educativa, receber alertas de excesso de velocidade e gerenciar os veiculos cadastrados do seu condominio.
 
 ---
 
-## 2. Primeiro Acesso ao Dashboard
+## Sumario
+
+1. [Acesso ao Sistema](#1-acesso-ao-sistema)
+2. [Tela Inicial (Dashboard)](#2-tela-inicial-dashboard)
+3. [Indicadores de Velocidade](#3-indicadores-de-velocidade)
+4. [Ultimas Capturas](#4-ultimas-capturas)
+5. [Status das Cameras](#5-status-das-cameras)
+6. [Gerenciar Veiculos](#6-gerenciar-veiculos)
+7. [Importar Veiculos por Excel](#7-importar-veiculos-por-excel)
+8. [Exportar Veiculos para Excel](#8-exportar-veiculos-para-excel)
+9. [Emails de Alerta](#9-emails-de-alerta)
+10. [Notificacoes Automaticas](#10-notificacoes-automaticas)
+11. [Recuperar Senha](#11-recuperar-senha)
+12. [Perguntas Frequentes (FAQ)](#12-perguntas-frequentes-faq)
+
+---
+
+## 1. Acesso ao Sistema
+
+### Como acessar
 
 1. Abra o navegador (Chrome, Firefox, Edge ou Safari)
-2. Acesse o endereco fornecido pelo seu integrador (ex: `https://protector-lombada.vercel.app`)
+2. Acesse o endereco fornecido pela Protector Sistemas (ex: `https://lombada.seudominio.com.br`)
 3. Voce vera a tela de login
 
----
+### Fazer Login
 
-## 3. Tela de Login
+1. Digite seu **email** cadastrado
+2. Digite sua **senha**
+3. Clique em **"ENTRAR"**
 
-A tela de login possui dois campos:
-
-- **E-mail:** Seu e-mail cadastrado no sistema
-- **Senha:** Sua senha de acesso
-
-Apos preencher, clique no botao **ENTRAR**.
-
-**Problemas no login?**
-- Verifique se o e-mail esta correto (com @ e dominio)
-- Verifique se a senha esta correta (maiusculas e minusculas importam)
-- Se esqueceu a senha, entre em contato com o integrador para reset
+> Se nao possui acesso, solicite suas credenciais ao administrador do sistema.
 
 ---
 
-## 4. Painel Principal
+## 2. Tela Inicial (Dashboard)
 
-Apos fazer login, voce vera o painel principal dividido em:
+Apos o login, voce vera o painel principal com as seguintes informacoes:
 
-```
-┌─────────────────────────────────────────────────┐
-│  PROTECTOR    Cond. Parque das Flores    [Sair] │
-├─────────────────────────────────────────────────┤
-│                                                  │
-│  [Passagens]  [Alertas]  [Vel.Max]  [Limite]    │
-│     125          8         58km/h    30km/h      │
-│                                                  │
-│  [Filtros: Data | Placa | Velocidade] [Filtrar]  │
-│                                                  │
-│  ┌──────────────────────────┐  ┌──────────────┐ │
-│  │  Tabela de Capturas      │  │ Grafico      │ │
-│  │  (clique para detalhes)  │  │ por hora     │ │
-│  │                          │  │              │ │
-│  │                          │  │ Top 8 placas │ │
-│  └──────────────────────────┘  └──────────────┘ │
-└─────────────────────────────────────────────────┘
-```
+### Barra Superior
+- **Logo e nome do sistema** (Protector Traffic Control)
+- **Nome do seu condominio/empresa**
+- **Seu email** de login
+- **Botao "Veiculos"** - acesso rapido ao cadastro de veiculos
+- **Botao "Sair"** - encerrar sessao
+
+### Area de Estatisticas (cards)
+Quatro cards com dados atualizados automaticamente:
+
+| Card               | Descricao                                    |
+|--------------------|----------------------------------------------|
+| **Capturas Hoje**  | Total de veiculos registrados no dia         |
+| **Velocidade Media**| Velocidade media de todos os veiculos do dia|
+| **Acima do Limite**| Quantidade de veiculos acima da velocidade permitida |
+| **Cameras Online** | Quantidade de cameras funcionando            |
 
 ---
 
-## 5. Cards de Estatisticas
+## 3. Indicadores de Velocidade
 
-No topo do painel, voce encontra 4 cards com informacoes do dia:
+### Grafico de Velocidade
+Na lateral direita do dashboard, um grafico mostra a distribuicao de velocidades das ultimas capturas:
 
-| Card | O que mostra |
-|------|-------------|
-| **Passagens Hoje** | Total de veiculos que passaram pela lombada hoje |
-| **Alertas Hoje** | Quantos estavam acima do limite de velocidade |
-| **Vel. Maxima Hoje** | A maior velocidade registrada hoje |
-| **Limite Configurado** | O limite de velocidade do seu condominio |
+- **Verde (0-20 km/h):** Velocidade adequada
+- **Amarelo (21-30 km/h):** Atencao
+- **Vermelho (acima de 30 km/h):** Acima do limite
 
-Os dados atualizam **automaticamente a cada 30 segundos**.
-
----
-
-## 6. Filtros de Busca
-
-Abaixo dos cards, voce pode filtrar as capturas:
-
-| Filtro | Como usar |
-|--------|-----------|
-| **Data Inicial** | Selecione a data de inicio (por padrao: hoje) |
-| **Data Final** | Selecione a data final (por padrao: hoje) |
-| **Placa** | Digite parte da placa (ex: "RPK" para buscar todas que contem RPK) |
-| **Vel. Min** | Velocidade minima para filtrar |
-| **Vel. Max** | Velocidade maxima para filtrar |
-
-**Botoes:**
-- **Filtrar** — Aplica os filtros selecionados
-- **Limpar** — Volta para os filtros padrao (somente hoje)
-
-**Dica:** Para ver todos os alertas do dia, deixe os filtros padrao e coloque no campo "Vel. Min" o valor do limite (ex: 31).
+### Velocidade Maxima e Media
+- A velocidade maxima registrada no dia e destacada
+- A media geral e exibida nos cards de estatistica
 
 ---
 
-## 7. Tabela de Capturas
+## 4. Ultimas Capturas
 
-A tabela mostra ate **200 registros** com as seguintes colunas:
+A secao principal do dashboard mostra as **10 ultimas capturas** em formato de cards:
 
-| Coluna | Descricao |
-|--------|-----------|
-| **Placa** | Placa do veiculo detectada pela camera |
-| **Velocidade** | Velocidade em km/h (colorida conforme o risco) |
-| **Data/Hora** | Quando o veiculo passou |
-| **Alerta** | Icone de envelope se o e-mail de alerta foi enviado |
+### Informacoes de cada captura:
+- **Foto do veiculo** capturada pela camera
+- **Placa** do veiculo (em destaque)
+- **Velocidade** registrada (com indicador de cor)
+- **Data e hora** da captura
+- **Camera** que registrou
+- **Nome do morador** (se o veiculo estiver cadastrado)
+- **Unidade** (se cadastrado)
 
 ### Cores da velocidade:
+- **Verde:** Abaixo do limite - veiculo trafegando normalmente
+- **Laranja:** Proximo do limite - atencao
+- **Vermelho:** Acima do limite - excesso de velocidade
 
-| Cor | Significado |
-|-----|------------|
-| **Verde** | Dentro do limite — tudo normal |
-| **Laranja** | Levemente acima do limite (ate 20 km/h acima) |
-| **Vermelho** | Muito acima do limite (mais de 20 km/h acima) |
-
-**Para ver mais detalhes:** Clique em qualquer linha da tabela para abrir o modal com foto e informacoes completas.
+### Atualizacao automatica
+As capturas sao atualizadas automaticamente a cada **30 segundos**. O ponto verde pulsante no canto superior direito indica que o sistema esta atualizando.
 
 ---
 
-## 8. Detalhes da Captura (Modal)
+## 5. Status das Cameras
 
-Ao clicar em uma linha da tabela, abre uma janela com:
+Na secao de cameras voce pode verificar:
 
-- **Foto do veiculo** (capturada pela camera)
-- **Placa** do veiculo
-- **Velocidade** registrada
-- **Data e Hora** exatas
-- **Tipo de veiculo** (carro, caminhao, etc.)
-- **Cor do veiculo** detectada
-- **Pixels LPR** (qualidade da leitura da placa)
-- **Status de notificacao** (se o alerta foi enviado)
+- **Camera Online (verde):** A camera esta funcionando normalmente e enviando dados
+- **Camera Offline (vermelho):** A camera nao enviou dados nos ultimos 5 minutos
 
-Para fechar: clique no **X** no canto superior direito ou pressione a tecla **Esc**.
+> Se uma camera aparece como offline, verifique a conexao de internet no local. Se o problema persistir, entre em contato com o suporte tecnico.
 
 ---
 
-## 9. Grafico de Passagens por Hora
+## 6. Gerenciar Veiculos
 
-Na lateral direita, o grafico de barras mostra **quantos veiculos passaram em cada hora do dia**.
+O cadastro de veiculos permite que o sistema identifique os moradores e inclua o nome/unidade nas notificacoes de velocidade.
 
-- O eixo horizontal mostra as horas (0h a 23h)
-- O eixo vertical mostra a quantidade de passagens
-- Barras laranjas indicam horarios com passagens
+### Abrir o modulo de veiculos
+Clique no botao **"Veiculos (X)"** na barra superior (onde X e o total cadastrado).
 
-**Utilidade:** Identifique os horarios de maior movimento para otimizar a seguranca.
+### Aba "Lista"
+Mostra todos os veiculos cadastrados com:
+- **Placa**
+- **Nome do morador**
+- **Unidade**
+- **Marca/modelo**
+- **Cor**
+
+**Funcionalidades:**
+- **Filtrar:** Digite no campo de busca para filtrar por placa, morador, unidade ou marca
+- **Paginacao:** Navega entre as paginas (10 veiculos por pagina)
+- **Excluir:** Clique em "Excluir" para remover um veiculo
+
+### Aba "Cadastrar"
+Para adicionar um veiculo individual:
+
+1. Clique na aba **"Cadastrar"**
+2. Preencha:
+   - **Placa** (obrigatorio) - formato ABC1D23 ou ABC1234
+   - **Nome do Morador** - nome completo do proprietario
+   - **Unidade** - ex: "Bloco A - Apt 101"
+   - **Marca/Modelo** - ex: "Honda Civic"
+   - **Cor** - ex: "Prata"
+3. Clique em **"Cadastrar Veiculo"**
 
 ---
 
-## 10. Ranking de Placas
+## 7. Importar Veiculos por Excel
 
-Abaixo do grafico, voce ve o **Top 8 Placas** — os veiculos que mais passaram nos ultimos 15 dias.
+Para cadastrar muitos veiculos de uma vez, use a importacao por planilha Excel.
 
-Cada item mostra:
-- Posicao no ranking (1 a 8)
-- Placa do veiculo
-- Quantidade de passagens
+### Passo a passo:
 
-**Utilidade:** Identifique veiculos frequentes e potenciais infratores recorrentes.
+1. Clique no botao **"Veiculos"** na barra superior
+2. Clique na aba **"Importar / Exportar"**
+3. Clique em **"Baixar Modelo"** para obter o modelo de planilha
+4. Abra o arquivo modelo no Excel ou Google Sheets
+5. Preencha os dados seguindo as colunas:
+
+| PLACA    | MORADOR        | UNIDADE           | MARCA          | COR    |
+|----------|----------------|-------------------|----------------|--------|
+| ABC1D23  | Joao Silva     | Bloco A - 101     | Honda Civic    | Prata  |
+| XYZ9876  | Maria Santos   | Bloco B - 202     | Toyota Corolla | Branco |
+
+6. Salve o arquivo como **.xlsx**
+7. Volte ao sistema e clique em **"Selecionar Arquivo"**
+8. Escolha o arquivo preenchido
+9. O sistema mostrara um **preview**:
+   - Quantas linhas foram lidas
+   - Quantos veiculos novos serao importados
+   - Quantos ja estao cadastrados (serao ignorados)
+10. Clique em **"Importar X veiculos"** para confirmar
+
+> **Dica:** Veiculos com placa ja cadastrada serao automaticamente ignorados, evitando duplicatas.
 
 ---
 
-## 11. Notificacoes por E-mail
+## 8. Exportar Veiculos para Excel
 
-Quando um veiculo e detectado **acima do limite de velocidade**, o sistema automaticamente:
+Para baixar a lista completa de veiculos em formato Excel:
 
-1. Gera um **relatorio em PDF** (veja secao 12)
-2. Envia um **e-mail de alerta** para todos os e-mails cadastrados
+1. Clique no botao **"Veiculos"** na barra superior
+2. Clique na aba **"Importar / Exportar"**
+3. Clique em **"Exportar Excel"**
+4. O arquivo `.xlsx` sera baixado automaticamente
 
-O e-mail contem:
-- Placa do veiculo
-- Velocidade registrada
-- Limite do condominio
-- Local da lombada
+O arquivo exportado contem todas as colunas: PLACA, MORADOR, UNIDADE, MARCA e COR.
+
+---
+
+## 9. Emails de Alerta
+
+### O que sao
+Quando um veiculo e detectado acima do limite de velocidade, o sistema envia automaticamente um email de alerta para os destinatarios cadastrados.
+
+### Gerenciar destinatarios
+
+Na secao **"Emails de Alerta"** do dashboard:
+
+1. **Adicionar:** Clique em "Adicionar", preencha nome, email e tipo
+2. **Tipos de notificacao:**
+   - **Alerta:** Recebe avisos de excesso de velocidade
+   - **Relatorio:** Recebe relatorios periodicos
+   - **Todos:** Recebe tudo
+3. **Remover:** Clique no botao de remover ao lado do destinatario
+
+### Conteudo do email de alerta
+Cada email de alerta inclui um **PDF anexo** com:
+- Foto do veiculo
+- Placa e velocidade registrada
 - Data e hora
-- **PDF em anexo** com o relatorio completo
-
-**Obs:** Os e-mails sao enviados apenas quando a velocidade **excede** o limite configurado. Passagens dentro do limite nao geram alerta.
-
----
-
-## 12. Relatorio PDF
-
-O PDF de notificacao contem:
-
-1. **Cabecalho** — "NOTIFICACAO ORIENTATIVA" + nome do condominio
-2. **Dados do veiculo** — Placa (em vermelho), nome do morador e unidade (se cadastrados)
-3. **Dados da ocorrencia** — Velocidade (em vermelho), data e hora
-4. **Foto do veiculo** — Imagem capturada pela camera
-5. **Historico** — Ultimas 30 passagens daquela mesma placa (com data, hora e velocidade)
-6. **Rodape** — Assinatura do sistema
-
-**Nota:** Velocidades iguais ou inferiores a 10 km/h sao exibidas como "1" no relatorio (padrao do sistema de lombada).
+- Nome do morador e unidade (se cadastrado)
+- Historico de passagens dos ultimos 30 dias
 
 ---
 
-## 13. Perguntas Frequentes
+## 10. Notificacoes Automaticas
 
-### A camera precisa de internet?
-**Sim.** A camera ALPHADIGI envia os dados via internet (Wi-Fi ou cabo) para o servidor. Sem internet, os dados nao sao transmitidos.
+O sistema funciona de forma totalmente automatica:
 
-### Os dados ficam armazenados por quanto tempo?
-Os dados sao mantidos por **15 dias**. Apos esse periodo, sao automaticamente removidos pelo sistema de limpeza.
+1. A camera detecta o veiculo e le a placa
+2. O sistema registra a passagem com foto e velocidade
+3. Se a velocidade for **acima do limite configurado**:
+   - Gera um PDF com os dados da infracao
+   - Envia email para todos os destinatarios de alerta
+4. O dashboard e atualizado em tempo real
 
-### Posso alterar o limite de velocidade?
-Sim, mas essa alteracao e feita pelo integrador no banco de dados. Entre em contato com ele.
-
-### Posso adicionar mais e-mails de notificacao?
-Sim. O integrador pode cadastrar quantos e-mails forem necessarios na lista de notificacao do seu condominio.
-
-### A placa aparece errada. O que fazer?
-A leitura da placa depende da qualidade da imagem. Placas sujas, danificadas ou com fontes nao-padrao podem ser lidas incorretamente. Isso e uma limitacao da tecnologia LPR.
-
-### Posso ver as capturas pelo celular?
-Sim. O dashboard e responsivo e funciona em qualquer navegador de celular ou tablet.
-
-### Os alertas chegam em tempo real?
-Sim. O e-mail e enviado segundos apos a camera detectar o veiculo acima do limite.
-
-### Como cadastrar os veiculos dos moradores?
-O integrador cadastra os veiculos no sistema. Forneca: placa, nome do morador, bloco/apartamento. Assim, o relatorio mostra o nome do morador na notificacao.
-
-### O que significa "Pixels LPR"?
-E a resolucao em pixels da area da placa na imagem. Quanto maior o numero, melhor a qualidade da leitura. Valores acima de 100 sao considerados bons.
-
-### Quantas cameras posso ter?
-Nao ha limite. Cada camera recebe um token unico e todas enviam dados para o mesmo sistema.
+> **Importante:** O documento PDF e meramente educativo e NAO tem valor de multa oficial. Seu objetivo e conscientizar os moradores sobre o respeito ao limite de velocidade.
 
 ---
 
-## SUPORTE
+## 11. Recuperar Senha
 
-Para suporte tecnico, entre em contato com seu integrador:
+Se voce esqueceu sua senha:
 
-**Protector Sistemas de Seguranca Eletronica**
+1. Na tela de login, clique em **"Esqueci minha senha"**
+2. Digite seu **email cadastrado**
+3. Clique em **"ENVIAR LINK DE RECUPERACAO"**
+4. Verifique seu email (inclusive a caixa de spam)
+5. Clique no link recebido
+6. Defina sua **nova senha** (minimo 6 caracteres)
+7. Faca login com a nova senha
+
+> O link de recuperacao expira apos 24 horas. Se expirar, solicite um novo.
 
 ---
 
-*Manual do Usuario — Protector Lombada Educativa v1.0.0*
+## 12. Perguntas Frequentes (FAQ)
+
+### As capturas ficam armazenadas por quanto tempo?
+As capturas (fotos e registros) ficam armazenadas por **15 dias**. Apos esse periodo, sao removidas automaticamente pelo sistema.
+
+### A velocidade mostrada e precisa?
+A velocidade e medida pelo **radar integrado** a camera ALPHADIGI. A precisao depende da calibracao do equipamento e das condicoes de instalacao.
+
+### Posso cadastrar veiculos de visitantes?
+Sim. Voce pode cadastrar qualquer placa no sistema. Recomendamos preencher o campo "Nome do Morador" com "Visitante" e a unidade com o morador responsavel.
+
+### O sistema funciona 24 horas?
+Sim. O sistema opera 24 horas por dia, 7 dias por semana. As cameras capturam veiculos durante o dia e a noite (com iluminacao infravermelha).
+
+### Por que uma camera aparece como "Offline"?
+Possíveis causas:
+- Queda de energia no local da camera
+- Queda de internet no local
+- Problema na camera (raro)
+
+Aguarde alguns minutos e verifique novamente. Se persistir, contate o suporte.
+
+### Posso acessar o sistema pelo celular?
+Sim. O dashboard e responsivo e funciona em qualquer dispositivo com navegador: computador, tablet ou celular.
+
+### Quantos emails de alerta posso cadastrar?
+Nao ha limite. Voce pode cadastrar quantos destinatarios desejar.
+
+### Como alterar o limite de velocidade?
+O limite de velocidade e configurado pelo administrador do sistema. Entre em contato com a Protector Sistemas para solicitar alteracoes.
+
+### Os dados sao seguros?
+Sim. O sistema utiliza:
+- **Conexao HTTPS** (criptografia em transito)
+- **Autenticacao JWT** (tokens seguros)
+- **Banco de dados isolado** por cliente (cada condominio so ve seus proprios dados)
+- **Politicas de acesso (RLS)** no banco de dados
+
+---
+
+## Suporte
+
+Em caso de duvidas ou problemas:
+
+- **Protector Sistemas**
+- Entre em contato com seu representante comercial
+- Informe o nome do condominio e descreva o problema
+
+---
+
+**Protector Traffic Control** - v1.0.0 | Marco 2026
+*Sistema de Lombada Educativa Inteligente*

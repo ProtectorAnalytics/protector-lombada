@@ -1,574 +1,687 @@
-# Manual Tecnico — Protector Lombada Educativa
-
-**Versao:** 1.0.0
-**Data:** Março 2026
-**Sistema:** Plataforma de Gerenciamento de Lombadas Educativas
+# Manual Tecnico - Protector Traffic Control
+## Lombada Educativa Inteligente
+### Versao 1.0.0 | Build d58093a | Marco 2026
 
 ---
 
-## 1. VISAO GERAL DA ARQUITETURA
+## Sumario
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                   CAMERAS ALPHADIGI                       │
-│              (LPR + Sensor Doppler + LED)                │
-│                                                          │
-│   Camera 1 ──┐    Camera 2 ──┐    Camera N ──┐          │
-└──────────────┼───────────────┼───────────────┼──────────┘
-               │ HTTP POST     │ HTTP POST     │ HTTP POST
-               ▼               ▼               ▼
-┌──────────────────────────────────────────────────────────┐
-│                     VERCEL (Serverless)                    │
-│                                                          │
-│   ┌─────────────────┐   ┌──────────────────┐            │
-│   │  /api/captura.js │   │ /api/cron-limpeza│            │
-│   │  (POST)          │   │ (GET - Cron)     │            │
-│   └────────┬─────────┘   └────────┬─────────┘            │
-│            │                      │                      │
-│   ┌────────┴──────────────────────┴─────────┐            │
-│   │              /lib/                       │            │
-│   │  supabase.js | pdf-generator.js          │            │
-│   │  email-sender.js                         │            │
-│   └──────────────────────────────────────────┘            │
-│                                                          │
-│   ┌─────────────────┐   ┌──────────────────┐            │
-│   │  /api/config.js  │   │ /dashboard/      │            │
-│   │  (GET - publico) │   │  index.html      │            │
-│   └─────────────────┘   └──────────────────┘            │
-└────────────────────────┬─────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│                      SUPABASE                             │
-│                                                          │
-│   ┌──────────┐  ┌───────────┐  ┌──────────────┐        │
-│   │ PostgreSQL│  │  Storage   │  │  Auth         │        │
-│   │ (Banco)  │  │  (Fotos)   │  │  (Login)      │        │
-│   │          │  │            │  │               │        │
-│   │ clientes │  │ capturas-  │  │ email+senha   │        │
-│   │ cameras  │  │ fotos/     │  │ → user_id     │        │
-│   │ veiculos │  │            │  │               │        │
-│   │ capturas │  │            │  │               │        │
-│   └──────────┘  └───────────┘  └──────────────┘        │
-│                                                          │
-│   RLS: Cada cliente so ve seus proprios dados            │
-└──────────────────────────────────────────────────────────┘
-```
+1. [Visao Geral da Arquitetura](#1-visao-geral-da-arquitetura)
+2. [Stack Tecnologica](#2-stack-tecnologica)
+3. [Variaveis de Ambiente](#3-variaveis-de-ambiente)
+4. [Banco de Dados (Supabase)](#4-banco-de-dados-supabase)
+5. [Cadastrar Novo Cliente](#5-cadastrar-novo-cliente)
+6. [Cadastrar Usuarios](#6-cadastrar-usuarios)
+7. [Cadastrar Cameras](#7-cadastrar-cameras)
+8. [Configurar Camera Fisica (ALPHADIGI)](#8-configurar-camera-fisica-alphadigi)
+9. [Configurar Destinatarios de Email](#9-configurar-destinatarios-de-email)
+10. [Fluxo de Captura (Pipeline)](#10-fluxo-de-captura-pipeline)
+11. [Geracao de PDF e Notificacao](#11-geracao-de-pdf-e-notificacao)
+12. [Endpoints da API](#12-endpoints-da-api)
+13. [Deploy e Infraestrutura](#13-deploy-e-infraestrutura)
+14. [Cron Jobs (Limpeza Automatica)](#14-cron-jobs-limpeza-automatica)
+15. [Troubleshooting](#15-troubleshooting)
 
 ---
 
-## 2. ESTRUTURA DE ARQUIVOS
+## 1. Visao Geral da Arquitetura
 
 ```
-protector-lombada/
-├── api/
-│   ├── captura.js          # Endpoint principal - recebe dados da camera
-│   ├── config.js           # Serve credenciais publicas do Supabase
-│   └── cron-limpeza.js     # Limpeza automatica de dados > 15 dias
-├── lib/
-│   ├── supabase.js         # Cliente Supabase + funcoes helper
-│   ├── pdf-generator.js    # Geracao de PDF de notificacao (pdfkit)
-│   └── email-sender.js     # Envio de e-mail SMTP (nodemailer)
-├── dashboard/
-│   └── index.html          # Dashboard SPA (HTML+CSS+JS inline)
-├── sql/
-│   └── schema.sql          # Schema completo do banco de dados
-├── scripts/
-│   ├── setup-supabase.js   # Setup automatico do Supabase
-│   └── test-captura.sh     # Script de teste via cURL
-├── docs/
-│   ├── MANUAL_TECNICO.md   # Este arquivo
-│   ├── MANUAL_USUARIO.md   # Manual do usuario final
-│   └── IMPLANTACAO.md      # Guia rapido de implantacao
-├── .env.example            # Modelo de variaveis de ambiente
-├── .gitignore
-├── package.json
-└── vercel.json             # Configuracao de deploy + cron
+┌─────────────────────┐     ┌──────────────────────────────┐
+│  Camera ALPHADIGI   │────>│  Vercel Serverless (API)     │
+│  (LPR - Leitura de  │     │  POST /api/captura           │
+│   Placas + Radar)   │     │                              │
+└─────────────────────┘     │  ┌────────────────────────┐  │
+                            │  │ Validacao do Token      │  │
+                            │  │ Rate Limiting (120/min) │  │
+                            │  │ Normalizacao de Dados   │  │
+                            │  │ Upload de Foto          │  │
+                            │  │ Registro da Captura     │  │
+                            │  │ Geracao de PDF          │  │
+                            │  │ Envio de Email          │  │
+                            │  └────────────────────────┘  │
+                            └──────────┬───────────────────┘
+                                       │
+                            ┌──────────▼───────────────────┐
+                            │  Supabase                     │
+                            │  - PostgreSQL (dados)         │
+                            │  - Auth (autenticacao)        │
+                            │  - Storage (fotos capturas)   │
+                            └──────────┬───────────────────┘
+                                       │
+                            ┌──────────▼───────────────────┐
+                            │  Dashboard Web                │
+                            │  /dashboard/ (clientes)       │
+                            │  /admin/ (super_admin)        │
+                            └───────────────────────────────┘
 ```
 
 ---
 
-## 3. BANCO DE DADOS
+## 2. Stack Tecnologica
 
-### 3.1 Diagrama de Tabelas
-
-```
-┌─────────────┐       ┌────────────┐
-│   clientes   │──────<│   cameras   │
-│──────────────│  1:N  │────────────│
-│ id (PK)      │       │ id (PK)    │
-│ user_id (FK) │       │ cliente_id │
-│ nome         │       │ nome       │
-│ local_via    │       │ token (UQ) │
-│ cidade_uf    │       │ ativa      │
-│ limite_vel.  │       └────────────┘
-│ emails_notif.│              │
-│ ativo        │              │ 1:N
-└──────┬───────┘              │
-       │ 1:N                  │
-       │                ┌─────▼──────┐
-┌──────▼───────┐       │  capturas   │
-│   veiculos   │       │────────────│
-│──────────────│       │ id (PK)    │
-│ id (PK)      │       │ camera_id  │
-│ cliente_id   │       │ cliente_id │
-│ placa        │       │ placa      │
-│ nome_morador │       │ velocidade │
-│ unidade      │       │ foto_path  │
-│ ativo        │       │ timestamp  │
-└──────────────┘       │ notificado │
-                       └────────────┘
-```
-
-### 3.2 Tabela: clientes
-
-| Coluna | Tipo | Descricao |
-|--------|------|-----------|
-| id | UUID (PK) | Identificador unico |
-| user_id | UUID (FK → auth.users) | Vinculo com Supabase Auth |
-| nome | TEXT | Nome do condominio |
-| local_via | TEXT | Local/via da lombada |
-| cidade_uf | TEXT | Cidade e UF |
-| cep | TEXT | CEP |
-| endereco | TEXT | Endereco completo |
-| limite_velocidade | INT | Limite em km/h (default: 30) |
-| emails_notificacao | TEXT[] | Array de e-mails para alertas |
-| logo_url | TEXT | URL do logo (para PDF) |
-| ativo | BOOLEAN | Cliente ativo |
-| criado_em | TIMESTAMPTZ | Data de criacao |
-
-### 3.3 Tabela: cameras
-
-| Coluna | Tipo | Descricao |
-|--------|------|-----------|
-| id | UUID (PK) | Identificador unico |
-| cliente_id | UUID (FK) | Cliente proprietario |
-| nome | TEXT | Nome da camera |
-| token | TEXT (UNIQUE) | Token de autenticacao da API |
-| ativa | BOOLEAN | Camera ativa |
-| criado_em | TIMESTAMPTZ | Data de criacao |
-
-### 3.4 Tabela: veiculos
-
-| Coluna | Tipo | Descricao |
-|--------|------|-----------|
-| id | UUID (PK) | Identificador unico |
-| cliente_id | UUID (FK) | Cliente proprietario |
-| placa | TEXT | Placa do veiculo |
-| nome_morador | TEXT | Nome do morador |
-| unidade | TEXT | Bloco/Apartamento |
-| marca | TEXT | Marca/modelo |
-| cor | TEXT | Cor do veiculo |
-| ativo | BOOLEAN | Veiculo ativo |
-
-### 3.5 Tabela: capturas
-
-| Coluna | Tipo | Descricao |
-|--------|------|-----------|
-| id | UUID (PK) | Identificador unico |
-| camera_id | UUID (FK) | Camera que capturou |
-| cliente_id | UUID (FK) | Cliente |
-| placa | TEXT | Placa detectada (LPR) |
-| velocidade | INT | Velocidade em km/h |
-| pixels | INT | Pixels LPR |
-| tipo_veiculo | TEXT | Tipo (car, truck, etc) |
-| cor_veiculo | TEXT | Cor detectada |
-| foto_path | TEXT | Caminho no Storage |
-| timestamp | TIMESTAMPTZ | Data/hora da captura |
-| notificado | BOOLEAN | E-mail enviado? |
-| notificado_em | TIMESTAMPTZ | Quando foi notificado |
-
-### 3.6 Indices
-
-- `idx_cameras_token` — Busca rapida por token na autenticacao
-- `idx_capturas_timestamp` — Ordenacao das capturas (mais recentes primeiro)
-- `idx_capturas_placa` — Busca por placa
-- `idx_capturas_cliente_id` — Filtro por cliente
-- `idx_clientes_user_id` — Vinculo Auth → Cliente
-
-### 3.7 Row Level Security (RLS)
-
-Todas as tabelas possuem RLS ativado. As policies garantem que:
-
-- **clientes**: `SELECT` onde `auth.uid() = user_id`
-- **cameras**: `SELECT` onde `cliente_id` pertence ao usuario logado
-- **veiculos**: `SELECT` onde `cliente_id` pertence ao usuario logado
-- **capturas**: `SELECT` onde `cliente_id` pertence ao usuario logado
-
-A API serverless usa `SUPABASE_SERVICE_KEY` (service role) que **bypassa** o RLS — necessario para as operacoes de escrita vindas das cameras.
+| Componente         | Tecnologia                              |
+|--------------------|-----------------------------------------|
+| Backend            | Node.js (Vercel Serverless Functions)   |
+| Banco de Dados     | Supabase (PostgreSQL)                   |
+| Autenticacao       | Supabase Auth (JWT)                     |
+| Armazenamento      | Supabase Storage (bucket `capturas-fotos`) |
+| Frontend Dashboard | HTML/CSS/JS (SPA vanilla)               |
+| PDF                | PDFKit (server-side)                    |
+| Email              | Nodemailer (SMTP ou Gmail)              |
+| Deploy             | Vercel                                  |
+| Camera             | ALPHADIGI LPR (protocolo HTTP/JSON)     |
 
 ---
 
-## 4. API — ENDPOINTS
+## 3. Variaveis de Ambiente
 
-### 4.1 POST /api/captura
+Configurar no painel do Vercel em **Settings > Environment Variables**:
 
-**Funcao:** Recebe dados de captura da camera ALPHADIGI.
+### Obrigatorias
 
-**Autenticacao:** Query param `?token=TOKEN_DA_CAMERA`
+| Variavel            | Descricao                                    | Exemplo                              |
+|---------------------|----------------------------------------------|--------------------------------------|
+| `SUPABASE_URL`      | URL do projeto Supabase                      | `https://abc123.supabase.co`         |
+| `SUPABASE_SERVICE_KEY` | Service Role Key (acesso admin)           | `eyJhbGciOiJI...`                    |
+| `SUPABASE_ANON_KEY` | Anon Key (acesso publico, usado no frontend) | `eyJhbGciOiJI...`                    |
+| `CRON_SECRET`       | Token para autenticar cron jobs              | `uuid-v4-aleatorio`                  |
 
-**Content-Types aceitos:**
-- `application/json`
-- `multipart/form-data`
-- `application/x-www-form-urlencoded`
+### Email (SMTP - cPanel/Hosting)
 
-**Campos esperados:**
+| Variavel     | Descricao          | Exemplo                   |
+|--------------|--------------------| --------------------------|
+| `SMTP_HOST`  | Servidor SMTP      | `mail.seudominio.com.br`  |
+| `SMTP_PORT`  | Porta              | `465`                     |
+| `SMTP_SECURE`| SSL/TLS            | `true`                    |
+| `SMTP_USER`  | Email do remetente | `alerta@seudominio.com.br`|
+| `SMTP_PASS`  | Senha do email     | `suaSenha123`             |
 
-| Campo | Alternativas | Tipo | Obrigatorio |
-|-------|-------------|------|-------------|
-| plate | placa | string | Sim |
-| speed | velocidade | string/int | Sim |
-| time | timestamp | string (datetime) | Nao (usa now()) |
-| pixels | pixels | string/int | Nao |
-| vehicleType | tipo_veiculo | string | Nao |
-| vehicleColor | cor_veiculo | string | Nao |
-| imageBase64 | image, foto | string (base64) | Nao |
+### Email (Alternativa Gmail)
 
-**Fluxo interno:**
+| Variavel             | Descricao                    | Exemplo                 |
+|----------------------|------------------------------|-------------------------|
+| `GMAIL_USER`         | Conta Gmail                  | `seu@gmail.com`         |
+| `GMAIL_APP_PASSWORD` | Senha de App (16 caracteres) | `abcd efgh ijkl mnop`  |
 
+> **Nota:** Para Gmail, gerar senha de app em: Google Account > Seguranca > Senhas de app
+
+---
+
+## 4. Banco de Dados (Supabase)
+
+### Tabelas Principais
+
+#### `clientes`
+| Coluna               | Tipo       | Descricao                                |
+|----------------------|------------|------------------------------------------|
+| `id`                 | UUID (PK)  | Identificador unico                      |
+| `user_id`            | UUID (FK)  | Referencia ao auth.users (admin_cliente)  |
+| `nome`               | TEXT        | Nome do condominio/empresa               |
+| `local_via`          | TEXT        | Rua/via onde a lombada esta instalada    |
+| `cidade_uf`          | TEXT        | Cidade/UF                                |
+| `cep`                | TEXT        | CEP                                      |
+| `endereco`           | TEXT        | Endereco completo                        |
+| `limite_velocidade`  | INTEGER     | Limite em km/h (padrao: 30)              |
+| `cnpj`               | TEXT        | CNPJ do cliente                          |
+| `telefone`           | TEXT        | Telefone de contato                      |
+| `contato_nome`       | TEXT        | Nome do contato principal                |
+| `pdf_titulo`         | TEXT        | Titulo personalizado no PDF              |
+| `pdf_subtitulo`      | TEXT        | Subtitulo no PDF                         |
+| `pdf_rodape`         | TEXT        | Rodape no PDF                            |
+| `pdf_logo_url`       | TEXT        | URL do logotipo para o PDF               |
+| `notif_auto_ativa`   | BOOLEAN     | Notificacoes automaticas ativas          |
+| `ativo`              | BOOLEAN     | Se o cliente esta ativo                  |
+
+#### `usuarios`
+| Coluna      | Tipo       | Descricao                                     |
+|-------------|------------|-----------------------------------------------|
+| `id`        | UUID (PK)  | Identificador unico                           |
+| `auth_id`   | UUID (FK)  | Referencia ao auth.users                      |
+| `cliente_id`| UUID (FK)  | Cliente vinculado                             |
+| `nome`      | TEXT        | Nome do usuario                               |
+| `email`     | TEXT        | Email                                         |
+| `role`      | TEXT        | `super_admin`, `admin_cliente`, ou `operador`  |
+| `ativo`     | BOOLEAN     | Se o usuario esta ativo                       |
+
+#### `cameras`
+| Coluna           | Tipo       | Descricao                          |
+|------------------|------------|------------------------------------|
+| `id`             | UUID (PK)  | Identificador unico                |
+| `cliente_id`     | UUID (FK)  | Cliente vinculado                  |
+| `nome`           | TEXT        | Nome descritivo (ex: "Entrada A")  |
+| `token`          | TEXT (UNIQUE)| Token de autenticacao (32 hex)   |
+| `serial_number`  | TEXT        | Numero de serie da camera (fallback)|
+| `ativa`          | BOOLEAN     | Se a camera esta ativa             |
+| `last_seen`      | TIMESTAMP   | Ultima comunicacao                 |
+| `last_capture_id`| UUID        | Ultima captura registrada          |
+
+#### `veiculos`
+| Coluna         | Tipo       | Descricao                      |
+|----------------|------------|--------------------------------|
+| `id`           | UUID (PK)  | Identificador unico            |
+| `cliente_id`   | UUID (FK)  | Cliente vinculado              |
+| `placa`        | TEXT        | Placa do veiculo (uppercase)   |
+| `nome_morador` | TEXT        | Nome do proprietario/morador   |
+| `unidade`      | TEXT        | Unidade/apartamento            |
+| `marca`        | TEXT        | Marca/modelo do veiculo        |
+| `cor`          | TEXT        | Cor do veiculo                 |
+| `ativo`        | BOOLEAN     | Se o registro esta ativo       |
+
+#### `capturas`
+| Coluna         | Tipo       | Descricao                          |
+|----------------|------------|------------------------------------|
+| `id`           | UUID (PK)  | Identificador unico                |
+| `camera_id`    | UUID (FK)  | Camera que realizou a captura      |
+| `cliente_id`   | UUID (FK)  | Cliente vinculado                  |
+| `placa`        | TEXT        | Placa detectada                    |
+| `velocidade`   | INTEGER     | Velocidade registrada (km/h)       |
+| `pixels`       | INTEGER     | Nivel de confianca (0-200)         |
+| `tipo_veiculo` | TEXT        | Tipo detectado                     |
+| `cor_veiculo`  | TEXT        | Cor detectada                      |
+| `foto_path`    | TEXT        | Caminho no Storage                 |
+| `timestamp`    | TIMESTAMP   | Data/hora da captura               |
+| `notificado`   | BOOLEAN     | Se a notificacao foi enviada       |
+| `notificado_em`| TIMESTAMP   | Data/hora do envio da notificacao  |
+
+#### `email_destinatarios`
+| Coluna       | Tipo       | Descricao                                    |
+|--------------|------------|----------------------------------------------|
+| `id`         | UUID (PK)  | Identificador unico                          |
+| `cliente_id` | UUID (FK)  | Cliente vinculado                            |
+| `nome`       | TEXT        | Nome do destinatario                         |
+| `email`      | TEXT        | Email                                        |
+| `tipo`       | TEXT        | `alerta`, `relatorio`, ou `todos`            |
+| `ativo`      | BOOLEAN     | Se esta ativo                                |
+
+---
+
+## 5. Cadastrar Novo Cliente
+
+### Passo a Passo
+
+#### 5.1. Acesse o Painel Admin
+1. Abra `https://seudominio.vercel.app/admin`
+2. Faca login com credenciais de **super_admin**
+
+#### 5.2. Crie o Cliente
+1. Na secao **Clientes**, clique em **"Novo Cliente"**
+2. Preencha os campos:
+   - **Nome**: Nome do condominio/empresa (ex: "Condominio Jardim das Flores")
+   - **Local/Via**: Via onde a lombada esta instalada (ex: "Rua das Palmeiras")
+   - **Cidade/UF**: (ex: "Sao Paulo/SP")
+   - **Limite de Velocidade**: Velocidade maxima em km/h (padrao: 30)
+   - **CNPJ**: CNPJ do cliente
+   - **Telefone**: Telefone de contato
+   - **Contato**: Nome do responsavel
+3. Clique em **"Salvar"**
+4. Anote o **ID do cliente** gerado (UUID)
+
+#### 5.3. Via API (alternativa)
+```bash
+curl -X POST https://seudominio.vercel.app/api/admin/clientes \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nome": "Condominio Jardim das Flores",
+    "local_via": "Rua das Palmeiras",
+    "cidade_uf": "Sao Paulo/SP",
+    "limite_velocidade": 30,
+    "cnpj": "12345678000199",
+    "telefone": "11999887766",
+    "contato_nome": "Carlos Silva"
+  }'
 ```
-1. Validar token → buscar camera + cliente
-2. Parsear body (auto-detecta formato)
-3. Normalizar campos (uppercase placa, parseInt speed)
-4. Se tem foto: decodificar base64 → upload ao Storage
-5. Inserir registro na tabela capturas
-6. Se velocidade > limite:
-   a. Buscar dados do veiculo (nome_morador, unidade)
-   b. Buscar ultimas 30 passagens da mesma placa
-   c. Gerar PDF de notificacao
-   d. Enviar e-mail com PDF em anexo
-   e. Marcar captura como notificada
-7. Retornar { ok: true, id: uuid }
+
+---
+
+## 6. Cadastrar Usuarios
+
+### Roles (Papeis)
+
+| Role            | Permissoes                                             |
+|-----------------|--------------------------------------------------------|
+| `super_admin`   | Acesso total: todos os clientes, cameras, usuarios     |
+| `admin_cliente` | Gerencia 1 cliente: cameras, veiculos, emails, capturas|
+| `operador`      | Somente visualizacao do dashboard do cliente           |
+
+### 6.1. Criar Usuario Admin do Cliente
+
+1. No painel admin, secao **Usuarios**
+2. Clique em **"Novo Usuario"**
+3. Preencha:
+   - **Email**: email do usuario
+   - **Senha**: minimo 6 caracteres
+   - **Nome**: nome completo
+   - **Cliente**: selecione o cliente associado
+   - **Role**: selecione `admin_cliente`
+4. Clique em **"Criar"**
+
+> **Importante:** O primeiro usuario `admin_cliente` de um cliente sera automaticamente vinculado como administrador principal daquele cliente.
+
+### 6.2. Via API
+```bash
+curl -X POST https://seudominio.vercel.app/api/admin/usuarios \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@condominio.com",
+    "senha": "senha123",
+    "nome": "Carlos Silva",
+    "cliente_id": "UUID_DO_CLIENTE",
+    "role": "admin_cliente"
+  }'
 ```
 
-**Respostas:**
+### 6.3. Criar Operadores Adicionais
+Repita o processo com role `operador` para usuarios que precisam apenas visualizar o dashboard.
 
-| HTTP | Corpo | Situacao |
-|------|-------|----------|
-| 200 | `{ ok: true, id: "uuid" }` | Captura salva |
-| 400 | `{ error: "Placa nao fornecida" }` | Dados invalidos |
-| 401 | `{ error: "Token invalido" }` | Token nao encontrado |
-| 403 | `{ error: "Cliente inativo" }` | Cliente desativado |
-| 405 | `{ error: "Metodo nao permitido" }` | Nao e POST |
-| 500 | `{ error: "Erro interno" }` | Erro no servidor |
+---
 
-### 4.2 GET /api/config
+## 7. Cadastrar Cameras
 
-**Funcao:** Retorna credenciais publicas do Supabase para o dashboard.
+### 7.1. Pelo Painel Admin
 
-**Autenticacao:** Nenhuma (dados publicos por design — anon key).
+1. Na secao **Cameras**, clique em **"Nova Camera"**
+2. Selecione o **cliente**
+3. Informe o **nome** descritivo (ex: "Camera Entrada Principal")
+4. Clique em **"Criar"**
+5. **COPIE O TOKEN GERADO** - ele sera exibido apenas uma vez
+
+> **IMPORTANTE:** O token e gerado automaticamente (32 caracteres hexadecimais). Guarde-o em local seguro. Este token sera configurado na camera fisica.
+
+### 7.2. Via API
+```bash
+curl -X POST https://seudominio.vercel.app/api/admin/cameras \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cliente_id": "UUID_DO_CLIENTE",
+    "nome": "Camera Entrada Principal"
+  }'
+```
 
 **Resposta:**
 ```json
 {
-  "supabaseUrl": "https://xxx.supabase.co",
-  "supabaseAnonKey": "eyJ..."
+  "id": "uuid-da-camera",
+  "nome": "Camera Entrada Principal",
+  "token": "a1b2c3d4e5f6...32chars",
+  "ativa": true
 }
 ```
 
-### 4.3 GET /api/cron-limpeza
-
-**Funcao:** Deleta capturas com mais de 15 dias e suas fotos.
-
-**Autenticacao:** Header `Authorization: Bearer CRON_SECRET`
-
-**Fluxo interno:**
-1. Verificar header de autorizacao
-2. Buscar capturas com `timestamp < now() - 15 dias` (lote de 100)
-3. Deletar fotos do Storage
-4. Deletar registros do banco
-5. Repetir ate zerar ou atingir 1000 registros
-6. Retornar contagem de deletados
-
-**Cron Schedule:** `0 6 * * *` (diariamente as 06:00 UTC = 03:00 BRT)
-
-**Resposta:**
-```json
-{
-  "ok": true,
-  "deletados": 47,
-  "timestamp": "2026-03-10T06:00:01.234Z"
-}
-```
+### 7.3. Formato do Token
+- 32 caracteres hexadecimais (gerado via `crypto.randomBytes(16)`)
+- Unico por camera
+- Imutavel apos criacao
+- Usado na URL de envio de capturas
 
 ---
 
-## 5. GERACAO DE PDF
+## 8. Configurar Camera Fisica (ALPHADIGI)
 
-### 5.1 Layout
+### 8.1. Acesse a Interface da Camera
 
-O PDF replica o formato da notificacao do IN IOT:
+1. Conecte-se a camera via navegador (IP local da camera)
+2. Acesse **Configuracoes > Rede > Servidor HTTP**
 
-```
-┌──────────────────────────────────────┐
-│  NOTIFICACAO ORIENTATIVA (vermelho)  │
-│  Transitar em velocidade superior... │
-│  [NOME DO CONDOMINIO] (negrito)      │
-│  [LOCAL_VIA] - [CIDADE_UF]          │
-│  Lombada Educativa (laranja)         │
-├──────────────────────────────────────┤
-│ PLACA VEICULO  │ MORADOR │ UNIDADE  │
-│ RPK5F09 (verm) │ Joao    │ Bl.A 101 │
-├──────────────────────────────────────┤
-│ VELOCIDADE  │ DATA      │ HORA     │
-│ 55 km/h     │ 21/03/2025│ 14:57:02 │
-│ (vermelho)  │ (negrito) │ (negrito)│
-├──────────────────────────────────────┤
-│                                      │
-│        [FOTO DO VEICULO]             │
-│        (largura total)               │
-│                                      │
-├──────────────────────────────────────┤
-│ "Velocidades <= 10km/h registradas   │
-│  como 1 neste relatorio."           │
-│                                      │
-│ [NOME DO CONDOMINIO]                 │
-│ Ultimas passagens / Velocidades      │
-├──┬──┬──┬──┬──┬──┬──┬──┬──┬──┤
-│DT│DT│DT│DT│DT│DT│DT│DT│DT│DT│  Grid
-│HR│HR│HR│HR│HR│HR│HR│HR│HR│HR│  10 cols
-│VL│VL│VL│VL│VL│VL│VL│VL│VL│VL│  x linhas
-├──┴──┴──┴──┴──┴──┴──┴──┴──┴──┤
-│ Sistema de monitoramento |    │
-│ Protector Sistemas de Seg.   │
-└──────────────────────────────────────┘
-```
+### 8.2. Configure o Endpoint de Envio
 
-### 5.2 Cores
+| Campo             | Valor                                                      |
+|-------------------|------------------------------------------------------------|
+| **Protocolo**     | HTTPS                                                      |
+| **Metodo**        | POST                                                       |
+| **URL de Destino**| `https://seudominio.vercel.app/api/captura?token=SEU_TOKEN`|
+| **Content-Type**  | `application/json`                                         |
+| **Porta**         | 443                                                        |
 
-- Placa e velocidade: **#CC0000** (vermelho)
-- Titulo "Lombada Educativa": **#FF6B00** (laranja)
-- Headers de tabela: **#666666** (cinza)
-- Velocidade no historico acima do limite: **#CC0000**
-- Bordas do grid: **#CCCCCC**
+### 8.3. Formato do Payload Esperado (AlarmInfoPlate)
 
-### 5.3 Regra especial
-
-Velocidades <= 10 km/h sao registradas como **1** no PDF.
-
----
-
-## 6. E-MAIL (SMTP)
-
-### 6.1 Configuracao
-
-O sistema suporta dois modos de SMTP:
-
-**Modo cPanel/Hospedagem (recomendado):**
-```
-SMTP_HOST=mail.seudominio.com.br
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=alerta@seudominio.com.br
-SMTP_PASS=senha
-```
-
-**Modo Gmail:**
-```
-GMAIL_USER=email@gmail.com
-GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
-```
-
-Se `SMTP_HOST` esta definido, usa SMTP generico. Senao, usa Gmail.
-
-### 6.2 Formato do E-mail
-
-- **From:** "Protector Lombada" <email_configurado>
-- **To:** Lista de emails_notificacao do cliente
-- **Subject:** "Alerta de Velocidade - [PLACA] - [CONDOMINIO]"
-- **Body:** HTML com tabela de resumo (placa, velocidade, limite, local, data, hora)
-- **Anexo:** PDF de notificacao
-
-### 6.3 Limites
-
-- Gmail gratuito: ~500 e-mails/dia
-- cPanel: depende da hospedagem (geralmente 500-2000/dia)
-
----
-
-## 7. DASHBOARD
-
-### 7.1 Tecnologia
-
-SPA (Single Page Application) em HTML+CSS+JS puro, sem framework.
-Supabase JS SDK carregado via CDN.
-
-### 7.2 Autenticacao
-
-1. Tela de login com e-mail/senha
-2. Supabase Auth valida credenciais
-3. Busca cliente via `user_id = auth.uid()`
-4. Se nao encontrar cliente vinculado, rejeita login
-
-### 7.3 Componentes
-
-| Componente | Descricao |
-|------------|-----------|
-| Stats Cards | 4 cards: passagens hoje, alertas hoje, vel. maxima, limite |
-| Filtros | Data inicial/final, placa, vel. min/max |
-| Tabela | 200 registros, scroll, velocidade color-coded |
-| Modal | Foto + todos os dados ao clicar na linha |
-| Grafico | Barras: passagens por hora (Canvas API) |
-| Ranking | Top 8 placas dos ultimos 15 dias |
-
-### 7.4 Cores da velocidade na tabela
-
-| Cor | Condicao |
-|-----|----------|
-| Verde (#00c853) | Velocidade <= limite |
-| Laranja (#ff9800) | Limite+1 ate limite+20 |
-| Vermelho (#ff1744) | > limite+20 |
-
-### 7.5 Polling
-
-Atualizacao automatica a cada **30 segundos** via `setInterval`.
-
----
-
-## 8. SEGURANCA
-
-### 8.1 Autenticacao
-
-| Acesso | Metodo |
-|--------|--------|
-| Camera → API | Token unico por camera (query param) |
-| Usuario → Dashboard | Supabase Auth (email + senha) |
-| Cron → Limpeza | Bearer token (CRON_SECRET) |
-
-### 8.2 Isolamento de dados
-
-- **RLS (Row Level Security)**: Cada cliente so ve seus dados
-- **Service Key**: Usada apenas no backend (nunca exposta ao frontend)
-- **Anon Key**: Usada no dashboard (segura pois RLS protege os dados)
-
-### 8.3 Storage
-
-- Bucket **privado** (nao publico)
-- Fotos acessadas via **signed URLs** (expiracao de 5 minutos)
-- Caminho inclui `cliente_id` para organizacao
-
----
-
-## 9. VARIAVEIS DE AMBIENTE
-
-| Variavel | Descricao | Obrigatoria |
-|----------|-----------|-------------|
-| SUPABASE_URL | URL do projeto Supabase | Sim |
-| SUPABASE_SERVICE_KEY | Service role key (backend) | Sim |
-| SUPABASE_ANON_KEY | Anon key (frontend) | Sim |
-| SMTP_HOST | Host SMTP (cPanel) | Sim* |
-| SMTP_PORT | Porta SMTP (465 ou 587) | Sim* |
-| SMTP_SECURE | true para SSL (465) | Sim* |
-| SMTP_USER | E-mail remetente | Sim |
-| SMTP_PASS | Senha do e-mail | Sim |
-| CRON_SECRET | Secret para autenticar o cron | Sim |
-
-*Se usar Gmail, defina apenas GMAIL_USER e GMAIL_APP_PASSWORD.
-
----
-
-## 10. DEPLOY E INFRAESTRUTURA
-
-### 10.1 Vercel
-
-- **Plano:** Free ou Pro
-- **Funcoes:** Node.js serverless (maxDuration: 30s para captura)
-- **Static:** Dashboard servido como arquivo estatico
-- **Cron:** Configurado no vercel.json (diario as 06:00 UTC)
-- **Dominio:** Customizavel via Vercel Dashboard
-
-### 10.2 Supabase
-
-- **Plano:** Free (500MB banco, 1GB storage, 50k auth users)
-- **Regiao:** Recomendado: South America (sa-east-1) ou mais proximo
-- **Backup:** Automatico (diario, retencao 7 dias no plano Free)
-
-### 10.3 Limites do Free Tier
-
-| Recurso | Limite Vercel Free | Limite Supabase Free |
-|---------|-------------------|---------------------|
-| Funcoes | 100GB-hrs/mes | N/A |
-| Storage | N/A | 1GB |
-| Banco | N/A | 500MB |
-| Bandwidth | 100GB/mes | 5GB/mes |
-| Cron | 1x/dia max | N/A |
-
----
-
-## 11. MANUTENCAO
-
-### 11.1 Adicionar novo cliente
-
-1. Criar usuario no Supabase Auth
-2. Inserir na tabela `clientes` com `user_id`
-3. Inserir camera(s) com token(s) unico(s)
-4. Configurar e-mails de notificacao
-5. Cadastrar veiculos (opcional)
-6. Configurar camera ALPHADIGI com URL + token
-
-### 11.2 Adicionar nova camera
-
-```sql
-INSERT INTO cameras (cliente_id, nome, token)
-VALUES ('uuid-do-cliente', 'Camera Saida', 'token-unico-hex');
-```
-
-### 11.3 Alterar limite de velocidade
-
-```sql
-UPDATE clientes SET limite_velocidade = 20 WHERE id = 'uuid';
-```
-
-### 11.4 Monitoramento
-
-- **Logs Vercel:** Dashboard Vercel → Functions → Logs
-- **Banco:** Supabase Dashboard → Table Editor
-- **Storage:** Supabase Dashboard → Storage → capturas-fotos
-- **E-mails:** Verificar caixa de saida do SMTP configurado
-
-### 11.5 Troubleshooting
-
-| Problema | Solucao |
-|----------|---------|
-| Camera nao envia dados | Verificar URL + token na camera. Testar com curl |
-| E-mail nao chega | Verificar SMTP_HOST, porta, credenciais. Testar envio manual |
-| Dashboard nao carrega | Verificar /api/config retorna JSON valido |
-| Dados nao aparecem | Verificar RLS policies e vinculo user_id |
-| Foto nao aparece no modal | Verificar bucket existe e foto_path esta correto |
-| Cron nao executa | Verificar plano Vercel e CRON_SECRET |
-
----
-
-## 12. FORMATO DE DADOS DA CAMERA ALPHADIGI
-
-### 12.1 Exemplo de payload JSON
+A camera ALPHADIGI envia automaticamente neste formato:
 
 ```json
 {
-  "plate": "RPK5F09",
-  "speed": "20",
-  "time": "2025-03-21 14:57:02",
-  "pixels": "194",
-  "vehicleType": "car",
-  "vehicleColor": "silver",
-  "imageBase64": "/9j/4AAQSkZJRg..."
+  "AlarmInfoPlate": {
+    "serialno": "NUMERO_SERIE_CAMERA",
+    "result": {
+      "PlateResult": {
+        "license": "ABC1D23",
+        "confidence": 194,
+        "carColor": "silver",
+        "type": "car",
+        "speed": 45,
+        "radarSpeed": {
+          "Speed": {
+            "PerHour": 45
+          }
+        },
+        "imageFile": "data:image/jpeg;base64,/9j/4AAQ..."
+      }
+    }
+  }
 }
 ```
 
-### 12.2 Mapeamento de campos
+### 8.4. Autenticacao da Camera
 
-A API aceita nomes em ingles (padrao ALPHADIGI) e portugues:
+**Metodo primario:** Token na URL
+```
+POST /api/captura?token=a1b2c3d4e5f6...
+```
 
-| ALPHADIGI | Alternativa PT | Campo no banco |
-|-----------|---------------|----------------|
-| plate | placa | placa |
-| speed | velocidade | velocidade |
-| time | timestamp | timestamp |
-| pixels | pixels | pixels |
-| vehicleType | tipo_veiculo | tipo_veiculo |
-| vehicleColor | cor_veiculo | cor_veiculo |
-| imageBase64 | image, foto | foto_path (storage) |
+**Metodo secundario (fallback):** Numero de serie
+- Se o token nao for fornecido, o sistema busca pelo campo `serialno` no payload
+- O numero de serie deve estar cadastrado no campo `serial_number` da tabela `cameras`
+- Para usar este metodo, edite a camera e adicione o serial:
+```bash
+curl -X PUT https://seudominio.vercel.app/api/admin/cameras \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "UUID_DA_CAMERA",
+    "serial_number": "ALPHADIGI_SN_123"
+  }'
+```
+
+### 8.5. Verificar Funcionamento
+
+Apos configurar, verifique:
+
+1. **Heartbeat:** A camera envia sinais periodicos
+   - No dashboard, o status da camera aparece como **"Online"** (verde)
+   - A camera e considerada offline se nao enviar dados em 5 minutos
+
+2. **Teste de captura:** Passe um veiculo na frente da camera
+   - Verifique no dashboard se a captura aparece na secao "Ultimas Capturas"
+   - Verifique se a foto foi armazenada corretamente
 
 ---
 
-*Protector Sistemas de Seguranca Eletronica — Documento Tecnico v1.0.0*
+## 9. Configurar Destinatarios de Email
+
+### 9.1. Pelo Dashboard do Cliente
+
+1. Faca login no dashboard como `admin_cliente`
+2. Na secao **"Emails de Alerta"**, clique em **"Adicionar"**
+3. Preencha nome, email e tipo:
+   - **alerta**: recebe notificacoes de velocidade acima do limite
+   - **relatorio**: recebe relatorios periodicos
+   - **todos**: recebe tudo
+4. Clique em **"Salvar"**
+
+### 9.2. Via API
+```bash
+curl -X POST https://seudominio.vercel.app/api/admin/emails \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cliente_id": "UUID_DO_CLIENTE",
+    "nome": "Portaria Central",
+    "email": "portaria@condominio.com",
+    "tipo": "alerta"
+  }'
+```
+
+---
+
+## 10. Fluxo de Captura (Pipeline)
+
+```
+Camera envia POST /api/captura?token=xxx
+         │
+         ▼
+   ┌─ Autenticacao ──┐
+   │ Token valido?    │──Nao──> 401 Unauthorized
+   │ Camera ativa?    │──Nao──> 403 Forbidden
+   │ Cliente ativo?   │──Nao──> 403 Forbidden
+   └────────┬─────────┘
+            │ Sim
+            ▼
+   ┌─ Rate Limiting ──┐
+   │ < 120 req/min?   │──Nao──> 429 Too Many Requests
+   └────────┬──────────┘
+            │ Sim
+            ▼
+   ┌─ Parsing Payload ─────────────┐
+   │ Extrair: placa, velocidade,   │
+   │ confianca, cor, tipo, foto    │
+   │ Normalizar placa (uppercase)  │
+   │ Velocidade: radarSpeed > speed│
+   └────────┬──────────────────────┘
+            │
+            ▼
+   ┌─ Upload Foto ─────────────────┐
+   │ Base64 → Buffer               │
+   │ Path: {cliente}/{camera}/     │
+   │        {timestamp}_{placa}.jpg│
+   │ Bucket: capturas-fotos        │
+   └────────┬──────────────────────┘
+            │
+            ▼
+   ┌─ Salvar Captura ──────────────┐
+   │ INSERT em capturas            │
+   │ UPDATE camera.last_seen       │
+   └────────┬──────────────────────┘
+            │
+            ▼
+   ┌─ Verificar Velocidade ────────┐
+   │ velocidade > limite_cliente?  │──Nao──> 200 OK (fim)
+   └────────┬──────────────────────┘
+            │ Sim (infracao)
+            ▼
+   ┌─ Gerar PDF ──────────────────┐
+   │ Dados da captura + veiculo   │
+   │ Historico ultimos 30 dias    │
+   │ Logotipo do cliente          │
+   └────────┬─────────────────────┘
+            │
+            ▼
+   ┌─ Enviar Email ───────────────┐
+   │ Para todos destinatarios     │
+   │ tipo = 'alerta' ou 'todos'  │
+   │ Anexo: PDF da notificacao   │
+   └────────┬─────────────────────┘
+            │
+            ▼
+   ┌─ Marcar Notificado ──────────┐
+   │ UPDATE captura               │
+   │ notificado = true            │
+   │ notificado_em = now()        │
+   └──────────────────────────────┘
+```
+
+---
+
+## 11. Geracao de PDF e Notificacao
+
+### Estrutura do PDF
+
+O PDF gerado automaticamente contem:
+
+1. **Cabecalho**: Logotipo + titulo personalizado do cliente
+2. **Dados da Infracao**:
+   - Placa do veiculo
+   - Velocidade registrada vs limite permitido
+   - Data e hora
+   - Camera que registrou
+3. **Foto da Captura**: Imagem do veiculo no momento
+4. **Dados do Proprietario** (se cadastrado):
+   - Nome do morador
+   - Unidade/apartamento
+5. **Historico de Passagens**: Ultimas 30 passagens do veiculo (tabela)
+6. **Rodape**: Texto personalizado do cliente
+
+### Personalizacao do PDF
+
+Via painel admin ou API, edite o cliente:
+```json
+{
+  "pdf_titulo": "CONDOMINIO JARDIM DAS FLORES",
+  "pdf_subtitulo": "Lombada Educativa - Controle de Velocidade",
+  "pdf_rodape": "Este documento e meramente educativo e nao tem valor de multa.",
+  "pdf_logo_url": "https://seusite.com/logo.png"
+}
+```
+
+---
+
+## 12. Endpoints da API
+
+### Autenticacao
+Todos os endpoints admin requerem header:
+```
+Authorization: Bearer <JWT_TOKEN_SUPABASE>
+```
+
+### Endpoints Publicos
+
+| Metodo | Endpoint          | Descricao                    |
+|--------|-------------------|------------------------------|
+| GET    | `/api/config`     | Retorna SUPABASE_URL e ANON_KEY |
+| POST   | `/api/captura`    | Recebe capturas das cameras  |
+| GET    | `/api/heartbeat`  | Heartbeat das cameras        |
+
+### Endpoints Admin (requer `super_admin`)
+
+| Metodo | Endpoint              | Descricao                      |
+|--------|-----------------------|--------------------------------|
+| GET    | `/api/admin/clientes` | Listar todos os clientes       |
+| POST   | `/api/admin/clientes` | Criar novo cliente             |
+| PUT    | `/api/admin/clientes` | Atualizar cliente              |
+| DELETE | `/api/admin/clientes` | Desativar cliente (soft delete)|
+| GET    | `/api/admin/usuarios` | Listar usuarios                |
+| POST   | `/api/admin/usuarios` | Criar usuario                  |
+| PUT    | `/api/admin/usuarios` | Atualizar usuario              |
+| DELETE | `/api/admin/usuarios` | Desativar usuario              |
+| GET    | `/api/admin/cameras`  | Listar cameras                 |
+| POST   | `/api/admin/cameras`  | Criar camera (gera token)      |
+| PUT    | `/api/admin/cameras`  | Atualizar camera               |
+| DELETE | `/api/admin/cameras`  | Desativar camera               |
+
+### Endpoints Admin/Cliente (requer `admin_cliente` ou superior)
+
+| Metodo | Endpoint               | Descricao                      |
+|--------|------------------------|--------------------------------|
+| GET    | `/api/admin/veiculos`  | Listar veiculos do cliente     |
+| POST   | `/api/admin/veiculos`  | Cadastrar veiculo              |
+| PUT    | `/api/admin/veiculos`  | Atualizar veiculo              |
+| DELETE | `/api/admin/veiculos`  | Desativar veiculo              |
+| GET    | `/api/admin/emails`    | Listar destinatarios           |
+| POST   | `/api/admin/emails`    | Adicionar destinatario         |
+| PUT    | `/api/admin/emails`    | Atualizar destinatario         |
+| DELETE | `/api/admin/emails`    | Desativar destinatario         |
+| GET    | `/api/admin/dashboard` | Dados do dashboard             |
+
+---
+
+## 13. Deploy e Infraestrutura
+
+### Vercel
+
+O projeto esta configurado para deploy automatico no Vercel.
+
+**Arquivo `vercel.json`:**
+- Rotas API: `/api/*` → Serverless Functions
+- Dashboard: `/` → `/dashboard/index.html`
+- Admin: `/admin` → `/admin/index.html`
+- Cron: Execucao diaria as 06:00 UTC
+
+### Passo a Passo do Deploy
+
+1. Conecte o repositorio GitHub ao Vercel
+2. Configure as variaveis de ambiente (secao 3)
+3. Deploy automatico a cada push na branch `master`
+
+### Dominio Personalizado
+
+1. No Vercel, va em **Settings > Domains**
+2. Adicione seu dominio (ex: `lombada.seudominio.com.br`)
+3. Configure o DNS (CNAME para `cname.vercel-dns.com`)
+
+---
+
+## 14. Cron Jobs (Limpeza Automatica)
+
+### Configuracao
+
+Definido no `vercel.json`:
+```json
+{
+  "crons": [{
+    "path": "/api/cron-limpeza",
+    "schedule": "0 6 * * *"
+  }]
+}
+```
+
+### Funcionamento
+
+- **Horario:** Todos os dias as 06:00 UTC (03:00 Brasilia)
+- **Acao:** Remove capturas com mais de 15 dias
+- **Inclui:** Deleta registros do banco + fotos do Storage
+- **Autenticacao:** `Authorization: Bearer {CRON_SECRET}`
+
+---
+
+## 15. Troubleshooting
+
+### Camera nao aparece como Online
+
+1. Verifique se o token esta correto na URL da camera
+2. Verifique se a camera tem acesso a internet (HTTPS porta 443)
+3. Verifique nos logs do Vercel se a requisicao esta chegando
+4. Teste manualmente:
+```bash
+curl -X POST "https://seudominio.vercel.app/api/captura?token=TOKEN_DA_CAMERA" \
+  -H "Content-Type: application/json" \
+  -d '{"AlarmInfoPlate":{"serialno":"TEST","result":{"PlateResult":{"license":"TEST123","speed":20,"confidence":180,"imageFile":"data:image/jpeg;base64,/9j/4AAQ"}}}}'
+```
+
+### Emails nao estao sendo enviados
+
+1. Verifique as variaveis SMTP no Vercel
+2. Teste a conexao SMTP:
+```bash
+telnet mail.seudominio.com 465
+```
+3. Verifique se ha destinatarios cadastrados para o cliente
+4. Verifique se a velocidade da captura excede o limite do cliente
+5. Verifique nos logs do Vercel por erros de envio
+
+### Fotos nao aparecem no dashboard
+
+1. Verifique se o bucket `capturas-fotos` existe no Supabase
+2. Verifique as politicas RLS do Storage
+3. Execute a migration `migration-storage-rls.sql` se necessario
+
+### Erro 429 (Too Many Requests)
+
+- A camera esta enviando mais de 120 requisicoes por minuto
+- Verifique a configuracao de frequencia de envio na camera
+- Ajuste o intervalo minimo entre capturas na interface da camera
+
+### Usuario nao consegue fazer login
+
+1. Verifique se o usuario existe na tabela `usuarios` E no `auth.users`
+2. Verifique se o campo `ativo = true`
+3. Verifique se o `auth_id` esta correto
+4. Resete a senha pelo painel admin (PUT `/api/admin/usuarios`)
+
+---
+
+## Checklist para Novo Cliente
+
+- [ ] Criar cliente no painel admin
+- [ ] Criar usuario admin_cliente
+- [ ] Criar camera(s) e anotar token(s)
+- [ ] Configurar camera fisica com a URL + token
+- [ ] Cadastrar destinatarios de email
+- [ ] Importar lista de veiculos (Excel)
+- [ ] Personalizar PDF (titulo, logo, rodape)
+- [ ] Testar captura e envio de email
+- [ ] Enviar credenciais de acesso ao cliente
+
+---
+
+**Protector Traffic Control** - v1.0.0 | Build d58093a | Marco 2026
