@@ -1,4 +1,5 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
+const { isValidEmail } = require('../../lib/validators');
 
 module.exports = async function handler(req, res) {
   try {
@@ -34,6 +35,10 @@ module.exports = async function handler(req, res) {
 
       if (!targetCliente || !nome || !email) {
         return res.status(400).json({ error: 'Campos obrigatórios: cliente_id, nome, email' });
+      }
+
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'E-mail inválido' });
       }
 
       if (!verificarAcessoCliente(profile, targetCliente)) {

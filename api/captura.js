@@ -12,6 +12,7 @@ const {
 } = require('../lib/supabase');
 const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
+const { checkRateLimit } = require('../lib/rate-limiter');
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -92,6 +93,16 @@ module.exports = async function handler(req, res) {
         });
         return res.status(401).json({ error: 'Camera nao identificada' });
       }
+    }
+
+    // Rate limiting por câmera
+    const rateCheck = checkRateLimit(camera.id);
+    if (!rateCheck.allowed) {
+      res.setHeader('Retry-After', Math.ceil(rateCheck.resetIn / 1000));
+      await logDebug('captura-ratelimit', `Rate limit excedido para camera ${camera.nome}`, {
+        cameraId: camera.id, resetIn: rateCheck.resetIn,
+      });
+      return res.status(429).json({ error: 'Muitas requisicoes. Tente novamente em breve.' });
     }
 
     const cliente = camera.clientes;

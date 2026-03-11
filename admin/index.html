@@ -267,6 +267,15 @@
       <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()">ENTRAR</button>
       <div class="login-error" id="login-error"></div>
+      <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:13px;text-decoration:none;">Esqueci minha senha</a>
+
+      <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperacao:</div>
+        <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado">
+        <button onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERACAO</button>
+        <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;"></div>
+        <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
+      </div>
     </div>
   </div>
 
@@ -570,6 +579,25 @@ async function initApp() {
     const cfg = await resp.json();
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
+    // Detectar recuperacao de senha
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        const newPassword = prompt('Digite sua nova senha (minimo 6 caracteres):');
+        if (newPassword && newPassword.length >= 6) {
+          const { error } = await sb.auth.updateUser({ password: newPassword });
+          if (error) {
+            alert('Erro ao alterar senha: ' + error.message);
+          } else {
+            alert('Senha alterada com sucesso! Faca login com a nova senha.');
+            await sb.auth.signOut();
+            window.location.reload();
+          }
+        } else if (newPassword) {
+          alert('A senha deve ter pelo menos 6 caracteres.');
+        }
+      }
+    });
+
     const { data: { session } } = await sb.auth.getSession();
     if (session?.user) {
       authToken = session.access_token;
@@ -584,6 +612,58 @@ initApp();
 // ============================================
 // AUTH
 // ============================================
+
+function showResetPassword(e) {
+  e.preventDefault();
+  document.getElementById('reset-password-form').style.display = 'block';
+  document.getElementById('login-email').style.display = 'none';
+  document.getElementById('login-password').style.display = 'none';
+  document.querySelector('.login-box button[onclick="doLogin()"]').style.display = 'none';
+  document.querySelector('a[onclick="showResetPassword(event)"]').style.display = 'none';
+  document.getElementById('login-error').textContent = '';
+}
+
+function hideResetPassword(e) {
+  e.preventDefault();
+  document.getElementById('reset-password-form').style.display = 'none';
+  document.getElementById('login-email').style.display = '';
+  document.getElementById('login-password').style.display = '';
+  document.querySelector('.login-box button[onclick="doLogin()"]').style.display = '';
+  document.querySelector('a[onclick="showResetPassword(event)"]').style.display = '';
+  document.getElementById('reset-message').textContent = '';
+}
+
+async function doResetPassword() {
+  const email = document.getElementById('reset-email').value.trim();
+  const msgEl = document.getElementById('reset-message');
+  msgEl.textContent = '';
+  msgEl.style.color = '';
+
+  if (!email) {
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = 'Digite seu e-mail.';
+    return;
+  }
+
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/admin/',
+    });
+
+    if (error) {
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = 'Erro ao enviar. Tente novamente.';
+      return;
+    }
+
+    msgEl.style.color = 'var(--green)';
+    msgEl.textContent = 'Link enviado! Verifique sua caixa de entrada e spam.';
+  } catch {
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = 'Erro de conexao. Tente novamente.';
+  }
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;

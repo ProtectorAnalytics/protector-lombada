@@ -129,7 +129,7 @@
     }
 
     /* ===== DASHBOARD ===== */
-    #dashboard-screen { display: none; }
+    #dashboard-screen { display: none; overflow-y: auto; height: 100vh; }
 
     .topbar {
       background: #FFFFFF;
@@ -208,8 +208,8 @@
       flex-direction: column;
       gap: 12px;
       padding: 12px 20px;
-      height: calc(100vh - 50px);
-      overflow: hidden;
+      min-height: calc(100vh - 64px);
+      overflow: visible;
     }
 
     .top-section {
@@ -885,6 +885,142 @@
       color: var(--red);
     }
 
+    /* ===== VEICULOS SECTION ===== */
+    .veiculos-section {
+      padding: 16px 24px 24px;
+    }
+
+    .veiculos-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .veiculos-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .btn-add-veiculo {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-add-veiculo:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(4,107,210,0.25);
+    }
+
+    .veiculos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .veiculo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .veiculo-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .veiculo-card .placa {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+    }
+
+    .veiculo-card .info {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .veiculo-card .btn-remove {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--red);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .veiculo-card .btn-remove:hover {
+      background: #fef2f2;
+      border-color: var(--red);
+    }
+
+    .veiculo-form-inline {
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .veiculo-form-inline.active {
+      display: block;
+    }
+
+    .veiculo-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .veiculo-form-grid input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .veiculo-form-grid input:focus {
+      border-color: var(--accent);
+    }
+
+    .veiculo-form-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .veiculo-form-error {
+      color: var(--red);
+      font-size: 12px;
+      margin-top: 6px;
+      min-height: 16px;
+    }
+
     /* Responsive */
     @media (max-width: 1200px) {
       .recent-cards { grid-template-columns: repeat(3, 1fr); }
@@ -911,6 +1047,16 @@
       <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()">ENTRAR</button>
       <div class="login-error" id="login-error"></div>
+      <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:13px;text-decoration:none;">Esqueci minha senha</a>
+
+      <!-- Formulario de recuperacao (oculto por padrao) -->
+      <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperacao:</div>
+        <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado">
+        <button onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERACAO</button>
+        <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;"></div>
+        <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
+      </div>
     </div>
   </div>
 
@@ -1015,7 +1161,10 @@
             </div>
             <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
             <button class="btn-clear" onclick="clearFilters()">Limpar</button>
-            <button class="btn-export" onclick="exportExcel()">Exportar Excel</button>
+            <div style="margin-left:auto;display:flex;gap:6px;">
+              <button class="btn-export" onclick="exportExcel()" style="margin-left:0">Exportar Excel</button>
+              <button class="btn-export" onclick="exportPDF()" style="margin-left:0;background:var(--red);color:white;">Exportar PDF</button>
+            </div>
           </div>
 
           <!-- Table -->
@@ -1080,6 +1229,33 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== VEICULOS ===== -->
+    <div class="veiculos-section">
+      <div class="veiculos-header">
+        <h3>Veiculos Cadastrados <span id="veiculos-count" style="font-size:12px;color:var(--text-muted);font-weight:400"></span></h3>
+        <button class="btn-add-veiculo" onclick="toggleVeiculoForm()">+ Novo Veiculo</button>
+      </div>
+
+      <div class="veiculo-form-inline" id="veiculo-form">
+        <div class="veiculo-form-grid">
+          <input type="text" id="vf-placa" placeholder="Placa (ABC1D23)" maxlength="7" style="text-transform:uppercase">
+          <input type="text" id="vf-morador" placeholder="Nome do morador">
+          <input type="text" id="vf-unidade" placeholder="Unidade (ex: Bloco A - 101)">
+          <input type="text" id="vf-marca" placeholder="Marca/Modelo">
+          <input type="text" id="vf-cor" placeholder="Cor">
+        </div>
+        <div class="veiculo-form-actions">
+          <button class="btn-add-veiculo" onclick="salvarVeiculo()">Salvar</button>
+          <button style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;color:var(--text-secondary)" onclick="toggleVeiculoForm()">Cancelar</button>
+        </div>
+        <div class="veiculo-form-error" id="vf-error"></div>
+      </div>
+
+      <div class="veiculos-grid" id="veiculos-grid">
+        <div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Carregando veiculos...</div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== MODAL ===== -->
@@ -1111,6 +1287,25 @@
         const resp = await fetch('/api/config');
         const cfg = await resp.json();
         sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+        // Detectar se o usuario veio pelo link de recuperacao de senha
+        sb.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'PASSWORD_RECOVERY') {
+            const newPassword = prompt('Digite sua nova senha (minimo 6 caracteres):');
+            if (newPassword && newPassword.length >= 6) {
+              const { error } = await sb.auth.updateUser({ password: newPassword });
+              if (error) {
+                alert('Erro ao alterar senha: ' + error.message);
+              } else {
+                alert('Senha alterada com sucesso! Faca login com a nova senha.');
+                await sb.auth.signOut();
+                window.location.reload();
+              }
+            } else if (newPassword) {
+              alert('A senha deve ter pelo menos 6 caracteres.');
+            }
+          }
+        });
 
         const { data: { session } } = await sb.auth.getSession();
         if (session?.user) {
@@ -1147,6 +1342,60 @@
 
       currentUser = data.user;
       await loadProfile();
+    }
+
+    // ============================================
+    // RECUPERACAO DE SENHA
+    // ============================================
+    function showResetPassword(e) {
+      e.preventDefault();
+      document.getElementById('reset-password-form').style.display = 'block';
+      document.getElementById('login-email').style.display = 'none';
+      document.getElementById('login-password').style.display = 'none';
+      document.querySelector('.login-box button[onclick="doLogin()"]').style.display = 'none';
+      document.querySelector('a[onclick="showResetPassword(event)"]').style.display = 'none';
+      document.getElementById('login-error').textContent = '';
+    }
+
+    function hideResetPassword(e) {
+      e.preventDefault();
+      document.getElementById('reset-password-form').style.display = 'none';
+      document.getElementById('login-email').style.display = '';
+      document.getElementById('login-password').style.display = '';
+      document.querySelector('.login-box button[onclick="doLogin()"]').style.display = '';
+      document.querySelector('a[onclick="showResetPassword(event)"]').style.display = '';
+      document.getElementById('reset-message').textContent = '';
+    }
+
+    async function doResetPassword() {
+      const email = document.getElementById('reset-email').value.trim();
+      const msgEl = document.getElementById('reset-message');
+      msgEl.textContent = '';
+      msgEl.style.color = '';
+
+      if (!email) {
+        msgEl.style.color = 'var(--red)';
+        msgEl.textContent = 'Digite seu e-mail.';
+        return;
+      }
+
+      try {
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/dashboard/',
+        });
+
+        if (error) {
+          msgEl.style.color = 'var(--red)';
+          msgEl.textContent = 'Erro ao enviar. Tente novamente.';
+          return;
+        }
+
+        msgEl.style.color = 'var(--green)';
+        msgEl.textContent = 'Link enviado! Verifique sua caixa de entrada e spam.';
+      } catch {
+        msgEl.style.color = 'var(--red)';
+        msgEl.textContent = 'Erro de conexao. Tente novamente.';
+      }
     }
 
     async function loadProfile() {
@@ -1224,6 +1473,7 @@
 
       loadVeiculosCache();
       loadCamerasList();
+      loadVeiculos();
       loadAll();
       pollingInterval = setInterval(loadAll, 30000);
     }
@@ -1477,6 +1727,164 @@
     }
 
     // ============================================
+    // VEICULOS MANAGEMENT
+    // ============================================
+    let veiculosList = [];
+
+    async function loadVeiculos() {
+      if (!currentCliente) return;
+      const token = (await sb.auth.getSession()).data.session?.access_token;
+      if (!token) return;
+
+      try {
+        const resp = await fetch(`/api/admin/veiculos?cliente_id=${currentCliente.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await resp.json();
+
+        if (Array.isArray(data)) {
+          veiculosList = data.filter(v => v.ativo !== false);
+          renderVeiculos();
+        }
+      } catch (err) {
+        console.error('Erro ao carregar veiculos:', err);
+      }
+    }
+
+    function renderVeiculos() {
+      const grid = document.getElementById('veiculos-grid');
+      const countEl = document.getElementById('veiculos-count');
+      const canEdit = currentProfile && ['super_admin', 'admin_cliente'].includes(currentProfile.role);
+
+      // Show/hide add button based on role
+      const addBtn = document.querySelector('.btn-add-veiculo');
+      if (addBtn) addBtn.style.display = canEdit ? '' : 'none';
+
+      countEl.textContent = `(${veiculosList.length})`;
+
+      if (veiculosList.length === 0) {
+        grid.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">Nenhum veiculo cadastrado.' + (canEdit ? ' Clique em "+ Novo Veiculo" para adicionar.' : '') + '</div>';
+        return;
+      }
+
+      grid.innerHTML = veiculosList.map(v => `
+        <div class="veiculo-card">
+          <div>
+            <div class="placa">${v.placa}</div>
+            <div class="info">${[v.nome_morador, v.unidade, v.marca, v.cor].filter(Boolean).join(' | ') || 'Sem informacoes adicionais'}</div>
+          </div>
+          ${canEdit ? `<button class="btn-remove" onclick="removerVeiculo('${v.id}', '${v.placa}')">Remover</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function toggleVeiculoForm() {
+      const form = document.getElementById('veiculo-form');
+      form.classList.toggle('active');
+      if (!form.classList.contains('active')) {
+        document.getElementById('vf-placa').value = '';
+        document.getElementById('vf-morador').value = '';
+        document.getElementById('vf-unidade').value = '';
+        document.getElementById('vf-marca').value = '';
+        document.getElementById('vf-cor').value = '';
+        document.getElementById('vf-error').textContent = '';
+      }
+    }
+
+    function isValidPlacaLocal(placa) {
+      const p = placa.toUpperCase().replace(/[-\s]/g, '');
+      return /^[A-Z]{3}\d{4}$/.test(p) || /^[A-Z]{3}\d[A-Z]\d{2}$/.test(p);
+    }
+
+    async function salvarVeiculo() {
+      const placa = document.getElementById('vf-placa').value.trim().toUpperCase().replace(/[-\s]/g, '');
+      const nome_morador = document.getElementById('vf-morador').value.trim();
+      const unidade = document.getElementById('vf-unidade').value.trim();
+      const marca = document.getElementById('vf-marca').value.trim();
+      const cor = document.getElementById('vf-cor').value.trim();
+      const errorEl = document.getElementById('vf-error');
+      errorEl.textContent = '';
+
+      if (!placa) {
+        errorEl.textContent = 'Placa e obrigatoria.';
+        return;
+      }
+
+      if (!isValidPlacaLocal(placa)) {
+        errorEl.textContent = 'Placa invalida. Use formato ABC1234 ou ABC1D23.';
+        return;
+      }
+
+      // Check duplicate
+      if (veiculosList.some(v => v.placa === placa)) {
+        errorEl.textContent = 'Esta placa ja esta cadastrada.';
+        return;
+      }
+
+      const token = (await sb.auth.getSession()).data.session?.access_token;
+      if (!token) {
+        errorEl.textContent = 'Sessao expirada. Faca login novamente.';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/admin/veiculos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            cliente_id: currentCliente.id,
+            placa,
+            nome_morador: nome_morador || null,
+            unidade: unidade || null,
+            marca: marca || null,
+            cor: cor || null,
+          }),
+        });
+
+        const result = await resp.json();
+
+        if (!resp.ok) {
+          errorEl.textContent = result.error || 'Erro ao cadastrar veiculo.';
+          return;
+        }
+
+        toggleVeiculoForm();
+        await loadVeiculos();
+        // Refresh cache for plate cross-reference in captures
+        await loadVeiculosCache();
+      } catch (err) {
+        errorEl.textContent = 'Erro de conexao. Tente novamente.';
+      }
+    }
+
+    async function removerVeiculo(id, placa) {
+      if (!confirm(`Deseja remover o veiculo ${placa}?`)) return;
+
+      const token = (await sb.auth.getSession()).data.session?.access_token;
+      if (!token) return;
+
+      try {
+        const resp = await fetch(`/api/admin/veiculos?id=${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (resp.ok) {
+          await loadVeiculos();
+          await loadVeiculosCache();
+        } else {
+          const result = await resp.json();
+          alert(result.error || 'Erro ao remover veiculo.');
+        }
+      } catch {
+        alert('Erro de conexao.');
+      }
+    }
+
+    // ============================================
     // EXPORT EXCEL
     // ============================================
     function exportExcel() {
@@ -1514,6 +1922,169 @@
 
       const dateStr = new Date().toISOString().slice(0, 10);
       XLSX.writeFile(wb, `capturas_${currentCliente.nome.replace(/\s+/g, '_')}_${dateStr}.xlsx`);
+    }
+
+    // ============================================
+    // EXPORT PDF
+    // ============================================
+    function exportPDF() {
+      if (!lastCapturas || lastCapturas.length === 0) {
+        alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const limite = currentCliente.limite_velocidade;
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      const usableW = pageW - margin * 2;
+
+      // --- Header ---
+      doc.setFillColor(4, 107, 210);
+      doc.rect(0, 0, pageW, 22, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('PROTECTOR TRAFFIC CONTROL', pageW / 2, 10, { align: 'center' });
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      doc.text('Relatorio de Capturas - Lombada Educativa', pageW / 2, 16, { align: 'center' });
+
+      // --- Info do cliente ---
+      doc.setTextColor(30, 41, 59);
+      let y = 30;
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.text(currentCliente.nome, margin, y);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`${currentCliente.local_via} | ${currentCliente.cidade_uf} | Limite: ${limite} km/h`, margin, y + 5);
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filterStart = document.getElementById('filter-date-start').value || dateStr;
+      const filterEnd = document.getElementById('filter-date-end').value || dateStr;
+      doc.text(`Periodo: ${filterStart} a ${filterEnd} | Total de registros: ${lastCapturas.length}`, margin, y + 10);
+
+      // --- Resumo ---
+      y += 18;
+      const totalAlertas = lastCapturas.filter(c => c.velocidade > limite).length;
+      const velMedia = lastCapturas.length > 0
+        ? Math.round(lastCapturas.reduce((s, c) => s + c.velocidade, 0) / lastCapturas.length)
+        : 0;
+      const velMax = lastCapturas.length > 0
+        ? Math.max(...lastCapturas.map(c => c.velocidade))
+        : 0;
+
+      doc.setFillColor(240, 245, 250);
+      doc.roundedRect(margin, y, usableW, 10, 2, 2, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(30, 41, 59);
+      doc.setFont(undefined, 'bold');
+      const summaryY = y + 6.5;
+      const col4 = usableW / 4;
+      doc.text(`Total: ${lastCapturas.length}`, margin + col4 * 0.5, summaryY, { align: 'center' });
+      doc.setTextColor(220, 38, 38);
+      doc.text(`Alertas: ${totalAlertas}`, margin + col4 * 1.5, summaryY, { align: 'center' });
+      doc.setTextColor(4, 107, 210);
+      doc.text(`Vel. Media: ${velMedia} km/h`, margin + col4 * 2.5, summaryY, { align: 'center' });
+      doc.text(`Vel. Maxima: ${velMax} km/h`, margin + col4 * 3.5, summaryY, { align: 'center' });
+
+      // --- Tabela ---
+      y += 16;
+      const cols = [
+        { label: 'Placa', w: usableW * 0.12 },
+        { label: 'Velocidade', w: usableW * 0.10 },
+        { label: 'Status', w: usableW * 0.08 },
+        { label: 'Data', w: usableW * 0.10 },
+        { label: 'Hora', w: usableW * 0.10 },
+        { label: 'Morador', w: usableW * 0.18 },
+        { label: 'Unidade', w: usableW * 0.14 },
+        { label: 'Tipo', w: usableW * 0.09 },
+        { label: 'Cor', w: usableW * 0.09 },
+      ];
+
+      const rowH = 6;
+
+      function drawTableHeader(yPos) {
+        doc.setFillColor(4, 107, 210);
+        doc.rect(margin, yPos, usableW, rowH, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'bold');
+        let x = margin;
+        cols.forEach(col => {
+          doc.text(col.label, x + col.w / 2, yPos + 4, { align: 'center' });
+          x += col.w;
+        });
+        return yPos + rowH;
+      }
+
+      y = drawTableHeader(y);
+
+      // Rows
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(7);
+      lastCapturas.forEach((c, idx) => {
+        if (y + rowH > pageH - 15) {
+          // Footer
+          drawFooter(doc, pageW, pageH, margin);
+          doc.addPage();
+          y = 14;
+          y = drawTableHeader(y);
+        }
+
+        const isAlert = c.velocidade > limite;
+        const bg = idx % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
+        doc.setFillColor(...bg);
+        doc.rect(margin, y, usableW, rowH, 'F');
+
+        const ts = new Date(c.timestamp);
+        const veiculo = veiculosCache[c.placa];
+        const values = [
+          c.placa,
+          `${c.velocidade} km/h`,
+          isAlert ? 'ALERTA' : 'OK',
+          ts.toLocaleDateString('pt-BR'),
+          ts.toLocaleTimeString('pt-BR'),
+          veiculo?.nome_morador || '---',
+          veiculo?.unidade || '---',
+          c.tipo_veiculo || '---',
+          c.cor_veiculo || '---',
+        ];
+
+        let x = margin;
+        values.forEach((val, i) => {
+          if (i === 2) {
+            doc.setTextColor(isAlert ? 220 : 22, isAlert ? 38 : 163, isAlert ? 38 : 74);
+            doc.setFont(undefined, 'bold');
+          } else {
+            doc.setTextColor(30, 41, 59);
+            doc.setFont(undefined, 'normal');
+          }
+          doc.text(String(val), x + cols[i].w / 2, y + 4, { align: 'center' });
+          x += cols[i].w;
+        });
+
+        y += rowH;
+      });
+
+      drawFooter(doc, pageW, pageH, margin);
+
+      const fileName = `capturas_${currentCliente.nome.replace(/\s+/g, '_')}_${dateStr}.pdf`;
+      doc.save(fileName);
+    }
+
+    function drawFooter(doc, pageW, pageH, margin) {
+      doc.setDrawColor(226, 232, 240);
+      doc.line(margin, pageH - 10, pageW - margin, pageH - 10);
+      doc.setFontSize(6);
+      doc.setTextColor(148, 163, 184);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Protector Traffic Control | Gerado em ${new Date().toLocaleString('pt-BR')}`, margin, pageH - 6);
+      doc.text(`Pagina ${doc.internal.getCurrentPageInfo().pageNumber}`, pageW - margin, pageH - 6, { align: 'right' });
     }
 
     // ============================================

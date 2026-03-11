@@ -1,4 +1,5 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
+const { isValidPlaca, normalizePlaca, sanitize } = require('../../lib/validators');
 
 module.exports = async function handler(req, res) {
   try {
@@ -40,6 +41,10 @@ module.exports = async function handler(req, res) {
 
       if (!targetCliente || !placa) {
         return res.status(400).json({ error: 'Campos obrigatórios: cliente_id, placa' });
+      }
+
+      if (!isValidPlaca(placa)) {
+        return res.status(400).json({ error: 'Placa inválida. Use formato ABC1234 ou ABC1D23' });
       }
 
       if (!verificarAcessoCliente(profile, targetCliente)) {

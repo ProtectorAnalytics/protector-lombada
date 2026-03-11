@@ -1,5 +1,6 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
 const crypto = require('crypto');
+const { isValidVelocidade, isValidCNPJ, isValidTelefone, isValidCEP, sanitize } = require('../../lib/validators');
 
 module.exports = async function handler(req, res) {
   try {
@@ -37,6 +38,22 @@ module.exports = async function handler(req, res) {
 
       if (!nome || !local_via || !cidade_uf) {
         return res.status(400).json({ error: 'Campos obrigatórios: nome, local_via, cidade_uf' });
+      }
+
+      if (limite_velocidade && !isValidVelocidade(limite_velocidade)) {
+        return res.status(400).json({ error: 'Limite de velocidade inválido (deve ser entre 1 e 200 km/h)' });
+      }
+
+      if (cnpj && !isValidCNPJ(cnpj)) {
+        return res.status(400).json({ error: 'CNPJ inválido (deve ter 14 dígitos)' });
+      }
+
+      if (telefone && !isValidTelefone(telefone)) {
+        return res.status(400).json({ error: 'Telefone inválido (deve ter 10 ou 11 dígitos)' });
+      }
+
+      if (cep && !isValidCEP(cep)) {
+        return res.status(400).json({ error: 'CEP inválido (deve ter 8 dígitos)' });
       }
 
       const { data, error } = await supabase
