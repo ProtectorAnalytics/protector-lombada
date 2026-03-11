@@ -972,7 +972,7 @@
     .vm-box {
       background: #FFFFFF;
       border-radius: 16px;
-      width: 520px;
+      width: 600px;
       max-width: 95vw;
       padding: 0;
       margin-bottom: 30px;
@@ -1186,6 +1186,85 @@
     .vm-status-not {
       background: #fef2f2;
       color: #dc2626;
+    }
+
+    /* Lista de veiculos no modal */
+    .vm-lista {
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    .vm-lista-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .vm-lista-item:hover {
+      background: var(--accent-light);
+    }
+    .vm-lista-item:last-child {
+      border-bottom: none;
+    }
+    .vm-lista-item .vm-li-placa {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+      min-width: 90px;
+    }
+    .vm-lista-item .vm-li-info {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-left: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .vm-lista-item .vm-li-del {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--red);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .vm-lista-item .vm-li-del:hover {
+      background: #fef2f2;
+      border-color: var(--red);
+    }
+    .vm-lista-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 0 0;
+      font-size: 12px;
+    }
+    .vm-lista-pagination button {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .vm-lista-pagination button.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .vm-lista-pagination button:disabled {
+      opacity: 0.4;
+      cursor: default;
     }
 
     /* Responsive */
@@ -1408,16 +1487,28 @@
   <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
     <div class="vm-box">
       <div class="vm-header">
-        <h3 id="vm-title">Veiculos</h3>
+        <h3 id="vm-title">Veiculos Cadastrados <span id="vm-count" style="font-size:13px;color:var(--text-secondary);font-weight:400"></span></h3>
         <button class="modal-close" onclick="fecharModalVeiculo()">&times;</button>
       </div>
       <div class="vm-tabs">
-        <button class="vm-tab active" id="vm-tab-cadastrar" onclick="vmSwitchTab('cadastrar')">Cadastrar</button>
-        <button class="vm-tab" id="vm-tab-consultar" onclick="vmSwitchTab('consultar')">Consultar</button>
+        <button class="vm-tab active" id="vm-tab-lista" onclick="vmSwitchTab('lista')">Lista</button>
+        <button class="vm-tab" id="vm-tab-cadastrar" onclick="vmSwitchTab('cadastrar')">Cadastrar</button>
+        <button class="vm-tab" id="vm-tab-importar" onclick="vmSwitchTab('importar')">Importar / Exportar</button>
+      </div>
+
+      <!-- Tab Lista -->
+      <div class="vm-body" id="vm-body-lista">
+        <div class="vm-search-box" style="margin-bottom:12px">
+          <input type="text" id="vm-busca-placa" placeholder="Filtrar por placa, morador, unidade..." oninput="filtrarListaVeiculos()">
+        </div>
+        <div class="vm-lista" id="vm-lista">
+          <div class="vm-result-empty">Carregando...</div>
+        </div>
+        <div class="vm-lista-pagination" id="vm-lista-pg"></div>
       </div>
 
       <!-- Tab Cadastrar -->
-      <div class="vm-body" id="vm-body-cadastrar">
+      <div class="vm-body" id="vm-body-cadastrar" style="display:none">
         <div class="vm-field">
           <label>Placa *</label>
           <input type="text" id="vf-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
@@ -1441,20 +1532,31 @@
           </div>
         </div>
         <div class="vm-actions">
-          <button class="vm-btn-cancel" onclick="fecharModalVeiculo()">Cancelar</button>
+          <button class="vm-btn-cancel" onclick="vmSwitchTab('lista')">Cancelar</button>
           <button class="vm-btn-primary" onclick="salvarVeiculo()">Cadastrar Veiculo</button>
         </div>
         <div class="vm-error" id="vf-error"></div>
       </div>
 
-      <!-- Tab Consultar -->
-      <div class="vm-body" id="vm-body-consultar" style="display:none">
-        <div class="vm-search-box">
-          <input type="text" id="vm-busca-placa" placeholder="Digite a placa..." maxlength="7" onkeydown="if(event.key==='Enter')buscarVeiculo()">
-          <button onclick="buscarVeiculo()">Buscar</button>
+      <!-- Tab Importar/Exportar -->
+      <div class="vm-body" id="vm-body-importar" style="display:none">
+        <div style="margin-bottom:20px">
+          <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Exportar Veiculos</h4>
+          <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Baixe a lista completa de veiculos cadastrados em formato Excel.</p>
+          <button class="vm-btn-primary" onclick="exportarVeiculosExcel()" style="width:auto;padding:10px 20px">Exportar Excel</button>
         </div>
-        <div class="vm-result" id="vm-result">
-          <div class="vm-result-empty">Digite uma placa para verificar se esta cadastrada</div>
+        <div style="border-top:1px solid var(--border);padding-top:20px">
+          <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Importar Veiculos</h4>
+          <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">Envie um arquivo Excel (.xlsx) com as colunas:</p>
+          <p style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px;font-family:'SF Mono',Consolas,monospace">PLACA | MORADOR | UNIDADE | MARCA | COR</p>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <button class="vm-btn-primary" onclick="document.getElementById('vm-import-file').click()" style="width:auto;padding:10px 20px;background:var(--green)">Selecionar Arquivo</button>
+            <span id="vm-import-filename" style="font-size:12px;color:var(--text-secondary)">Nenhum arquivo selecionado</span>
+            <input type="file" id="vm-import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="previewImport(this)">
+          </div>
+          <button class="vm-btn-primary" onclick="downloadModeloExcel()" style="width:auto;padding:8px 16px;background:transparent;color:var(--accent);border:1px solid var(--accent);font-size:12px">Baixar Modelo</button>
+          <div id="vm-import-preview" style="margin-top:12px"></div>
+          <div class="vm-error" id="vm-import-error"></div>
         </div>
       </div>
     </div>
@@ -1997,6 +2099,9 @@
     // VEICULOS MANAGEMENT
     // ============================================
     let veiculosList = [];
+    let vmListaPage = 1;
+    let vmListaFiltered = [];
+    const VM_PER_PAGE = 10;
 
     async function loadVeiculos() {
       if (!currentCliente) return;
@@ -2019,32 +2124,32 @@
     }
 
     function renderVeiculos() {
-      // Veiculos are now managed via the modal popup
-      // Update topbar button badge
       const btn = document.getElementById('btn-topbar-veiculos');
       if (btn) btn.textContent = `Veiculos (${veiculosList.length})`;
+      document.getElementById('vm-count').textContent = `(${veiculosList.length})`;
+      vmListaFiltered = [...veiculosList];
+      vmListaPage = 1;
+      renderListaVeiculos();
     }
 
     function toggleVeiculoForm() {
       const overlay = document.getElementById('vm-overlay');
-      if (overlay.classList.contains('active')) {
-        fecharModalVeiculo();
-      } else {
-        abrirModalVeiculo();
-      }
+      overlay.classList.contains('active') ? fecharModalVeiculo() : abrirModalVeiculo();
     }
 
     function abrirModalVeiculo() {
       document.getElementById('vm-overlay').classList.add('active');
       document.body.style.overflow = 'hidden';
-      vmSwitchTab('cadastrar');
+      vmSwitchTab('lista');
       limparFormVeiculo();
+      vmListaFiltered = [...veiculosList];
+      vmListaPage = 1;
+      renderListaVeiculos();
     }
 
     function fecharModalVeiculo() {
       document.getElementById('vm-overlay').classList.remove('active');
       document.body.style.overflow = '';
-      limparFormVeiculo();
     }
 
     function limparFormVeiculo() {
@@ -2055,66 +2160,235 @@
       document.getElementById('vf-cor').value = '';
       document.getElementById('vf-error').textContent = '';
       document.getElementById('vm-busca-placa').value = '';
-      document.getElementById('vm-result').innerHTML = '<div class="vm-result-empty">Digite uma placa para verificar se esta cadastrada</div>';
     }
 
     function vmSwitchTab(tab) {
-      document.getElementById('vm-tab-cadastrar').classList.toggle('active', tab === 'cadastrar');
-      document.getElementById('vm-tab-consultar').classList.toggle('active', tab === 'consultar');
-      document.getElementById('vm-body-cadastrar').style.display = tab === 'cadastrar' ? '' : 'none';
-      document.getElementById('vm-body-consultar').style.display = tab === 'consultar' ? '' : 'none';
+      ['lista', 'cadastrar', 'importar'].forEach(t => {
+        const tabEl = document.getElementById('vm-tab-' + t);
+        const bodyEl = document.getElementById('vm-body-' + t);
+        if (tabEl) tabEl.classList.toggle('active', t === tab);
+        if (bodyEl) bodyEl.style.display = t === tab ? '' : 'none';
+      });
     }
 
-    function buscarVeiculo() {
-      const placa = document.getElementById('vm-busca-placa').value.trim().toUpperCase().replace(/[-\s]/g, '');
-      const resultEl = document.getElementById('vm-result');
+    function filtrarListaVeiculos() {
+      const busca = document.getElementById('vm-busca-placa').value.trim().toUpperCase();
+      if (!busca) {
+        vmListaFiltered = [...veiculosList];
+      } else {
+        vmListaFiltered = veiculosList.filter(v =>
+          (v.placa && v.placa.includes(busca)) ||
+          (v.nome_morador && v.nome_morador.toUpperCase().includes(busca)) ||
+          (v.unidade && v.unidade.toUpperCase().includes(busca)) ||
+          (v.marca && v.marca.toUpperCase().includes(busca))
+        );
+      }
+      vmListaPage = 1;
+      renderListaVeiculos();
+    }
 
-      if (!placa) {
-        resultEl.innerHTML = '<div class="vm-result-empty">Digite uma placa para buscar</div>';
+    function renderListaVeiculos() {
+      const lista = document.getElementById('vm-lista');
+      const pgEl = document.getElementById('vm-lista-pg');
+      const data = vmListaFiltered;
+
+      if (data.length === 0) {
+        lista.innerHTML = '<div class="vm-result-empty">Nenhum veiculo encontrado</div>';
+        pgEl.innerHTML = '';
         return;
       }
 
-      const found = veiculosList.find(v => v.placa === placa);
+      const totalPages = Math.ceil(data.length / VM_PER_PAGE);
+      const start = (vmListaPage - 1) * VM_PER_PAGE;
+      const pageData = data.slice(start, start + VM_PER_PAGE);
 
-      if (found) {
-        const info = [found.nome_morador, found.unidade, found.marca, found.cor].filter(Boolean).join(' | ');
-        resultEl.innerHTML = `
-          <div class="vm-result-card">
-            <div>
-              <div class="placa">${found.placa}</div>
-              <div class="info">${info || 'Sem informacoes adicionais'}</div>
-            </div>
-            <span class="vm-status vm-status-ok">Cadastrado</span>
-          </div>
-        `;
+      lista.innerHTML = pageData.map(v => {
+        const info = [v.nome_morador, v.unidade, v.marca, v.cor].filter(Boolean).join(' | ');
+        return `<div class="vm-lista-item">
+          <span class="vm-li-placa">${v.placa}</span>
+          <span class="vm-li-info">${info || '—'}</span>
+          <button class="vm-li-del" onclick="removerVeiculo('${v.id}', '${v.placa}')" title="Remover">Excluir</button>
+        </div>`;
+      }).join('');
+
+      if (totalPages > 1) {
+        let btns = `<button onclick="vmListaGoTo(${vmListaPage - 1})" ${vmListaPage === 1 ? 'disabled' : ''}>&lsaquo;</button>`;
+        let pgStart = Math.max(1, vmListaPage - 2);
+        let pgEnd = Math.min(totalPages, pgStart + 4);
+        if (pgEnd - pgStart < 4) pgStart = Math.max(1, pgEnd - 4);
+        for (let p = pgStart; p <= pgEnd; p++) {
+          btns += `<button class="${p === vmListaPage ? 'active' : ''}" onclick="vmListaGoTo(${p})">${p}</button>`;
+        }
+        btns += `<button onclick="vmListaGoTo(${vmListaPage + 1})" ${vmListaPage === totalPages ? 'disabled' : ''}>&rsaquo;</button>`;
+        btns += `<span style="margin-left:8px;color:var(--text-muted);font-size:11px">${data.length} veiculos</span>`;
+        pgEl.innerHTML = btns;
       } else {
-        // Also search partial matches
-        const partial = veiculosList.filter(v => v.placa.includes(placa));
-        if (partial.length > 0) {
-          resultEl.innerHTML = partial.map(v => {
-            const info = [v.nome_morador, v.unidade, v.marca, v.cor].filter(Boolean).join(' | ');
-            return `
-              <div class="vm-result-card" style="margin-bottom:8px">
-                <div>
-                  <div class="placa">${v.placa}</div>
-                  <div class="info">${info || 'Sem informacoes adicionais'}</div>
+        pgEl.innerHTML = `<span style="color:var(--text-muted);font-size:11px">${data.length} veiculos</span>`;
+      }
+    }
+
+    function vmListaGoTo(page) {
+      const totalPages = Math.ceil(vmListaFiltered.length / VM_PER_PAGE);
+      if (page < 1 || page > totalPages) return;
+      vmListaPage = page;
+      renderListaVeiculos();
+    }
+
+    // ============================================
+    // IMPORT / EXPORT VEICULOS
+    // ============================================
+    function exportarVeiculosExcel() {
+      if (veiculosList.length === 0) {
+        alert('Nenhum veiculo para exportar.');
+        return;
+      }
+      const rows = veiculosList.map(v => ({
+        PLACA: v.placa,
+        MORADOR: v.nome_morador || '',
+        UNIDADE: v.unidade || '',
+        MARCA: v.marca || '',
+        COR: v.cor || '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{ wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 12 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Veiculos');
+      XLSX.writeFile(wb, `veiculos_${currentCliente.nome.replace(/\s/g, '_')}.xlsx`);
+    }
+
+    function downloadModeloExcel() {
+      const rows = [
+        { PLACA: 'ABC1D23', MORADOR: 'Joao Silva', UNIDADE: 'Bloco A - 101', MARCA: 'Honda Civic', COR: 'Prata' },
+        { PLACA: 'XYZ9876', MORADOR: 'Maria Santos', UNIDADE: 'Bloco B - 202', MARCA: 'Toyota Corolla', COR: 'Branco' },
+      ];
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{ wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 12 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
+      XLSX.writeFile(wb, 'modelo_veiculos.xlsx');
+    }
+
+    let importQueue = [];
+
+    function previewImport(input) {
+      const file = input.files[0];
+      const errorEl = document.getElementById('vm-import-error');
+      const previewEl = document.getElementById('vm-import-preview');
+      const nameEl = document.getElementById('vm-import-filename');
+      errorEl.textContent = '';
+      importQueue = [];
+
+      if (!file) {
+        nameEl.textContent = 'Nenhum arquivo selecionado';
+        previewEl.innerHTML = '';
+        return;
+      }
+
+      nameEl.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+          if (rows.length === 0) {
+            errorEl.textContent = 'Arquivo vazio.';
+            return;
+          }
+
+          // Normalize column names
+          const normalized = rows.map(r => {
+            const obj = {};
+            Object.keys(r).forEach(k => {
+              const key = k.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+              obj[key] = String(r[k]).trim();
+            });
+            return obj;
+          });
+
+          // Map columns
+          importQueue = normalized.map(r => ({
+            placa: (r.PLACA || '').toUpperCase().replace(/[-\s]/g, ''),
+            nome_morador: r.MORADOR || r.NOME || r['NOME DO MORADOR'] || r['NOME_MORADOR'] || '',
+            unidade: r.UNIDADE || r.APTO || r.APARTAMENTO || '',
+            marca: r.MARCA || r.MODELO || r['MARCA / MODELO'] || r['MARCA/MODELO'] || '',
+            cor: r.COR || '',
+          })).filter(r => r.placa.length >= 7);
+
+          // Check existing
+          const existing = new Set(veiculosList.map(v => v.placa));
+          const newOnes = importQueue.filter(r => !existing.has(r.placa));
+          const dupes = importQueue.length - newOnes.length;
+          importQueue = newOnes;
+
+          previewEl.innerHTML = `
+            <div style="background:var(--bg-input);border-radius:8px;padding:12px;font-size:13px">
+              <div style="margin-bottom:6px"><strong>${rows.length}</strong> linhas lidas do arquivo</div>
+              <div style="margin-bottom:6px;color:var(--green)"><strong>${newOnes.length}</strong> novos veiculos para importar</div>
+              ${dupes > 0 ? `<div style="color:var(--orange)"><strong>${dupes}</strong> ja cadastrados (serao ignorados)</div>` : ''}
+              ${importQueue.length > 0 ? `
+                <div style="margin-top:10px">
+                  <button class="vm-btn-primary" onclick="executarImport()" style="width:auto;padding:10px 24px">
+                    Importar ${importQueue.length} veiculos
+                  </button>
                 </div>
-                <span class="vm-status vm-status-ok">Cadastrado</span>
-              </div>
-            `;
-          }).join('');
-        } else {
-          resultEl.innerHTML = `
-            <div class="vm-result-card">
-              <div>
-                <div class="placa">${placa}</div>
-                <div class="info">Nenhum veiculo encontrado com esta placa</div>
-              </div>
-              <span class="vm-status vm-status-not">Nao cadastrado</span>
+              ` : '<div style="margin-top:6px;color:var(--text-muted)">Nada para importar.</div>'}
             </div>
           `;
+        } catch (err) {
+          errorEl.textContent = 'Erro ao ler arquivo: ' + err.message;
         }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function executarImport() {
+      if (importQueue.length === 0) return;
+
+      const previewEl = document.getElementById('vm-import-preview');
+      const errorEl = document.getElementById('vm-import-error');
+      const token = (await sb.auth.getSession()).data.session?.access_token;
+      if (!token) { errorEl.textContent = 'Sessao expirada.'; return; }
+
+      let ok = 0, fail = 0;
+      previewEl.innerHTML = `<div style="background:var(--bg-input);border-radius:8px;padding:12px;font-size:13px">
+        <div id="import-progress">Importando 0 / ${importQueue.length}...</div>
+      </div>`;
+
+      for (let i = 0; i < importQueue.length; i++) {
+        const v = importQueue[i];
+        try {
+          const resp = await fetch('/api/admin/veiculos', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cliente_id: currentCliente.id,
+              placa: v.placa,
+              nome_morador: v.nome_morador || null,
+              unidade: v.unidade || null,
+              marca: v.marca || null,
+              cor: v.cor || null,
+            }),
+          });
+          if (resp.ok) ok++; else fail++;
+        } catch { fail++; }
+        document.getElementById('import-progress').textContent = `Importando ${i + 1} / ${importQueue.length}...`;
       }
+
+      importQueue = [];
+      document.getElementById('vm-import-file').value = '';
+      document.getElementById('vm-import-filename').textContent = 'Nenhum arquivo selecionado';
+
+      previewEl.innerHTML = `
+        <div style="background:#dcfce7;border-radius:8px;padding:12px;font-size:13px;color:#15803d">
+          Importacao concluida! <strong>${ok}</strong> veiculos cadastrados${fail > 0 ? `, <strong style="color:var(--red)">${fail}</strong> falharam` : ''}.
+        </div>
+      `;
+
+      await loadVeiculos();
+      await loadVeiculosCache();
     }
 
     function isValidPlacaLocal(placa) {
