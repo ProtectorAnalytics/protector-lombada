@@ -214,8 +214,8 @@
 
     .top-section {
       display: grid;
-      grid-template-columns: 1fr 260px;
-      gap: 12px;
+      grid-template-columns: 1fr 300px;
+      gap: 14px;
     }
 
     .content-area {
@@ -316,8 +316,8 @@
     /* Bottom section */
     .bottom-section {
       display: grid;
-      grid-template-columns: 1fr 260px;
-      gap: 12px;
+      grid-template-columns: 1fr 300px;
+      gap: 14px;
       flex: 1;
       min-height: 0;
     }
@@ -603,8 +603,13 @@
     }
 
     .chart-container {
-      height: 130px;
+      height: 180px;
       position: relative;
+    }
+
+    .chart-container canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
 
     .ranking-list { list-style: none; }
@@ -1801,10 +1806,13 @@
         });
       }
 
-      drawBarChart('chart-hourly', hours);
+      drawAreaChart('chart-hourly', hours);
     }
 
-    function drawBarChart(canvasId, data) {
+    // Animated area/mountain chart
+    let chartAnimFrame = null;
+
+    function drawAreaChart(canvasId, data) {
       const canvas = document.getElementById(canvasId);
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
@@ -1816,41 +1824,167 @@
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       const maxVal = Math.max(...data, 1);
-      const barWidth = (w - 30) / 24;
-      const chartHeight = h - 25;
+      const padLeft = 28;
+      const padRight = 8;
+      const padTop = 20;
+      const padBottom = 22;
+      const chartW = w - padLeft - padRight;
+      const chartH = h - padTop - padBottom;
+      const stepX = chartW / (data.length - 1);
 
-      ctx.clearRect(0, 0, w, h);
+      // Smooth the data using cardinal spline for mountain effect
+      function getPoints(progress) {
+        return data.map((val, i) => ({
+          x: padLeft + i * stepX,
+          y: padTop + chartH - (val / maxVal) * chartH * progress
+        }));
+      }
 
-      data.forEach((val, i) => {
-        const barH = (val / maxVal) * (chartHeight - 8);
-        const x = 24 + i * barWidth;
-        const y = chartHeight - barH;
+      function catmullRom(pts) {
+        const tension = 0.35;
+        const path = [];
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p0 = pts[Math.max(i - 1, 0)];
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const p3 = pts[Math.min(i + 2, pts.length - 1)];
 
-        ctx.fillStyle = val > 0 ? '#046bd2' : '#e2e8f0';
-        ctx.fillRect(x + 1, y, barWidth - 2, barH);
+          const cp1x = p1.x + (p2.x - p0.x) * tension;
+          const cp1y = p1.y + (p2.y - p0.y) * tension;
+          const cp2x = p2.x - (p3.x - p1.x) * tension;
+          const cp2y = p2.y - (p3.y - p1.y) * tension;
 
-        if (i % 3 === 0) {
-          ctx.fillStyle = '#64748b';
-          ctx.font = '9px Inter';
-          ctx.textAlign = 'center';
-          ctx.fillText(`${i}h`, x + barWidth / 2, h - 3);
+          path.push({ p1, cp1: {x:cp1x, y:cp1y}, cp2: {x:cp2x, y:cp2y}, p2 });
+        }
+        return path;
+      }
+
+      function drawFrame(progress) {
+        ctx.clearRect(0, 0, w, h);
+
+        // Grid lines (horizontal)
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i <= 4; i++) {
+          const gy = padTop + (chartH / 4) * i;
+          ctx.beginPath();
+          ctx.setLineDash([3, 3]);
+          ctx.moveTo(padLeft, gy);
+          ctx.lineTo(w - padRight, gy);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        const pts = getPoints(progress);
+        const segments = catmullRom(pts);
+
+        // Area fill (gradient)
+        const grad = ctx.createLinearGradient(0, padTop, 0, padTop + chartH);
+        grad.addColorStop(0, 'rgba(4, 107, 210, 0.35)');
+        grad.addColorStop(0.5, 'rgba(4, 107, 210, 0.12)');
+        grad.addColorStop(1, 'rgba(4, 107, 210, 0.02)');
+
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, padTop + chartH);
+        ctx.lineTo(pts[0].x, pts[0].y);
+        segments.forEach(s => {
+          ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
+        });
+        ctx.lineTo(pts[pts.length - 1].x, padTop + chartH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Line stroke
+        const lineGrad = ctx.createLinearGradient(0, padTop, 0, padTop + chartH);
+        lineGrad.addColorStop(0, '#046bd2');
+        lineGrad.addColorStop(1, '#045cb4');
+
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        segments.forEach(s => {
+          ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
+        });
+        ctx.strokeStyle = lineGrad;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Data points (dots) and values
+        pts.forEach((pt, i) => {
+          if (data[i] > 0 && progress > 0.8) {
+            const dotOpacity = Math.min(1, (progress - 0.8) / 0.2);
+
+            // Glow
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(4, 107, 210, ${0.15 * dotOpacity})`;
+            ctx.fill();
+
+            // Dot
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(4, 107, 210, ${dotOpacity})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(255, 255, 255, ${dotOpacity})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Value label
+            ctx.fillStyle = `rgba(30, 41, 59, ${dotOpacity})`;
+            ctx.font = 'bold 9px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(data[i], pt.x, pt.y - 10);
+          }
+        });
+
+        // X-axis labels
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '9px Inter';
+        ctx.textAlign = 'center';
+        data.forEach((_, i) => {
+          if (i % 3 === 0) {
+            const x = padLeft + i * stepX;
+            ctx.fillText(`${i}h`, x, h - 4);
+          }
+        });
+
+        // Y-axis labels
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '8px Inter';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 4; i++) {
+          const val = Math.round((maxVal / 4) * (4 - i));
+          const gy = padTop + (chartH / 4) * i;
+          if (val > 0) ctx.fillText(val, padLeft - 4, gy + 3);
         }
 
-        if (val > 0) {
-          ctx.fillStyle = '#1e293b';
-          ctx.font = '8px Inter';
-          ctx.textAlign = 'center';
-          ctx.fillText(val, x + barWidth / 2, y - 2);
-        }
-      });
+        // Baseline
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, padTop + chartH);
+        ctx.lineTo(w - padRight, padTop + chartH);
+        ctx.stroke();
+      }
 
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(22, 0);
-      ctx.lineTo(22, chartHeight);
-      ctx.lineTo(w, chartHeight);
-      ctx.stroke();
+      // Animate
+      if (chartAnimFrame) cancelAnimationFrame(chartAnimFrame);
+      const duration = 1200;
+      const start = performance.now();
+
+      function animate(now) {
+        const elapsed = now - start;
+        const rawProgress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const progress = 1 - Math.pow(1 - rawProgress, 3);
+        drawFrame(progress);
+        if (rawProgress < 1) {
+          chartAnimFrame = requestAnimationFrame(animate);
+        }
+      }
+      chartAnimFrame = requestAnimationFrame(animate);
     }
 
     // ============================================
