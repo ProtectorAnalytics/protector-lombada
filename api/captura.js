@@ -123,9 +123,12 @@ module.exports = async function handler(req, res) {
     if (dados.AlarmInfoPlate) {
       const alarm = dados.AlarmInfoPlate;
       const plate = alarm.result?.PlateResult || {};
+      // Speed: prefer radarSpeed (actual radar measurement) over plate.speed
+      const radarSpeed = plate.radarSpeed?.Speed?.PerHour || 0;
+      const finalSpeed = radarSpeed || plate.speed || 0;
       normalized = {
         placa: plate.license || '',
-        velocidade: plate.speed || 0,
+        velocidade: finalSpeed,
         imageBase64: plate.imageFile || '',
         pixels: plate.confidence || 0,
         tipo_veiculo: plate.type || '',
