@@ -19,11 +19,11 @@ module.exports.config = {
   api: { bodyParser: false },
 };
 
-// Log debug to database for diagnostics
-async function logDebug(level, message, data) {
+// Log only errors to database (debug_log is auto-cleaned every 6h)
+async function logError(message, data) {
   try {
     await supabase.from('debug_log').insert({
-      content_type: level,
+      content_type: 'captura-error',
       raw_body: message,
       parsed_json: typeof data === 'object' ? data : { value: data },
     });
@@ -34,19 +34,6 @@ module.exports = async function handler(req, res) {
   const method = req.method;
   const url = req.url;
   const contentType = req.headers['content-type'] || '';
-
-  // Log every request that arrives
-  await logDebug('captura-request', `${method} ${url} | content-type: ${contentType}`, {
-    method,
-    url,
-    contentType,
-    query: req.query,
-    headers: {
-      'content-type': contentType,
-      'content-length': req.headers['content-length'] || 'unknown',
-      'user-agent': req.headers['user-agent'] || 'unknown',
-    },
-  });
 
   // Apenas POST
   if (method !== 'POST') {
@@ -81,13 +68,10 @@ module.exports = async function handler(req, res) {
 
       if (serialno) {
         camera = await findCameraBySerial(serialno);
-        if (camera) {
-          await logDebug('captura-auth', `Camera encontrada por serial: ${serialno}`, { serialno, cameraId: camera.id });
-        }
       }
 
       if (!camera) {
-        await logDebug('captura-error', `Camera nao encontrada | token: ${token || 'none'} | type: ${dataType}`, {
+        await logError(`Camera nao encontrada | token: ${token || 'none'} | type: ${dataType}`, {
           token, dataType, url,
           serialno: serialno || 'none',
         });
@@ -99,9 +83,6 @@ module.exports = async function handler(req, res) {
     const rateCheck = checkRateLimit(camera.id);
     if (!rateCheck.allowed) {
       res.setHeader('Retry-After', Math.ceil(rateCheck.resetIn / 1000));
-      await logDebug('captura-ratelimit', `Rate limit excedido para camera ${camera.nome}`, {
-        cameraId: camera.id, resetIn: rateCheck.resetIn,
-      });
       return res.status(429).json({ error: 'Muitas requisicoes. Tente novamente em breve.' });
     }
 
@@ -109,15 +90,6 @@ module.exports = async function handler(req, res) {
     if (!cliente || !cliente.ativo) {
       return res.status(403).json({ error: 'Cliente inativo' });
     }
-
-    // Log the parsed data (without image to save space)
-    const logData = JSON.parse(JSON.stringify(dados));
-    if (logData.AlarmInfoPlate?.result?.PlateResult?.imageFile) {
-      logData.AlarmInfoPlate.result.PlateResult.imageFile = '[BASE64_IMAGE_REMOVED]';
-    }
-    if (logData.imageBase64) logData.imageBase64 = '[BASE64_IMAGE_REMOVED]';
-
-    await logDebug('captura-parsed', `${dataType} | camera: ${camera.nome}`, logData);
 
     // Skip SerialData - it's raw sensor data, not plate recognition
     if (dados.SerialData) {
@@ -146,12 +118,6 @@ module.exports = async function handler(req, res) {
         cor_veiculo: String(plate.carColor || ''),
       };
 
-      await logDebug('captura-normalized', `AlarmInfoPlate -> placa: ${normalized.placa}, vel: ${normalized.velocidade}`, {
-        placa: normalized.placa,
-        velocidade: normalized.velocidade,
-        pixels: normalized.pixels,
-        hasImage: !!normalized.imageBase64,
-      });
     }
 
     // Extrair campos
@@ -164,7 +130,7 @@ module.exports = async function handler(req, res) {
     const imageBase64 = normalized.imageBase64 || normalized.image || normalized.foto || '';
 
     if (!placa) {
-      await logDebug('captura-error', 'Placa vazia apos normalizacao', { normalized: logData, placa });
+      await logError('Placa vazia apos normalizacao', { placa });
       return res.status(400).json({ error: 'Placa nao fornecida' });
     }
 
@@ -184,7 +150,7 @@ module.exports = async function handler(req, res) {
       try {
         await uploadPhoto(fotoPath, fotoBuffer);
       } catch (uploadErr) {
-        await logDebug('captura-error', `Erro upload foto: ${uploadErr.message}`, { fotoPath, size: fotoBuffer.length });
+        await logError(`Erro upload foto: ${uploadErr.message}`, { fotoPath, size: fotoBuffer.length });
         // Continue without photo
         fotoPath = null;
       }
@@ -206,13 +172,6 @@ module.exports = async function handler(req, res) {
 
     // Atualizar last_seen da camera
     await updateCameraLastSeen(camera.id, captura.id);
-
-    await logDebug('captura-success', `Captura salva: ${placa} ${velocidade}km/h`, {
-      capturaId: captura.id,
-      placa,
-      velocidade,
-      fotoPath,
-    });
 
     // Verificar se precisa notificar
     if (velocidade > cliente.limite_velocidade) {
@@ -245,14 +204,14 @@ module.exports = async function handler(req, res) {
 
         await markNotificado(captura.id);
       } catch (notifErr) {
-        await logDebug('captura-error', `Erro notificacao: ${notifErr.message}`, { placa, velocidade });
+        await logError(`Erro notificacao: ${notifErr.message}`, { placa, velocidade });
         console.error('Erro na notificacao:', notifErr.message);
       }
     }
 
     return res.status(200).json({ ok: true, id: captura.id });
   } catch (err) {
-    await logDebug('captura-error', `Erro geral: ${err.message}`, { stack: err.stack?.slice(0, 500) });
+    await logError(`Erro geral: ${err.message}`, { stack: err.stack?.slice(0, 500) });
     console.error('Erro no endpoint /api/captura:', err.message);
     return res.status(500).json({ error: 'Erro interno do servidor' });
   }
