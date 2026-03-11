@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
 
     // POST: cadastrar veículo
     if (method === 'POST') {
-      const { profile } = await autenticar(req, ['super_admin', 'admin_cliente']);
+      const { profile } = await autenticar(req, ['super_admin', 'admin_cliente', 'operador']);
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
 
       const { cliente_id, placa, nome_morador, unidade, marca, cor } = body;
@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
 
     // PUT: atualizar veículo
     if (method === 'PUT') {
-      const { profile } = await autenticar(req, ['super_admin', 'admin_cliente']);
+      const { profile } = await autenticar(req, ['super_admin', 'admin_cliente', 'operador']);
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
       const { id, ...campos } = body;
 
@@ -126,7 +126,7 @@ module.exports = async function handler(req, res) {
 
     // DELETE: desativar veículo
     if (method === 'DELETE') {
-      const { profile } = await autenticar(req, ['super_admin', 'admin_cliente']);
+      const { profile } = await autenticar(req, ['super_admin', 'admin_cliente', 'operador']);
       const veiculoId = req.query.id;
       if (!veiculoId) return res.status(400).json({ error: 'ID do veículo obrigatório' });
 
