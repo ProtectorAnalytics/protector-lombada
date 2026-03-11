@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual do Usuário - Protector Traffic Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #046bd2;
+            --accent-light: #e8f1fc;
+            --accent-dark: #034ea2;
+            --text: #1a1a2e;
+            --text-light: #555;
+            --bg: #ffffff;
+            --bg-alt: #f7f9fc;
+            --border: #e0e6ed;
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --sidebar-w: 280px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* ── Top Navbar ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 60px;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            text-decoration: none;
+        }
+        .navbar .brand svg { flex-shrink: 0; }
+        .navbar .nav-actions { display: flex; gap: 10px; }
+        .navbar .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: background .2s, transform .1s;
+        }
+        .navbar .btn:active { transform: scale(.97); }
+        .btn-white { background: #fff; color: var(--accent); }
+        .btn-white:hover { background: #f0f4ff; }
+        .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.5); }
+        .btn-outline:hover { background: rgba(255,255,255,.12); }
+
+        /* ── Sidebar TOC ── */
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-w);
+            background: var(--bg-alt);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 24px 0;
+            z-index: 50;
+        }
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            padding: 0 20px;
+            margin-bottom: 12px;
+        }
+        .sidebar a {
+            display: block;
+            padding: 7px 20px;
+            font-size: 13px;
+            color: var(--text-light);
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all .15s;
+        }
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: var(--accent);
+            background: var(--accent-light);
+            border-left-color: var(--accent);
+        }
+
+        /* ── Main content ── */
+        .main {
+            margin-left: var(--sidebar-w);
+            margin-top: 60px;
+            padding: 40px 48px 80px;
+            max-width: 900px;
+        }
+
+        /* ── Typography ── */
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: var(--text-light);
+            font-weight: 400;
+            margin-bottom: 4px;
+        }
+        .version {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 32px;
+        }
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            margin-top: 48px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--accent-light);
+        }
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+        h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+        p { margin-bottom: 14px; }
+
+        a { color: var(--accent); }
+
+        strong { font-weight: 600; }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 36px 0;
+        }
+
+        /* ── Lists ── */
+        ul, ol { margin: 0 0 14px 24px; }
+        li { margin-bottom: 4px; }
+        li > ul, li > ol { margin-top: 4px; margin-bottom: 4px; }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px;
+            font-size: 14px;
+        }
+        th {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 14px;
+        }
+        th:first-child { border-radius: 6px 0 0 0; }
+        th:last-child { border-radius: 0 6px 0 0; }
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        tr:nth-child(even) td { background: var(--bg-alt); }
+        tr:hover td { background: var(--accent-light); }
+
+        /* ── Code ── */
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #d6336c;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0 24px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        /* ── Blockquotes ── */
+        blockquote {
+            border-left: 4px solid var(--accent);
+            background: var(--accent-light);
+            padding: 14px 20px;
+            margin: 16px 0 24px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: var(--text);
+        }
+        blockquote p { margin-bottom: 0; }
+        blockquote strong { color: var(--accent-dark); }
+
+        /* ── Color indicators ── */
+        .color-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        /* ── Mobile ── */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        @media (max-width: 860px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+            .main { margin-left: 0; padding: 32px 20px 60px; }
+            .menu-toggle { display: block; }
+        }
+
+        /* ── Print ── */
+        @media print {
+            .navbar, .sidebar, .menu-toggle, .btn { display: none !important; }
+            .main {
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+            }
+            body { font-size: 12px; line-height: 1.5; color: #000; }
+            h1 { font-size: 24px; color: #000; }
+            h2 { font-size: 18px; border-bottom-color: #ccc; page-break-after: avoid; }
+            h3 { font-size: 15px; page-break-after: avoid; }
+            table { font-size: 11px; }
+            th { background: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr:nth-child(even) td { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            blockquote { border-left-color: #333; background: #f5f5f5; }
+            pre { background: #f5f5f5 !important; color: #000 !important; border: 1px solid #ccc; }
+            a { color: #000; text-decoration: none; }
+            .main h2:first-of-type { margin-top: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="/dashboard/" class="brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Protector Traffic Control
+    </a>
+    <div class="nav-actions">
+        <button class="btn btn-outline" onclick="window.print()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h8v7M6 14H4a2 2 0 01-2-2V9h16v3a2 2 0 01-2 2h-2m-8 0h8v5H6v-5z"/></svg>
+            Imprimir / Salvar PDF
+        </button>
+        <a href="/dashboard/" class="btn btn-white">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            Voltar ao Dashboard
+        </a>
+    </div>
+</nav>
+
+<!-- Sidebar TOC -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">Sumario</div>
+    <a href="#acesso-ao-sistema">1. Acesso ao Sistema</a>
+    <a href="#tela-inicial-dashboard">2. Tela Inicial (Dashboard)</a>
+    <a href="#indicadores-de-velocidade">3. Indicadores de Velocidade</a>
+    <a href="#ultimas-capturas">4. Ultimas Capturas</a>
+    <a href="#status-das-cameras">5. Status das Cameras</a>
+    <a href="#gerenciar-veiculos">6. Gerenciar Veiculos</a>
+    <a href="#importar-veiculos-por-excel">7. Importar Veiculos por Excel</a>
+    <a href="#exportar-veiculos-para-excel">8. Exportar Veiculos para Excel</a>
+    <a href="#emails-de-alerta">9. Emails de Alerta</a>
+    <a href="#notificacoes-automaticas">10. Notificacoes Automaticas</a>
+    <a href="#recuperar-senha">11. Recuperar Senha</a>
+    <a href="#faq">12. Perguntas Frequentes (FAQ)</a>
+    <a href="#suporte">Suporte</a>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+    <h1>Manual do Usuario</h1>
+    <p class="subtitle">Lombada Educativa Inteligente</p>
+    <p class="version">Versao 1.0.0 | Marco 2026</p>
+
+    <hr>
+
+    <h2 id="bem-vindo">Bem-vindo ao Protector Traffic Control</h2>
+    <p>O <strong>Protector Traffic Control</strong> e o sistema de monitoramento de velocidade para condominios e vias privadas. Atraves do dashboard web, voce pode acompanhar em tempo real os veiculos que passam pela lombada educativa, receber alertas de excesso de velocidade e gerenciar os veiculos cadastrados do seu condominio.</p>
+
+    <hr>
+
+    <!-- Section 1 -->
+    <h2 id="acesso-ao-sistema">1. Acesso ao Sistema</h2>
+
+    <h3>Como acessar</h3>
+    <ol>
+        <li>Abra o navegador (Chrome, Firefox, Edge ou Safari)</li>
+        <li>Acesse o endereco fornecido pela Protector Sistemas (ex: <code>https://lombada.seudominio.com.br</code>)</li>
+        <li>Voce vera a tela de login</li>
+    </ol>
+
+    <h3>Fazer Login</h3>
+    <ol>
+        <li>Digite seu <strong>email</strong> cadastrado</li>
+        <li>Digite sua <strong>senha</strong></li>
+        <li>Clique em <strong>"ENTRAR"</strong></li>
+    </ol>
+
+    <blockquote><p>Se nao possui acesso, solicite suas credenciais ao administrador do sistema.</p></blockquote>
+
+    <hr>
+
+    <!-- Section 2 -->
+    <h2 id="tela-inicial-dashboard">2. Tela Inicial (Dashboard)</h2>
+    <p>Apos o login, voce vera o painel principal com as seguintes informacoes:</p>
+
+    <h3>Barra Superior</h3>
+    <ul>
+        <li><strong>Logo e nome do sistema</strong> (Protector Traffic Control)</li>
+        <li><strong>Nome do seu condominio/empresa</strong></li>
+        <li><strong>Seu email</strong> de login</li>
+        <li><strong>Botao "Veiculos"</strong> - acesso rapido ao cadastro de veiculos</li>
+        <li><strong>Botao "Sair"</strong> - encerrar sessao</li>
+    </ul>
+
+    <h3>Area de Estatisticas (cards)</h3>
+    <p>Quatro cards com dados atualizados automaticamente:</p>
+
+    <table>
+        <thead>
+            <tr><th>Card</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Capturas Hoje</strong></td><td>Total de veiculos registrados no dia</td></tr>
+            <tr><td><strong>Velocidade Media</strong></td><td>Velocidade media de todos os veiculos do dia</td></tr>
+            <tr><td><strong>Acima do Limite</strong></td><td>Quantidade de veiculos acima da velocidade permitida</td></tr>
+            <tr><td><strong>Cameras Online</strong></td><td>Quantidade de cameras funcionando</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- Section 3 -->
+    <h2 id="indicadores-de-velocidade">3. Indicadores de Velocidade</h2>
+
+    <h3>Grafico de Velocidade</h3>
+    <p>Na lateral direita do dashboard, um grafico mostra a distribuicao de velocidades das ultimas capturas:</p>
+    <ul>
+        <li><span class="color-dot" style="background:#22c55e"></span> <strong>Verde (0-20 km/h):</strong> Velocidade adequada</li>
+        <li><span class="color-dot" style="background:#f59e0b"></span> <strong>Amarelo (21-30 km/h):</strong> Atencao</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Vermelho (acima de 30 km/h):</strong> Acima do limite</li>
+    </ul>
+
+    <h3>Velocidade Maxima e Media</h3>
+    <ul>
+        <li>A velocidade maxima registrada no dia e destacada</li>
+        <li>A media geral e exibida nos cards de estatistica</li>
+    </ul>
+
+    <hr>
+
+    <!-- Section 4 -->
+    <h2 id="ultimas-capturas">4. Ultimas Capturas</h2>
+    <p>A secao principal do dashboard mostra as <strong>10 ultimas capturas</strong> em formato de cards:</p>
+
+    <h3>Informacoes de cada captura:</h3>
+    <ul>
+        <li><strong>Foto do veiculo</strong> capturada pela camera</li>
+        <li><strong>Placa</strong> do veiculo (em destaque)</li>
+        <li><strong>Velocidade</strong> registrada (com indicador de cor)</li>
+        <li><strong>Data e hora</strong> da captura</li>
+        <li><strong>Camera</strong> que registrou</li>
+        <li><strong>Nome do morador</strong> (se o veiculo estiver cadastrado)</li>
+        <li><strong>Unidade</strong> (se cadastrado)</li>
+    </ul>
+
+    <h3>Cores da velocidade:</h3>
+    <ul>
+        <li><span class="color-dot" style="background:#22c55e"></span> <strong>Verde:</strong> Abaixo do limite - veiculo trafegando normalmente</li>
+        <li><span class="color-dot" style="background:#f59e0b"></span> <strong>Laranja:</strong> Proximo do limite - atencao</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Vermelho:</strong> Acima do limite - excesso de velocidade</li>
+    </ul>
+
+    <h3>Atualizacao automatica</h3>
+    <p>As capturas sao atualizadas automaticamente a cada <strong>30 segundos</strong>. O ponto verde pulsante no canto superior direito indica que o sistema esta atualizando.</p>
+
+    <hr>
+
+    <!-- Section 5 -->
+    <h2 id="status-das-cameras">5. Status das Cameras</h2>
+    <p>Na secao de cameras voce pode verificar:</p>
+    <ul>
+        <li><span class="color-dot" style="background:#22c55e"></span> <strong>Camera Online (verde):</strong> A camera esta funcionando normalmente e enviando dados</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Camera Offline (vermelho):</strong> A camera nao enviou dados nos ultimos 5 minutos</li>
+    </ul>
+
+    <blockquote><p>Se uma camera aparece como offline, verifique a conexao de internet no local. Se o problema persistir, entre em contato com o suporte tecnico.</p></blockquote>
+
+    <hr>
+
+    <!-- Section 6 -->
+    <h2 id="gerenciar-veiculos">6. Gerenciar Veiculos</h2>
+    <p>O cadastro de veiculos permite que o sistema identifique os moradores e inclua o nome/unidade nas notificacoes de velocidade.</p>
+
+    <h3>Abrir o modulo de veiculos</h3>
+    <p>Clique no botao <strong>"Veiculos (X)"</strong> na barra superior (onde X e o total cadastrado).</p>
+
+    <h3>Aba "Lista"</h3>
+    <p>Mostra todos os veiculos cadastrados com:</p>
+    <ul>
+        <li><strong>Placa</strong></li>
+        <li><strong>Nome do morador</strong></li>
+        <li><strong>Unidade</strong></li>
+        <li><strong>Marca/modelo</strong></li>
+        <li><strong>Cor</strong></li>
+    </ul>
+    <p><strong>Funcionalidades:</strong></p>
+    <ul>
+        <li><strong>Filtrar:</strong> Digite no campo de busca para filtrar por placa, morador, unidade ou marca</li>
+        <li><strong>Paginacao:</strong> Navega entre as paginas (10 veiculos por pagina)</li>
+        <li><strong>Excluir:</strong> Clique em "Excluir" para remover um veiculo</li>
+    </ul>
+
+    <h3>Aba "Cadastrar"</h3>
+    <p>Para adicionar um veiculo individual:</p>
+    <ol>
+        <li>Clique na aba <strong>"Cadastrar"</strong></li>
+        <li>Preencha:
+            <ul>
+                <li><strong>Placa</strong> (obrigatorio) - formato ABC1D23 ou ABC1234</li>
+                <li><strong>Nome do Morador</strong> - nome completo do proprietario</li>
+                <li><strong>Unidade</strong> - ex: "Bloco A - Apt 101"</li>
+                <li><strong>Marca/Modelo</strong> - ex: "Honda Civic"</li>
+                <li><strong>Cor</strong> - ex: "Prata"</li>
+            </ul>
+        </li>
+        <li>Clique em <strong>"Cadastrar Veiculo"</strong></li>
+    </ol>
+
+    <hr>
+
+    <!-- Section 7 -->
+    <h2 id="importar-veiculos-por-excel">7. Importar Veiculos por Excel</h2>
+    <p>Para cadastrar muitos veiculos de uma vez, use a importacao por planilha Excel.</p>
+
+    <h3>Passo a passo:</h3>
+    <ol>
+        <li>Clique no botao <strong>"Veiculos"</strong> na barra superior</li>
+        <li>Clique na aba <strong>"Importar / Exportar"</strong></li>
+        <li>Clique em <strong>"Baixar Modelo"</strong> para obter o modelo de planilha</li>
+        <li>Abra o arquivo modelo no Excel ou Google Sheets</li>
+        <li>Preencha os dados seguindo as colunas:</li>
+    </ol>
+
+    <table>
+        <thead>
+            <tr><th>PLACA</th><th>MORADOR</th><th>UNIDADE</th><th>MARCA</th><th>COR</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>ABC1D23</td><td>Joao Silva</td><td>Bloco A - 101</td><td>Honda Civic</td><td>Prata</td></tr>
+            <tr><td>XYZ9876</td><td>Maria Santos</td><td>Bloco B - 202</td><td>Toyota Corolla</td><td>Branco</td></tr>
+        </tbody>
+    </table>
+
+    <ol start="6">
+        <li>Salve o arquivo como <strong>.xlsx</strong></li>
+        <li>Volte ao sistema e clique em <strong>"Selecionar Arquivo"</strong></li>
+        <li>Escolha o arquivo preenchido</li>
+        <li>O sistema mostrara um <strong>preview</strong>:
+            <ul>
+                <li>Quantas linhas foram lidas</li>
+                <li>Quantos veiculos novos serao importados</li>
+                <li>Quantos ja estao cadastrados (serao ignorados)</li>
+            </ul>
+        </li>
+        <li>Clique em <strong>"Importar X veiculos"</strong> para confirmar</li>
+    </ol>
+
+    <blockquote><p><strong>Dica:</strong> Veiculos com placa ja cadastrada serao automaticamente ignorados, evitando duplicatas.</p></blockquote>
+
+    <hr>
+
+    <!-- Section 8 -->
+    <h2 id="exportar-veiculos-para-excel">8. Exportar Veiculos para Excel</h2>
+    <p>Para baixar a lista completa de veiculos em formato Excel:</p>
+    <ol>
+        <li>Clique no botao <strong>"Veiculos"</strong> na barra superior</li>
+        <li>Clique na aba <strong>"Importar / Exportar"</strong></li>
+        <li>Clique em <strong>"Exportar Excel"</strong></li>
+        <li>O arquivo <code>.xlsx</code> sera baixado automaticamente</li>
+    </ol>
+    <p>O arquivo exportado contem todas as colunas: PLACA, MORADOR, UNIDADE, MARCA e COR.</p>
+
+    <hr>
+
+    <!-- Section 9 -->
+    <h2 id="emails-de-alerta">9. Emails de Alerta</h2>
+
+    <h3>O que sao</h3>
+    <p>Quando um veiculo e detectado acima do limite de velocidade, o sistema envia automaticamente um email de alerta para os destinatarios cadastrados.</p>
+
+    <h3>Gerenciar destinatarios</h3>
+    <p>Na secao <strong>"Emails de Alerta"</strong> do dashboard:</p>
+    <ol>
+        <li><strong>Adicionar:</strong> Clique em "Adicionar", preencha nome, email e tipo</li>
+        <li><strong>Tipos de notificacao:</strong>
+            <ul>
+                <li><strong>Alerta:</strong> Recebe avisos de excesso de velocidade</li>
+                <li><strong>Relatorio:</strong> Recebe relatorios periodicos</li>
+                <li><strong>Todos:</strong> Recebe tudo</li>
+            </ul>
+        </li>
+        <li><strong>Remover:</strong> Clique no botao de remover ao lado do destinatario</li>
+    </ol>
+
+    <h3>Conteudo do email de alerta</h3>
+    <p>Cada email de alerta inclui um <strong>PDF anexo</strong> com:</p>
+    <ul>
+        <li>Foto do veiculo</li>
+        <li>Placa e velocidade registrada</li>
+        <li>Data e hora</li>
+        <li>Nome do morador e unidade (se cadastrado)</li>
+        <li>Historico de passagens dos ultimos 30 dias</li>
+    </ul>
+
+    <hr>
+
+    <!-- Section 10 -->
+    <h2 id="notificacoes-automaticas">10. Notificacoes Automaticas</h2>
+    <p>O sistema funciona de forma totalmente automatica:</p>
+    <ol>
+        <li>A camera detecta o veiculo e le a placa</li>
+        <li>O sistema registra a passagem com foto e velocidade</li>
+        <li>Se a velocidade for <strong>acima do limite configurado</strong>:
+            <ul>
+                <li>Gera um PDF com os dados da infracao</li>
+                <li>Envia email para todos os destinatarios de alerta</li>
+            </ul>
+        </li>
+        <li>O dashboard e atualizado em tempo real</li>
+    </ol>
+
+    <blockquote><p><strong>Importante:</strong> O documento PDF e meramente educativo e NAO tem valor de multa oficial. Seu objetivo e conscientizar os moradores sobre o respeito ao limite de velocidade.</p></blockquote>
+
+    <hr>
+
+    <!-- Section 11 -->
+    <h2 id="recuperar-senha">11. Recuperar Senha</h2>
+    <p>Se voce esqueceu sua senha:</p>
+    <ol>
+        <li>Na tela de login, clique em <strong>"Esqueci minha senha"</strong></li>
+        <li>Digite seu <strong>email cadastrado</strong></li>
+        <li>Clique em <strong>"ENVIAR LINK DE RECUPERACAO"</strong></li>
+        <li>Verifique seu email (inclusive a caixa de spam)</li>
+        <li>Clique no link recebido</li>
+        <li>Defina sua <strong>nova senha</strong> (minimo 6 caracteres)</li>
+        <li>Faca login com a nova senha</li>
+    </ol>
+
+    <blockquote><p>O link de recuperacao expira apos 24 horas. Se expirar, solicite um novo.</p></blockquote>
+
+    <hr>
+
+    <!-- Section 12 -->
+    <h2 id="faq">12. Perguntas Frequentes (FAQ)</h2>
+
+    <h3>As capturas ficam armazenadas por quanto tempo?</h3>
+    <p>As capturas (fotos e registros) ficam armazenadas por <strong>15 dias</strong>. Apos esse periodo, sao removidas automaticamente pelo sistema.</p>
+
+    <h3>A velocidade mostrada e precisa?</h3>
+    <p>A velocidade e medida pelo <strong>radar integrado</strong> a camera ALPHADIGI. A precisao depende da calibracao do equipamento e das condicoes de instalacao.</p>
+
+    <h3>Posso cadastrar veiculos de visitantes?</h3>
+    <p>Sim. Voce pode cadastrar qualquer placa no sistema. Recomendamos preencher o campo "Nome do Morador" com "Visitante" e a unidade com o morador responsavel.</p>
+
+    <h3>O sistema funciona 24 horas?</h3>
+    <p>Sim. O sistema opera 24 horas por dia, 7 dias por semana. As cameras capturam veiculos durante o dia e a noite (com iluminacao infravermelha).</p>
+
+    <h3>Por que uma camera aparece como "Offline"?</h3>
+    <p>Possiveis causas:</p>
+    <ul>
+        <li>Queda de energia no local da camera</li>
+        <li>Queda de internet no local</li>
+        <li>Problema na camera (raro)</li>
+    </ul>
+    <p>Aguarde alguns minutos e verifique novamente. Se persistir, contate o suporte.</p>
+
+    <h3>Posso acessar o sistema pelo celular?</h3>
+    <p>Sim. O dashboard e responsivo e funciona em qualquer dispositivo com navegador: computador, tablet ou celular.</p>
+
+    <h3>Quantos emails de alerta posso cadastrar?</h3>
+    <p>Nao ha limite. Voce pode cadastrar quantos destinatarios desejar.</p>
+
+    <h3>Como alterar o limite de velocidade?</h3>
+    <p>O limite de velocidade e configurado pelo administrador do sistema. Entre em contato com a Protector Sistemas para solicitar alteracoes.</p>
+
+    <h3>Os dados sao seguros?</h3>
+    <p>Sim. O sistema utiliza:</p>
+    <ul>
+        <li><strong>Conexao HTTPS</strong> (criptografia em transito)</li>
+        <li><strong>Autenticacao JWT</strong> (tokens seguros)</li>
+        <li><strong>Banco de dados isolado</strong> por cliente (cada condominio so ve seus proprios dados)</li>
+        <li><strong>Politicas de acesso (RLS)</strong> no banco de dados</li>
+    </ul>
+
+    <hr>
+
+    <!-- Suporte -->
+    <h2 id="suporte">Suporte</h2>
+    <p>Em caso de duvidas ou problemas:</p>
+    <ul>
+        <li><strong>Protector Sistemas</strong></li>
+        <li>Entre em contato com seu representante comercial</li>
+        <li>Informe o nome do condominio e descreva o problema</li>
+    </ul>
+
+    <hr>
+
+    <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
+        <strong>Protector Traffic Control</strong> - v1.0.0 | Marco 2026<br>
+        <em>Sistema de Lombada Educativa Inteligente</em>
+    </p>
+
+</main>
+
+<script>
+// Highlight active sidebar link on scroll
+(function() {
+    const sections = document.querySelectorAll('h2[id]');
+    const links = document.querySelectorAll('.sidebar a');
+    function onScroll() {
+        let current = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 100) current = s.id;
+        });
+        links.forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+        });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Close sidebar on mobile when clicking a link
+    links.forEach(a => a.addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.remove('open');
+    }));
+})();
+</script>
+
+</body>
+</html>

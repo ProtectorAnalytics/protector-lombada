@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Tecnico - Protector Traffic Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #046bd2;
+            --accent-light: #e8f1fc;
+            --accent-dark: #034ea2;
+            --text: #1a1a2e;
+            --text-light: #555;
+            --bg: #ffffff;
+            --bg-alt: #f7f9fc;
+            --border: #e0e6ed;
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --sidebar-w: 300px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* ── Top Navbar ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 60px;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            text-decoration: none;
+        }
+        .navbar .brand svg { flex-shrink: 0; }
+        .navbar .badge {
+            background: rgba(255,255,255,.2);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .navbar .nav-actions { display: flex; gap: 10px; }
+        .navbar .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: background .2s, transform .1s;
+        }
+        .navbar .btn:active { transform: scale(.97); }
+        .btn-white { background: #fff; color: var(--accent); }
+        .btn-white:hover { background: #f0f4ff; }
+        .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.5); }
+        .btn-outline:hover { background: rgba(255,255,255,.12); }
+
+        /* ── Sidebar TOC ── */
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-w);
+            background: var(--bg-alt);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 24px 0;
+            z-index: 50;
+        }
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            padding: 0 20px;
+            margin-bottom: 12px;
+        }
+        .sidebar a {
+            display: block;
+            padding: 6px 20px;
+            font-size: 12.5px;
+            color: var(--text-light);
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all .15s;
+        }
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: var(--accent);
+            background: var(--accent-light);
+            border-left-color: var(--accent);
+        }
+
+        /* ── Main content ── */
+        .main {
+            margin-left: var(--sidebar-w);
+            margin-top: 60px;
+            padding: 40px 48px 80px;
+            max-width: 920px;
+        }
+
+        /* ── Typography ── */
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: var(--text-light);
+            font-weight: 400;
+            margin-bottom: 4px;
+        }
+        .version {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 32px;
+        }
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            margin-top: 48px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--accent-light);
+        }
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+        h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            color: var(--accent-dark);
+        }
+        p { margin-bottom: 14px; }
+
+        a { color: var(--accent); }
+
+        strong { font-weight: 600; }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 36px 0;
+        }
+
+        /* ── Lists ── */
+        ul, ol { margin: 0 0 14px 24px; }
+        li { margin-bottom: 4px; }
+        li > ul, li > ol { margin-top: 4px; margin-bottom: 4px; }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px;
+            font-size: 13.5px;
+        }
+        th {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 14px;
+        }
+        th:first-child { border-radius: 6px 0 0 0; }
+        th:last-child { border-radius: 0 6px 0 0; }
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        tr:nth-child(even) td { background: var(--bg-alt); }
+        tr:hover td { background: var(--accent-light); }
+
+        /* ── Code ── */
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #d6336c;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0 24px;
+            font-size: 12.5px;
+            line-height: 1.6;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        /* ── Blockquotes ── */
+        blockquote {
+            border-left: 4px solid var(--accent);
+            background: var(--accent-light);
+            padding: 14px 20px;
+            margin: 16px 0 24px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: var(--text);
+        }
+        blockquote p { margin-bottom: 0; }
+        blockquote strong { color: var(--accent-dark); }
+
+        /* ── Architecture diagram ── */
+        .diagram {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0 24px;
+        }
+        .diagram pre {
+            background: transparent;
+            color: var(--text);
+            padding: 0;
+            margin: 0;
+            font-size: 12.5px;
+        }
+
+        /* ── Checklist ── */
+        .checklist {
+            list-style: none;
+            margin-left: 0;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checklist li::before {
+            content: '';
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        /* ── Mobile ── */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+            .main { margin-left: 0; padding: 32px 20px 60px; }
+            .menu-toggle { display: block; }
+            pre { font-size: 11.5px; padding: 14px; }
+            table { font-size: 12px; }
+        }
+
+        /* ── Print ── */
+        @media print {
+            .navbar, .sidebar, .menu-toggle, .btn { display: none !important; }
+            .main {
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+            }
+            body { font-size: 11px; line-height: 1.5; color: #000; }
+            h1 { font-size: 22px; color: #000; }
+            h2 { font-size: 17px; border-bottom-color: #ccc; page-break-after: avoid; }
+            h3 { font-size: 14px; page-break-after: avoid; }
+            table { font-size: 10px; }
+            th { background: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr:nth-child(even) td { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            blockquote { border-left-color: #333; background: #f5f5f5; }
+            pre { background: #f5f5f5 !important; color: #000 !important; border: 1px solid #ccc; font-size: 10px; }
+            .diagram pre { color: #000 !important; }
+            a { color: #000; text-decoration: none; }
+            .main h2:first-of-type { margin-top: 24px; }
+            .checklist li::before { border-color: #999; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="/admin/" class="brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Protector Traffic Control
+        <span class="badge">Tecnico</span>
+    </a>
+    <div class="nav-actions">
+        <button class="btn btn-outline" onclick="window.print()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h8v7M6 14H4a2 2 0 01-2-2V9h16v3a2 2 0 01-2 2h-2m-8 0h8v5H6v-5z"/></svg>
+            Imprimir / Salvar PDF
+        </button>
+        <a href="/admin/" class="btn btn-white">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            Voltar ao Admin
+        </a>
+    </div>
+</nav>
+
+<!-- Sidebar TOC -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">Sumario</div>
+    <a href="#visao-geral-da-arquitetura">1. Visao Geral da Arquitetura</a>
+    <a href="#stack-tecnologica">2. Stack Tecnologica</a>
+    <a href="#variaveis-de-ambiente">3. Variaveis de Ambiente</a>
+    <a href="#banco-de-dados">4. Banco de Dados (Supabase)</a>
+    <a href="#cadastrar-novo-cliente">5. Cadastrar Novo Cliente</a>
+    <a href="#cadastrar-usuarios">6. Cadastrar Usuarios</a>
+    <a href="#cadastrar-cameras">7. Cadastrar Cameras</a>
+    <a href="#configurar-camera-fisica">8. Configurar Camera Fisica (ALPHADIGI)</a>
+    <a href="#configurar-destinatarios-email">9. Configurar Destinatarios de Email</a>
+    <a href="#fluxo-de-captura">10. Fluxo de Captura (Pipeline)</a>
+    <a href="#geracao-pdf-notificacao">11. Geracao de PDF e Notificacao</a>
+    <a href="#endpoints-da-api">12. Endpoints da API</a>
+    <a href="#deploy-infraestrutura">13. Deploy e Infraestrutura</a>
+    <a href="#cron-jobs">14. Cron Jobs (Limpeza Automatica)</a>
+    <a href="#troubleshooting">15. Troubleshooting</a>
+    <a href="#checklist-novo-cliente">Checklist para Novo Cliente</a>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+    <h1>Manual Tecnico</h1>
+    <p class="subtitle">Lombada Educativa Inteligente</p>
+    <p class="version">Versao 1.0.0 | Build d58093a | Marco 2026</p>
+
+    <hr>
+
+    <!-- Section 1 -->
+    <h2 id="visao-geral-da-arquitetura">1. Visao Geral da Arquitetura</h2>
+
+    <div class="diagram">
+<pre>
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;     &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474;  Camera ALPHADIGI   &#9474;&#9472;&#9472;&#9472;&#9472;&gt;&#9474;  Vercel Serverless (API)     &#9474;
+&#9474;  (LPR - Leitura de  &#9474;     &#9474;  POST /api/captura           &#9474;
+&#9474;   Placas + Radar)   &#9474;     &#9474;                              &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;     &#9474;  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;  &#9474;
+                            &#9474;  &#9474; Validacao do Token      &#9474;  &#9474;
+                            &#9474;  &#9474; Rate Limiting (120/min) &#9474;  &#9474;
+                            &#9474;  &#9474; Normalizacao de Dados   &#9474;  &#9474;
+                            &#9474;  &#9474; Upload de Foto          &#9474;  &#9474;
+                            &#9474;  &#9474; Registro da Captura     &#9474;  &#9474;
+                            &#9474;  &#9474; Geracao de PDF          &#9474;  &#9474;
+                            &#9474;  &#9474; Envio de Email          &#9474;  &#9474;
+                            &#9474;  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;  &#9474;
+                            &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                                       &#9474;
+                            &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+                            &#9474;  Supabase                     &#9474;
+                            &#9474;  - PostgreSQL (dados)         &#9474;
+                            &#9474;  - Auth (autenticacao)        &#9474;
+                            &#9474;  - Storage (fotos capturas)   &#9474;
+                            &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                                       &#9474;
+                            &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+                            &#9474;  Dashboard Web                &#9474;
+                            &#9474;  /dashboard/ (clientes)       &#9474;
+                            &#9474;  /admin/ (super_admin)        &#9474;
+                            &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+</pre>
+    </div>
+
+    <hr>
+
+    <!-- Section 2 -->
+    <h2 id="stack-tecnologica">2. Stack Tecnologica</h2>
+
+    <table>
+        <thead>
+            <tr><th>Componente</th><th>Tecnologia</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Backend</td><td>Node.js (Vercel Serverless Functions)</td></tr>
+            <tr><td>Banco de Dados</td><td>Supabase (PostgreSQL)</td></tr>
+            <tr><td>Autenticacao</td><td>Supabase Auth (JWT)</td></tr>
+            <tr><td>Armazenamento</td><td>Supabase Storage (bucket <code>capturas-fotos</code>)</td></tr>
+            <tr><td>Frontend Dashboard</td><td>HTML/CSS/JS (SPA vanilla)</td></tr>
+            <tr><td>PDF</td><td>PDFKit (server-side)</td></tr>
+            <tr><td>Email</td><td>Nodemailer (SMTP ou Gmail)</td></tr>
+            <tr><td>Deploy</td><td>Vercel</td></tr>
+            <tr><td>Camera</td><td>ALPHADIGI LPR (protocolo HTTP/JSON)</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- Section 3 -->
+    <h2 id="variaveis-de-ambiente">3. Variaveis de Ambiente</h2>
+    <p>Configurar no painel do Vercel em <strong>Settings &gt; Environment Variables</strong>:</p>
+
+    <h3>Obrigatorias</h3>
+    <table>
+        <thead>
+            <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>SUPABASE_URL</code></td><td>URL do projeto Supabase</td><td><code>https://abc123.supabase.co</code></td></tr>
+            <tr><td><code>SUPABASE_SERVICE_KEY</code></td><td>Service Role Key (acesso admin)</td><td><code>eyJhbGciOiJI...</code></td></tr>
+            <tr><td><code>SUPABASE_ANON_KEY</code></td><td>Anon Key (acesso publico, usado no frontend)</td><td><code>eyJhbGciOiJI...</code></td></tr>
+            <tr><td><code>CRON_SECRET</code></td><td>Token para autenticar cron jobs</td><td><code>uuid-v4-aleatorio</code></td></tr>
+        </tbody>
+    </table>
+
+    <h3>Email (SMTP - cPanel/Hosting)</h3>
+    <table>
+        <thead>
+            <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>SMTP_HOST</code></td><td>Servidor SMTP</td><td><code>mail.seudominio.com.br</code></td></tr>
+            <tr><td><code>SMTP_PORT</code></td><td>Porta</td><td><code>465</code></td></tr>
+            <tr><td><code>SMTP_SECURE</code></td><td>SSL/TLS</td><td><code>true</code></td></tr>
+            <tr><td><code>SMTP_USER</code></td><td>Email do remetente</td><td><code>alerta@seudominio.com.br</code></td></tr>
+            <tr><td><code>SMTP_PASS</code></td><td>Senha do email</td><td><code>suaSenha123</code></td></tr>
+        </tbody>
+    </table>
+
+    <h3>Email (Alternativa Gmail)</h3>
+    <table>
+        <thead>
+            <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>GMAIL_USER</code></td><td>Conta Gmail</td><td><code>seu@gmail.com</code></td></tr>
+            <tr><td><code>GMAIL_APP_PASSWORD</code></td><td>Senha de App (16 caracteres)</td><td><code>abcd efgh ijkl mnop</code></td></tr>
+        </tbody>
+    </table>
+
+    <blockquote><p><strong>Nota:</strong> Para Gmail, gerar senha de app em: Google Account &gt; Seguranca &gt; Senhas de app</p></blockquote>
+
+    <hr>
+
+    <!-- Section 4 -->
+    <h2 id="banco-de-dados">4. Banco de Dados (Supabase)</h2>
+
+    <h3>Tabelas Principais</h3>
+
+    <h4><code>clientes</code></h4>
+    <table>
+        <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>user_id</code></td><td>UUID (FK)</td><td>Referencia ao auth.users (admin_cliente)</td></tr>
+            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do condominio/empresa</td></tr>
+            <tr><td><code>local_via</code></td><td>TEXT</td><td>Rua/via onde a lombada esta instalada</td></tr>
+            <tr><td><code>cidade_uf</code></td><td>TEXT</td><td>Cidade/UF</td></tr>
+            <tr><td><code>cep</code></td><td>TEXT</td><td>CEP</td></tr>
+            <tr><td><code>endereco</code></td><td>TEXT</td><td>Endereco completo</td></tr>
+            <tr><td><code>limite_velocidade</code></td><td>INTEGER</td><td>Limite em km/h (padrao: 30)</td></tr>
+            <tr><td><code>cnpj</code></td><td>TEXT</td><td>CNPJ do cliente</td></tr>
+            <tr><td><code>telefone</code></td><td>TEXT</td><td>Telefone de contato</td></tr>
+            <tr><td><code>contato_nome</code></td><td>TEXT</td><td>Nome do contato principal</td></tr>
+            <tr><td><code>pdf_titulo</code></td><td>TEXT</td><td>Titulo personalizado no PDF</td></tr>
+            <tr><td><code>pdf_subtitulo</code></td><td>TEXT</td><td>Subtitulo no PDF</td></tr>
+            <tr><td><code>pdf_rodape</code></td><td>TEXT</td><td>Rodape no PDF</td></tr>
+            <tr><td><code>pdf_logo_url</code></td><td>TEXT</td><td>URL do logotipo para o PDF</td></tr>
+            <tr><td><code>notif_auto_ativa</code></td><td>BOOLEAN</td><td>Notificacoes automaticas ativas</td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o cliente esta ativo</td></tr>
+        </tbody>
+    </table>
+
+    <h4><code>usuarios</code></h4>
+    <table>
+        <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>auth_id</code></td><td>UUID (FK)</td><td>Referencia ao auth.users</td></tr>
+            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
+            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do usuario</td></tr>
+            <tr><td><code>email</code></td><td>TEXT</td><td>Email</td></tr>
+            <tr><td><code>role</code></td><td>TEXT</td><td><code>super_admin</code>, <code>admin_cliente</code>, ou <code>operador</code></td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o usuario esta ativo</td></tr>
+        </tbody>
+    </table>
+
+    <h4><code>cameras</code></h4>
+    <table>
+        <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
+            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome descritivo (ex: "Entrada A")</td></tr>
+            <tr><td><code>token</code></td><td>TEXT (UNIQUE)</td><td>Token de autenticacao (32 hex)</td></tr>
+            <tr><td><code>serial_number</code></td><td>TEXT</td><td>Numero de serie da camera (fallback)</td></tr>
+            <tr><td><code>ativa</code></td><td>BOOLEAN</td><td>Se a camera esta ativa</td></tr>
+            <tr><td><code>last_seen</code></td><td>TIMESTAMP</td><td>Ultima comunicacao</td></tr>
+            <tr><td><code>last_capture_id</code></td><td>UUID</td><td>Ultima captura registrada</td></tr>
+        </tbody>
+    </table>
+
+    <h4><code>veiculos</code></h4>
+    <table>
+        <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
+            <tr><td><code>placa</code></td><td>TEXT</td><td>Placa do veiculo (uppercase)</td></tr>
+            <tr><td><code>nome_morador</code></td><td>TEXT</td><td>Nome do proprietario/morador</td></tr>
+            <tr><td><code>unidade</code></td><td>TEXT</td><td>Unidade/apartamento</td></tr>
+            <tr><td><code>marca</code></td><td>TEXT</td><td>Marca/modelo do veiculo</td></tr>
+            <tr><td><code>cor</code></td><td>TEXT</td><td>Cor do veiculo</td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o registro esta ativo</td></tr>
+        </tbody>
+    </table>
+
+    <h4><code>capturas</code></h4>
+    <table>
+        <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>camera_id</code></td><td>UUID (FK)</td><td>Camera que realizou a captura</td></tr>
+            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
+            <tr><td><code>placa</code></td><td>TEXT</td><td>Placa detectada</td></tr>
+            <tr><td><code>velocidade</code></td><td>INTEGER</td><td>Velocidade registrada (km/h)</td></tr>
+            <tr><td><code>pixels</code></td><td>INTEGER</td><td>Nivel de confianca (0-200)</td></tr>
+            <tr><td><code>tipo_veiculo</code></td><td>TEXT</td><td>Tipo detectado</td></tr>
+            <tr><td><code>cor_veiculo</code></td><td>TEXT</td><td>Cor detectada</td></tr>
+            <tr><td><code>foto_path</code></td><td>TEXT</td><td>Caminho no Storage</td></tr>
+            <tr><td><code>timestamp</code></td><td>TIMESTAMP</td><td>Data/hora da captura</td></tr>
+            <tr><td><code>notificado</code></td><td>BOOLEAN</td><td>Se a notificacao foi enviada</td></tr>
+            <tr><td><code>notificado_em</code></td><td>TIMESTAMP</td><td>Data/hora do envio da notificacao</td></tr>
+        </tbody>
+    </table>
+
+    <h4><code>email_destinatarios</code></h4>
+    <table>
+        <thead>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
+            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do destinatario</td></tr>
+            <tr><td><code>email</code></td><td>TEXT</td><td>Email</td></tr>
+            <tr><td><code>tipo</code></td><td>TEXT</td><td><code>alerta</code>, <code>relatorio</code>, ou <code>todos</code></td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se esta ativo</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- Section 5 -->
+    <h2 id="cadastrar-novo-cliente">5. Cadastrar Novo Cliente</h2>
+
+    <h3>Passo a Passo</h3>
+
+    <h4>5.1. Acesse o Painel Admin</h4>
+    <ol>
+        <li>Abra <code>https://seudominio.vercel.app/admin</code></li>
+        <li>Faca login com credenciais de <strong>super_admin</strong></li>
+    </ol>
+
+    <h4>5.2. Crie o Cliente</h4>
+    <ol>
+        <li>Na secao <strong>Clientes</strong>, clique em <strong>"Novo Cliente"</strong></li>
+        <li>Preencha os campos:
+            <ul>
+                <li><strong>Nome</strong>: Nome do condominio/empresa (ex: "Condominio Jardim das Flores")</li>
+                <li><strong>Local/Via</strong>: Via onde a lombada esta instalada (ex: "Rua das Palmeiras")</li>
+                <li><strong>Cidade/UF</strong>: (ex: "Sao Paulo/SP")</li>
+                <li><strong>Limite de Velocidade</strong>: Velocidade maxima em km/h (padrao: 30)</li>
+                <li><strong>CNPJ</strong>: CNPJ do cliente</li>
+                <li><strong>Telefone</strong>: Telefone de contato</li>
+                <li><strong>Contato</strong>: Nome do responsavel</li>
+            </ul>
+        </li>
+        <li>Clique em <strong>"Salvar"</strong></li>
+        <li>Anote o <strong>ID do cliente</strong> gerado (UUID)</li>
+    </ol>
+
+    <h4>5.3. Via API (alternativa)</h4>
+    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/clientes \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nome": "Condominio Jardim das Flores",
+    "local_via": "Rua das Palmeiras",
+    "cidade_uf": "Sao Paulo/SP",
+    "limite_velocidade": 30,
+    "cnpj": "12345678000199",
+    "telefone": "11999887766",
+    "contato_nome": "Carlos Silva"
+  }'</code></pre>
+
+    <hr>
+
+    <!-- Section 6 -->
+    <h2 id="cadastrar-usuarios">6. Cadastrar Usuarios</h2>
+
+    <h3>Roles (Papeis)</h3>
+    <table>
+        <thead>
+            <tr><th>Role</th><th>Permissoes</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>super_admin</code></td><td>Acesso total: todos os clientes, cameras, usuarios</td></tr>
+            <tr><td><code>admin_cliente</code></td><td>Gerencia 1 cliente: cameras, veiculos, emails, capturas</td></tr>
+            <tr><td><code>operador</code></td><td>Somente visualizacao do dashboard do cliente</td></tr>
+        </tbody>
+    </table>
+
+    <h4>6.1. Criar Usuario Admin do Cliente</h4>
+    <ol>
+        <li>No painel admin, secao <strong>Usuarios</strong></li>
+        <li>Clique em <strong>"Novo Usuario"</strong></li>
+        <li>Preencha:
+            <ul>
+                <li><strong>Email</strong>: email do usuario</li>
+                <li><strong>Senha</strong>: minimo 6 caracteres</li>
+                <li><strong>Nome</strong>: nome completo</li>
+                <li><strong>Cliente</strong>: selecione o cliente associado</li>
+                <li><strong>Role</strong>: selecione <code>admin_cliente</code></li>
+            </ul>
+        </li>
+        <li>Clique em <strong>"Criar"</strong></li>
+    </ol>
+
+    <blockquote><p><strong>Importante:</strong> O primeiro usuario <code>admin_cliente</code> de um cliente sera automaticamente vinculado como administrador principal daquele cliente.</p></blockquote>
+
+    <h4>6.2. Via API</h4>
+    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/usuarios \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@condominio.com",
+    "senha": "senha123",
+    "nome": "Carlos Silva",
+    "cliente_id": "UUID_DO_CLIENTE",
+    "role": "admin_cliente"
+  }'</code></pre>
+
+    <h4>6.3. Criar Operadores Adicionais</h4>
+    <p>Repita o processo com role <code>operador</code> para usuarios que precisam apenas visualizar o dashboard.</p>
+
+    <hr>
+
+    <!-- Section 7 -->
+    <h2 id="cadastrar-cameras">7. Cadastrar Cameras</h2>
+
+    <h4>7.1. Pelo Painel Admin</h4>
+    <ol>
+        <li>Na secao <strong>Cameras</strong>, clique em <strong>"Nova Camera"</strong></li>
+        <li>Selecione o <strong>cliente</strong></li>
+        <li>Informe o <strong>nome</strong> descritivo (ex: "Camera Entrada Principal")</li>
+        <li>Clique em <strong>"Criar"</strong></li>
+        <li><strong>COPIE O TOKEN GERADO</strong> - ele sera exibido apenas uma vez</li>
+    </ol>
+
+    <blockquote><p><strong>IMPORTANTE:</strong> O token e gerado automaticamente (32 caracteres hexadecimais). Guarde-o em local seguro. Este token sera configurado na camera fisica.</p></blockquote>
+
+    <h4>7.2. Via API</h4>
+    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/cameras \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cliente_id": "UUID_DO_CLIENTE",
+    "nome": "Camera Entrada Principal"
+  }'</code></pre>
+
+    <p><strong>Resposta:</strong></p>
+    <pre><code>{
+  "id": "uuid-da-camera",
+  "nome": "Camera Entrada Principal",
+  "token": "a1b2c3d4e5f6...32chars",
+  "ativa": true
+}</code></pre>
+
+    <h4>7.3. Formato do Token</h4>
+    <ul>
+        <li>32 caracteres hexadecimais (gerado via <code>crypto.randomBytes(16)</code>)</li>
+        <li>Unico por camera</li>
+        <li>Imutavel apos criacao</li>
+        <li>Usado na URL de envio de capturas</li>
+    </ul>
+
+    <hr>
+
+    <!-- Section 8 -->
+    <h2 id="configurar-camera-fisica">8. Configurar Camera Fisica (ALPHADIGI)</h2>
+
+    <h4>8.1. Acesse a Interface da Camera</h4>
+    <ol>
+        <li>Conecte-se a camera via navegador (IP local da camera)</li>
+        <li>Acesse <strong>Configuracoes &gt; Rede &gt; Servidor HTTP</strong></li>
+    </ol>
+
+    <h4>8.2. Configure o Endpoint de Envio</h4>
+    <table>
+        <thead>
+            <tr><th>Campo</th><th>Valor</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Protocolo</strong></td><td>HTTPS</td></tr>
+            <tr><td><strong>Metodo</strong></td><td>POST</td></tr>
+            <tr><td><strong>URL de Destino</strong></td><td><code>https://seudominio.vercel.app/api/captura?token=SEU_TOKEN</code></td></tr>
+            <tr><td><strong>Content-Type</strong></td><td><code>application/json</code></td></tr>
+            <tr><td><strong>Porta</strong></td><td>443</td></tr>
+        </tbody>
+    </table>
+
+    <h4>8.3. Formato do Payload Esperado (AlarmInfoPlate)</h4>
+    <p>A camera ALPHADIGI envia automaticamente neste formato:</p>
+    <pre><code>{
+  "AlarmInfoPlate": {
+    "serialno": "NUMERO_SERIE_CAMERA",
+    "result": {
+      "PlateResult": {
+        "license": "ABC1D23",
+        "confidence": 194,
+        "carColor": "silver",
+        "type": "car",
+        "speed": 45,
+        "radarSpeed": {
+          "Speed": {
+            "PerHour": 45
+          }
+        },
+        "imageFile": "data:image/jpeg;base64,/9j/4AAQ..."
+      }
+    }
+  }
+}</code></pre>
+
+    <h4>8.4. Autenticacao da Camera</h4>
+    <p><strong>Metodo primario:</strong> Token na URL</p>
+    <pre><code>POST /api/captura?token=a1b2c3d4e5f6...</code></pre>
+
+    <p><strong>Metodo secundario (fallback):</strong> Numero de serie</p>
+    <ul>
+        <li>Se o token nao for fornecido, o sistema busca pelo campo <code>serialno</code> no payload</li>
+        <li>O numero de serie deve estar cadastrado no campo <code>serial_number</code> da tabela <code>cameras</code></li>
+        <li>Para usar este metodo, edite a camera e adicione o serial:</li>
+    </ul>
+    <pre><code>curl -X PUT https://seudominio.vercel.app/api/admin/cameras \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "UUID_DA_CAMERA",
+    "serial_number": "ALPHADIGI_SN_123"
+  }'</code></pre>
+
+    <h4>8.5. Verificar Funcionamento</h4>
+    <p>Apos configurar, verifique:</p>
+    <ol>
+        <li><strong>Heartbeat:</strong> A camera envia sinais periodicos
+            <ul>
+                <li>No dashboard, o status da camera aparece como <strong>"Online"</strong> (verde)</li>
+                <li>A camera e considerada offline se nao enviar dados em 5 minutos</li>
+            </ul>
+        </li>
+        <li><strong>Teste de captura:</strong> Passe um veiculo na frente da camera
+            <ul>
+                <li>Verifique no dashboard se a captura aparece na secao "Ultimas Capturas"</li>
+                <li>Verifique se a foto foi armazenada corretamente</li>
+            </ul>
+        </li>
+    </ol>
+
+    <hr>
+
+    <!-- Section 9 -->
+    <h2 id="configurar-destinatarios-email">9. Configurar Destinatarios de Email</h2>
+
+    <h4>9.1. Pelo Dashboard do Cliente</h4>
+    <ol>
+        <li>Faca login no dashboard como <code>admin_cliente</code></li>
+        <li>Na secao <strong>"Emails de Alerta"</strong>, clique em <strong>"Adicionar"</strong></li>
+        <li>Preencha nome, email e tipo:
+            <ul>
+                <li><strong>alerta</strong>: recebe notificacoes de velocidade acima do limite</li>
+                <li><strong>relatorio</strong>: recebe relatorios periodicos</li>
+                <li><strong>todos</strong>: recebe tudo</li>
+            </ul>
+        </li>
+        <li>Clique em <strong>"Salvar"</strong></li>
+    </ol>
+
+    <h4>9.2. Via API</h4>
+    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/emails \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cliente_id": "UUID_DO_CLIENTE",
+    "nome": "Portaria Central",
+    "email": "portaria@condominio.com",
+    "tipo": "alerta"
+  }'</code></pre>
+
+    <hr>
+
+    <!-- Section 10 -->
+    <h2 id="fluxo-de-captura">10. Fluxo de Captura (Pipeline)</h2>
+
+    <div class="diagram">
+<pre>
+Camera envia POST /api/captura?token=xxx
+         |
+         v
+   +-- Autenticacao --+
+   | Token valido?    |--Nao--> 401 Unauthorized
+   | Camera ativa?    |--Nao--> 403 Forbidden
+   | Cliente ativo?   |--Nao--> 403 Forbidden
+   +--------+---------+
+            | Sim
+            v
+   +-- Rate Limiting --+
+   | &lt; 120 req/min?   |--Nao--> 429 Too Many Requests
+   +--------+----------+
+            | Sim
+            v
+   +-- Parsing Payload ---------------+
+   | Extrair: placa, velocidade,      |
+   | confianca, cor, tipo, foto       |
+   | Normalizar placa (uppercase)     |
+   | Velocidade: radarSpeed &gt; speed   |
+   +--------+-------------------------+
+            |
+            v
+   +-- Upload Foto -------------------+
+   | Base64 -&gt; Buffer                 |
+   | Path: {cliente}/{camera}/        |
+   |        {timestamp}_{placa}.jpg   |
+   | Bucket: capturas-fotos           |
+   +--------+-------------------------+
+            |
+            v
+   +-- Salvar Captura ----------------+
+   | INSERT em capturas               |
+   | UPDATE camera.last_seen          |
+   +--------+-------------------------+
+            |
+            v
+   +-- Verificar Velocidade ----------+
+   | velocidade &gt; limite_cliente?     |--Nao--> 200 OK (fim)
+   +--------+-------------------------+
+            | Sim (infracao)
+            v
+   +-- Gerar PDF ---------------------+
+   | Dados da captura + veiculo       |
+   | Historico ultimos 30 dias        |
+   | Logotipo do cliente              |
+   +--------+-------------------------+
+            |
+            v
+   +-- Enviar Email ------------------+
+   | Para todos destinatarios         |
+   | tipo = 'alerta' ou 'todos'      |
+   | Anexo: PDF da notificacao        |
+   +--------+-------------------------+
+            |
+            v
+   +-- Marcar Notificado -------------+
+   | UPDATE captura                   |
+   | notificado = true                |
+   | notificado_em = now()            |
+   +----------------------------------+
+</pre>
+    </div>
+
+    <hr>
+
+    <!-- Section 11 -->
+    <h2 id="geracao-pdf-notificacao">11. Geracao de PDF e Notificacao</h2>
+
+    <h3>Estrutura do PDF</h3>
+    <p>O PDF gerado automaticamente contem:</p>
+    <ol>
+        <li><strong>Cabecalho</strong>: Logotipo + titulo personalizado do cliente</li>
+        <li><strong>Dados da Infracao</strong>:
+            <ul>
+                <li>Placa do veiculo</li>
+                <li>Velocidade registrada vs limite permitido</li>
+                <li>Data e hora</li>
+                <li>Camera que registrou</li>
+            </ul>
+        </li>
+        <li><strong>Foto da Captura</strong>: Imagem do veiculo no momento</li>
+        <li><strong>Dados do Proprietario</strong> (se cadastrado):
+            <ul>
+                <li>Nome do morador</li>
+                <li>Unidade/apartamento</li>
+            </ul>
+        </li>
+        <li><strong>Historico de Passagens</strong>: Ultimas 30 passagens do veiculo (tabela)</li>
+        <li><strong>Rodape</strong>: Texto personalizado do cliente</li>
+    </ol>
+
+    <h3>Personalizacao do PDF</h3>
+    <p>Via painel admin ou API, edite o cliente:</p>
+    <pre><code>{
+  "pdf_titulo": "CONDOMINIO JARDIM DAS FLORES",
+  "pdf_subtitulo": "Lombada Educativa - Controle de Velocidade",
+  "pdf_rodape": "Este documento e meramente educativo e nao tem valor de multa.",
+  "pdf_logo_url": "https://seusite.com/logo.png"
+}</code></pre>
+
+    <hr>
+
+    <!-- Section 12 -->
+    <h2 id="endpoints-da-api">12. Endpoints da API</h2>
+
+    <h3>Autenticacao</h3>
+    <p>Todos os endpoints admin requerem header:</p>
+    <pre><code>Authorization: Bearer &lt;JWT_TOKEN_SUPABASE&gt;</code></pre>
+
+    <h3>Endpoints Publicos</h3>
+    <table>
+        <thead>
+            <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>GET</td><td><code>/api/config</code></td><td>Retorna SUPABASE_URL e ANON_KEY</td></tr>
+            <tr><td>POST</td><td><code>/api/captura</code></td><td>Recebe capturas das cameras</td></tr>
+            <tr><td>GET</td><td><code>/api/heartbeat</code></td><td>Heartbeat das cameras</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Endpoints Admin (requer <code>super_admin</code>)</h3>
+    <table>
+        <thead>
+            <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>GET</td><td><code>/api/admin/clientes</code></td><td>Listar todos os clientes</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/clientes</code></td><td>Criar novo cliente</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/clientes</code></td><td>Atualizar cliente</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/clientes</code></td><td>Desativar cliente (soft delete)</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/usuarios</code></td><td>Listar usuarios</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/usuarios</code></td><td>Criar usuario</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/usuarios</code></td><td>Atualizar usuario</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/usuarios</code></td><td>Desativar usuario</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/cameras</code></td><td>Listar cameras</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/cameras</code></td><td>Criar camera (gera token)</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/cameras</code></td><td>Atualizar camera</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/cameras</code></td><td>Desativar camera</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Endpoints Admin/Cliente (requer <code>admin_cliente</code> ou superior)</h3>
+    <table>
+        <thead>
+            <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>GET</td><td><code>/api/admin/veiculos</code></td><td>Listar veiculos do cliente</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/veiculos</code></td><td>Cadastrar veiculo</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/veiculos</code></td><td>Atualizar veiculo</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/veiculos</code></td><td>Desativar veiculo</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/emails</code></td><td>Listar destinatarios</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/emails</code></td><td>Adicionar destinatario</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/emails</code></td><td>Atualizar destinatario</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/emails</code></td><td>Desativar destinatario</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/dashboard</code></td><td>Dados do dashboard</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- Section 13 -->
+    <h2 id="deploy-infraestrutura">13. Deploy e Infraestrutura</h2>
+
+    <h3>Vercel</h3>
+    <p>O projeto esta configurado para deploy automatico no Vercel.</p>
+    <p><strong>Arquivo <code>vercel.json</code>:</strong></p>
+    <ul>
+        <li>Rotas API: <code>/api/*</code> &rarr; Serverless Functions</li>
+        <li>Dashboard: <code>/</code> &rarr; <code>/dashboard/index.html</code></li>
+        <li>Admin: <code>/admin</code> &rarr; <code>/admin/index.html</code></li>
+        <li>Cron: Execucao diaria as 06:00 UTC</li>
+    </ul>
+
+    <h3>Passo a Passo do Deploy</h3>
+    <ol>
+        <li>Conecte o repositorio GitHub ao Vercel</li>
+        <li>Configure as variaveis de ambiente (secao 3)</li>
+        <li>Deploy automatico a cada push na branch <code>master</code></li>
+    </ol>
+
+    <h3>Dominio Personalizado</h3>
+    <ol>
+        <li>No Vercel, va em <strong>Settings &gt; Domains</strong></li>
+        <li>Adicione seu dominio (ex: <code>lombada.seudominio.com.br</code>)</li>
+        <li>Configure o DNS (CNAME para <code>cname.vercel-dns.com</code>)</li>
+    </ol>
+
+    <hr>
+
+    <!-- Section 14 -->
+    <h2 id="cron-jobs">14. Cron Jobs (Limpeza Automatica)</h2>
+
+    <h3>Configuracao</h3>
+    <p>Definido no <code>vercel.json</code>:</p>
+    <pre><code>{
+  "crons": [{
+    "path": "/api/cron-limpeza",
+    "schedule": "0 6 * * *"
+  }]
+}</code></pre>
+
+    <h3>Funcionamento</h3>
+    <ul>
+        <li><strong>Horario:</strong> Todos os dias as 06:00 UTC (03:00 Brasilia)</li>
+        <li><strong>Acao:</strong> Remove capturas com mais de 15 dias</li>
+        <li><strong>Inclui:</strong> Deleta registros do banco + fotos do Storage</li>
+        <li><strong>Autenticacao:</strong> <code>Authorization: Bearer {CRON_SECRET}</code></li>
+    </ul>
+
+    <hr>
+
+    <!-- Section 15 -->
+    <h2 id="troubleshooting">15. Troubleshooting</h2>
+
+    <h3>Camera nao aparece como Online</h3>
+    <ol>
+        <li>Verifique se o token esta correto na URL da camera</li>
+        <li>Verifique se a camera tem acesso a internet (HTTPS porta 443)</li>
+        <li>Verifique nos logs do Vercel se a requisicao esta chegando</li>
+        <li>Teste manualmente:</li>
+    </ol>
+    <pre><code>curl -X POST "https://seudominio.vercel.app/api/captura?token=TOKEN_DA_CAMERA" \
+  -H "Content-Type: application/json" \
+  -d '{"AlarmInfoPlate":{"serialno":"TEST","result":{"PlateResult":{"license":"TEST123","speed":20,"confidence":180,"imageFile":"data:image/jpeg;base64,/9j/4AAQ"}}}}'</code></pre>
+
+    <h3>Emails nao estao sendo enviados</h3>
+    <ol>
+        <li>Verifique as variaveis SMTP no Vercel</li>
+        <li>Teste a conexao SMTP:
+            <pre><code>telnet mail.seudominio.com 465</code></pre>
+        </li>
+        <li>Verifique se ha destinatarios cadastrados para o cliente</li>
+        <li>Verifique se a velocidade da captura excede o limite do cliente</li>
+        <li>Verifique nos logs do Vercel por erros de envio</li>
+    </ol>
+
+    <h3>Fotos nao aparecem no dashboard</h3>
+    <ol>
+        <li>Verifique se o bucket <code>capturas-fotos</code> existe no Supabase</li>
+        <li>Verifique as politicas RLS do Storage</li>
+        <li>Execute a migration <code>migration-storage-rls.sql</code> se necessario</li>
+    </ol>
+
+    <h3>Erro 429 (Too Many Requests)</h3>
+    <ul>
+        <li>A camera esta enviando mais de 120 requisicoes por minuto</li>
+        <li>Verifique a configuracao de frequencia de envio na camera</li>
+        <li>Ajuste o intervalo minimo entre capturas na interface da camera</li>
+    </ul>
+
+    <h3>Usuario nao consegue fazer login</h3>
+    <ol>
+        <li>Verifique se o usuario existe na tabela <code>usuarios</code> E no <code>auth.users</code></li>
+        <li>Verifique se o campo <code>ativo = true</code></li>
+        <li>Verifique se o <code>auth_id</code> esta correto</li>
+        <li>Resete a senha pelo painel admin (PUT <code>/api/admin/usuarios</code>)</li>
+    </ol>
+
+    <hr>
+
+    <!-- Checklist -->
+    <h2 id="checklist-novo-cliente">Checklist para Novo Cliente</h2>
+
+    <ul class="checklist">
+        <li>Criar cliente no painel admin</li>
+        <li>Criar usuario admin_cliente</li>
+        <li>Criar camera(s) e anotar token(s)</li>
+        <li>Configurar camera fisica com a URL + token</li>
+        <li>Cadastrar destinatarios de email</li>
+        <li>Importar lista de veiculos (Excel)</li>
+        <li>Personalizar PDF (titulo, logo, rodape)</li>
+        <li>Testar captura e envio de email</li>
+        <li>Enviar credenciais de acesso ao cliente</li>
+    </ul>
+
+    <hr>
+
+    <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
+        <strong>Protector Traffic Control</strong> - v1.0.0 | Build d58093a | Marco 2026
+    </p>
+
+</main>
+
+<script>
+// Highlight active sidebar link on scroll
+(function() {
+    const sections = document.querySelectorAll('h2[id]');
+    const links = document.querySelectorAll('.sidebar a');
+    function onScroll() {
+        let current = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 100) current = s.id;
+        });
+        links.forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+        });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Close sidebar on mobile when clicking a link
+    links.forEach(a => a.addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.remove('open');
+    }));
+})();
+</script>
+
+</body>
+</html>
