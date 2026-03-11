@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Protector Lombada Educativa</title>
+  <title>Protector Radar - Lombada Educativa</title>
+  <link rel="icon" type="image/png" href="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -13,27 +14,32 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg-primary: #0f0f1a;
-      --bg-secondary: #1a1a2e;
-      --bg-card: #16213e;
-      --bg-input: #0d1b2a;
-      --accent: #FF6B00;
-      --accent-hover: #FF8C33;
-      --text-primary: #e0e0e0;
-      --text-secondary: #888;
-      --text-muted: #555;
-      --border: #2a2a4a;
-      --green: #00c853;
-      --orange: #ff9800;
-      --red: #ff1744;
-      --red-dark: #CC0000;
+      --bg-primary: #F0F5FA;
+      --bg-secondary: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-input: #F0F5FA;
+      --accent: #046bd2;
+      --accent-hover: #045cb4;
+      --accent-light: #e8f1fb;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --green: #16a34a;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --red-dark: #b91c1c;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --radius: 10px;
     }
 
     body {
-      font-family: 'Barlow Condensed', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg-primary);
       color: var(--text-primary);
       min-height: 100vh;
+      font-size: 14px;
     }
 
     /* ===== LOGIN ===== */
@@ -42,29 +48,35 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+      background: linear-gradient(135deg, #046bd2 0%, #1e293b 100%);
     }
 
     .login-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 40px;
-      width: 380px;
+      background: #FFFFFF;
+      border: none;
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 400px;
       text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .login-box .login-logo {
+      width: 180px;
+      margin-bottom: 8px;
     }
 
     .login-box h1 {
       color: var(--accent);
-      font-size: 28px;
+      font-size: 22px;
       font-weight: 700;
-      margin-bottom: 5px;
+      margin-bottom: 2px;
     }
 
     .login-box .subtitle {
       color: var(--text-secondary);
-      font-size: 14px;
-      margin-bottom: 30px;
+      font-size: 13px;
+      margin-bottom: 28px;
     }
 
     .login-box input {
@@ -75,13 +87,13 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text-primary);
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
       outline: none;
       transition: border-color 0.2s;
     }
 
-    .login-box input:focus { border-color: var(--accent); }
+    .login-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,107,210,0.1); }
 
     .login-box button {
       width: 100%;
@@ -90,11 +102,11 @@
       color: white;
       border: none;
       border-radius: 8px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 18px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
       margin-top: 8px;
     }
 
@@ -111,29 +123,43 @@
     #dashboard-screen { display: none; }
 
     .topbar {
-      background: var(--bg-secondary);
+      background: #FFFFFF;
       border-bottom: 1px solid var(--border);
-      padding: 10px 24px;
+      padding: 8px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .topbar .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+    }
+
+    .topbar .brand img {
+      height: 36px;
+    }
+
+    .topbar .brand .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
     }
 
     .topbar .brand h2 {
       color: var(--accent);
-      font-size: 22px;
+      font-size: 16px;
       font-weight: 700;
     }
 
     .topbar .brand span {
       color: var(--text-secondary);
-      font-size: 14px;
+      font-size: 12px;
     }
 
     .topbar .user-info {
@@ -141,7 +167,7 @@
       align-items: center;
       gap: 12px;
       color: var(--text-secondary);
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .topbar .btn-logout {
@@ -151,14 +177,15 @@
       padding: 6px 14px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
       transition: all 0.2s;
     }
 
     .topbar .btn-logout:hover {
       border-color: var(--red);
       color: var(--red);
+      background: #fef2f2;
     }
 
     .main-layout {
@@ -192,17 +219,19 @@
     .recent-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--radius);
       padding: 10px;
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
       overflow: hidden;
+      box-shadow: var(--shadow-sm);
     }
 
     .recent-card:hover {
       border-color: var(--accent);
       transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
 
     .recent-card.alerta { border-left: 3px solid var(--red); }
@@ -264,13 +293,8 @@
       z-index: 2;
     }
 
-    .recent-card .rc-badge.alert-badge {
-      background: rgba(255, 23, 68, 0.85);
-      color: #fff;
-    }
-
     .recent-card .rc-badge.ok-badge {
-      background: rgba(0, 200, 83, 0.15);
+      background: #dcfce7;
       color: var(--green);
     }
 
@@ -293,9 +317,10 @@
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px;
+      border-radius: var(--radius);
+      padding: 12px;
       text-align: center;
+      box-shadow: var(--shadow-sm);
     }
 
     .stat-card .label {
@@ -324,12 +349,13 @@
     .filters-row {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 12px;
+      border-radius: var(--radius);
+      padding: 10px 14px;
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
     }
 
     .filters-row label {
@@ -343,8 +369,8 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--text-primary);
-      padding: 5px 8px;
-      font-family: 'Barlow Condensed', sans-serif;
+      padding: 6px 10px;
+      font-family: 'Inter', sans-serif;
       font-size: 13px;
       outline: none;
     }
@@ -369,10 +395,10 @@
     }
 
     .btn-filter, .btn-clear, .btn-export {
-      padding: 5px 14px;
+      padding: 6px 16px;
       border: none;
       border-radius: 6px;
-      font-family: 'Barlow Condensed', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -406,23 +432,24 @@
     .table-container {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--radius);
       overflow: hidden;
       flex: 1;
       display: flex;
       flex-direction: column;
       min-height: 0;
+      box-shadow: var(--shadow-sm);
     }
 
     .table-header {
       display: grid;
       grid-template-columns: 50px 100px 80px 1fr 60px;
-      padding: 6px 12px;
-      background: var(--bg-secondary);
+      padding: 8px 12px;
+      background: var(--bg-input);
       border-bottom: 1px solid var(--border);
-      font-size: 10px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       color: var(--text-secondary);
       font-weight: 600;
     }
@@ -443,7 +470,7 @@
       align-items: center;
     }
 
-    .table-row:hover { background: rgba(255, 107, 0, 0.05); }
+    .table-row:hover { background: var(--accent-light); }
 
     .table-row .row-thumb {
       width: 40px;
@@ -507,8 +534,9 @@
     .sidebar-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
     }
 
     .sidebar-card h3 {
@@ -562,7 +590,8 @@
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(4px);
       z-index: 1000;
       justify-content: center;
       align-items: flex-start;
@@ -573,13 +602,14 @@
     .modal-overlay.active { display: flex; }
 
     .modal-content {
-      background: var(--bg-card);
+      background: #FFFFFF;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 16px;
       width: 700px;
       max-width: 95vw;
-      padding: 20px;
+      padding: 24px;
       margin-bottom: 30px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
     }
 
     .modal-header {
@@ -655,9 +685,9 @@
 
     /* Modal: morador section */
     .modal-morador {
-      background: var(--bg-input);
+      background: var(--accent-light);
       border-radius: 8px;
-      padding: 10px 14px;
+      padding: 12px 14px;
       margin-bottom: 14px;
       border-left: 3px solid var(--accent);
     }
@@ -742,7 +772,7 @@
       color: white;
       border: none;
       border-radius: 6px;
-      font-family: 'Barlow Condensed', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -753,17 +783,17 @@
     .btn-pdf:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: var(--bg-primary); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
     /* Loading indicator */
     .loading-dot {
       display: inline-block;
       width: 8px;
       height: 8px;
-      background: var(--accent);
+      background: var(--green);
       border-radius: 50%;
       margin-left: 8px;
       animation: pulse 1.5s ease-in-out infinite;
@@ -772,6 +802,11 @@
     @keyframes pulse {
       0%, 100% { opacity: 0.3; }
       50% { opacity: 1; }
+    }
+
+    .recent-card .rc-badge.alert-badge {
+      background: #fee2e2;
+      color: var(--red);
     }
 
     /* Responsive */
@@ -793,9 +828,9 @@
   <!-- ===== LOGIN ===== -->
   <div id="login-screen">
     <div class="login-box">
-      <h1>PROTECTOR</h1>
-      <div class="subtitle">Lombada Educativa</div>
-      <div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">v2.0.0</div>
+      <img class="login-logo" src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Protector Sistemas">
+      <h1>PROTECTOR RADAR</h1>
+      <div class="subtitle">Lombada Educativa Inteligente</div>
       <input type="email" id="login-email" placeholder="E-mail">
       <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()">ENTRAR</button>
@@ -807,9 +842,11 @@
   <div id="dashboard-screen">
     <div class="topbar">
       <div class="brand">
-        <h2>PROTECTOR</h2>
-        <span style="color:var(--text-muted);font-size:11px">v2.0</span>
-        <span id="topbar-cliente">Lombada Educativa</span>
+        <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Logo">
+        <div class="brand-text">
+          <h2>PROTECTOR RADAR</h2>
+          <span id="topbar-cliente">Lombada Educativa</span>
+        </div>
       </div>
       <div class="user-info">
         <span id="topbar-email"></span>
@@ -1527,8 +1564,8 @@
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      doc.setTextColor(255, 107, 0);
-      doc.text('Lombada Educativa', pageW / 2, 51, { align: 'center' });
+      doc.setTextColor(4, 107, 210);
+      doc.text('Protector Radar - Lombada Educativa', pageW / 2, 51, { align: 'center' });
 
       // Line
       doc.setDrawColor(200, 200, 200);
@@ -1718,25 +1755,25 @@
         const x = 24 + i * barWidth;
         const y = chartHeight - barH;
 
-        ctx.fillStyle = val > 0 ? '#FF6B00' : '#2a2a4a';
+        ctx.fillStyle = val > 0 ? '#046bd2' : '#e2e8f0';
         ctx.fillRect(x + 1, y, barWidth - 2, barH);
 
         if (i % 3 === 0) {
-          ctx.fillStyle = '#666';
-          ctx.font = '9px Barlow Condensed';
+          ctx.fillStyle = '#64748b';
+          ctx.font = '9px Inter';
           ctx.textAlign = 'center';
           ctx.fillText(`${i}h`, x + barWidth / 2, h - 3);
         }
 
         if (val > 0) {
-          ctx.fillStyle = '#ccc';
-          ctx.font = '8px Barlow Condensed';
+          ctx.fillStyle = '#1e293b';
+          ctx.font = '8px Inter';
           ctx.textAlign = 'center';
           ctx.fillText(val, x + barWidth / 2, y - 2);
         }
       });
 
-      ctx.strokeStyle = '#2a2a4a';
+      ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(22, 0);
