@@ -7,6 +7,7 @@ const {
   getPassagensByPlaca,
   updateCameraLastSeen,
   markNotificado,
+  supabase,
 } = require('../lib/supabase');
 const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
@@ -16,22 +17,52 @@ module.exports.config = {
   api: { bodyParser: false },
 };
 
+// Log debug to database for diagnostics
+async function logDebug(level, message, data) {
+  try {
+    await supabase.from('debug_log').insert({
+      content_type: level,
+      raw_body: message,
+      parsed_json: typeof data === 'object' ? data : { value: data },
+    });
+  } catch { /* ignore log errors */ }
+}
+
 module.exports = async function handler(req, res) {
+  const method = req.method;
+  const url = req.url;
+  const contentType = req.headers['content-type'] || '';
+
+  // Log every request that arrives
+  await logDebug('captura-request', `${method} ${url} | content-type: ${contentType}`, {
+    method,
+    url,
+    contentType,
+    query: req.query,
+    headers: {
+      'content-type': contentType,
+      'content-length': req.headers['content-length'] || 'unknown',
+      'user-agent': req.headers['user-agent'] || 'unknown',
+    },
+  });
+
   // Apenas POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+  if (method !== 'POST') {
+    return res.status(405).json({ error: 'Metodo nao permitido' });
   }
 
-  // Autenticação por token
+  // Autenticacao por token
   const token = req.query.token;
   if (!token) {
-    return res.status(401).json({ error: 'Token não fornecido' });
+    await logDebug('captura-error', 'Token nao fornecido', { url, query: req.query });
+    return res.status(401).json({ error: 'Token nao fornecido' });
   }
 
   try {
     const camera = await findCameraByToken(token);
     if (!camera) {
-      return res.status(401).json({ error: 'Token inválido ou câmera inativa' });
+      await logDebug('captura-error', 'Token invalido', { token });
+      return res.status(401).json({ error: 'Token invalido ou camera inativa' });
     }
 
     const cliente = camera.clientes;
@@ -42,7 +73,31 @@ module.exports = async function handler(req, res) {
     // Parsear body (JSON ou multipart)
     const dados = await parseBody(req);
 
-    // Normalizar formato AlarmInfoPlate (câmeras LPR)
+    // Log the parsed data (without image to save space)
+    const logData = JSON.parse(JSON.stringify(dados));
+    if (logData.AlarmInfoPlate?.result?.PlateResult?.imageFile) {
+      logData.AlarmInfoPlate.result.PlateResult.imageFile = '[BASE64_IMAGE_REMOVED]';
+    }
+    if (logData.imageBase64) logData.imageBase64 = '[BASE64_IMAGE_REMOVED]';
+
+    const dataType = dados.AlarmInfoPlate ? 'AlarmInfoPlate'
+      : dados.SerialData ? 'SerialData'
+      : dados.heartbeat ? 'Heartbeat'
+      : 'Unknown';
+
+    await logDebug('captura-parsed', `${dataType} | camera: ${camera.nome}`, logData);
+
+    // Skip SerialData - it's raw sensor data, not plate recognition
+    if (dados.SerialData) {
+      return res.status(200).json({ ok: true, skipped: 'SerialData' });
+    }
+
+    // Skip heartbeat if it somehow arrives here
+    if (dados.heartbeat) {
+      return res.status(200).json({ ok: true, skipped: 'heartbeat' });
+    }
+
+    // Normalizar formato AlarmInfoPlate (cameras LPR)
     let normalized = dados;
     if (dados.AlarmInfoPlate) {
       const alarm = dados.AlarmInfoPlate;
@@ -55,6 +110,13 @@ module.exports = async function handler(req, res) {
         tipo_veiculo: plate.type || '',
         cor_veiculo: String(plate.carColor || ''),
       };
+
+      await logDebug('captura-normalized', `AlarmInfoPlate -> placa: ${normalized.placa}, vel: ${normalized.velocidade}`, {
+        placa: normalized.placa,
+        velocidade: normalized.velocidade,
+        pixels: normalized.pixels,
+        hasImage: !!normalized.imageBase64,
+      });
     }
 
     // Extrair campos
@@ -67,24 +129,30 @@ module.exports = async function handler(req, res) {
     const imageBase64 = normalized.imageBase64 || normalized.image || normalized.foto || '';
 
     if (!placa) {
-      return res.status(400).json({ error: 'Placa não fornecida' });
+      await logDebug('captura-error', 'Placa vazia apos normalizacao', { normalized: logData, placa });
+      return res.status(400).json({ error: 'Placa nao fornecida' });
     }
 
     // Decodificar foto
     let fotoBuffer = null;
     if (imageBase64) {
-      // Remover prefixo data:image/jpeg;base64, se presente
       const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
       fotoBuffer = Buffer.from(base64Clean, 'base64');
     }
 
     // Upload da foto ao Storage
     let fotoPath = null;
-    if (fotoBuffer) {
+    if (fotoBuffer && fotoBuffer.length > 100) {
       const ts = new Date(timestamp);
       const dateStr = ts.toISOString().replace(/[:.]/g, '-').slice(0, 19);
       fotoPath = `${cliente.id}/${camera.id}/${dateStr}_${placa}.jpg`;
-      await uploadPhoto(fotoPath, fotoBuffer);
+      try {
+        await uploadPhoto(fotoPath, fotoBuffer);
+      } catch (uploadErr) {
+        await logDebug('captura-error', `Erro upload foto: ${uploadErr.message}`, { fotoPath, size: fotoBuffer.length });
+        // Continue without photo
+        fotoPath = null;
+      }
     }
 
     // Salvar captura no banco
@@ -101,19 +169,22 @@ module.exports = async function handler(req, res) {
       notificado: false,
     });
 
-    // Atualizar last_seen da câmera
+    // Atualizar last_seen da camera
     await updateCameraLastSeen(camera.id, captura.id);
+
+    await logDebug('captura-success', `Captura salva: ${placa} ${velocidade}km/h`, {
+      capturaId: captura.id,
+      placa,
+      velocidade,
+      fotoPath,
+    });
 
     // Verificar se precisa notificar
     if (velocidade > cliente.limite_velocidade) {
       try {
-        // Buscar dados do veículo
         const veiculo = await findVeiculo(cliente.id, placa);
-
-        // Buscar histórico de passagens
         const historico = await getPassagensByPlaca(cliente.id, placa, 30);
 
-        // Gerar PDF
         const pdfBuffer = await gerarPDF({
           cliente,
           captura,
@@ -122,10 +193,8 @@ module.exports = async function handler(req, res) {
           historico,
         });
 
-        // Buscar destinatários da tabela (com fallback para campo legado)
         const destinatarios = await getDestinatarios(cliente.id, 'alerta');
 
-        // Enviar e-mail
         if (destinatarios.length > 0) {
           await enviarAlerta({
             destinatarios,
@@ -139,16 +208,16 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        // Marcar como notificado
         await markNotificado(captura.id);
       } catch (notifErr) {
-        // Log do erro mas não falha a captura
-        console.error('Erro na notificação:', notifErr.message);
+        await logDebug('captura-error', `Erro notificacao: ${notifErr.message}`, { placa, velocidade });
+        console.error('Erro na notificacao:', notifErr.message);
       }
     }
 
     return res.status(200).json({ ok: true, id: captura.id });
   } catch (err) {
+    await logDebug('captura-error', `Erro geral: ${err.message}`, { stack: err.stack?.slice(0, 500) });
     console.error('Erro no endpoint /api/captura:', err.message);
     return res.status(500).json({ error: 'Erro interno do servidor' });
   }
@@ -162,32 +231,40 @@ function parseBody(req) {
     const contentType = req.headers['content-type'] || '';
 
     if (contentType.includes('application/json')) {
-      // JSON body
       let body = '';
       req.on('data', (chunk) => { body += chunk; });
       req.on('end', () => {
         try {
           resolve(JSON.parse(body));
         } catch {
-          reject(new Error('JSON inválido'));
+          reject(new Error('JSON invalido'));
         }
       });
       req.on('error', reject);
     } else if (contentType.includes('multipart/form-data')) {
-      // Multipart form-data (via busboy)
       const fields = {};
       const busboy = Busboy({ headers: req.headers });
 
       busboy.on('field', (name, val) => {
-        fields[name] = val;
+        // Try to parse JSON fields (camera may send AlarmInfoPlate as a field)
+        try {
+          const parsed = JSON.parse(val);
+          if (typeof parsed === 'object') {
+            Object.assign(fields, parsed);
+          } else {
+            fields[name] = val;
+          }
+        } catch {
+          fields[name] = val;
+        }
       });
 
       busboy.on('file', (name, file, info) => {
         const chunks = [];
         file.on('data', (chunk) => chunks.push(chunk));
         file.on('end', () => {
-          // Converter arquivo para base64 e armazenar no campo imageBase64
           fields.imageBase64 = Buffer.concat(chunks).toString('base64');
+          fields._fileInfo = { name: info.filename, mimeType: info.mimeType, size: Buffer.concat(chunks).length };
         });
       });
 
@@ -196,7 +273,6 @@ function parseBody(req) {
 
       req.pipe(busboy);
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
-      // URL encoded
       let body = '';
       req.on('data', (chunk) => { body += chunk; });
       req.on('end', () => {

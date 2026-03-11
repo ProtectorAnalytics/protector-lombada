@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -79,9 +81,7 @@
       transition: border-color 0.2s;
     }
 
-    .login-box input:focus {
-      border-color: var(--accent);
-    }
+    .login-box input:focus { border-color: var(--accent); }
 
     .login-box button {
       width: 100%;
@@ -113,7 +113,7 @@
     .topbar {
       background: var(--bg-secondary);
       border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
+      padding: 10px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -164,36 +164,36 @@
     .main-layout {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      padding: 16px 24px;
-      height: calc(100vh - 56px);
+      gap: 12px;
+      padding: 12px 20px;
+      height: calc(100vh - 50px);
       overflow: hidden;
     }
 
     .top-section {
       display: grid;
-      grid-template-columns: 1fr 280px;
-      gap: 16px;
+      grid-template-columns: 1fr 260px;
+      gap: 12px;
     }
 
     .content-area {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     /* Recent Cards */
     .recent-cards {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     .recent-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px;
+      padding: 10px;
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
@@ -205,21 +205,41 @@
       transform: translateY(-2px);
     }
 
-    .recent-card.alerta {
-      border-left: 3px solid var(--red);
+    .recent-card.alerta { border-left: 3px solid var(--red); }
+
+    .recent-card .rc-thumb {
+      width: 100%;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      background: var(--bg-input);
+    }
+
+    .recent-card .rc-no-photo {
+      width: 100%;
+      height: 60px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      background: var(--bg-input);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 20px;
     }
 
     .recent-card .rc-placa {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       letter-spacing: 1.5px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .recent-card .rc-vel {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .recent-card .rc-vel.green { color: var(--green); }
@@ -227,25 +247,26 @@
     .recent-card .rc-vel.red { color: var(--red); }
 
     .recent-card .rc-info {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-secondary);
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     .recent-card .rc-badge {
       position: absolute;
-      top: 8px;
-      right: 8px;
-      font-size: 10px;
-      padding: 2px 6px;
+      top: 6px;
+      right: 6px;
+      font-size: 9px;
+      padding: 2px 5px;
       border-radius: 4px;
       font-weight: 600;
       text-transform: uppercase;
+      z-index: 2;
     }
 
     .recent-card .rc-badge.alert-badge {
-      background: rgba(255, 23, 68, 0.15);
-      color: var(--red);
+      background: rgba(255, 23, 68, 0.85);
+      color: #fff;
     }
 
     .recent-card .rc-badge.ok-badge {
@@ -256,8 +277,8 @@
     /* Bottom section */
     .bottom-section {
       display: grid;
-      grid-template-columns: 1fr 280px;
-      gap: 16px;
+      grid-template-columns: 1fr 260px;
+      gap: 12px;
       flex: 1;
       min-height: 0;
     }
@@ -266,28 +287,28 @@
     .stats-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px;
+      padding: 10px;
       text-align: center;
     }
 
     .stat-card .label {
       color: var(--text-secondary);
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
     .stat-card .value {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
-      margin: 2px 0;
+      margin: 1px 0;
     }
 
     .stat-card .value.orange { color: var(--accent); }
@@ -296,7 +317,7 @@
 
     .stat-card .unit {
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     /* Filters */
@@ -304,41 +325,55 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px 16px;
+      padding: 8px 12px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       flex-wrap: wrap;
     }
 
     .filters-row label {
       color: var(--text-secondary);
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
     }
 
-    .filters-row input {
+    .filters-row input, .filters-row select {
       background: var(--bg-input);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--text-primary);
-      padding: 6px 10px;
+      padding: 5px 8px;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
-      width: 130px;
+      font-size: 13px;
       outline: none;
     }
 
-    .filters-row input:focus { border-color: var(--accent); }
+    .filters-row input:focus, .filters-row select:focus { border-color: var(--accent); }
+    .filters-row input[type="date"] { width: 120px; }
+    .filters-row input[type="text"] { width: 90px; }
+    .filters-row input[type="number"] { width: 60px; }
+    .filters-row select { width: 120px; }
 
-    .filters-row input[type="text"] { width: 100px; }
+    .filters-row .filter-check {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
 
-    .btn-filter, .btn-clear {
-      padding: 6px 16px;
+    .filters-row .filter-check input[type="checkbox"] {
+      width: auto;
+      accent-color: var(--accent);
+    }
+
+    .btn-filter, .btn-clear, .btn-export {
+      padding: 5px 14px;
       border: none;
       border-radius: 6px;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -359,6 +394,14 @@
 
     .btn-clear:hover { border-color: var(--text-secondary); }
 
+    .btn-export {
+      background: #1b5e20;
+      color: white;
+      margin-left: auto;
+    }
+
+    .btn-export:hover { background: #2e7d32; }
+
     /* Table */
     .table-container {
       background: var(--bg-card);
@@ -373,11 +416,11 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 110px 100px 1fr 50px;
-      padding: 8px 14px;
+      grid-template-columns: 50px 100px 80px 1fr 60px;
+      padding: 6px 12px;
       background: var(--bg-secondary);
       border-bottom: 1px solid var(--border);
-      font-size: 11px;
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--text-secondary);
@@ -391,15 +434,36 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 110px 100px 1fr 50px;
-      padding: 7px 14px;
+      grid-template-columns: 50px 100px 80px 1fr 60px;
+      padding: 5px 12px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: background 0.15s;
-      font-size: 14px;
+      font-size: 13px;
+      align-items: center;
     }
 
     .table-row:hover { background: rgba(255, 107, 0, 0.05); }
+
+    .table-row .row-thumb {
+      width: 40px;
+      height: 28px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: var(--bg-input);
+    }
+
+    .table-row .row-no-thumb {
+      width: 40px;
+      height: 28px;
+      border-radius: 4px;
+      background: var(--bg-input);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
 
     .table-row .placa {
       font-weight: 600;
@@ -408,7 +472,7 @@
 
     .table-row .vel {
       font-weight: 700;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     .table-row .vel.green { color: var(--green); }
@@ -417,26 +481,26 @@
 
     .table-row .datetime {
       color: var(--text-secondary);
-      font-size: 14px;
+      font-size: 13px;
     }
 
-    .table-row .notif {
-      text-align: center;
-      font-size: 14px;
+    .table-row .morador-info {
+      font-size: 11px;
+      color: var(--text-muted);
     }
 
     .table-empty {
-      padding: 40px;
+      padding: 30px;
       text-align: center;
       color: var(--text-muted);
-      font-size: 16px;
+      font-size: 15px;
     }
 
     /* Sidebar */
     .sidebar {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       overflow-y: auto;
     }
 
@@ -444,41 +508,42 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 14px;
+      padding: 12px;
     }
 
     .sidebar-card h3 {
       color: var(--accent);
-      font-size: 13px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .chart-container {
-      height: 140px;
+      height: 130px;
       position: relative;
     }
 
-    .ranking-list {
-      list-style: none;
-    }
+    .ranking-list { list-style: none; }
 
     .ranking-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 0;
+      padding: 5px 0;
       border-bottom: 1px solid var(--border);
-      font-size: 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: color 0.15s;
     }
 
+    .ranking-item:hover { color: var(--accent); }
     .ranking-item:last-child { border-bottom: none; }
 
     .ranking-item .pos {
       color: var(--accent);
       font-weight: 700;
-      width: 24px;
+      width: 22px;
     }
 
     .ranking-item .placa {
@@ -489,18 +554,20 @@
 
     .ranking-item .count {
       color: var(--text-secondary);
-      font-size: 13px;
+      font-size: 12px;
     }
 
-    /* Modal */
+    /* ===== MODAL ===== */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       z-index: 1000;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      padding-top: 30px;
+      overflow-y: auto;
     }
 
     .modal-overlay.active { display: flex; }
@@ -509,22 +576,22 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      width: 600px;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 24px;
+      width: 700px;
+      max-width: 95vw;
+      padding: 20px;
+      margin-bottom: 30px;
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .modal-header h3 {
       color: var(--accent);
-      font-size: 20px;
+      font-size: 18px;
     }
 
     .modal-close {
@@ -540,39 +607,153 @@
     .modal-photo {
       width: 100%;
       border-radius: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       background: var(--bg-input);
-      min-height: 200px;
+    }
+
+    .modal-no-photo {
+      width: 100%;
+      height: 180px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      background: var(--bg-input);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 16px;
     }
 
     .modal-details {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
     .modal-field {
-      padding: 8px 12px;
+      padding: 8px 10px;
       background: var(--bg-input);
       border-radius: 6px;
     }
 
     .modal-field .label {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
     }
 
     .modal-field .value {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       margin-top: 2px;
     }
 
     .modal-field .value.red { color: var(--red); }
+    .modal-field .value.green { color: var(--green); }
+    .modal-field .value.accent { color: var(--accent); }
+
+    /* Modal: morador section */
+    .modal-morador {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .modal-morador h4 {
+      color: var(--accent);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .modal-morador .morador-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .modal-morador .morador-grid span {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      display: block;
+    }
+
+    .modal-morador .morador-grid strong {
+      color: var(--text-primary);
+    }
+
+    /* Modal: historico section */
+    .modal-historico {
+      margin-bottom: 14px;
+    }
+
+    .modal-historico h4 {
+      color: var(--accent);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .historico-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .historico-cell {
+      background: var(--bg-input);
+      border-radius: 4px;
+      padding: 4px 6px;
+      text-align: center;
+      min-width: 56px;
+      font-size: 11px;
+    }
+
+    .historico-cell .h-date {
+      color: var(--text-muted);
+      font-size: 9px;
+    }
+
+    .historico-cell .h-vel {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .historico-cell .h-vel.red { color: var(--red); }
+    .historico-cell .h-vel.green { color: var(--text-primary); }
+
+    /* Modal actions */
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .btn-pdf {
+      padding: 8px 20px;
+      background: var(--red-dark);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-pdf:hover { background: #e60000; }
+    .btn-pdf:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg-primary); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
@@ -603,7 +784,7 @@
       .recent-cards { grid-template-columns: repeat(2, 1fr); }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .filters-row { flex-direction: column; align-items: stretch; }
-      .filters-row input { width: 100%; }
+      .modal-details { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -614,7 +795,7 @@
     <div class="login-box">
       <h1>PROTECTOR</h1>
       <div class="subtitle">Lombada Educativa</div>
-      <div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">v1.2.0 &middot; build 2026.03.10</div>
+      <div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">v2.0.0</div>
       <input type="email" id="login-email" placeholder="E-mail">
       <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
       <button onclick="doLogin()">ENTRAR</button>
@@ -627,7 +808,7 @@
     <div class="topbar">
       <div class="brand">
         <h2>PROTECTOR</h2>
-        <span style="color:var(--text-muted);font-size:11px">v1.2.0</span>
+        <span style="color:var(--text-muted);font-size:11px">v2.0</span>
         <span id="topbar-cliente">Lombada Educativa</span>
       </div>
       <div class="user-info">
@@ -638,14 +819,14 @@
     </div>
 
     <div class="main-layout">
-      <!-- TOP: Stats + Sidebar Chart -->
+      <!-- TOP: Stats + Recent Cards + Sidebar Chart -->
       <div class="top-section">
         <div class="content-area">
           <div class="stats-row">
             <div class="stat-card">
               <div class="label">Passagens Hoje</div>
               <div class="value orange" id="stat-total">0</div>
-              <div class="unit">veículos</div>
+              <div class="unit">veiculos</div>
             </div>
             <div class="stat-card">
               <div class="label">Alertas Hoje</div>
@@ -653,7 +834,7 @@
               <div class="unit">acima do limite</div>
             </div>
             <div class="stat-card">
-              <div class="label">Vel. Máxima Hoje</div>
+              <div class="label">Vel. Maxima Hoje</div>
               <div class="value red" id="stat-maxvel">0</div>
               <div class="unit">km/h</div>
             </div>
@@ -664,8 +845,8 @@
             </div>
           </div>
 
-          <!-- Status das Câmeras -->
-          <div id="cameras-status" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+          <!-- Status das Cameras -->
+          <div id="cameras-status" style="display:flex;gap:8px;flex-wrap:wrap"></div>
 
           <!-- 6 Recent Cards -->
           <div class="recent-cards" id="recent-cards">
@@ -676,7 +857,7 @@
         <!-- Sidebar top: Chart -->
         <div class="sidebar">
           <div class="sidebar-card">
-            <h3>Passagens por Hora (Hoje)</h3>
+            <h3>Passagens por Hora</h3>
             <div class="chart-container">
               <canvas id="chart-hourly"></canvas>
             </div>
@@ -686,7 +867,7 @@
 
       <!-- BOTTOM: Filters + Table + Ranking -->
       <div class="bottom-section">
-        <div style="display:flex;flex-direction:column;gap:10px;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:8px;min-height:0">
           <!-- Filters -->
           <div class="filters-row">
             <div>
@@ -703,23 +884,35 @@
             </div>
             <div>
               <label>Vel. Min</label><br>
-              <input type="number" id="filter-vel-min" placeholder="0" min="0" style="width:70px">
+              <input type="number" id="filter-vel-min" placeholder="0" min="0">
             </div>
             <div>
               <label>Vel. Max</label><br>
-              <input type="number" id="filter-vel-max" placeholder="999" min="0" style="width:70px">
+              <input type="number" id="filter-vel-max" placeholder="999" min="0">
+            </div>
+            <div>
+              <label>Camera</label><br>
+              <select id="filter-camera">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div class="filter-check">
+              <input type="checkbox" id="filter-alertas-only">
+              <label for="filter-alertas-only" style="text-transform:none;font-size:12px;cursor:pointer">So alertas</label>
             </div>
             <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
             <button class="btn-clear" onclick="clearFilters()">Limpar</button>
+            <button class="btn-export" onclick="exportExcel()">Exportar Excel</button>
           </div>
 
           <!-- Table -->
           <div class="table-container">
             <div class="table-header">
+              <div>Foto</div>
               <div>Placa</div>
               <div>Velocidade</div>
               <div>Data / Hora</div>
-              <div>Alerta</div>
+              <div>Status</div>
             </div>
             <div class="table-body" id="table-body">
               <div class="table-empty">Carregando...</div>
@@ -730,7 +923,7 @@
         <!-- Sidebar bottom: Ranking -->
         <div class="sidebar">
           <div class="sidebar-card">
-            <h3>Top 8 Placas (15 dias)</h3>
+            <h3>Top 10 Placas (15 dias)</h3>
             <ul class="ranking-list" id="ranking-list">
               <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
             </ul>
@@ -747,20 +940,22 @@
         <h3>Detalhes da Captura</h3>
         <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
-      <img class="modal-photo" id="modal-photo" alt="Foto do veículo" style="display:none">
-      <div class="modal-details" id="modal-details"></div>
+      <div id="modal-body"></div>
     </div>
   </div>
 
   <script>
     // ============================================
-    // CONFIG - Carregado automaticamente do servidor
+    // CONFIG
     // ============================================
     let sb = null;
     let currentUser = null;
     let currentCliente = null;
     let currentProfile = null;
     let pollingInterval = null;
+    let camerasList = [];
+    let veiculosCache = {};
+    let lastCapturas = []; // store last filtered captures for export
 
     async function initApp() {
       try {
@@ -768,7 +963,6 @@
         const cfg = await resp.json();
         sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
-        // Verificar sessão existente
         const { data: { session } } = await sb.auth.getSession();
         if (session?.user) {
           currentUser = session.user;
@@ -807,7 +1001,6 @@
     }
 
     async function loadProfile() {
-      // Tentar carregar perfil da tabela usuarios
       const { data: profile } = await sb.from('usuarios')
         .select('*')
         .eq('auth_id', currentUser.id)
@@ -817,13 +1010,11 @@
       if (profile) {
         currentProfile = profile;
 
-        // Super admin deve ir para /admin
         if (profile.role === 'super_admin') {
           window.location.href = '/admin';
           return;
         }
 
-        // admin_cliente ou operador: carregar cliente pelo perfil
         if (profile.cliente_id) {
           const { data: cliente } = await sb.from('clientes')
             .select('*')
@@ -839,7 +1030,6 @@
         }
       }
 
-      // Fallback: buscar cliente pelo user_id (compatibilidade)
       await loadClienteLegado();
     }
 
@@ -851,7 +1041,7 @@
         .single();
 
       if (error || !data) {
-        document.getElementById('login-error').textContent = 'Nenhum cliente vinculado a este usuário.';
+        document.getElementById('login-error').textContent = 'Nenhum cliente vinculado a este usuario.';
         await sb.auth.signOut();
         return;
       }
@@ -869,8 +1059,6 @@
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    // Sessão verificada automaticamente pelo initApp()
-
     // ============================================
     // DASHBOARD
     // ============================================
@@ -881,11 +1069,12 @@
       document.getElementById('topbar-email').textContent = currentUser.email;
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
-      // Set default date filters to today
       const today = new Date().toISOString().slice(0, 10);
       document.getElementById('filter-date-start').value = today;
       document.getElementById('filter-date-end').value = today;
 
+      loadVeiculosCache();
+      loadCamerasList();
       loadAll();
       pollingInterval = setInterval(loadAll, 30000);
     }
@@ -902,7 +1091,53 @@
     }
 
     // ============================================
-    // RECENT CARDS (6 últimas capturas)
+    // VEICULOS CACHE (for plate cross-reference)
+    // ============================================
+    async function loadVeiculosCache() {
+      const { data } = await sb.from('veiculos')
+        .select('placa, nome_morador, unidade, marca, modelo, cor')
+        .eq('cliente_id', currentCliente.id)
+        .eq('ativo', true);
+
+      if (data) {
+        veiculosCache = {};
+        data.forEach(v => {
+          veiculosCache[v.placa] = v;
+        });
+      }
+    }
+
+    // ============================================
+    // CAMERAS LIST (for filter dropdown)
+    // ============================================
+    async function loadCamerasList() {
+      const { data } = await sb.from('cameras')
+        .select('id, nome')
+        .eq('cliente_id', currentCliente.id)
+        .eq('ativa', true);
+
+      if (data) {
+        camerasList = data;
+        const sel = document.getElementById('filter-camera');
+        sel.innerHTML = '<option value="">Todas</option>' +
+          data.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      }
+    }
+
+    // ============================================
+    // PHOTO URL HELPER
+    // ============================================
+    async function getPhotoUrl(fotoPath) {
+      if (!fotoPath) return null;
+      try {
+        const { data } = await sb.storage.from('capturas-fotos')
+          .createSignedUrl(fotoPath, 600);
+        return data?.signedUrl || null;
+      } catch { return null; }
+    }
+
+    // ============================================
+    // RECENT CARDS (6 ultimas capturas)
     // ============================================
     async function loadRecentCards() {
       const { data, error } = await sb.from('capturas')
@@ -919,21 +1154,31 @@
       }
 
       const limite = currentCliente.limite_velocidade;
-      container.innerHTML = data.map(c => {
+
+      // Get photo URLs in parallel
+      const photoUrls = await Promise.all(data.map(c => getPhotoUrl(c.foto_path)));
+
+      container.innerHTML = data.map((c, i) => {
         const isAlert = c.velocidade > limite;
         const velClass = c.velocidade <= limite ? 'green'
           : c.velocidade <= limite + 20 ? 'orange' : 'red';
         const ts = new Date(c.timestamp);
         const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const data_str = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const veiculo = veiculosCache[c.placa];
+        const morador = veiculo ? veiculo.nome_morador || veiculo.unidade || '' : '';
+
+        const photoHtml = photoUrls[i]
+          ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="Foto" loading="lazy">`
+          : `<div class="rc-no-photo">&#128663;</div>`;
 
         return `<div class="recent-card ${isAlert ? 'alerta' : ''}" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
           <div class="rc-badge ${isAlert ? 'alert-badge' : 'ok-badge'}">${isAlert ? 'ALERTA' : 'OK'}</div>
+          ${photoHtml}
           <div class="rc-placa">${c.placa}</div>
-          <div class="rc-vel ${velClass}">${c.velocidade} <span style="font-size:14px">km/h</span></div>
+          <div class="rc-vel ${velClass}">${c.velocidade} <span style="font-size:13px">km/h</span></div>
           <div class="rc-info">
-            ${hora} &middot; ${data_str}<br>
-            ${c.tipo_veiculo || '---'} &middot; ${c.cor_veiculo || '---'}
+            ${hora} &middot; ${data_str}${morador ? '<br>' + morador : ''}
           </div>
         </div>`;
       }).join('');
@@ -947,7 +1192,7 @@
       todayStart.setHours(0, 0, 0, 0);
 
       const { data, error } = await sb.from('capturas')
-        .select('velocidade, notificado')
+        .select('velocidade')
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', todayStart.toISOString());
 
@@ -963,17 +1208,17 @@
     }
 
     // ============================================
-    // STATUS DAS CÂMERAS
+    // STATUS DAS CAMERAS
     // ============================================
     function cameraStatus(lastSeen) {
-      if (!lastSeen) return { status: 'offline', label: 'Sem conexão', color: '#ef4444' };
+      if (!lastSeen) return { status: 'offline', label: 'Sem conexao', color: '#ef4444' };
       const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
       if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
-      if (mins < 5) return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
-      if (mins < 15) return { status: 'alerta', label: `Há ${Math.floor(mins)} min`, color: '#facc15' };
-      if (mins < 60) return { status: 'offline', label: `Há ${Math.floor(mins)} min`, color: '#ef4444' };
-      if (mins < 1440) return { status: 'offline', label: `Há ${Math.floor(mins / 60)}h`, color: '#ef4444' };
-      return { status: 'offline', label: `Há ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
+      if (mins < 5) return { status: 'online', label: `Ha ${Math.floor(mins)} min`, color: '#4ade80' };
+      if (mins < 15) return { status: 'alerta', label: `Ha ${Math.floor(mins)} min`, color: '#facc15' };
+      if (mins < 60) return { status: 'offline', label: `Ha ${Math.floor(mins)} min`, color: '#ef4444' };
+      if (mins < 1440) return { status: 'offline', label: `Ha ${Math.floor(mins / 60)}h`, color: '#ef4444' };
+      return { status: 'offline', label: `Ha ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
     }
 
     async function loadCamerasStatus() {
@@ -986,22 +1231,19 @@
         if (error || !cameras) return;
 
         const container = document.getElementById('cameras-status');
-        if (!cameras.length) {
-          container.innerHTML = '';
-          return;
-        }
+        if (!cameras.length) { container.innerHTML = ''; return; }
 
         container.innerHTML = cameras.map(cam => {
           const st = cameraStatus(cam.last_seen);
           const title = cam.last_seen ? new Date(cam.last_seen).toLocaleString('pt-BR') : 'Nunca conectou';
-          return `<div title="${title}" style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-card, #16213e);border-radius:8px;font-size:0.9rem;border:1px solid ${st.color}30">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80"></span>
+          return `<div title="${title}" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;font-size:0.85rem;border:1px solid ${st.color}30">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80"></span>
             <strong>${cam.nome}</strong>
             <span style="color:${st.color}">${st.label}</span>
           </div>`;
         }).join('');
       } catch (err) {
-        console.error('Erro ao carregar status das câmeras:', err);
+        console.error('Erro cameras:', err);
       }
     }
 
@@ -1014,50 +1256,57 @@
       const placa = document.getElementById('filter-placa').value.toUpperCase().trim();
       const velMin = parseInt(document.getElementById('filter-vel-min').value) || 0;
       const velMax = parseInt(document.getElementById('filter-vel-max').value) || 999;
+      const cameraId = document.getElementById('filter-camera').value;
+      const alertasOnly = document.getElementById('filter-alertas-only').checked;
 
       let query = sb.from('capturas')
         .select('*')
         .eq('cliente_id', currentCliente.id)
         .order('timestamp', { ascending: false })
-        .limit(200);
+        .limit(300);
 
-      if (dateStart) {
-        query = query.gte('timestamp', dateStart + 'T00:00:00');
-      }
-      if (dateEnd) {
-        query = query.lte('timestamp', dateEnd + 'T23:59:59');
-      }
-      if (placa) {
-        query = query.ilike('placa', `%${placa}%`);
-      }
-      if (velMin > 0) {
-        query = query.gte('velocidade', velMin);
-      }
-      if (velMax < 999) {
-        query = query.lte('velocidade', velMax);
-      }
+      if (dateStart) query = query.gte('timestamp', dateStart + 'T00:00:00');
+      if (dateEnd) query = query.lte('timestamp', dateEnd + 'T23:59:59');
+      if (placa) query = query.ilike('placa', `%${placa}%`);
+      if (velMin > 0) query = query.gte('velocidade', velMin);
+      if (velMax < 999) query = query.lte('velocidade', velMax);
+      if (cameraId) query = query.eq('camera_id', cameraId);
+      if (alertasOnly) query = query.gt('velocidade', currentCliente.limite_velocidade);
 
       const { data, error } = await query;
       const tbody = document.getElementById('table-body');
 
       if (error || !data || data.length === 0) {
         tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
+        lastCapturas = [];
         return;
       }
 
+      lastCapturas = data;
       const limite = currentCliente.limite_velocidade;
-      tbody.innerHTML = data.map(c => {
+
+      // Get thumbnail URLs (batch)
+      const thumbUrls = await Promise.all(
+        data.slice(0, 50).map(c => getPhotoUrl(c.foto_path))
+      );
+
+      tbody.innerHTML = data.map((c, i) => {
         const velClass = c.velocidade <= limite ? 'green'
           : c.velocidade <= limite + 20 ? 'orange' : 'red';
         const ts = new Date(c.timestamp);
         const dt = ts.toLocaleDateString('pt-BR') + ' ' + ts.toLocaleTimeString('pt-BR');
-        const notifIcon = c.notificado ? '&#9993;' : '';
+        const isAlert = c.velocidade > limite;
+
+        const thumbHtml = i < 50 && thumbUrls[i]
+          ? `<img class="row-thumb" src="${thumbUrls[i]}" alt="" loading="lazy">`
+          : `<div class="row-no-thumb">&#128663;</div>`;
 
         return `<div class="table-row" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
+          <div>${thumbHtml}</div>
           <div class="placa">${c.placa}</div>
           <div class="vel ${velClass}">${c.velocidade} km/h</div>
           <div class="datetime">${dt}</div>
-          <div class="notif">${notifIcon}</div>
+          <div style="text-align:center;font-size:12px;font-weight:600;color:${isAlert ? 'var(--red)' : 'var(--green)'}">${isAlert ? 'ALERTA' : 'OK'}</div>
         </div>`;
       }).join('');
     }
@@ -1071,43 +1320,96 @@
       document.getElementById('filter-placa').value = '';
       document.getElementById('filter-vel-min').value = '';
       document.getElementById('filter-vel-max').value = '';
+      document.getElementById('filter-camera').value = '';
+      document.getElementById('filter-alertas-only').checked = false;
       loadCapturas();
     }
 
     // ============================================
-    // MODAL
+    // EXPORT EXCEL
+    // ============================================
+    function exportExcel() {
+      if (!lastCapturas || lastCapturas.length === 0) {
+        alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
+        return;
+      }
+
+      const limite = currentCliente.limite_velocidade;
+      const rows = lastCapturas.map(c => {
+        const ts = new Date(c.timestamp);
+        const veiculo = veiculosCache[c.placa];
+        return {
+          'Placa': c.placa,
+          'Velocidade (km/h)': c.velocidade,
+          'Data': ts.toLocaleDateString('pt-BR'),
+          'Hora': ts.toLocaleTimeString('pt-BR'),
+          'Status': c.velocidade > limite ? 'ALERTA' : 'OK',
+          'Morador': veiculo?.nome_morador || '',
+          'Unidade': veiculo?.unidade || '',
+          'Tipo Veiculo': c.tipo_veiculo || '',
+          'Cor Veiculo': c.cor_veiculo || '',
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Capturas');
+
+      // Auto-width columns
+      const colWidths = Object.keys(rows[0]).map(k => ({
+        wch: Math.max(k.length, ...rows.map(r => String(r[k]).length)) + 2
+      }));
+      ws['!cols'] = colWidths;
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `capturas_${currentCliente.nome.replace(/\s+/g, '_')}_${dateStr}.xlsx`);
+    }
+
+    // ============================================
+    // MODAL - Full detail view
     // ============================================
     async function openModal(captura) {
       const modal = document.getElementById('modal');
-      const photo = document.getElementById('modal-photo');
-      const details = document.getElementById('modal-details');
+      const body = document.getElementById('modal-body');
       const limite = currentCliente.limite_velocidade;
+      const isAlert = captura.velocidade > limite;
+      const ts = new Date(captura.timestamp);
+
+      // Show loading
+      body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando detalhes...</div>';
+      modal.classList.add('active');
+
+      // Load photo, veiculo, historico in parallel
+      const [photoUrl, historico] = await Promise.all([
+        getPhotoUrl(captura.foto_path),
+        loadHistoricoPlaca(captura.placa),
+      ]);
+
+      const veiculo = veiculosCache[captura.placa];
+
+      // Build modal content
+      let html = '';
 
       // Photo
-      if (captura.foto_path) {
-        const { data } = await sb.storage.from('capturas-fotos')
-          .createSignedUrl(captura.foto_path, 300);
-        if (data?.signedUrl) {
-          photo.src = data.signedUrl;
-          photo.style.display = 'block';
-        } else {
-          photo.style.display = 'none';
-        }
+      if (photoUrl) {
+        html += `<img class="modal-photo" src="${photoUrl}" alt="Foto do veiculo">`;
       } else {
-        photo.style.display = 'none';
+        html += `<div class="modal-no-photo">Sem foto disponivel</div>`;
       }
 
-      const ts = new Date(captura.timestamp);
-      const velClass = captura.velocidade > limite ? 'red' : '';
-
-      details.innerHTML = `
+      // Main details (3 columns)
+      html += `<div class="modal-details">
         <div class="modal-field">
           <div class="label">Placa</div>
-          <div class="value">${captura.placa}</div>
+          <div class="value" style="font-size:20px;letter-spacing:2px">${captura.placa}</div>
         </div>
         <div class="modal-field">
           <div class="label">Velocidade</div>
-          <div class="value ${velClass}">${captura.velocidade} km/h</div>
+          <div class="value ${isAlert ? 'red' : 'green'}" style="font-size:20px">${captura.velocidade} km/h</div>
+        </div>
+        <div class="modal-field">
+          <div class="label">Status</div>
+          <div class="value ${isAlert ? 'red' : 'green'}">${isAlert ? 'ALERTA' : 'OK'}</div>
         </div>
         <div class="modal-field">
           <div class="label">Data</div>
@@ -1118,35 +1420,258 @@
           <div class="value">${ts.toLocaleTimeString('pt-BR')}</div>
         </div>
         <div class="modal-field">
-          <div class="label">Tipo Veículo</div>
-          <div class="value">${captura.tipo_veiculo || '---'}</div>
+          <div class="label">Limite</div>
+          <div class="value accent">${limite} km/h</div>
         </div>
-        <div class="modal-field">
-          <div class="label">Cor Veículo</div>
-          <div class="value">${captura.cor_veiculo || '---'}</div>
-        </div>
-        <div class="modal-field">
-          <div class="label">Pixels LPR</div>
-          <div class="value">${captura.pixels || '---'}</div>
-        </div>
-        <div class="modal-field">
-          <div class="label">Notificado</div>
-          <div class="value">${captura.notificado ? 'Sim' : 'Não'}</div>
-        </div>
-      `;
+      </div>`;
 
-      modal.classList.add('active');
+      // Morador section
+      if (veiculo) {
+        html += `<div class="modal-morador">
+          <h4>Veiculo Cadastrado</h4>
+          <div class="morador-grid">
+            <div><span>Morador</span><strong>${veiculo.nome_morador || '---'}</strong></div>
+            <div><span>Unidade</span><strong>${veiculo.unidade || '---'}</strong></div>
+            <div><span>Veiculo</span><strong>${[veiculo.marca, veiculo.modelo].filter(Boolean).join(' ') || '---'} ${veiculo.cor || ''}</strong></div>
+          </div>
+        </div>`;
+      } else {
+        html += `<div class="modal-morador" style="border-left-color:var(--text-muted);opacity:0.6">
+          <h4>Veiculo nao cadastrado</h4>
+          <div style="font-size:12px;color:var(--text-muted)">Cadastre este veiculo no painel administrativo para identificar o morador.</div>
+        </div>`;
+      }
+
+      // Historico de velocidades
+      if (historico && historico.length > 1) {
+        html += `<div class="modal-historico">
+          <h4>Ultimas Passagens desta Placa (${historico.length})</h4>
+          <div class="historico-grid">
+            ${historico.map(h => {
+              const hts = new Date(h.timestamp);
+              const hVel = h.velocidade;
+              const hAlert = hVel > limite;
+              return `<div class="historico-cell">
+                <div class="h-date">${hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'})}</div>
+                <div class="h-date">${hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>
+                <div class="h-vel ${hAlert ? 'red' : 'green'}">${hVel}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }
+
+      // Actions
+      html += `<div class="modal-actions">
+        <button class="btn-pdf" onclick='gerarNotificacaoPDF(${JSON.stringify(captura).replace(/'/g, "&#39;")})'>
+          Gerar Notificacao PDF
+        </button>
+      </div>`;
+
+      body.innerHTML = html;
+    }
+
+    async function loadHistoricoPlaca(placa) {
+      const { data } = await sb.from('capturas')
+        .select('placa, velocidade, timestamp')
+        .eq('cliente_id', currentCliente.id)
+        .eq('placa', placa)
+        .order('timestamp', { ascending: false })
+        .limit(30);
+      return data || [];
     }
 
     function closeModal() {
       document.getElementById('modal').classList.remove('active');
-      document.getElementById('modal-photo').src = '';
     }
 
-    // Close on Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
+
+    // ============================================
+    // PDF NOTIFICATION GENERATOR (client-side)
+    // ============================================
+    async function gerarNotificacaoPDF(captura) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const limite = currentCliente.limite_velocidade;
+      const ts = new Date(captura.timestamp);
+      const veiculo = veiculosCache[captura.placa];
+      const velReport = captura.velocidade <= 10 ? 1 : captura.velocidade;
+      const pageW = 210;
+      const margin = 20;
+      const contentW = pageW - margin * 2;
+
+      // Title
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(204, 0, 0);
+      doc.text('NOTIFICACAO ORIENTATIVA', pageW / 2, 20, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      doc.text('Transitar em velocidade superior a maxima permitida', pageW / 2, 27, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(currentCliente.nome, pageW / 2, 34, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text(currentCliente.local_via || '', pageW / 2, 40, { align: 'center' });
+      doc.text(currentCliente.cidade_uf || '', pageW / 2, 45, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(255, 107, 0);
+      doc.text('Lombada Educativa', pageW / 2, 51, { align: 'center' });
+
+      // Line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, 55, pageW - margin, 55);
+
+      // Table 1: Placa | Morador | Unidade
+      const col3 = contentW / 3;
+      let y = 60;
+
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(120, 120, 120);
+      doc.text('PLACA VEICULO', margin + col3 * 0.5, y, { align: 'center' });
+      doc.text('NOME MORADOR', margin + col3 * 1.5, y, { align: 'center' });
+      doc.text('UNIDADE', margin + col3 * 2.5, y, { align: 'center' });
+
+      y += 7;
+      doc.setFontSize(14);
+      doc.setTextColor(204, 0, 0);
+      doc.text(captura.placa, margin + col3 * 0.5, y, { align: 'center' });
+
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(veiculo?.nome_morador || '---', margin + col3 * 1.5, y, { align: 'center' });
+      doc.text(veiculo?.unidade || '---', margin + col3 * 2.5, y, { align: 'center' });
+
+      y += 6;
+      doc.line(margin, y, pageW - margin, y);
+
+      // Table 2: Velocidade | Data | Hora
+      y += 5;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(120, 120, 120);
+      doc.text('VELOCIDADE REGISTRADA', margin + col3 * 0.5, y, { align: 'center' });
+      doc.text('DATA DA OCORRENCIA', margin + col3 * 1.5, y, { align: 'center' });
+      doc.text('HORA OCORRENCIA', margin + col3 * 2.5, y, { align: 'center' });
+
+      y += 8;
+      doc.setFontSize(18);
+      doc.setTextColor(204, 0, 0);
+      doc.text(`${velReport} km/h`, margin + col3 * 0.5, y, { align: 'center' });
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text(ts.toLocaleDateString('pt-BR'), margin + col3 * 1.5, y, { align: 'center' });
+      doc.text(ts.toLocaleTimeString('pt-BR'), margin + col3 * 2.5, y, { align: 'center' });
+
+      y += 6;
+      doc.line(margin, y, pageW - margin, y);
+
+      // Photo
+      y += 3;
+      const photoUrl = await getPhotoUrl(captura.foto_path);
+      if (photoUrl) {
+        try {
+          const imgData = await loadImageAsBase64(photoUrl);
+          if (imgData) {
+            doc.addImage(imgData, 'JPEG', margin, y, contentW, contentW * 0.55);
+            y += contentW * 0.55 + 3;
+          }
+        } catch {
+          // skip photo
+        }
+      }
+
+      doc.line(margin, y, pageW - margin, y);
+      y += 5;
+
+      // Footer note
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(150, 150, 150);
+      doc.text('Velocidades igual ou inferior a 10km/h serao registradas com velocidade igual a 1 neste relatorio.', pageW / 2, y, { align: 'center' });
+
+      y += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(currentCliente.nome, pageW / 2, y, { align: 'center' });
+
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Ultimas passagens por data / Velocidades', pageW / 2, y, { align: 'center' });
+
+      // Historico grid
+      y += 5;
+      const historico = await loadHistoricoPlaca(captura.placa);
+      if (historico && historico.length > 0) {
+        const cellW = contentW / 10;
+        const cellH = 12;
+        historico.forEach((h, i) => {
+          const col = i % 10;
+          const row = Math.floor(i / 10);
+          const cx = margin + col * cellW;
+          const cy = y + row * cellH;
+
+          if (cy + cellH > 280) return; // page overflow protection
+
+          doc.setDrawColor(200, 200, 200);
+          doc.rect(cx, cy, cellW, cellH);
+
+          const hts = new Date(h.timestamp);
+          const hVel = h.velocidade <= 10 ? 1 : h.velocidade;
+          const isAbove = hVel > limite;
+
+          doc.setFontSize(5);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(120, 120, 120);
+          doc.text(hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'}), cx + cellW/2, cy + 3.5, { align: 'center' });
+          doc.text(hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), cx + cellW/2, cy + 6.5, { align: 'center' });
+
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(isAbove ? 204 : 60, isAbove ? 0 : 60, isAbove ? 0 : 60);
+          doc.text(`${hVel}`, cx + cellW/2, cy + 10.5, { align: 'center' });
+        });
+      }
+
+      // Save
+      const fileName = `notificacao_${captura.placa}_${ts.toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+      doc.save(fileName);
+    }
+
+    // Load image from URL as base64 for jsPDF
+    function loadImageAsBase64(url) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
 
     // ============================================
     // HOURLY CHART (Canvas)
@@ -1160,7 +1685,6 @@
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', todayStart.toISOString());
 
-      // Count per hour
       const hours = new Array(24).fill(0);
       if (data) {
         data.forEach(c => {
@@ -1184,43 +1708,39 @@
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       const maxVal = Math.max(...data, 1);
-      const barWidth = (w - 40) / 24;
-      const chartHeight = h - 30;
+      const barWidth = (w - 30) / 24;
+      const chartHeight = h - 25;
 
       ctx.clearRect(0, 0, w, h);
 
-      // Bars
       data.forEach((val, i) => {
-        const barH = (val / maxVal) * (chartHeight - 10);
-        const x = 30 + i * barWidth;
+        const barH = (val / maxVal) * (chartHeight - 8);
+        const x = 24 + i * barWidth;
         const y = chartHeight - barH;
 
         ctx.fillStyle = val > 0 ? '#FF6B00' : '#2a2a4a';
         ctx.fillRect(x + 1, y, barWidth - 2, barH);
 
-        // Hour labels (every 3 hours)
         if (i % 3 === 0) {
           ctx.fillStyle = '#666';
-          ctx.font = '10px Barlow Condensed';
-          ctx.textAlign = 'center';
-          ctx.fillText(`${i}h`, x + barWidth / 2, h - 5);
-        }
-
-        // Value on top
-        if (val > 0) {
-          ctx.fillStyle = '#ccc';
           ctx.font = '9px Barlow Condensed';
           ctx.textAlign = 'center';
-          ctx.fillText(val, x + barWidth / 2, y - 3);
+          ctx.fillText(`${i}h`, x + barWidth / 2, h - 3);
+        }
+
+        if (val > 0) {
+          ctx.fillStyle = '#ccc';
+          ctx.font = '8px Barlow Condensed';
+          ctx.textAlign = 'center';
+          ctx.fillText(val, x + barWidth / 2, y - 2);
         }
       });
 
-      // Y axis line
       ctx.strokeStyle = '#2a2a4a';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(28, 0);
-      ctx.lineTo(28, chartHeight);
+      ctx.moveTo(22, 0);
+      ctx.lineTo(22, chartHeight);
       ctx.lineTo(w, chartHeight);
       ctx.stroke();
     }
@@ -1243,22 +1763,18 @@
         return;
       }
 
-      // Count by plate
       const counts = {};
-      data.forEach(c => {
-        counts[c.placa] = (counts[c.placa] || 0) + 1;
-      });
+      data.forEach(c => { counts[c.placa] = (counts[c.placa] || 0) + 1; });
 
-      // Sort and take top 8
       const sorted = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 8);
+        .slice(0, 10);
 
       document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => `
-        <li class="ranking-item">
+        <li class="ranking-item" onclick="document.getElementById('filter-placa').value='${item[0]}';applyFilters()">
           <span class="pos">${i + 1}.</span>
           <span class="placa">${item[0]}</span>
-          <span class="count">${item[1]} passagens</span>
+          <span class="count">${item[1]}x</span>
         </li>
       `).join('');
     }
