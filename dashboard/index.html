@@ -974,51 +974,238 @@
       border-color: var(--red);
     }
 
-    .veiculo-form-inline {
-      background: var(--bg-card);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 12px;
+    /* ===== MODAL VEICULOS ===== */
+    .vm-overlay {
       display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1001;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 60px;
+      overflow-y: auto;
+    }
+    .vm-overlay.active { display: flex; }
+
+    .vm-box {
+      background: #FFFFFF;
+      border-radius: 16px;
+      width: 520px;
+      max-width: 95vw;
+      padding: 0;
+      margin-bottom: 30px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
     }
 
-    .veiculo-form-inline.active {
+    .vm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px 0;
+    }
+    .vm-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .vm-header .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .vm-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin: 16px 24px 0;
+    }
+    .vm-tab {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .vm-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .vm-tab:hover:not(.active) {
+      color: var(--text-primary);
+    }
+
+    .vm-body {
+      padding: 20px 24px 24px;
+    }
+
+    .vm-field {
+      margin-bottom: 12px;
+    }
+    .vm-field label {
       display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-
-    .veiculo-form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .veiculo-form-grid input {
+    .vm-field input {
       width: 100%;
-      padding: 8px 12px;
+      padding: 10px 14px;
       background: var(--bg-input);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      font-size: 14px;
       outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
     }
-
-    .veiculo-form-grid input:focus {
+    .vm-field input:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(4,107,210,0.1);
     }
 
-    .veiculo-form-actions {
+    .vm-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .vm-actions {
       display: flex;
-      gap: 8px;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .vm-actions .vm-btn-primary {
+      flex: 1;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .vm-actions .vm-btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(4,107,210,0.25);
+    }
+    .vm-actions .vm-btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .vm-actions .vm-btn-cancel:hover {
+      border-color: var(--text-secondary);
     }
 
-    .veiculo-form-error {
+    .vm-error {
       color: var(--red);
       font-size: 12px;
-      margin-top: 6px;
+      margin-top: 8px;
       min-height: 16px;
+    }
+
+    /* Consultar tab */
+    .vm-search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .vm-search-box input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      text-transform: uppercase;
+    }
+    .vm-search-box input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(4,107,210,0.1);
+    }
+    .vm-search-box button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .vm-result {
+      background: var(--bg-input);
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 60px;
+    }
+    .vm-result-empty {
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .vm-result-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .vm-result-card .placa {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+    }
+    .vm-result-card .info {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .vm-result-card .vm-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .vm-status-ok {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .vm-status-not {
+      background: #fef2f2;
+      color: #dc2626;
     }
 
     /* Responsive */
@@ -1237,19 +1424,60 @@
         <button class="btn-add-veiculo" onclick="toggleVeiculoForm()">+ Novo Veiculo</button>
       </div>
 
-      <div class="veiculo-form-inline" id="veiculo-form">
-        <div class="veiculo-form-grid">
-          <input type="text" id="vf-placa" placeholder="Placa (ABC1D23)" maxlength="7" style="text-transform:uppercase">
-          <input type="text" id="vf-morador" placeholder="Nome do morador">
-          <input type="text" id="vf-unidade" placeholder="Unidade (ex: Bloco A - 101)">
-          <input type="text" id="vf-marca" placeholder="Marca/Modelo">
-          <input type="text" id="vf-cor" placeholder="Cor">
+      <!-- Modal Veiculos -->
+      <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
+        <div class="vm-box">
+          <div class="vm-header">
+            <h3 id="vm-title">Veiculos</h3>
+            <button class="modal-close" onclick="fecharModalVeiculo()">&times;</button>
+          </div>
+          <div class="vm-tabs">
+            <button class="vm-tab active" id="vm-tab-cadastrar" onclick="vmSwitchTab('cadastrar')">Cadastrar</button>
+            <button class="vm-tab" id="vm-tab-consultar" onclick="vmSwitchTab('consultar')">Consultar</button>
+          </div>
+
+          <!-- Tab Cadastrar -->
+          <div class="vm-body" id="vm-body-cadastrar">
+            <div class="vm-field">
+              <label>Placa *</label>
+              <input type="text" id="vf-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
+            </div>
+            <div class="vm-field">
+              <label>Nome do Morador</label>
+              <input type="text" id="vf-morador" placeholder="Nome completo">
+            </div>
+            <div class="vm-field">
+              <label>Unidade</label>
+              <input type="text" id="vf-unidade" placeholder="Ex: Bloco A - Apt 101">
+            </div>
+            <div class="vm-row">
+              <div class="vm-field">
+                <label>Marca / Modelo</label>
+                <input type="text" id="vf-marca" placeholder="Ex: Honda Civic">
+              </div>
+              <div class="vm-field">
+                <label>Cor</label>
+                <input type="text" id="vf-cor" placeholder="Ex: Prata">
+              </div>
+            </div>
+            <div class="vm-actions">
+              <button class="vm-btn-cancel" onclick="fecharModalVeiculo()">Cancelar</button>
+              <button class="vm-btn-primary" onclick="salvarVeiculo()">Cadastrar Veiculo</button>
+            </div>
+            <div class="vm-error" id="vf-error"></div>
+          </div>
+
+          <!-- Tab Consultar -->
+          <div class="vm-body" id="vm-body-consultar" style="display:none">
+            <div class="vm-search-box">
+              <input type="text" id="vm-busca-placa" placeholder="Digite a placa..." maxlength="7" onkeydown="if(event.key==='Enter')buscarVeiculo()">
+              <button onclick="buscarVeiculo()">Buscar</button>
+            </div>
+            <div class="vm-result" id="vm-result">
+              <div class="vm-result-empty">Digite uma placa para verificar se esta cadastrada</div>
+            </div>
+          </div>
         </div>
-        <div class="veiculo-form-actions">
-          <button class="btn-add-veiculo" onclick="salvarVeiculo()">Salvar</button>
-          <button style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;color:var(--text-secondary)" onclick="toggleVeiculoForm()">Cancelar</button>
-        </div>
-        <div class="veiculo-form-error" id="vf-error"></div>
       </div>
 
       <div class="veiculos-grid" id="veiculos-grid">
@@ -1779,15 +2007,94 @@
     }
 
     function toggleVeiculoForm() {
-      const form = document.getElementById('veiculo-form');
-      form.classList.toggle('active');
-      if (!form.classList.contains('active')) {
-        document.getElementById('vf-placa').value = '';
-        document.getElementById('vf-morador').value = '';
-        document.getElementById('vf-unidade').value = '';
-        document.getElementById('vf-marca').value = '';
-        document.getElementById('vf-cor').value = '';
-        document.getElementById('vf-error').textContent = '';
+      const overlay = document.getElementById('vm-overlay');
+      if (overlay.classList.contains('active')) {
+        fecharModalVeiculo();
+      } else {
+        abrirModalVeiculo();
+      }
+    }
+
+    function abrirModalVeiculo() {
+      document.getElementById('vm-overlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      vmSwitchTab('cadastrar');
+      limparFormVeiculo();
+    }
+
+    function fecharModalVeiculo() {
+      document.getElementById('vm-overlay').classList.remove('active');
+      document.body.style.overflow = '';
+      limparFormVeiculo();
+    }
+
+    function limparFormVeiculo() {
+      document.getElementById('vf-placa').value = '';
+      document.getElementById('vf-morador').value = '';
+      document.getElementById('vf-unidade').value = '';
+      document.getElementById('vf-marca').value = '';
+      document.getElementById('vf-cor').value = '';
+      document.getElementById('vf-error').textContent = '';
+      document.getElementById('vm-busca-placa').value = '';
+      document.getElementById('vm-result').innerHTML = '<div class="vm-result-empty">Digite uma placa para verificar se esta cadastrada</div>';
+    }
+
+    function vmSwitchTab(tab) {
+      document.getElementById('vm-tab-cadastrar').classList.toggle('active', tab === 'cadastrar');
+      document.getElementById('vm-tab-consultar').classList.toggle('active', tab === 'consultar');
+      document.getElementById('vm-body-cadastrar').style.display = tab === 'cadastrar' ? '' : 'none';
+      document.getElementById('vm-body-consultar').style.display = tab === 'consultar' ? '' : 'none';
+    }
+
+    function buscarVeiculo() {
+      const placa = document.getElementById('vm-busca-placa').value.trim().toUpperCase().replace(/[-\s]/g, '');
+      const resultEl = document.getElementById('vm-result');
+
+      if (!placa) {
+        resultEl.innerHTML = '<div class="vm-result-empty">Digite uma placa para buscar</div>';
+        return;
+      }
+
+      const found = veiculosList.find(v => v.placa === placa);
+
+      if (found) {
+        const info = [found.nome_morador, found.unidade, found.marca, found.cor].filter(Boolean).join(' | ');
+        resultEl.innerHTML = `
+          <div class="vm-result-card">
+            <div>
+              <div class="placa">${found.placa}</div>
+              <div class="info">${info || 'Sem informacoes adicionais'}</div>
+            </div>
+            <span class="vm-status vm-status-ok">Cadastrado</span>
+          </div>
+        `;
+      } else {
+        // Also search partial matches
+        const partial = veiculosList.filter(v => v.placa.includes(placa));
+        if (partial.length > 0) {
+          resultEl.innerHTML = partial.map(v => {
+            const info = [v.nome_morador, v.unidade, v.marca, v.cor].filter(Boolean).join(' | ');
+            return `
+              <div class="vm-result-card" style="margin-bottom:8px">
+                <div>
+                  <div class="placa">${v.placa}</div>
+                  <div class="info">${info || 'Sem informacoes adicionais'}</div>
+                </div>
+                <span class="vm-status vm-status-ok">Cadastrado</span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          resultEl.innerHTML = `
+            <div class="vm-result-card">
+              <div>
+                <div class="placa">${placa}</div>
+                <div class="info">Nenhum veiculo encontrado com esta placa</div>
+              </div>
+              <span class="vm-status vm-status-not">Nao cadastrado</span>
+            </div>
+          `;
+        }
       }
     }
 
@@ -1851,7 +2158,7 @@
           return;
         }
 
-        toggleVeiculoForm();
+        fecharModalVeiculo();
         await loadVeiculos();
         // Refresh cache for plate cross-reference in captures
         await loadVeiculosCache();
