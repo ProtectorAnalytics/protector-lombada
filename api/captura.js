@@ -1,6 +1,7 @@
 const Busboy = require('busboy');
 const {
   findCameraByToken,
+  findCameraBySerial,
   saveCaptura,
   uploadPhoto,
   findVeiculo,
@@ -51,18 +52,46 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Metodo nao permitido' });
   }
 
-  // Autenticacao por token
-  const token = req.query.token;
-  if (!token) {
-    await logDebug('captura-error', 'Token nao fornecido', { url, query: req.query });
-    return res.status(401).json({ error: 'Token nao fornecido' });
-  }
-
   try {
-    const camera = await findCameraByToken(token);
+    // Parsear body FIRST (we need it to find camera by serial if no token)
+    const dados = await parseBody(req);
+
+    // Log the parsed data type
+    const dataType = dados.AlarmInfoPlate ? 'AlarmInfoPlate'
+      : dados.SerialData ? 'SerialData'
+      : dados.heartbeat ? 'Heartbeat'
+      : 'Unknown';
+
+    // Try to find camera: first by token, then by serial from payload
+    const token = req.query.token;
+    let camera = null;
+
+    if (token) {
+      camera = await findCameraByToken(token);
+    }
+
+    // Fallback: identify camera by serial number from AlarmInfoPlate or SerialData
     if (!camera) {
-      await logDebug('captura-error', 'Token invalido', { token });
-      return res.status(401).json({ error: 'Token invalido ou camera inativa' });
+      const serialno = dados.AlarmInfoPlate?.serialno
+        || dados.AlarmInfoPlate?.result?.PlateResult?.serialno
+        || dados.SerialData?.serialno
+        || dados.heartbeat?.serialno
+        || null;
+
+      if (serialno) {
+        camera = await findCameraBySerial(serialno);
+        if (camera) {
+          await logDebug('captura-auth', `Camera encontrada por serial: ${serialno}`, { serialno, cameraId: camera.id });
+        }
+      }
+
+      if (!camera) {
+        await logDebug('captura-error', `Camera nao encontrada | token: ${token || 'none'} | type: ${dataType}`, {
+          token, dataType, url,
+          serialno: serialno || 'none',
+        });
+        return res.status(401).json({ error: 'Camera nao identificada' });
+      }
     }
 
     const cliente = camera.clientes;
@@ -70,20 +99,12 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: 'Cliente inativo' });
     }
 
-    // Parsear body (JSON ou multipart)
-    const dados = await parseBody(req);
-
     // Log the parsed data (without image to save space)
     const logData = JSON.parse(JSON.stringify(dados));
     if (logData.AlarmInfoPlate?.result?.PlateResult?.imageFile) {
       logData.AlarmInfoPlate.result.PlateResult.imageFile = '[BASE64_IMAGE_REMOVED]';
     }
     if (logData.imageBase64) logData.imageBase64 = '[BASE64_IMAGE_REMOVED]';
-
-    const dataType = dados.AlarmInfoPlate ? 'AlarmInfoPlate'
-      : dados.SerialData ? 'SerialData'
-      : dados.heartbeat ? 'Heartbeat'
-      : 'Unknown';
 
     await logDebug('captura-parsed', `${dataType} | camera: ${camera.nome}`, logData);
 
