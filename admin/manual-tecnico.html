@@ -6,7 +6,7 @@
     <title>Manual Tecnico - Protector Traffic Control</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #046bd2;
@@ -20,7 +20,7 @@
             --green: #22c55e;
             --orange: #f59e0b;
             --red: #ef4444;
-            --sidebar-w: 300px;
+            --sidebar-w: 280px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -58,16 +58,6 @@
             text-decoration: none;
         }
         .navbar .brand svg { flex-shrink: 0; }
-        .navbar .badge {
-            background: rgba(255,255,255,.2);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-        }
         .navbar .nav-actions { display: flex; gap: 10px; }
         .navbar .btn {
             display: inline-flex;
@@ -112,8 +102,8 @@
         }
         .sidebar a {
             display: block;
-            padding: 6px 20px;
-            font-size: 12.5px;
+            padding: 7px 20px;
+            font-size: 13px;
             color: var(--text-light);
             text-decoration: none;
             border-left: 3px solid transparent;
@@ -131,7 +121,7 @@
             margin-left: var(--sidebar-w);
             margin-top: 60px;
             padding: 40px 48px 80px;
-            max-width: 920px;
+            max-width: 900px;
         }
 
         /* ── Typography ── */
@@ -173,7 +163,6 @@
             font-weight: 600;
             margin-top: 20px;
             margin-bottom: 8px;
-            color: var(--accent-dark);
         }
         p { margin-bottom: 14px; }
 
@@ -197,7 +186,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 16px 0 24px;
-            font-size: 13.5px;
+            font-size: 14px;
         }
         th {
             background: var(--accent);
@@ -231,7 +220,7 @@
             border-radius: 8px;
             overflow-x: auto;
             margin: 16px 0 24px;
-            font-size: 12.5px;
+            font-size: 13px;
             line-height: 1.6;
         }
         pre code {
@@ -253,43 +242,14 @@
         blockquote p { margin-bottom: 0; }
         blockquote strong { color: var(--accent-dark); }
 
-        /* ── Architecture diagram ── */
-        .diagram {
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            overflow-x: auto;
-            margin: 16px 0 24px;
-        }
-        .diagram pre {
-            background: transparent;
-            color: var(--text);
-            padding: 0;
-            margin: 0;
-            font-size: 12.5px;
-        }
-
-        /* ── Checklist ── */
-        .checklist {
-            list-style: none;
-            margin-left: 0;
-            padding: 0;
-        }
-        .checklist li {
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .checklist li::before {
-            content: '';
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--border);
-            border-radius: 4px;
-            flex-shrink: 0;
+        /* ── Color indicators ── */
+        .color-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
         }
 
         /* ── Mobile ── */
@@ -301,13 +261,11 @@
             cursor: pointer;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 860px) {
             .sidebar { transform: translateX(-100%); transition: transform .3s; }
             .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
             .main { margin-left: 0; padding: 32px 20px 60px; }
             .menu-toggle { display: block; }
-            pre { font-size: 11.5px; padding: 14px; }
-            table { font-size: 12px; }
         }
 
         /* ── Print ── */
@@ -318,19 +276,17 @@
                 padding: 0;
                 max-width: 100%;
             }
-            body { font-size: 11px; line-height: 1.5; color: #000; }
-            h1 { font-size: 22px; color: #000; }
-            h2 { font-size: 17px; border-bottom-color: #ccc; page-break-after: avoid; }
-            h3 { font-size: 14px; page-break-after: avoid; }
-            table { font-size: 10px; }
+            body { font-size: 12px; line-height: 1.5; color: #000; }
+            h1 { font-size: 24px; color: #000; }
+            h2 { font-size: 18px; border-bottom-color: #ccc; page-break-after: avoid; }
+            h3 { font-size: 15px; page-break-after: avoid; }
+            table { font-size: 11px; }
             th { background: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             tr:nth-child(even) td { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             blockquote { border-left-color: #333; background: #f5f5f5; }
-            pre { background: #f5f5f5 !important; color: #000 !important; border: 1px solid #ccc; font-size: 10px; }
-            .diagram pre { color: #000 !important; }
+            pre { background: #f5f5f5 !important; color: #000 !important; border: 1px solid #ccc; }
             a { color: #000; text-decoration: none; }
             .main h2:first-of-type { margin-top: 24px; }
-            .checklist li::before { border-color: #999; }
         }
     </style>
 </head>
@@ -341,19 +297,18 @@
     <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
-    <a href="/admin/" class="brand">
+    <a href="/admin" class="brand">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
         Protector Traffic Control
-        <span class="badge">Tecnico</span>
     </a>
     <div class="nav-actions">
         <button class="btn btn-outline" onclick="window.print()">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h8v7M6 14H4a2 2 0 01-2-2V9h16v3a2 2 0 01-2 2h-2m-8 0h8v5H6v-5z"/></svg>
             Imprimir / Salvar PDF
         </button>
-        <a href="/admin/" class="btn btn-white">
+        <a href="/admin" class="btn btn-white">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
             Voltar ao Admin
         </a>
@@ -378,7 +333,6 @@
     <a href="#deploy-infraestrutura">13. Deploy e Infraestrutura</a>
     <a href="#cron-jobs">14. Cron Jobs (Limpeza Automatica)</a>
     <a href="#troubleshooting">15. Troubleshooting</a>
-    <a href="#checklist-novo-cliente">Checklist para Novo Cliente</a>
 </aside>
 
 <!-- Main Content -->
@@ -393,37 +347,33 @@
     <!-- Section 1 -->
     <h2 id="visao-geral-da-arquitetura">1. Visao Geral da Arquitetura</h2>
 
-    <div class="diagram">
-<pre>
-&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;     &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
-&#9474;  Camera ALPHADIGI   &#9474;&#9472;&#9472;&#9472;&#9472;&gt;&#9474;  Vercel Serverless (API)     &#9474;
-&#9474;  (LPR - Leitura de  &#9474;     &#9474;  POST /api/captura           &#9474;
-&#9474;   Placas + Radar)   &#9474;     &#9474;                              &#9474;
-&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;     &#9474;  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;  &#9474;
-                            &#9474;  &#9474; Validacao do Token      &#9474;  &#9474;
-                            &#9474;  &#9474; Rate Limiting (120/min) &#9474;  &#9474;
-                            &#9474;  &#9474; Normalizacao de Dados   &#9474;  &#9474;
-                            &#9474;  &#9474; Upload de Foto          &#9474;  &#9474;
-                            &#9474;  &#9474; Registro da Captura     &#9474;  &#9474;
-                            &#9474;  &#9474; Geracao de PDF          &#9474;  &#9474;
-                            &#9474;  &#9474; Envio de Email          &#9474;  &#9474;
-                            &#9474;  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;  &#9474;
-                            &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
-                                       &#9474;
-                            &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
-                            &#9474;  Supabase                     &#9474;
-                            &#9474;  - PostgreSQL (dados)         &#9474;
-                            &#9474;  - Auth (autenticacao)        &#9474;
-                            &#9474;  - Storage (fotos capturas)   &#9474;
-                            &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
-                                       &#9474;
-                            &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
-                            &#9474;  Dashboard Web                &#9474;
-                            &#9474;  /dashboard/ (clientes)       &#9474;
-                            &#9474;  /admin/ (super_admin)        &#9474;
-                            &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
-</pre>
-    </div>
+<pre><code>┌─────────────────────┐     ┌──────────────────────────────┐
+│  Camera ALPHADIGI   │────&gt;│  Vercel Serverless (API)     │
+│  (LPR - Leitura de  │     │  POST /api/captura           │
+│   Placas + Radar)   │     │                              │
+└─────────────────────┘     │  ┌────────────────────────┐  │
+                            │  │ Validacao do Token      │  │
+                            │  │ Rate Limiting (120/min) │  │
+                            │  │ Normalizacao de Dados   │  │
+                            │  │ Upload de Foto          │  │
+                            │  │ Registro da Captura     │  │
+                            │  │ Geracao de PDF          │  │
+                            │  │ Envio de Email          │  │
+                            │  └────────────────────────┘  │
+                            └──────────┬───────────────────┘
+                                       │
+                            ┌──────────▼───────────────────┐
+                            │  Supabase                     │
+                            │  - PostgreSQL (dados)         │
+                            │  - Auth (autenticacao)        │
+                            │  - Storage (fotos capturas)   │
+                            └──────────┬───────────────────┘
+                                       │
+                            ┌──────────▼───────────────────┐
+                            │  Dashboard Web                │
+                            │  /dashboard/ (clientes)       │
+                            │  /admin/ (super_admin)        │
+                            └───────────────────────────────┘</code></pre>
 
     <hr>
 
@@ -454,6 +404,7 @@
     <p>Configurar no painel do Vercel em <strong>Settings &gt; Environment Variables</strong>:</p>
 
     <h3>Obrigatorias</h3>
+
     <table>
         <thead>
             <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
@@ -467,6 +418,7 @@
     </table>
 
     <h3>Email (SMTP - cPanel/Hosting)</h3>
+
     <table>
         <thead>
             <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
@@ -481,6 +433,7 @@
     </table>
 
     <h3>Email (Alternativa Gmail)</h3>
+
     <table>
         <thead>
             <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
@@ -644,7 +597,7 @@
     </ol>
 
     <h4>5.3. Via API (alternativa)</h4>
-    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/clientes \
+<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/clientes \
   -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -663,6 +616,7 @@
     <h2 id="cadastrar-usuarios">6. Cadastrar Usuarios</h2>
 
     <h3>Roles (Papeis)</h3>
+
     <table>
         <thead>
             <tr><th>Role</th><th>Permissoes</th></tr>
@@ -693,7 +647,7 @@
     <blockquote><p><strong>Importante:</strong> O primeiro usuario <code>admin_cliente</code> de um cliente sera automaticamente vinculado como administrador principal daquele cliente.</p></blockquote>
 
     <h4>6.2. Via API</h4>
-    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/usuarios \
+<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/usuarios \
   -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -712,7 +666,7 @@
     <!-- Section 7 -->
     <h2 id="cadastrar-cameras">7. Cadastrar Cameras</h2>
 
-    <h4>7.1. Pelo Painel Admin</h4>
+    <h3>7.1. Pelo Painel Admin</h3>
     <ol>
         <li>Na secao <strong>Cameras</strong>, clique em <strong>"Nova Camera"</strong></li>
         <li>Selecione o <strong>cliente</strong></li>
@@ -723,8 +677,8 @@
 
     <blockquote><p><strong>IMPORTANTE:</strong> O token e gerado automaticamente (32 caracteres hexadecimais). Guarde-o em local seguro. Este token sera configurado na camera fisica.</p></blockquote>
 
-    <h4>7.2. Via API</h4>
-    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/cameras \
+    <h3>7.2. Via API</h3>
+<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/cameras \
   -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -733,14 +687,14 @@
   }'</code></pre>
 
     <p><strong>Resposta:</strong></p>
-    <pre><code>{
+<pre><code>{
   "id": "uuid-da-camera",
   "nome": "Camera Entrada Principal",
   "token": "a1b2c3d4e5f6...32chars",
   "ativa": true
 }</code></pre>
 
-    <h4>7.3. Formato do Token</h4>
+    <h3>7.3. Formato do Token</h3>
     <ul>
         <li>32 caracteres hexadecimais (gerado via <code>crypto.randomBytes(16)</code>)</li>
         <li>Unico por camera</li>
@@ -753,13 +707,14 @@
     <!-- Section 8 -->
     <h2 id="configurar-camera-fisica">8. Configurar Camera Fisica (ALPHADIGI)</h2>
 
-    <h4>8.1. Acesse a Interface da Camera</h4>
+    <h3>8.1. Acesse a Interface da Camera</h3>
     <ol>
         <li>Conecte-se a camera via navegador (IP local da camera)</li>
         <li>Acesse <strong>Configuracoes &gt; Rede &gt; Servidor HTTP</strong></li>
     </ol>
 
-    <h4>8.2. Configure o Endpoint de Envio</h4>
+    <h3>8.2. Configure o Endpoint de Envio</h3>
+
     <table>
         <thead>
             <tr><th>Campo</th><th>Valor</th></tr>
@@ -773,9 +728,10 @@
         </tbody>
     </table>
 
-    <h4>8.3. Formato do Payload Esperado (AlarmInfoPlate)</h4>
+    <h3>8.3. Formato do Payload Esperado (AlarmInfoPlate)</h3>
     <p>A camera ALPHADIGI envia automaticamente neste formato:</p>
-    <pre><code>{
+
+<pre><code>{
   "AlarmInfoPlate": {
     "serialno": "NUMERO_SERIE_CAMERA",
     "result": {
@@ -796,9 +752,10 @@
   }
 }</code></pre>
 
-    <h4>8.4. Autenticacao da Camera</h4>
+    <h3>8.4. Autenticacao da Camera</h3>
+
     <p><strong>Metodo primario:</strong> Token na URL</p>
-    <pre><code>POST /api/captura?token=a1b2c3d4e5f6...</code></pre>
+<pre><code>POST /api/captura?token=a1b2c3d4e5f6...</code></pre>
 
     <p><strong>Metodo secundario (fallback):</strong> Numero de serie</p>
     <ul>
@@ -806,7 +763,8 @@
         <li>O numero de serie deve estar cadastrado no campo <code>serial_number</code> da tabela <code>cameras</code></li>
         <li>Para usar este metodo, edite a camera e adicione o serial:</li>
     </ul>
-    <pre><code>curl -X PUT https://seudominio.vercel.app/api/admin/cameras \
+
+<pre><code>curl -X PUT https://seudominio.vercel.app/api/admin/cameras \
   -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -814,7 +772,7 @@
     "serial_number": "ALPHADIGI_SN_123"
   }'</code></pre>
 
-    <h4>8.5. Verificar Funcionamento</h4>
+    <h3>8.5. Verificar Funcionamento</h3>
     <p>Apos configurar, verifique:</p>
     <ol>
         <li><strong>Heartbeat:</strong> A camera envia sinais periodicos
@@ -836,7 +794,7 @@
     <!-- Section 9 -->
     <h2 id="configurar-destinatarios-email">9. Configurar Destinatarios de Email</h2>
 
-    <h4>9.1. Pelo Dashboard do Cliente</h4>
+    <h3>9.1. Pelo Dashboard do Cliente</h3>
     <ol>
         <li>Faca login no dashboard como <code>admin_cliente</code></li>
         <li>Na secao <strong>"Emails de Alerta"</strong>, clique em <strong>"Adicionar"</strong></li>
@@ -850,8 +808,8 @@
         <li>Clique em <strong>"Salvar"</strong></li>
     </ol>
 
-    <h4>9.2. Via API</h4>
-    <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/emails \
+    <h3>9.2. Via API</h3>
+<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/emails \
   -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -866,20 +824,18 @@
     <!-- Section 10 -->
     <h2 id="fluxo-de-captura">10. Fluxo de Captura (Pipeline)</h2>
 
-    <div class="diagram">
-<pre>
-Camera envia POST /api/captura?token=xxx
+<pre><code>Camera envia POST /api/captura?token=xxx
          |
          v
    +-- Autenticacao --+
-   | Token valido?    |--Nao--> 401 Unauthorized
-   | Camera ativa?    |--Nao--> 403 Forbidden
-   | Cliente ativo?   |--Nao--> 403 Forbidden
+   | Token valido?    |--Nao--&gt; 401 Unauthorized
+   | Camera ativa?    |--Nao--&gt; 403 Forbidden
+   | Cliente ativo?   |--Nao--&gt; 403 Forbidden
    +--------+---------+
             | Sim
             v
    +-- Rate Limiting --+
-   | &lt; 120 req/min?   |--Nao--> 429 Too Many Requests
+   | &lt; 120 req/min?   |--Nao--&gt; 429 Too Many Requests
    +--------+----------+
             | Sim
             v
@@ -906,7 +862,7 @@ Camera envia POST /api/captura?token=xxx
             |
             v
    +-- Verificar Velocidade ----------+
-   | velocidade &gt; limite_cliente?     |--Nao--> 200 OK (fim)
+   | velocidade &gt; limite_cliente?     |--Nao--&gt; 200 OK (fim)
    +--------+-------------------------+
             | Sim (infracao)
             v
@@ -928,9 +884,7 @@ Camera envia POST /api/captura?token=xxx
    | UPDATE captura                   |
    | notificado = true                |
    | notificado_em = now()            |
-   +----------------------------------+
-</pre>
-    </div>
+   +----------------------------------+</code></pre>
 
     <hr>
 
@@ -962,7 +916,7 @@ Camera envia POST /api/captura?token=xxx
 
     <h3>Personalizacao do PDF</h3>
     <p>Via painel admin ou API, edite o cliente:</p>
-    <pre><code>{
+<pre><code>{
   "pdf_titulo": "CONDOMINIO JARDIM DAS FLORES",
   "pdf_subtitulo": "Lombada Educativa - Controle de Velocidade",
   "pdf_rodape": "Este documento e meramente educativo e nao tem valor de multa.",
@@ -976,9 +930,10 @@ Camera envia POST /api/captura?token=xxx
 
     <h3>Autenticacao</h3>
     <p>Todos os endpoints admin requerem header:</p>
-    <pre><code>Authorization: Bearer &lt;JWT_TOKEN_SUPABASE&gt;</code></pre>
+<pre><code>Authorization: Bearer &lt;JWT_TOKEN_SUPABASE&gt;</code></pre>
 
     <h3>Endpoints Publicos</h3>
+
     <table>
         <thead>
             <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
@@ -991,6 +946,7 @@ Camera envia POST /api/captura?token=xxx
     </table>
 
     <h3>Endpoints Admin (requer <code>super_admin</code>)</h3>
+
     <table>
         <thead>
             <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
@@ -1012,6 +968,7 @@ Camera envia POST /api/captura?token=xxx
     </table>
 
     <h3>Endpoints Admin/Cliente (requer <code>admin_cliente</code> ou superior)</h3>
+
     <table>
         <thead>
             <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
@@ -1036,6 +993,7 @@ Camera envia POST /api/captura?token=xxx
 
     <h3>Vercel</h3>
     <p>O projeto esta configurado para deploy automatico no Vercel.</p>
+
     <p><strong>Arquivo <code>vercel.json</code>:</strong></p>
     <ul>
         <li>Rotas API: <code>/api/*</code> &rarr; Serverless Functions</li>
@@ -1065,7 +1023,8 @@ Camera envia POST /api/captura?token=xxx
 
     <h3>Configuracao</h3>
     <p>Definido no <code>vercel.json</code>:</p>
-    <pre><code>{
+
+<pre><code>{
   "crons": [{
     "path": "/api/cron-limpeza",
     "schedule": "0 6 * * *"
@@ -1092,16 +1051,20 @@ Camera envia POST /api/captura?token=xxx
         <li>Verifique nos logs do Vercel se a requisicao esta chegando</li>
         <li>Teste manualmente:</li>
     </ol>
-    <pre><code>curl -X POST "https://seudominio.vercel.app/api/captura?token=TOKEN_DA_CAMERA" \
+
+<pre><code>curl -X POST "https://seudominio.vercel.app/api/captura?token=TOKEN_DA_CAMERA" \
   -H "Content-Type: application/json" \
   -d '{"AlarmInfoPlate":{"serialno":"TEST","result":{"PlateResult":{"license":"TEST123","speed":20,"confidence":180,"imageFile":"data:image/jpeg;base64,/9j/4AAQ"}}}}'</code></pre>
 
     <h3>Emails nao estao sendo enviados</h3>
     <ol>
         <li>Verifique as variaveis SMTP no Vercel</li>
-        <li>Teste a conexao SMTP:
-            <pre><code>telnet mail.seudominio.com 465</code></pre>
-        </li>
+        <li>Teste a conexao SMTP:</li>
+    </ol>
+
+<pre><code>telnet mail.seudominio.com 465</code></pre>
+
+    <ol start="3">
         <li>Verifique se ha destinatarios cadastrados para o cliente</li>
         <li>Verifique se a velocidade da captura excede o limite do cliente</li>
         <li>Verifique nos logs do Vercel por erros de envio</li>
@@ -1133,8 +1096,7 @@ Camera envia POST /api/captura?token=xxx
 
     <!-- Checklist -->
     <h2 id="checklist-novo-cliente">Checklist para Novo Cliente</h2>
-
-    <ul class="checklist">
+    <ul>
         <li>Criar cliente no painel admin</li>
         <li>Criar usuario admin_cliente</li>
         <li>Criar camera(s) e anotar token(s)</li>
@@ -1149,7 +1111,8 @@ Camera envia POST /api/captura?token=xxx
     <hr>
 
     <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.0.0 | Build d58093a | Marco 2026
+        <strong>Protector Traffic Control</strong> - v1.0.0 | Build d58093a | Marco 2026<br>
+        <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 
 </main>
