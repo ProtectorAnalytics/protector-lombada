@@ -124,10 +124,11 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // DELETE: desativar veículo
+    // DELETE: desativar ou excluir veículo
     if (method === 'DELETE') {
       const { profile } = await autenticar(req, ['super_admin', 'admin_cliente', 'operador']);
       const veiculoId = req.query.id;
+      const permanent = req.query.permanent === 'true';
       if (!veiculoId) return res.status(400).json({ error: 'ID do veículo obrigatório' });
 
       // Verificar acesso
@@ -140,6 +141,21 @@ module.exports = async function handler(req, res) {
       if (!existing) return res.status(404).json({ error: 'Veículo não encontrado' });
       if (!verificarAcessoCliente(profile, existing.cliente_id)) {
         return res.status(403).json({ error: 'Sem acesso a este cliente' });
+      }
+
+      if (permanent) {
+        const { error } = await supabase.from('veiculos').delete().eq('id', veiculoId);
+        if (error) throw error;
+
+        await registrarAuditoria({
+          usuarioId: profile.id,
+          acao: 'excluir',
+          tabela: 'veiculos',
+          registroId: veiculoId,
+          detalhes: { placa: existing.placa },
+          ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
+        });
+        return res.status(200).json({ ok: true, message: 'Veículo excluído permanentemente' });
       }
 
       const { error } = await supabase

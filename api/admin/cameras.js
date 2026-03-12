@@ -112,11 +112,28 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // DELETE: desativar câmera
+    // DELETE: desativar ou excluir câmera
     if (method === 'DELETE') {
       const { profile } = await autenticar(req, ['super_admin']);
       const cameraId = req.query.id;
+      const permanent = req.query.permanent === 'true';
       if (!cameraId) return res.status(400).json({ error: 'ID da câmera obrigatório' });
+
+      if (permanent) {
+        const { data: camera } = await supabase.from('cameras').select('nome').eq('id', cameraId).single();
+        const { error } = await supabase.from('cameras').delete().eq('id', cameraId);
+        if (error) throw error;
+
+        await registrarAuditoria({
+          usuarioId: profile.id,
+          acao: 'excluir',
+          tabela: 'cameras',
+          registroId: cameraId,
+          detalhes: { nome: camera?.nome || cameraId },
+          ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
+        });
+        return res.status(200).json({ ok: true, message: 'Câmera excluída permanentemente' });
+      }
 
       const { data, error } = await supabase
         .from('cameras')

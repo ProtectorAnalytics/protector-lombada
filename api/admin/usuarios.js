@@ -156,11 +156,36 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // DELETE: desativar usuário
+    // DELETE: desativar ou excluir usuário
     if (method === 'DELETE') {
       const { profile } = await autenticar(req, ['super_admin']);
       const userId = req.query.id;
+      const permanent = req.query.permanent === 'true';
       if (!userId) return res.status(400).json({ error: 'ID do usuário obrigatório' });
+
+      if (permanent) {
+        // Buscar dados do usuário antes de excluir
+        const { data: usuario } = await supabase.from('usuarios').select('email, auth_id').eq('id', userId).single();
+
+        // Excluir da tabela usuarios
+        const { error } = await supabase.from('usuarios').delete().eq('id', userId);
+        if (error) throw error;
+
+        // Excluir do Supabase Auth
+        if (usuario?.auth_id) {
+          await supabase.auth.admin.deleteUser(usuario.auth_id);
+        }
+
+        await registrarAuditoria({
+          usuarioId: profile.id,
+          acao: 'excluir',
+          tabela: 'usuarios',
+          registroId: userId,
+          detalhes: { email: usuario?.email || userId },
+          ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
+        });
+        return res.status(200).json({ ok: true, message: 'Usuário excluído permanentemente' });
+      }
 
       const { data, error } = await supabase
         .from('usuarios')
