@@ -1623,7 +1623,8 @@
     let currentProfile = null;
     let pollingInterval = null;
     let camerasList = [];
-    let camerasMap = {}; // camera_id -> nome (lookup para exibir nome do radar)
+    let camerasMap = {}; // camera_id -> nome_exibicao (curto, p/ dashboard)
+    let camerasMapFull = {}; // camera_id -> nome (completo, p/ relatórios)
     let veiculosCache = {};
     let lastCapturas = []; // store last filtered captures for export
 
@@ -1865,17 +1866,21 @@
     // ============================================
     async function loadCamerasList() {
       const { data } = await sb.from('cameras')
-        .select('id, nome')
+        .select('id, nome, nome_exibicao')
         .eq('cliente_id', currentCliente.id)
         .eq('ativa', true);
 
       if (data) {
         camerasList = data;
         camerasMap = {};
-        data.forEach(c => { camerasMap[c.id] = c.nome; });
+        camerasMapFull = {};
+        data.forEach(c => {
+          camerasMap[c.id] = c.nome_exibicao || c.nome;     // curto p/ dashboard
+          camerasMapFull[c.id] = c.nome;                      // completo p/ relatório
+        });
         const sel = document.getElementById('filter-camera');
         sel.innerHTML = '<option value="">Todas</option>' +
-          data.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+          data.map(c => `<option value="${c.id}">${c.nome_exibicao || c.nome}</option>`).join('');
       }
     }
 
@@ -1980,7 +1985,7 @@
     async function loadCamerasStatus() {
       try {
         const { data: cameras, error } = await sb.from('cameras')
-          .select('id, nome, last_seen, ativa')
+          .select('id, nome, nome_exibicao, last_seen, ativa')
           .eq('cliente_id', currentCliente.id)
           .eq('ativa', true);
 
@@ -1991,10 +1996,11 @@
 
         container.innerHTML = cameras.map(cam => {
           const st = cameraStatus(cam.last_seen);
-          const title = cam.last_seen ? new Date(cam.last_seen).toLocaleString('pt-BR') : 'Nunca conectou';
+          const displayName = cam.nome_exibicao || cam.nome;
+          const title = (cam.last_seen ? new Date(cam.last_seen).toLocaleString('pt-BR') : 'Nunca conectou') + ' | ' + cam.nome;
           return `<div title="${title}" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;font-size:0.85rem;border:1px solid ${st.color}30">
             <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80"></span>
-            <strong>${cam.nome}</strong>
+            <strong>${displayName}</strong>
             <span style="color:${st.color}">${st.label}</span>
           </div>`;
         }).join('');
@@ -2552,7 +2558,7 @@
         return {
           'Placa': c.placa,
           'Velocidade (km/h)': c.velocidade,
-          'Radar': camerasMap[c.camera_id] || '---',
+          'Radar': camerasMapFull[c.camera_id] || '---',
           'Data': ts.toLocaleDateString('pt-BR'),
           'Hora': ts.toLocaleTimeString('pt-BR'),
           'Status': c.velocidade > limite ? 'ALERTA' : 'OK',
@@ -2700,7 +2706,7 @@
         const values = [
           c.placa,
           `${c.velocidade} km/h`,
-          camerasMap[c.camera_id] || '---',
+          camerasMapFull[c.camera_id] || '---',
           isAlert ? 'ALERTA' : 'OK',
           ts.toLocaleDateString('pt-BR'),
           ts.toLocaleTimeString('pt-BR'),
@@ -2906,7 +2912,7 @@
       doc.text(currentCliente.cidade_uf || '', pageW / 2, 45, { align: 'center' });
 
       // Radar name
-      const radarNomePdf = camerasMap[captura.camera_id] || '';
+      const radarNomePdf = camerasMapFull[captura.camera_id] || '';
       let headerY = 45;
       if (radarNomePdf) {
         headerY += 5;
