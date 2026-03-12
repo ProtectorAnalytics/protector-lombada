@@ -338,7 +338,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.0.1 | Build 2ea9b40 | Março 2026</p>
+    <p class="version">Versão 2.0.0 | Build 8b34a0f | Março 2026</p>
 
     <hr>
 
@@ -389,10 +389,10 @@
             <tr><th>Card</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><strong>Capturas Hoje</strong></td><td>Total de veículos registrados no dia</td></tr>
-            <tr><td><strong>Velocidade Média</strong></td><td>Velocidade média de todos os veículos do dia</td></tr>
-            <tr><td><strong>Acima do Limite</strong></td><td>Quantidade de veículos acima da velocidade permitida</td></tr>
-            <tr><td><strong>Câmeras Online</strong></td><td>Quantidade de câmeras funcionando</td></tr>
+            <tr><td><strong>Passagens Hoje</strong></td><td>Total de veículos registrados no dia</td></tr>
+            <tr><td><strong>Alertas Hoje</strong></td><td>Quantidade de veículos acima do limite de velocidade</td></tr>
+            <tr><td><strong>Vel. Máxima Hoje</strong></td><td>Maior velocidade registrada no dia</td></tr>
+            <tr><td><strong>Limite Configurado</strong></td><td>Limite de velocidade configurado para o local</td></tr>
         </tbody>
     </table>
 
@@ -446,13 +446,15 @@
 
     <!-- Section 5 -->
     <h2 id="status-das-cameras">5. Status das Câmeras</h2>
-    <p>Na seção de câmeras você pode verificar:</p>
+    <p>Abaixo dos cards de estatísticas, badges coloridos indicam o status de cada câmera:</p>
     <ul>
-        <li><span class="color-dot" style="background:#22c55e"></span> <strong>Câmera Online (verde):</strong> A câmera está funcionando normalmente e enviando dados</li>
-        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Câmera Offline (vermelho):</strong> A câmera não enviou dados nos últimos 5 minutos</li>
+        <li><span class="color-dot" style="background:#4ade80"></span> <strong>Online (verde):</strong> A câmera está funcionando e enviando dados normalmente</li>
+        <li><span class="color-dot" style="background:#facc15"></span> <strong>Alerta (amarelo):</strong> A câmera não envia dados entre 5 e 15 minutos — pode ser instabilidade de rede</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Offline (vermelho):</strong> A câmera não enviou dados há mais de 15 minutos</li>
+        <li><span class="color-dot" style="background:#3b82f6"></span> <strong>Aguardando (azul):</strong> A câmera foi cadastrada recentemente e ainda não enviou sua primeira captura</li>
     </ul>
 
-    <blockquote><p>Se uma câmera aparece como offline, verifique a conexão de internet no local. Se o problema persistir, entre em contato com o suporte técnico.</p></blockquote>
+    <blockquote><p>Se uma câmera aparece como offline, verifique a conexão de internet e energia no local. Se o problema persistir, entre em contato com o suporte técnico.</p></blockquote>
 
     <hr>
 
@@ -469,7 +471,7 @@
         <li><strong>Placa</strong></li>
         <li><strong>Nome do morador</strong></li>
         <li><strong>Unidade</strong></li>
-        <li><strong>Marca/modelo</strong></li>
+        <li><strong>Marca</strong></li>
         <li><strong>Cor</strong></li>
     </ul>
     <p><strong>Funcionalidades:</strong></p>
@@ -488,12 +490,14 @@
                 <li><strong>Placa</strong> (obrigatório) - formato ABC1D23 ou ABC1234</li>
                 <li><strong>Nome do Morador</strong> - nome completo do proprietário</li>
                 <li><strong>Unidade</strong> - ex: "Bloco A - Apt 101"</li>
-                <li><strong>Marca/Modelo</strong> - ex: "Honda Civic"</li>
+                <li><strong>Marca</strong> - ex: "Fiat Argo"</li>
                 <li><strong>Cor</strong> - ex: "Prata"</li>
             </ul>
         </li>
         <li>Clique em <strong>"Cadastrar Veículo"</strong></li>
     </ol>
+
+    <blockquote><p><strong>Vinculação automática:</strong> Ao cadastrar um veículo, todas as capturas existentes daquela placa passam a exibir imediatamente o nome do morador e unidade — sem necessidade de recarregar a página.</p></blockquote>
 
     <hr>
 
@@ -633,6 +637,9 @@
 
     <h3>O sistema funciona 24 horas?</h3>
     <p>Sim. O sistema opera 24 horas por dia, 7 dias por semana. As câmeras capturam veículos durante o dia e a noite (com iluminação infravermelha).</p>
+
+    <h3>Por que uma câmera aparece como "Aguardando"?</h3>
+    <p>O status <strong>"Aguardando" (azul)</strong> indica que a câmera foi cadastrada no sistema mas ainda não enviou sua primeira captura. Isso é normal para câmeras recém-configuradas. Assim que a câmera enviar dados, o status muda automaticamente para "Online".</p>
 
     <h3>Por que uma câmera aparece como "Offline"?</h3>
     <p>Possíveis causas:</p>
