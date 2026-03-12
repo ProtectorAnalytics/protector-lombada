@@ -2475,6 +2475,8 @@
 
       await loadVeiculos();
       await loadVeiculosCache();
+      loadCapturas();
+      loadRecentCards();
     }
 
     function isValidPlacaLocal(placa) {
@@ -2539,8 +2541,10 @@
 
         fecharModalVeiculo();
         await loadVeiculos();
-        // Refresh cache for plate cross-reference in captures
+        // Refresh cache and re-render captures with updated vehicle info
         await loadVeiculosCache();
+        loadCapturas();
+        loadRecentCards();
       } catch (err) {
         errorEl.textContent = 'Erro de conexão. Tente novamente.';
       }
@@ -2561,6 +2565,8 @@
         if (resp.ok) {
           await loadVeiculos();
           await loadVeiculosCache();
+          loadCapturas();
+          loadRecentCards();
         } else {
           const result = await resp.json();
           alert(result.error || 'Erro ao remover veículo.');
