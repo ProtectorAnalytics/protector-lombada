@@ -72,9 +72,13 @@ module.exports = async function handler(req, res) {
       }
 
       if (!camera) {
+        const logIp = dados.AlarmInfoPlate?.ipaddr || dados.AlarmInfoPlate?.ip || req.headers['x-forwarded-for'] || '';
+        const logMac = dados.AlarmInfoPlate?.macaddr || dados.AlarmInfoPlate?.mac || '';
         await logError(`Camera nao encontrada | token: ${token || 'none'} | type: ${dataType}`, {
           token, dataType, url,
           serialno: serialno || 'none',
+          ip: logIp || 'none',
+          mac: logMac || 'none',
         });
         return res.status(401).json({ error: 'Camera nao identificada' });
       }
@@ -102,10 +106,14 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, skipped: 'heartbeat' });
     }
 
+    // Extrair MAC e IP da câmera (vem no AlarmInfoPlate ou headers)
+    const alarm = dados.AlarmInfoPlate || {};
+    const camIp = alarm.ipaddr || alarm.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+    const camMac = alarm.macaddr || alarm.mac || '';
+
     // Normalizar formato AlarmInfoPlate (cameras LPR)
     let normalized = dados;
     if (dados.AlarmInfoPlate) {
-      const alarm = dados.AlarmInfoPlate;
       const plate = alarm.result?.PlateResult || {};
       // Speed: prefer radarSpeed (actual radar measurement) over plate.speed
       const radarSpeed = plate.radarSpeed?.Speed?.PerHour || 0;
@@ -118,7 +126,6 @@ module.exports = async function handler(req, res) {
         tipo_veiculo: plate.type || '',
         cor_veiculo: String(plate.carColor || ''),
       };
-
     }
 
     // Extrair campos
@@ -197,8 +204,11 @@ module.exports = async function handler(req, res) {
       notificado: false,
     });
 
-    // Atualizar last_seen da camera
-    await updateCameraLastSeen(camera.id, captura.id);
+    // Atualizar last_seen da camera (com IP/MAC se disponíveis)
+    await updateCameraLastSeen(camera.id, captura.id, {
+      ip_address: camIp || null,
+      mac_address: camMac || null,
+    });
 
     // Verificar se precisa notificar
     if (velocidade > cliente.limite_velocidade) {
