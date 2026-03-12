@@ -1205,8 +1205,11 @@ function renderCameras() {
   tbody.innerHTML = camerasData.map(c => {
     const st = cameraStatus(c.last_seen);
     const lastSeenTitle = c.last_seen ? new Date(c.last_seen).toLocaleString('pt-BR') : 'Nunca conectou';
+    const serialInfo = c.serial_number
+      ? `<div style="font-size:10px;color:#64748b;margin-top:2px">Serial: ${esc(c.serial_number)}</div>`
+      : '';
     return `<tr>
-    <td><strong>${esc(c.nome)}</strong></td>
+    <td><strong>${esc(c.nome)}</strong>${serialInfo}</td>
     <td title="${lastSeenTitle}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80;margin-right:6px;vertical-align:middle"></span>${st.label}</td>
     <td class="token-cell">${c.token}<button class="copy-btn" onclick="copyText('${c.token}')" title="Copiar token">&#128203;</button></td>
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
@@ -1223,6 +1226,8 @@ function openCameraModal(camera = null) {
   const isEdit = !!camera;
   openModal(isEdit ? 'Editar Câmera' : 'Nova Câmera', `
     <div class="form-group"><label>Nome *</label><input id="f-cam-nome" value="${esc(camera?.nome || '')}"></div>
+    <div class="form-group"><label>Serial da Câmera</label><input id="f-cam-serial" value="${esc(camera?.serial_number || '')}" placeholder="Ex: V3832090xxxx (encontrado nas config da câmera)"></div>
+    <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Com o serial cadastrado, a câmera é identificada automaticamente sem precisar configurar token.</div>
     ${isEdit ? `<div class="form-group"><label>Token (não editável)</label><input value="${camera.token}" disabled></div>` : ''}
     <div class="form-error" id="f-cam-error"></div>
     <div class="form-actions">
@@ -1234,15 +1239,19 @@ function openCameraModal(camera = null) {
 
 async function saveCamera(id) {
   const nome = document.getElementById('f-cam-nome').value.trim();
+  const serial_number = document.getElementById('f-cam-serial').value.trim();
   if (!nome) { document.getElementById('f-cam-error').textContent = 'Nome obrigatório.'; return; }
 
   try {
+    const payload = { nome };
+    if (serial_number) payload.serial_number = serial_number;
+
     if (id) {
-      await api('/cameras', 'PUT', { id, nome });
+      await api('/cameras', 'PUT', { id, ...payload });
       toast('Câmera atualizada!');
     } else {
-      await api('/cameras', 'POST', { cliente_id: currentDetailCliente.id, nome });
-      toast('Câmera criada! Token gerado automaticamente.');
+      await api('/cameras', 'POST', { cliente_id: currentDetailCliente.id, ...payload });
+      toast('Câmera criada!' + (serial_number ? ' Identificação por serial ativa.' : ' Token gerado automaticamente.'));
     }
     closeModal();
     loadCameras();

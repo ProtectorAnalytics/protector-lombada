@@ -508,7 +508,7 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 50px minmax(90px, 120px) minmax(70px, 100px) 1fr minmax(50px, 80px);
+      grid-template-columns: 50px minmax(90px, 120px) minmax(70px, 100px) minmax(80px, 140px) 1fr minmax(50px, 80px);
       padding: 10px 14px;
       background: var(--accent);
       color: #FFFFFF;
@@ -574,7 +574,7 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 50px minmax(90px, 120px) minmax(70px, 100px) 1fr minmax(50px, 80px);
+      grid-template-columns: 50px minmax(90px, 120px) minmax(70px, 100px) minmax(80px, 140px) 1fr minmax(50px, 80px);
       padding: 6px 14px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
@@ -1302,6 +1302,12 @@
       .stats-row { grid-template-columns: 1fr; }
       .topbar { grid-template-columns: 1fr; text-align: center; gap: 8px; }
       .topbar .brand, .topbar .user-info { justify-content: center; }
+      .table-header, .table-row {
+        grid-template-columns: 50px minmax(80px, 1fr) minmax(60px, 80px) 1fr minmax(40px, 60px);
+      }
+      .table-header > div:nth-child(4), .table-row > div:nth-child(4) {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -1447,6 +1453,7 @@
               <div>Foto</div>
               <div>Placa</div>
               <div>Velocidade</div>
+              <div>Radar</div>
               <div>Data / Hora</div>
               <div>Status</div>
             </div>
@@ -1616,6 +1623,7 @@
     let currentProfile = null;
     let pollingInterval = null;
     let camerasList = [];
+    let camerasMap = {}; // camera_id -> nome (lookup para exibir nome do radar)
     let veiculosCache = {};
     let lastCapturas = []; // store last filtered captures for export
 
@@ -1863,6 +1871,8 @@
 
       if (data) {
         camerasList = data;
+        camerasMap = {};
+        data.forEach(c => { camerasMap[c.id] = c.nome; });
         const sel = document.getElementById('filter-camera');
         sel.innerHTML = '<option value="">Todas</option>' +
           data.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -1917,13 +1927,14 @@
           ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="Foto" loading="lazy">`
           : `<div class="rc-no-photo">&#128663;</div>`;
 
+        const radarNome = camerasMap[c.camera_id] || '';
         return `<div class="recent-card ${isAlert ? 'alerta' : ''}" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
           <div class="rc-badge ${isAlert ? 'alert-badge' : 'ok-badge'}">${isAlert ? 'ALERTA' : 'OK'}</div>
           ${photoHtml}
           <div class="rc-placa">${c.placa}</div>
           <div class="rc-vel ${velClass}">${c.velocidade} <span style="font-size:13px">km/h</span></div>
           <div class="rc-info">
-            ${hora} &middot; ${data_str}${morador ? '<br>' + morador : ''}
+            ${hora} &middot; ${data_str}${radarNome ? '<br><span style="font-size:10px;color:var(--accent);font-weight:600">' + radarNome + '</span>' : ''}${morador ? '<br>' + morador : ''}
           </div>
         </div>`;
       }).join('');
@@ -2077,10 +2088,12 @@
           ? `<img class="row-thumb" src="${allThumbUrls[globalIdx]}" alt="" loading="lazy">`
           : `<div class="row-no-thumb">&#128663;</div>`;
 
+        const radarNome = camerasMap[c.camera_id] || '---';
         return `<div class="table-row" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
           <div>${thumbHtml}</div>
           <div class="placa">${c.placa}</div>
           <div class="vel ${velClass}">${c.velocidade} km/h</div>
+          <div style="font-size:11px;color:var(--text-secondary);font-weight:500">${radarNome}</div>
           <div class="datetime">${dt}</div>
           <div style="text-align:center;font-size:12px;font-weight:600;color:${isAlert ? 'var(--red)' : 'var(--green)'}">${isAlert ? 'ALERTA' : 'OK'}</div>
         </div>`;
@@ -2539,6 +2552,7 @@
         return {
           'Placa': c.placa,
           'Velocidade (km/h)': c.velocidade,
+          'Radar': camerasMap[c.camera_id] || '---',
           'Data': ts.toLocaleDateString('pt-BR'),
           'Hora': ts.toLocaleTimeString('pt-BR'),
           'Status': c.velocidade > limite ? 'ALERTA' : 'OK',
@@ -2634,15 +2648,16 @@
       // --- Tabela ---
       y += 16;
       const cols = [
-        { label: 'Placa', w: usableW * 0.12 },
-        { label: 'Velocidade', w: usableW * 0.10 },
-        { label: 'Status', w: usableW * 0.08 },
-        { label: 'Data', w: usableW * 0.10 },
-        { label: 'Hora', w: usableW * 0.10 },
-        { label: 'Morador', w: usableW * 0.18 },
-        { label: 'Unidade', w: usableW * 0.14 },
-        { label: 'Tipo', w: usableW * 0.09 },
-        { label: 'Cor', w: usableW * 0.09 },
+        { label: 'Placa', w: usableW * 0.11 },
+        { label: 'Velocidade', w: usableW * 0.09 },
+        { label: 'Radar', w: usableW * 0.12 },
+        { label: 'Status', w: usableW * 0.07 },
+        { label: 'Data', w: usableW * 0.09 },
+        { label: 'Hora', w: usableW * 0.09 },
+        { label: 'Morador', w: usableW * 0.16 },
+        { label: 'Unidade', w: usableW * 0.12 },
+        { label: 'Tipo', w: usableW * 0.08 },
+        { label: 'Cor', w: usableW * 0.07 },
       ];
 
       const rowH = 6;
@@ -2685,6 +2700,7 @@
         const values = [
           c.placa,
           `${c.velocidade} km/h`,
+          camerasMap[c.camera_id] || '---',
           isAlert ? 'ALERTA' : 'OK',
           ts.toLocaleDateString('pt-BR'),
           ts.toLocaleTimeString('pt-BR'),
@@ -2696,7 +2712,7 @@
 
         let x = margin;
         values.forEach((val, i) => {
-          if (i === 2) {
+          if (i === 3) { // Status column
             doc.setTextColor(isAlert ? 220 : 22, isAlert ? 38 : 163, isAlert ? 38 : 74);
             doc.setFont(undefined, 'bold');
           } else {
@@ -2758,6 +2774,9 @@
         html += `<div class="modal-no-photo">Sem foto disponivel</div>`;
       }
 
+      // Radar name
+      const radarNome = camerasMap[captura.camera_id] || '---';
+
       // Main details (3 columns)
       html += `<div class="modal-details">
         <div class="modal-field">
@@ -2769,8 +2788,8 @@
           <div class="value ${isAlert ? 'red' : 'green'}" style="font-size:20px">${captura.velocidade} km/h</div>
         </div>
         <div class="modal-field">
-          <div class="label">Status</div>
-          <div class="value ${isAlert ? 'red' : 'green'}">${isAlert ? 'ALERTA' : 'OK'}</div>
+          <div class="label">Radar</div>
+          <div class="value accent" style="font-size:14px;font-weight:700">${radarNome}</div>
         </div>
         <div class="modal-field">
           <div class="label">Data</div>
@@ -2886,18 +2905,29 @@
       doc.text(currentCliente.local_via || '', pageW / 2, 40, { align: 'center' });
       doc.text(currentCliente.cidade_uf || '', pageW / 2, 45, { align: 'center' });
 
+      // Radar name
+      const radarNomePdf = camerasMap[captura.camera_id] || '';
+      let headerY = 45;
+      if (radarNomePdf) {
+        headerY += 5;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(51, 51, 51);
+        doc.text('Radar: ' + radarNomePdf, pageW / 2, headerY, { align: 'center' });
+      }
+
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.setTextColor(4, 107, 210);
-      doc.text('Protector Traffic Control - Lombada Educativa', pageW / 2, 51, { align: 'center' });
+      doc.text('Protector Traffic Control - Lombada Educativa', pageW / 2, headerY + 6, { align: 'center' });
 
       // Line
       doc.setDrawColor(200, 200, 200);
-      doc.line(margin, 55, pageW - margin, 55);
+      doc.line(margin, headerY + 10, pageW - margin, headerY + 10);
 
       // Table 1: Placa | Morador | Unidade
       const col3 = contentW / 3;
-      let y = 60;
+      let y = headerY + 15;
 
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');

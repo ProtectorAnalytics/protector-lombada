@@ -1,4 +1,4 @@
-const { findCameraByToken, updateCameraLastSeen } = require('../lib/supabase');
+const { findCameraByToken, findCameraBySerial, updateCameraLastSeen } = require('../lib/supabase');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -6,14 +6,18 @@ module.exports = async function handler(req, res) {
   }
 
   const token = req.query.token;
-  if (!token) {
-    return res.status(401).json({ error: 'Token não fornecido' });
+  const serial = req.query.serial;
+
+  if (!token && !serial) {
+    return res.status(401).json({ error: 'Token ou serial não fornecido' });
   }
 
   try {
-    const camera = await findCameraByToken(token);
+    let camera = null;
+    if (token) camera = await findCameraByToken(token);
+    if (!camera && serial) camera = await findCameraBySerial(serial);
     if (!camera) {
-      return res.status(401).json({ error: 'Token inválido ou câmera inativa' });
+      return res.status(401).json({ error: 'Câmera não identificada' });
     }
 
     const cliente = camera.clientes;

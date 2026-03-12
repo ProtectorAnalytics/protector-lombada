@@ -30,16 +30,32 @@ module.exports = async function handler(req, res) {
       const { profile } = await autenticar(req, ['super_admin']);
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
 
-      const { cliente_id, nome } = body;
+      const { cliente_id, nome, serial_number } = body;
       if (!cliente_id || !nome) {
         return res.status(400).json({ error: 'Campos obrigatórios: cliente_id, nome' });
       }
 
+      // Se tiver serial_number, verificar se já existe
+      if (serial_number) {
+        const { data: existing } = await supabase
+          .from('cameras')
+          .select('id')
+          .eq('serial_number', serial_number)
+          .eq('ativa', true)
+          .single();
+        if (existing) {
+          return res.status(409).json({ error: `Serial ${serial_number} já cadastrado em outra câmera` });
+        }
+      }
+
       const token = crypto.randomBytes(16).toString('hex');
+
+      const insertData = { cliente_id, nome, token, ativa: true };
+      if (serial_number) insertData.serial_number = serial_number.trim();
 
       const { data, error } = await supabase
         .from('cameras')
-        .insert({ cliente_id, nome, token, ativa: true })
+        .insert(insertData)
         .select()
         .single();
 
@@ -50,7 +66,7 @@ module.exports = async function handler(req, res) {
         acao: 'criar',
         tabela: 'cameras',
         registroId: data.id,
-        detalhes: { nome, cliente_id },
+        detalhes: { nome, cliente_id, serial_number: serial_number || null },
         ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       });
 

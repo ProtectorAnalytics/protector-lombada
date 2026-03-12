@@ -146,10 +146,24 @@ module.exports = async function handler(req, res) {
             .resize(1280, null, { withoutEnlargement: true })
             .jpeg({ quality: 70 })
             .toBuffer();
-        } catch {
+        } catch (sharpErr) {
+          await logError(`Sharp falhou, usando original | camera: ${camera.nome}`, {
+            err: sharpErr.message, rawSize: rawBuffer.length, camera_id: camera.id,
+          });
           fotoBuffer = rawBuffer; // fallback: usar original se sharp falhar
         }
+      } else {
+        await logError(`Imagem muito pequena (${rawBuffer.length} bytes) | camera: ${camera.nome}`, {
+          camera_id: camera.id, placa, base64Len: imageBase64.length,
+        });
       }
+    } else {
+      await logError(`Sem imagem no payload | camera: ${camera.nome}`, {
+        camera_id: camera.id, placa, contentType,
+        hasAlarmInfoPlate: !!dados.AlarmInfoPlate,
+        hasImageFile: !!dados.AlarmInfoPlate?.result?.PlateResult?.imageFile,
+        payloadKeys: Object.keys(normalized).join(','),
+      });
     }
 
     // Upload da foto ao Storage
@@ -161,7 +175,9 @@ module.exports = async function handler(req, res) {
       try {
         await uploadPhoto(fotoPath, fotoBuffer);
       } catch (uploadErr) {
-        await logError(`Erro upload foto: ${uploadErr.message}`, { fotoPath, size: fotoBuffer.length });
+        await logError(`Erro upload foto: ${uploadErr.message} | camera: ${camera.nome}`, {
+          fotoPath, size: fotoBuffer.length, camera_id: camera.id, placa,
+        });
         // Continue without photo
         fotoPath = null;
       }
@@ -196,6 +212,7 @@ module.exports = async function handler(req, res) {
           veiculo,
           fotoBuffer,
           historico,
+          cameraNome: camera.nome || '',
         });
 
         const destinatarios = await getDestinatarios(cliente.id, 'alerta');
@@ -210,6 +227,7 @@ module.exports = async function handler(req, res) {
             localVia: cliente.local_via,
             limite: cliente.limite_velocidade,
             pdfBuffer,
+            cameraNome: camera.nome || '',
           });
         }
 
