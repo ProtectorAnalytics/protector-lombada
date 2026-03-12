@@ -252,6 +252,18 @@
             vertical-align: middle;
         }
 
+        /* ── Checklist ── */
+        .checklist { list-style: none; margin-left: 0; padding-left: 0; }
+        .checklist li {
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            background: var(--bg-alt);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            font-size: 14px;
+        }
+        .checklist li strong { color: var(--accent-dark); }
+
         /* ── Mobile ── */
         .menu-toggle {
             display: none;
@@ -318,801 +330,494 @@
 <!-- Sidebar TOC -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-title">Sumário</div>
-    <a href="#visao-geral-da-arquitetura">1. Visão Geral da Arquitetura</a>
-    <a href="#stack-tecnologica">2. Stack Tecnológica</a>
-    <a href="#variaveis-de-ambiente">3. Variáveis de Ambiente</a>
-    <a href="#banco-de-dados">4. Banco de Dados (Supabase)</a>
-    <a href="#cadastrar-novo-cliente">5. Cadastrar Novo Cliente</a>
-    <a href="#cadastrar-usuarios">6. Cadastrar Usuários</a>
-    <a href="#cadastrar-cameras">7. Cadastrar Câmeras</a>
-    <a href="#configurar-camera-fisica">8. Configurar Câmera Física (ALPHADIGI)</a>
-    <a href="#configurar-destinatarios-email">9. Configurar Destinatários de Email</a>
-    <a href="#fluxo-de-captura">10. Fluxo de Captura (Pipeline)</a>
-    <a href="#geracao-pdf-notificacao">11. Geração de PDF e Notificação</a>
-    <a href="#endpoints-da-api">12. Endpoints da API</a>
-    <a href="#deploy-infraestrutura">13. Deploy e Infraestrutura</a>
-    <a href="#cron-jobs">14. Cron Jobs (Limpeza Automática)</a>
-    <a href="#troubleshooting">15. Troubleshooting</a>
+    <a href="#o-que-e">O que é este sistema?</a>
+    <a href="#como-conecta">Como a câmera se conecta?</a>
+    <a href="#parte1">1. Cadastrar um Novo Cliente</a>
+    <a href="#parte2">2. Cadastrar uma Câmera</a>
+    <a href="#parte3">3. Configurar a Câmera Física</a>
+    <a href="#parte4">4. Verificar se está Funcionando</a>
+    <a href="#parte5">5. Cadastrar Usuários</a>
+    <a href="#parte6">6. Cadastrar Emails de Alerta</a>
+    <a href="#parte7">7. Como Funciona a Detecção</a>
+    <a href="#parte8">8. Cadastrar Veículos</a>
+    <a href="#parte9">9. Personalização do PDF</a>
+    <a href="#parte10">10. Resolução de Problemas</a>
+    <a href="#checklist">Checklist: Novo Condomínio</a>
+    <a href="#dados-tecnicos">Dados Técnicos</a>
 </aside>
 
 <!-- Main Content -->
 <main class="main">
 
-    <h1>Manual Técnico</h1>
-    <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.0.1 | Build 2ea9b40 | Março 2026</p>
+    <h1>Manual da Lombada Educativa</h1>
+    <p class="subtitle">Protector Traffic Control</p>
+    <p class="version">Versão 2.0 | Março 2026</p>
 
     <hr>
 
-    <!-- Section 1 -->
-    <h2 id="visao-geral-da-arquitetura">1. Visão Geral da Arquitetura</h2>
+    <!-- O que é -->
+    <h2 id="o-que-e">O que é este sistema?</h2>
 
-<pre><code>┌─────────────────────┐     ┌──────────────────────────────┐
-│  Camera ALPHADIGI   │────&gt;│  Vercel Serverless (API)     │
-│  (LPR - Leitura de  │     │  POST /api/captura           │
-│   Placas + Radar)   │     │                              │
-└─────────────────────┘     │  ┌────────────────────────┐  │
-                            │  │ Validação do Token      │  │
-                            │  │ Rate Limiting (120/min) │  │
-                            │  │ Normalização de Dados   │  │
-                            │  │ Upload de Foto          │  │
-                            │  │ Registro da Captura     │  │
-                            │  │ Geração de PDF          │  │
-                            │  │ Envio de Email          │  │
-                            │  └────────────────────────┘  │
-                            └──────────┬───────────────────┘
-                                       │
-                            ┌──────────▼───────────────────┐
-                            │  Supabase                     │
-                            │  - PostgreSQL (dados)         │
-                            │  - Auth (autenticação)        │
-                            │  - Storage (fotos capturas)   │
-                            └──────────┬───────────────────┘
-                                       │
-                            ┌──────────▼───────────────────┐
-                            │  Dashboard Web                │
-                            │  /dashboard/ (clientes)       │
-                            │  /admin/ (super_admin)        │
-                            └───────────────────────────────┘</code></pre>
+    <p>A Lombada Educativa é um sistema que usa câmeras ALPHADIGI para detectar veículos, ler placas e medir velocidade. Quando um veículo passa acima do limite, o sistema gera um PDF com a foto e envia por email para os responsáveis do condomínio.</p>
 
-    <hr>
-
-    <!-- Section 2 -->
-    <h2 id="stack-tecnologica">2. Stack Tecnológica</h2>
-
-    <table>
-        <thead>
-            <tr><th>Componente</th><th>Tecnologia</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>Backend</td><td>Node.js (Vercel Serverless Functions)</td></tr>
-            <tr><td>Banco de Dados</td><td>Supabase (PostgreSQL)</td></tr>
-            <tr><td>Autenticacao</td><td>Supabase Auth (JWT)</td></tr>
-            <tr><td>Armazenamento</td><td>Supabase Storage (bucket <code>capturas-fotos</code>)</td></tr>
-            <tr><td>Frontend Dashboard</td><td>HTML/CSS/JS (SPA vanilla)</td></tr>
-            <tr><td>PDF</td><td>PDFKit (server-side)</td></tr>
-            <tr><td>Email</td><td>Nodemailer (SMTP ou Gmail)</td></tr>
-            <tr><td>Deploy</td><td>Vercel</td></tr>
-            <tr><td>Camera</td><td>ALPHADIGI LPR (protocolo HTTP/JSON)</td></tr>
-        </tbody>
-    </table>
-
-    <hr>
-
-    <!-- Section 3 -->
-    <h2 id="variaveis-de-ambiente">3. Variáveis de Ambiente</h2>
-    <p>Configurar no painel do Vercel em <strong>Settings &gt; Environment Variables</strong>:</p>
-
-    <h3>Obrigatórias</h3>
-
-    <table>
-        <thead>
-            <tr><th>Variável</th><th>Descrição</th><th>Exemplo</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>SUPABASE_URL</code></td><td>URL do projeto Supabase</td><td><code>https://abc123.supabase.co</code></td></tr>
-            <tr><td><code>SUPABASE_SERVICE_KEY</code></td><td>Service Role Key (acesso admin)</td><td><code>eyJhbGciOiJI...</code></td></tr>
-            <tr><td><code>SUPABASE_ANON_KEY</code></td><td>Anon Key (acesso público, usado no frontend)</td><td><code>eyJhbGciOiJI...</code></td></tr>
-            <tr><td><code>CRON_SECRET</code></td><td>Token para autenticar cron jobs</td><td><code>uuid-v4-aleatorio</code></td></tr>
-        </tbody>
-    </table>
-
-    <h3>Email (SMTP - cPanel/Hosting)</h3>
-
-    <table>
-        <thead>
-            <tr><th>Variável</th><th>Descrição</th><th>Exemplo</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>SMTP_HOST</code></td><td>Servidor SMTP</td><td><code>mail.seudominio.com.br</code></td></tr>
-            <tr><td><code>SMTP_PORT</code></td><td>Porta</td><td><code>465</code></td></tr>
-            <tr><td><code>SMTP_SECURE</code></td><td>SSL/TLS</td><td><code>true</code></td></tr>
-            <tr><td><code>SMTP_USER</code></td><td>Email do remetente</td><td><code>alerta@seudominio.com.br</code></td></tr>
-            <tr><td><code>SMTP_PASS</code></td><td>Senha do email</td><td><code>suaSenha123</code></td></tr>
-        </tbody>
-    </table>
-
-    <h3>Email (Alternativa Gmail)</h3>
-
-    <table>
-        <thead>
-            <tr><th>Variável</th><th>Descrição</th><th>Exemplo</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>GMAIL_USER</code></td><td>Conta Gmail</td><td><code>seu@gmail.com</code></td></tr>
-            <tr><td><code>GMAIL_APP_PASSWORD</code></td><td>Senha de App (16 caracteres)</td><td><code>abcd efgh ijkl mnop</code></td></tr>
-        </tbody>
-    </table>
-
-    <blockquote><p><strong>Nota:</strong> Para Gmail, gerar senha de app em: Google Account &gt; Segurança &gt; Senhas de app</p></blockquote>
-
-    <hr>
-
-    <!-- Section 4 -->
-    <h2 id="banco-de-dados">4. Banco de Dados (Supabase)</h2>
-
-    <h3>Tabelas Principais</h3>
-
-    <h4><code>clientes</code></h4>
-    <table>
-        <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
-            <tr><td><code>user_id</code></td><td>UUID (FK)</td><td>Referência ao auth.users (admin_cliente)</td></tr>
-            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do condomínio/empresa</td></tr>
-            <tr><td><code>local_via</code></td><td>TEXT</td><td>Rua/via onde a lombada está instalada</td></tr>
-            <tr><td><code>cidade_uf</code></td><td>TEXT</td><td>Cidade/UF</td></tr>
-            <tr><td><code>cep</code></td><td>TEXT</td><td>CEP</td></tr>
-            <tr><td><code>endereco</code></td><td>TEXT</td><td>Endereço completo</td></tr>
-            <tr><td><code>limite_velocidade</code></td><td>INTEGER</td><td>Limite em km/h (padrão: 30)</td></tr>
-            <tr><td><code>cnpj</code></td><td>TEXT</td><td>CNPJ do cliente</td></tr>
-            <tr><td><code>telefone</code></td><td>TEXT</td><td>Telefone de contato</td></tr>
-            <tr><td><code>contato_nome</code></td><td>TEXT</td><td>Nome do contato principal</td></tr>
-            <tr><td><code>pdf_titulo</code></td><td>TEXT</td><td>Título personalizado no PDF</td></tr>
-            <tr><td><code>pdf_subtitulo</code></td><td>TEXT</td><td>Subtítulo no PDF</td></tr>
-            <tr><td><code>pdf_rodape</code></td><td>TEXT</td><td>Rodapé no PDF</td></tr>
-            <tr><td><code>pdf_logo_url</code></td><td>TEXT</td><td>URL do logotipo para o PDF</td></tr>
-            <tr><td><code>notif_auto_ativa</code></td><td>BOOLEAN</td><td>Notificações automáticas ativas</td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o cliente está ativo</td></tr>
-        </tbody>
-    </table>
-
-    <h4><code>usuarios</code></h4>
-    <table>
-        <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
-            <tr><td><code>auth_id</code></td><td>UUID (FK)</td><td>Referência ao auth.users</td></tr>
-            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do usuário</td></tr>
-            <tr><td><code>email</code></td><td>TEXT</td><td>Email</td></tr>
-            <tr><td><code>role</code></td><td>TEXT</td><td><code>super_admin</code>, <code>admin_cliente</code>, ou <code>operador</code></td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o usuário está ativo</td></tr>
-        </tbody>
-    </table>
-
-    <h4><code>cameras</code></h4>
-    <table>
-        <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
-            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome descritivo (ex: "Entrada A")</td></tr>
-            <tr><td><code>token</code></td><td>TEXT (UNIQUE)</td><td>Token de autenticação (32 hex)</td></tr>
-            <tr><td><code>serial_number</code></td><td>TEXT</td><td>Número de série da câmera (fallback)</td></tr>
-            <tr><td><code>ativa</code></td><td>BOOLEAN</td><td>Se a câmera está ativa</td></tr>
-            <tr><td><code>last_seen</code></td><td>TIMESTAMP</td><td>Última comunicação</td></tr>
-            <tr><td><code>last_capture_id</code></td><td>UUID</td><td>Última captura registrada</td></tr>
-        </tbody>
-    </table>
-
-    <h4><code>veiculos</code></h4>
-    <table>
-        <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
-            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>placa</code></td><td>TEXT</td><td>Placa do veículo (uppercase)</td></tr>
-            <tr><td><code>nome_morador</code></td><td>TEXT</td><td>Nome do proprietário/morador</td></tr>
-            <tr><td><code>unidade</code></td><td>TEXT</td><td>Unidade/apartamento</td></tr>
-            <tr><td><code>marca</code></td><td>TEXT</td><td>Marca/modelo do veículo</td></tr>
-            <tr><td><code>cor</code></td><td>TEXT</td><td>Cor do veículo</td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o registro está ativo</td></tr>
-        </tbody>
-    </table>
-
-    <h4><code>capturas</code></h4>
-    <table>
-        <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
-            <tr><td><code>camera_id</code></td><td>UUID (FK)</td><td>Câmera que realizou a captura</td></tr>
-            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>placa</code></td><td>TEXT</td><td>Placa detectada</td></tr>
-            <tr><td><code>velocidade</code></td><td>INTEGER</td><td>Velocidade registrada (km/h)</td></tr>
-            <tr><td><code>pixels</code></td><td>INTEGER</td><td>Nível de confiança (0-200)</td></tr>
-            <tr><td><code>tipo_veiculo</code></td><td>TEXT</td><td>Tipo detectado</td></tr>
-            <tr><td><code>cor_veiculo</code></td><td>TEXT</td><td>Cor detectada</td></tr>
-            <tr><td><code>foto_path</code></td><td>TEXT</td><td>Caminho no Storage</td></tr>
-            <tr><td><code>timestamp</code></td><td>TIMESTAMP</td><td>Data/hora da captura</td></tr>
-            <tr><td><code>notificado</code></td><td>BOOLEAN</td><td>Se a notificação foi enviada</td></tr>
-            <tr><td><code>notificado_em</code></td><td>TIMESTAMP</td><td>Data/hora do envio da notificação</td></tr>
-        </tbody>
-    </table>
-
-    <h4><code>email_destinatarios</code></h4>
-    <table>
-        <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
-            <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do destinatário</td></tr>
-            <tr><td><code>email</code></td><td>TEXT</td><td>Email</td></tr>
-            <tr><td><code>tipo</code></td><td>TEXT</td><td><code>alerta</code>, <code>relatorio</code>, ou <code>todos</code></td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se está ativo</td></tr>
-        </tbody>
-    </table>
-
-    <hr>
-
-    <!-- Section 5 -->
-    <h2 id="cadastrar-novo-cliente">5. Cadastrar Novo Cliente</h2>
-
-    <h3>Passo a Passo</h3>
-
-    <h4>5.1. Acesse o Painel Admin</h4>
+    <h3>Resumo em 4 passos</h3>
     <ol>
-        <li>Abra <code>https://seudominio.vercel.app/admin</code></li>
-        <li>Faça login com credenciais de <strong>super_admin</strong></li>
+        <li>A câmera lê a placa e mede a velocidade</li>
+        <li>Envia os dados para a internet (nosso servidor)</li>
+        <li>O servidor salva tudo e verifica se passou do limite</li>
+        <li>Se passou, gera um PDF e manda por email</li>
     </ol>
 
-    <h4>5.2. Crie o Cliente</h4>
+    <hr>
+
+    <!-- Como conecta -->
+    <h2 id="como-conecta">Como a câmera se conecta ao sistema?</h2>
+
+    <p>A câmera envia os dados para o endereço <code>protector-lombada.vercel.app</code> na pasta <code>/placa</code>.</p>
+
+    <p><strong>A câmera se identifica automaticamente pelo número de série.</strong> Não precisa de token na URL. O número de série já vem dentro dos dados que a câmera envia (campo <code>serialno</code>). O sistema recebe, procura no banco de dados qual câmera tem aquele serial, e pronto.</p>
+
+    <blockquote>
+        <p><strong>Exemplo:</strong> A câmera com serial <code>QFX2152506180113</code> envia dados → o sistema procura "qual câmera tem esse serial?" → encontra "CEC-LOMB01 do Enseada do Castelo" → salva a captura.</p>
+    </blockquote>
+
+    <hr>
+
+    <!-- PARTE 1 -->
+    <h2 id="parte1">PARTE 1: Cadastrar um Novo Cliente</h2>
+
+    <h3>O que você precisa antes de começar</h3>
+    <ul>
+        <li>Acesso ao painel admin: <code>https://protector-lombada.vercel.app/admin</code></li>
+        <li>Login de super_admin (email e senha)</li>
+    </ul>
+
+    <h3>Passo a passo</h3>
     <ol>
-        <li>Na seção <strong>Clientes</strong>, clique em <strong>"Novo Cliente"</strong></li>
+        <li>Abra o painel admin no navegador</li>
+        <li>Faça login com seu email e senha de super_admin</li>
+        <li>Na parte de <strong>Clientes</strong>, clique em <strong>"Novo Cliente"</strong></li>
         <li>Preencha os campos:
             <ul>
-                <li><strong>Nome</strong>: Nome do condomínio/empresa (ex: "Condomínio Jardim das Flores")</li>
-                <li><strong>Local/Via</strong>: Via onde a lombada está instalada (ex: "Rua das Palmeiras")</li>
-                <li><strong>Cidade/UF</strong>: (ex: "São Paulo/SP")</li>
-                <li><strong>Limite de Velocidade</strong>: Velocidade máxima em km/h (padrão: 30)</li>
-                <li><strong>CNPJ</strong>: CNPJ do cliente</li>
-                <li><strong>Telefone</strong>: Telefone de contato</li>
-                <li><strong>Contato</strong>: Nome do responsável</li>
+                <li><strong>Nome</strong> — nome do condomínio (ex: "Enseada do Castelo")</li>
+                <li><strong>Local/Via</strong> — a rua onde a lombada fica (ex: "Rua Principal")</li>
+                <li><strong>Cidade/UF</strong> — cidade e estado (ex: "Guarapari/ES")</li>
+                <li><strong>Limite de Velocidade</strong> — velocidade máxima em km/h (ex: 30)</li>
+                <li><strong>CNPJ</strong> — CNPJ do condomínio</li>
+                <li><strong>Telefone</strong> — telefone do responsável</li>
+                <li><strong>Contato</strong> — nome do responsável</li>
             </ul>
         </li>
         <li>Clique em <strong>"Salvar"</strong></li>
-        <li>Anote o <strong>ID do cliente</strong> gerado (UUID)</li>
     </ol>
 
-    <h4>5.3. Via API (alternativa)</h4>
-<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/clientes \
-  -H "Authorization: Bearer SEU_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nome": "Condomínio Jardim das Flores",
-    "local_via": "Rua das Palmeiras",
-    "cidade_uf": "São Paulo/SP",
-    "limite_velocidade": 30,
-    "cnpj": "12345678000199",
-    "telefone": "11999887766",
-    "contato_nome": "Carlos Silva"
-  }'</code></pre>
+    <p>Pronto! O cliente foi criado.</p>
 
     <hr>
 
-    <!-- Section 6 -->
-    <h2 id="cadastrar-usuarios">6. Cadastrar Usuários</h2>
+    <!-- PARTE 2 -->
+    <h2 id="parte2">PARTE 2: Cadastrar uma Câmera</h2>
 
-    <h3>Roles (Papéis)</h3>
+    <h3>Passo a passo</h3>
+    <ol>
+        <li>No painel admin, vá em <strong>Câmeras</strong></li>
+        <li>Clique em <strong>"Nova Câmera"</strong></li>
+        <li>Selecione o <strong>cliente</strong> (condomínio) que essa câmera pertence</li>
+        <li>Digite o <strong>nome</strong> da câmera (ex: "CEC-LOMB01")</li>
+        <li>Digite o <strong>número de série</strong> da câmera (ex: "QFX2152506180113")
+            <ul>
+                <li>Para encontrar o serial: acesse a câmera pelo navegador → Manutenção → Informação do Dispositivo → campo "Nr série"</li>
+            </ul>
+        </li>
+        <li>Clique em <strong>"Criar"</strong></li>
+    </ol>
+
+    <blockquote>
+        <p><strong>IMPORTANTE:</strong> O número de série deve ser EXATAMENTE igual ao que aparece na câmera. Se errar uma letra ou número, a câmera não vai ser reconhecida.</p>
+    </blockquote>
+
+    <h3>Se a câmera já existia mas estava desativada</h3>
+    <p>Isso acontece quando você tenta cadastrar e aparece erro de "serial já existe". Nesse caso, a câmera foi desativada antes e precisa ser reativada. Peça ao administrador do banco de dados para reativar.</p>
+
+    <hr>
+
+    <!-- PARTE 3 -->
+    <h2 id="parte3">PARTE 3: Configurar a Câmera Física (ALPHADIGI)</h2>
+
+    <p>Esta é a parte mais importante. Você vai configurar a câmera para enviar os dados para o nosso servidor.</p>
+
+    <h3>Como acessar a configuração</h3>
+    <ol>
+        <li>Conecte seu computador na mesma rede da câmera</li>
+        <li>Abra o navegador e digite o IP da câmera (ex: <code>http://192.168.1.100</code>)</li>
+        <li>Faça login (usuário e senha da câmera)</li>
+        <li>Clique em <strong>Configuração</strong> (canto superior direito)</li>
+        <li>No menu lateral, clique em <strong>Comunicação</strong> → <strong>Comunicação</strong></li>
+    </ol>
+
+    <h3>Tela "Configurações de HTTP" — Campo por campo</h3>
+    <p>Você vai ver uma tela com várias seções. Configure <strong>EXATAMENTE</strong> assim:</p>
+
+    <h4>Seção: Conf. HTTP Push (lado esquerdo)</h4>
 
     <table>
         <thead>
-            <tr><th>Role</th><th>Permissões</th></tr>
+            <tr><th>#</th><th>Campo</th><th>O que colocar</th><th>Explicação</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>super_admin</code></td><td>Acesso total: todos os clientes, câmeras, usuários</td></tr>
-            <tr><td><code>admin_cliente</code></td><td>Gerencia 1 cliente: câmeras, veículos, emails, capturas</td></tr>
-            <tr><td><code>operador</code></td><td>Somente visualização do dashboard do cliente</td></tr>
+            <tr><td>1</td><td><strong>Habilitar</strong></td><td>✅ Marcado</td><td>Liga o envio de dados</td></tr>
+            <tr><td>2</td><td><strong>Servidor Pri.</strong></td><td><code>protector-lombada.vercel.app</code></td><td>Endereço do nosso servidor. <strong>CUIDADO:</strong> confira que está escrito PROTECTOR e não "rotector" (o campo é pequeno e pode cortar o texto)</td></tr>
+            <tr><td>3</td><td><strong>Servidor Seg.</strong></td><td>(vazio)</td><td>Não tem servidor secundário</td></tr>
+            <tr><td>4</td><td><strong>Porta</strong></td><td><code>443</code></td><td>Porta do HTTPS</td></tr>
+            <tr><td>5</td><td><strong>Timeout</strong></td><td><code>10</code></td><td>Tempo máximo de espera em segundos</td></tr>
+            <tr><td>6</td><td><strong>Nr.da Placa</strong></td><td>✅ Marcado</td><td>Envia o número da placa lida</td></tr>
+            <tr><td>7</td><td><strong>Pasta</strong></td><td><code>/placa</code></td><td>Caminho onde o servidor recebe os dados</td></tr>
+            <tr><td>8</td><td><strong>Img.Veículo</strong></td><td>✅ Marcado</td><td>Envia a foto do veículo inteiro</td></tr>
+            <tr><td>9</td><td><strong>Img. Placa</strong></td><td>✅ Marcado</td><td>Envia a foto da placa</td></tr>
+            <tr><td>10</td><td><strong>GPIO</strong></td><td>☐ Desmarcado</td><td>Não usamos</td></tr>
+            <tr><td>11</td><td><strong>Pasta (GPIO)</strong></td><td>(qualquer valor)</td><td>Não usamos</td></tr>
+            <tr><td>12</td><td><strong>Dados Serial</strong></td><td>☐ Desmarcado</td><td>Não usamos</td></tr>
+            <tr><td>13</td><td><strong>Pasta (Serial)</strong></td><td>(vazio)</td><td>Não usamos</td></tr>
+            <tr><td>14</td><td><strong>Char Code</strong></td><td><code>UTF-8</code></td><td>Padrão de caracteres</td></tr>
         </tbody>
     </table>
 
-    <h4>6.1. Criar Usuário Admin do Cliente</h4>
+    <h4>Seção: Heartbeat (centro da tela)</h4>
+
+    <table>
+        <thead>
+            <tr><th>#</th><th>Campo</th><th>O que colocar</th><th>Explicação</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>15</td><td><strong>Habilitar</strong></td><td>✅ Marcado</td><td>Liga o "sinal de vida" da câmera</td></tr>
+            <tr><td>16</td><td><strong>Pasta</strong></td><td><code>/placa</code></td><td>Envia o heartbeat para o mesmo lugar que as capturas</td></tr>
+            <tr><td>17</td><td><strong>Intervalo</strong></td><td><code>10</code></td><td>Envia sinal a cada 10 segundos</td></tr>
+            <tr><td>18</td><td><strong>Protocolo</strong></td><td><code>Desativar</code></td><td>Usa o mesmo protocolo do HTTP Push</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Seção: Conexão e Segurança (centro da tela)</h4>
+
+    <table>
+        <thead>
+            <tr><th>#</th><th>Campo</th><th>O que colocar</th><th>Explicação</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>19</td><td><strong>Apenas lista branca</strong></td><td>☐ Desmarcado</td><td>Não usamos</td></tr>
+            <tr><td>20</td><td><strong>Conexão curta</strong></td><td>☐ Desmarcado</td><td>Não usamos</td></tr>
+            <tr><td>21</td><td><strong>Link SSL</strong></td><td>✅ Marcado</td><td>OBRIGATÓRIO — usa conexão segura (HTTPS)</td></tr>
+            <tr><td>22</td><td><strong>Porta SSL</strong></td><td><code>443</code></td><td>Porta do HTTPS</td></tr>
+            <tr><td>23</td><td><strong>Autenticação</strong></td><td><code>Anônimo</code></td><td>Não precisa de usuário/senha</td></tr>
+            <tr><td>24</td><td><strong>QoS (0-5)</strong></td><td><code>2</code></td><td>Qualidade de serviço média</td></tr>
+            <tr><td>25</td><td><strong>Resultados e fotos</strong></td><td><code>Carregar junto</code></td><td>Envia foto junto com os dados</td></tr>
+            <tr><td>26</td><td><strong>Empresa</strong></td><td>(vazio)</td><td>Não obrigatório</td></tr>
+            <tr><td>27</td><td><strong>CNPJ</strong></td><td>(vazio)</td><td>Não obrigatório</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Seção: Retransmissão (canto superior direito)</h4>
+
+    <table>
+        <thead>
+            <tr><th>#</th><th>Campo</th><th>O que colocar</th><th>Explicação</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>28</td><td><strong>Habilitar</strong></td><td>✅ Marcado</td><td>Se falhar o envio, tenta de novo</td></tr>
+            <tr><td>29</td><td><strong>Foto</strong></td><td>✅ Marcado</td><td>Reenvia a foto também</td></tr>
+            <tr><td>30</td><td><strong>Imag. Placa</strong></td><td>✅ Marcado</td><td>Reenvia a imagem da placa</td></tr>
+            <tr><td>31</td><td><strong>Modo autônomo</strong></td><td>✅ Marcado</td><td>A câmera reenvia sozinha</td></tr>
+            <tr><td>32</td><td><strong>Intervalo(S)</strong></td><td><code>2</code></td><td>Espera 2 segundos entre tentativas</td></tr>
+            <tr><td>33</td><td><strong>Tempo total(S)</strong></td><td><code>100</code></td><td>Tenta reenviar por até 100 segundos</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Seção: Conf. Http (canto inferior direito)</h4>
+
+    <table>
+        <thead>
+            <tr><th>#</th><th>Campo</th><th>O que colocar</th><th>Explicação</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>34</td><td><strong>Pasta</strong></td><td>(vazio)</td><td>Não usamos</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Depois de configurar</h3>
     <ol>
-        <li>No painel admin, seção <strong>Usuários</strong></li>
+        <li>Clique em <strong>OK</strong> para salvar</li>
+        <li><strong>Reinicie a câmera</strong> (Manutenção → Gestão do sistema → Reiniciar)</li>
+        <li>Aguarde 1-2 minutos para a câmera voltar</li>
+        <li>Verifique no dashboard se a câmera aparece como <strong>Online</strong> (bolinha verde)</li>
+    </ol>
+
+    <hr>
+
+    <!-- PARTE 4 -->
+    <h2 id="parte4">PARTE 4: Verificar se a Câmera está Funcionando</h2>
+
+    <h3>No dashboard</h3>
+    <ol>
+        <li>Acesse <code>https://protector-lombada.vercel.app/admin</code></li>
+        <li>Na lista de câmeras, a câmera deve mostrar:
+            <ul>
+                <li><strong>Status</strong>: <span class="color-dot" style="background:var(--green)"></span> Online (verde) — significa que está enviando dados</li>
+                <li><strong>Último sinal</strong>: horário recente (menos de 5 minutos atrás)</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>A câmera aparece Offline?</h3>
+    <p>Verifique na ordem:</p>
+    <ol>
+        <li><strong>A câmera tem internet?</strong> Ela precisa acessar a internet pela porta 443 (HTTPS)</li>
+        <li><strong>O endereço está certo?</strong> Confira que o Servidor Pri. está <code>protector-lombada.vercel.app</code> (com P no início!)</li>
+        <li><strong>O serial está cadastrado?</strong> Compare o serial da câmera (Manutenção → Informação do Dispositivo) com o que está no painel admin</li>
+        <li><strong>Link SSL está habilitado?</strong> Precisa estar marcado</li>
+        <li><strong>Porta SSL é 443?</strong> Confira</li>
+        <li><strong>Reiniciou a câmera depois de configurar?</strong> Sempre reinicie depois de mudar as configurações</li>
+    </ol>
+
+    <hr>
+
+    <!-- PARTE 5 -->
+    <h2 id="parte5">PARTE 5: Cadastrar Usuários</h2>
+
+    <h3>Tipos de usuário</h3>
+
+    <table>
+        <thead>
+            <tr><th>Tipo</th><th>O que pode fazer</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>super_admin</strong></td><td>Tudo — todos os clientes, câmeras e usuários</td></tr>
+            <tr><td><strong>admin_cliente</strong></td><td>Gerencia 1 condomínio — câmeras, veículos, emails</td></tr>
+            <tr><td><strong>operador</strong></td><td>Apenas vê o dashboard do condomínio</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Como criar</h3>
+    <ol>
+        <li>No painel admin, vá em <strong>Usuários</strong></li>
         <li>Clique em <strong>"Novo Usuário"</strong></li>
+        <li>Preencha: email, senha, nome, selecione o cliente e o tipo</li>
+        <li>Clique em <strong>"Criar"</strong></li>
+    </ol>
+
+    <hr>
+
+    <!-- PARTE 6 -->
+    <h2 id="parte6">PARTE 6: Cadastrar Emails de Alerta</h2>
+
+    <p>Para que o condomínio receba avisos quando alguém passa acima do limite.</p>
+
+    <ol>
+        <li>No painel admin, vá em <strong>Emails</strong></li>
+        <li>Clique em <strong>"Adicionar"</strong></li>
         <li>Preencha:
             <ul>
-                <li><strong>Email</strong>: email do usuário</li>
-                <li><strong>Senha</strong>: mínimo 6 caracteres</li>
-                <li><strong>Nome</strong>: nome completo</li>
-                <li><strong>Cliente</strong>: selecione o cliente associado</li>
-                <li><strong>Role</strong>: selecione <code>admin_cliente</code></li>
-            </ul>
-        </li>
-        <li>Clique em <strong>"Criar"</strong></li>
-    </ol>
-
-    <blockquote><p><strong>Importante:</strong> O primeiro usuario <code>admin_cliente</code> de um cliente será automaticamente vinculado como administrador principal daquele cliente.</p></blockquote>
-
-    <h4>6.2. Via API</h4>
-<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/usuarios \
-  -H "Authorization: Bearer SEU_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@condomínio.com",
-    "senha": "senha123",
-    "nome": "Carlos Silva",
-    "cliente_id": "UUID_DO_CLIENTE",
-    "role": "admin_cliente"
-  }'</code></pre>
-
-    <h4>6.3. Criar Operadores Adicionais</h4>
-    <p>Repita o processo com role <code>operador</code> para usuarios que precisam apenas visualizar o dashboard.</p>
-
-    <hr>
-
-    <!-- Section 7 -->
-    <h2 id="cadastrar-cameras">7. Cadastrar Câmeras</h2>
-
-    <h3>7.1. Pelo Painel Admin</h3>
-    <ol>
-        <li>Na seção <strong>Câmeras</strong>, clique em <strong>"Nova Câmera"</strong></li>
-        <li>Selecione o <strong>cliente</strong></li>
-        <li>Informe o <strong>nome</strong> descritivo (ex: "Câmera Entrada Principal")</li>
-        <li>Clique em <strong>"Criar"</strong></li>
-        <li><strong>COPIE O TOKEN GERADO</strong> - ele será exibido apenas uma vez</li>
-    </ol>
-
-    <blockquote><p><strong>IMPORTANTE:</strong> O token é gerado automaticamente (32 caracteres hexadecimais). Guarde-o em local seguro. Este token será configurado na câmera física.</p></blockquote>
-
-    <h3>7.2. Via API</h3>
-<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/cameras \
-  -H "Authorization: Bearer SEU_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "cliente_id": "UUID_DO_CLIENTE",
-    "nome": "Câmera Entrada Principal"
-  }'</code></pre>
-
-    <p><strong>Resposta:</strong></p>
-<pre><code>{
-  "id": "uuid-da-camera",
-  "nome": "Câmera Entrada Principal",
-  "token": "a1b2c3d4e5f6...32chars",
-  "ativa": true
-}</code></pre>
-
-    <h3>7.3. Formato do Token</h3>
-    <ul>
-        <li>32 caracteres hexadecimais (gerado via <code>crypto.randomBytes(16)</code>)</li>
-        <li>Único por câmera</li>
-        <li>Imutável após criação</li>
-        <li>Usado na URL de envio de capturas</li>
-    </ul>
-
-    <hr>
-
-    <!-- Section 8 -->
-    <h2 id="configurar-camera-fisica">8. Configurar Câmera Física (ALPHADIGI)</h2>
-
-    <h3>8.1. Acesse a Interface da Câmera</h3>
-    <ol>
-        <li>Conecte-se à câmera via navegador (IP local da câmera)</li>
-        <li>Acesse <strong>Configurações &gt; Rede &gt; Servidor HTTP</strong></li>
-    </ol>
-
-    <h3>8.2. Configure o Endpoint de Envio</h3>
-
-    <table>
-        <thead>
-            <tr><th>Campo</th><th>Valor</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><strong>Protocolo</strong></td><td>HTTPS</td></tr>
-            <tr><td><strong>Método</strong></td><td>POST</td></tr>
-            <tr><td><strong>URL de Destino</strong></td><td><code>https://seudominio.vercel.app/api/captura?token=SEU_TOKEN</code></td></tr>
-            <tr><td><strong>Content-Type</strong></td><td><code>application/json</code></td></tr>
-            <tr><td><strong>Porta</strong></td><td>443</td></tr>
-        </tbody>
-    </table>
-
-    <h3>8.3. Formato do Payload Esperado (AlarmInfoPlate)</h3>
-    <p>A câmera ALPHADIGI envia automaticamente neste formato:</p>
-
-<pre><code>{
-  "AlarmInfoPlate": {
-    "serialno": "NUMERO_SERIE_CAMERA",
-    "result": {
-      "PlateResult": {
-        "license": "ABC1D23",
-        "confidence": 194,
-        "carColor": "silver",
-        "type": "car",
-        "speed": 45,
-        "radarSpeed": {
-          "Speed": {
-            "PerHour": 45
-          }
-        },
-        "imageFile": "data:image/jpeg;base64,/9j/4AAQ..."
-      }
-    }
-  }
-}</code></pre>
-
-    <h3>8.4. Autenticação da Câmera</h3>
-
-    <p><strong>Metodo primario:</strong> Token na URL</p>
-<pre><code>POST /api/captura?token=a1b2c3d4e5f6...</code></pre>
-
-    <p><strong>Método secundário (fallback):</strong> Número de série</p>
-    <ul>
-        <li>Se o token não for fornecido, o sistema busca pelo campo <code>serialno</code> no payload</li>
-        <li>O número de série deve estar cadastrado no campo <code>serial_number</code> da tabela <code>cameras</code></li>
-        <li>Para usar este método, edite a câmera e adicione o serial:</li>
-    </ul>
-
-<pre><code>curl -X PUT https://seudominio.vercel.app/api/admin/cameras \
-  -H "Authorization: Bearer SEU_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": "UUID_DA_CAMERA",
-    "serial_number": "ALPHADIGI_SN_123"
-  }'</code></pre>
-
-    <h3>8.5. Verificar Funcionamento</h3>
-    <p>Após configurar, verifique:</p>
-    <ol>
-        <li><strong>Heartbeat:</strong> A câmera envia sinais periódicos
-            <ul>
-                <li>No dashboard, o status da câmera aparece como <strong>"Online"</strong> (verde)</li>
-                <li>A câmera é considerada offline se não enviar dados em 5 minutos</li>
-            </ul>
-        </li>
-        <li><strong>Teste de captura:</strong> Passe um veículo na frente da câmera
-            <ul>
-                <li>Verifique no dashboard se a captura aparece na seção "Últimas Capturas"</li>
-                <li>Verifique se a foto foi armazenada corretamente</li>
-            </ul>
-        </li>
-    </ol>
-
-    <hr>
-
-    <!-- Section 9 -->
-    <h2 id="configurar-destinatarios-email">9. Configurar Destinatários de Email</h2>
-
-    <h3>9.1. Pelo Dashboard do Cliente</h3>
-    <ol>
-        <li>Faça login no dashboard como <code>admin_cliente</code></li>
-        <li>Na seção <strong>"Emails de Alerta"</strong>, clique em <strong>"Adicionar"</strong></li>
-        <li>Preencha nome, email e tipo:
-            <ul>
-                <li><strong>alerta</strong>: recebe notificações de velocidade acima do limite</li>
-                <li><strong>relatorio</strong>: recebe relatórios periódicos</li>
-                <li><strong>todos</strong>: recebe tudo</li>
+                <li><strong>Nome</strong> — quem vai receber (ex: "Portaria Central")</li>
+                <li><strong>Email</strong> — email do destinatário</li>
+                <li><strong>Tipo</strong> — escolha <code>alerta</code> (recebe avisos de velocidade)</li>
             </ul>
         </li>
         <li>Clique em <strong>"Salvar"</strong></li>
     </ol>
 
-    <h3>9.2. Via API</h3>
-<pre><code>curl -X POST https://seudominio.vercel.app/api/admin/emails \
-  -H "Authorization: Bearer SEU_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "cliente_id": "UUID_DO_CLIENTE",
-    "nome": "Portaria Central",
-    "email": "portaria@condomínio.com",
-    "tipo": "alerta"
-  }'</code></pre>
+    <h3>Tipos de email</h3>
+
+    <table>
+        <thead>
+            <tr><th>Tipo</th><th>O que recebe</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>alerta</code></td><td>Só recebe avisos quando alguém ultrapassa o limite</td></tr>
+            <tr><td><code>relatorio</code></td><td>Recebe relatórios periódicos</td></tr>
+            <tr><td><code>todos</code></td><td>Recebe tudo</td></tr>
+        </tbody>
+    </table>
 
     <hr>
 
-    <!-- Section 10 -->
-    <h2 id="fluxo-de-captura">10. Fluxo de Captura (Pipeline)</h2>
+    <!-- PARTE 7 -->
+    <h2 id="parte7">PARTE 7: Como Funciona a Detecção</h2>
 
-<pre><code>Camera envia POST /api/captura?token=xxx
-         |
-         v
-   +-- Autenticação --+
-   | Token válido?    |--Não--&gt; 401 Unauthorized
-   | Camera ativa?    |--Não--&gt; 403 Forbidden
-   | Cliente ativo?   |--Não--&gt; 403 Forbidden
-   +--------+---------+
-            | Sim
-            v
-   +-- Rate Limiting --+
-   | &lt; 120 req/min?   |--Não--&gt; 429 Too Many Requests
-   +--------+----------+
-            | Sim
-            v
-   +-- Parsing Payload ---------------+
-   | Extrair: placa, velocidade,      |
-   | confiança, cor, tipo, foto       |
-   | Normalizar placa (uppercase)     |
-   | Velocidade: radarSpeed &gt; speed   |
-   +--------+-------------------------+
-            |
-            v
-   +-- Upload Foto -------------------+
-   | Base64 -&gt; Buffer                 |
-   | Path: {cliente}/{camera}/        |
-   |        {timestamp}_{placa}.jpg   |
-   | Bucket: capturas-fotos           |
-   +--------+-------------------------+
-            |
-            v
-   +-- Salvar Captura ----------------+
-   | INSERT em capturas               |
-   | UPDATE camera.last_seen          |
-   +--------+-------------------------+
-            |
-            v
-   +-- Verificar Velocidade ----------+
-   | velocidade &gt; limite_cliente?     |--Não--&gt; 200 OK (fim)
-   +--------+-------------------------+
-            | Sim (infracao)
-            v
-   +-- Gerar PDF ---------------------+
-   | Dados da captura + veículo       |
-   | Histórico últimos 30 dias        |
-   | Logotipo do cliente              |
-   +--------+-------------------------+
-            |
-            v
-   +-- Enviar Email ------------------+
-   | Para todos destinatários         |
-   | tipo = 'alerta' ou 'todos'      |
-   | Anexo: PDF da notificação        |
-   +--------+-------------------------+
-            |
-            v
-   +-- Marcar Notificado -------------+
-   | UPDATE captura                   |
-   | notificado = true                |
-   | notificado_em = now()            |
-   +----------------------------------+</code></pre>
+    <p>Quando um veículo passa pela câmera:</p>
 
-    <hr>
-
-    <!-- Section 11 -->
-    <h2 id="geracao-pdf-notificacao">11. Geração de PDF e Notificação</h2>
-
-    <h3>Estrutura do PDF</h3>
-    <p>O PDF gerado automaticamente contém:</p>
     <ol>
-        <li><strong>Cabeçalho/strong>: Logotipo + título personalizado do cliente</li>
-        <li><strong>Dados da Infração</strong>:
+        <li>A câmera lê a placa e mede a velocidade com radar</li>
+        <li>Tira uma foto do veículo</li>
+        <li>Envia tudo para <code>protector-lombada.vercel.app/placa</code></li>
+        <li>O servidor identifica a câmera pelo número de série</li>
+        <li>Salva a placa, velocidade e foto no banco de dados</li>
+        <li>Verifica: <strong>velocidade &gt; limite do condomínio?</strong>
             <ul>
-                <li>Placa do veículo</li>
-                <li>Velocidade registrada vs limite permitido</li>
-                <li>Data e hora</li>
-                <li>Câmera que registrou</li>
+                <li><strong>NÃO</strong> → salva e pronto</li>
+                <li><strong>SIM</strong> → gera um PDF com a foto e dados, e envia por email para os destinatários cadastrados</li>
             </ul>
         </li>
-        <li><strong>Foto da Captura</strong>: Imagem do veículo no momento</li>
-        <li><strong>Dados do Proprietário</strong> (se cadastrado):
-            <ul>
-                <li>Nome do morador</li>
-                <li>Unidade/apartamento</li>
-            </ul>
-        </li>
-        <li><strong>Histórico de Passagens</strong>: Últimas 30 passagens do veículo (tabela)</li>
-        <li><strong>Rodapé/strong>: Texto personalizado do cliente</li>
     </ol>
 
-    <h3>Personalização do PDF</h3>
-    <p>Via painel admin ou API, edite o cliente:</p>
-<pre><code>{
-  "pdf_titulo": "CONDOMINIO JARDIM DAS FLORES",
-  "pdf_subtitulo": "Lombada Educativa - Controle de Velocidade",
-  "pdf_rodape": "Este documento é meramente educativo e não tem valor de multa.",
-  "pdf_logo_url": "https://seusite.com/logo.png"
-}</code></pre>
+    <h3>O que tem no PDF</h3>
+    <ul>
+        <li>Logo do condomínio</li>
+        <li>Placa do veículo</li>
+        <li>Velocidade registrada e o limite permitido</li>
+        <li>Data e hora</li>
+        <li>Foto do veículo</li>
+        <li>Nome do morador (se a placa estiver cadastrada)</li>
+        <li>Histórico das últimas 30 passagens daquele veículo</li>
+    </ul>
 
     <hr>
 
-    <!-- Section 12 -->
-    <h2 id="endpoints-da-api">12. Endpoints da API</h2>
+    <!-- PARTE 8 -->
+    <h2 id="parte8">PARTE 8: Cadastrar Veículos dos Moradores</h2>
 
-    <h3>Autenticação</h3>
-    <p>Todos os endpoints admin requerem header:</p>
-<pre><code>Authorization: Bearer &lt;JWT_TOKEN_SUPABASE&gt;</code></pre>
+    <p>Isso é opcional, mas ajuda a identificar quem é o dono do veículo.</p>
 
-    <h3>Endpoints Públicos</h3>
+    <ol>
+        <li>No dashboard do condomínio, vá em <strong>Veículos</strong></li>
+        <li>Clique em <strong>"Adicionar"</strong></li>
+        <li>Preencha: placa, nome do morador, unidade, marca, cor</li>
+        <li>Clique em <strong>"Salvar"</strong></li>
+    </ol>
 
+    <p>Quando esse veículo for detectado, o nome do morador vai aparecer no PDF.</p>
+
+    <hr>
+
+    <!-- PARTE 9 -->
+    <h2 id="parte9">PARTE 9: Personalização do PDF</h2>
+
+    <p>Cada condomínio pode ter seu próprio visual no PDF.</p>
+
+    <p>No painel admin, edite o cliente e preencha:</p>
+    <ul>
+        <li><strong>Título do PDF</strong> — ex: "CONDOMÍNIO ENSEADA DO CASTELO"</li>
+        <li><strong>Subtítulo</strong> — ex: "Lombada Educativa - Controle de Velocidade"</li>
+        <li><strong>Rodapé</strong> — ex: "Este documento é meramente educativo e não tem valor de multa."</li>
+        <li><strong>Logo URL</strong> — link para a imagem do logo do condomínio</li>
+    </ul>
+
+    <hr>
+
+    <!-- PARTE 10 -->
+    <h2 id="parte10">PARTE 10: Resolução de Problemas</h2>
+
+    <h3>"A câmera está Online mas não aparece nenhuma captura"</h3>
+    <ul>
+        <li>A câmera precisa ler uma placa para gerar captura</li>
+        <li>Passe um veículo na frente da câmera e veja se aparece</li>
+    </ul>
+
+    <h3>"A câmera está Offline"</h3>
+    <p>Veja a lista de verificação na <a href="#parte4">PARTE 4</a>.</p>
+
+    <h3>"O email de alerta não chega"</h3>
+    <ol>
+        <li>Tem destinatário cadastrado? (<a href="#parte6">PARTE 6</a>)</li>
+        <li>O veículo passou acima do limite? Se a velocidade for menor que o limite, não envia email</li>
+        <li>Verifique se o email não caiu na caixa de spam</li>
+    </ol>
+
+    <h3>"Erro ao cadastrar câmera: serial já existe"</h3>
+    <p>A câmera já foi cadastrada antes e está desativada. Peça para reativar no banco de dados.</p>
+
+    <h3>"A câmera envia mas o sistema não reconhece"</h3>
+    <p>O serial cadastrado no painel não bate com o serial real da câmera. Confira:</p>
+    <ol>
+        <li>Na câmera: Manutenção → Informação do Dispositivo → Nr série</li>
+        <li>No painel: veja o serial cadastrado</li>
+        <li>Compare letra por letra — tem que ser IDÊNTICO</li>
+    </ol>
+
+    <hr>
+
+    <!-- CHECKLIST -->
+    <h2 id="checklist">Checklist: Novo Condomínio do Zero</h2>
+
+    <p>Use esta lista para não esquecer nada:</p>
+
+    <ul class="checklist">
+        <li><strong>1.</strong> Criar o cliente no painel admin (<a href="#parte1">PARTE 1</a>)</li>
+        <li><strong>2.</strong> Cadastrar a câmera com o serial correto (<a href="#parte2">PARTE 2</a>)</li>
+        <li><strong>3.</strong> Configurar a câmera física campo por campo (<a href="#parte3">PARTE 3</a>)</li>
+        <li><strong>4.</strong> Reiniciar a câmera</li>
+        <li><strong>5.</strong> Verificar se aparece Online no dashboard (<a href="#parte4">PARTE 4</a>)</li>
+        <li><strong>6.</strong> Criar usuário admin para o condomínio (<a href="#parte5">PARTE 5</a>)</li>
+        <li><strong>7.</strong> Cadastrar emails de alerta (<a href="#parte6">PARTE 6</a>)</li>
+        <li><strong>8.</strong> Cadastrar veículos dos moradores (<a href="#parte8">PARTE 8</a>, opcional)</li>
+        <li><strong>9.</strong> Personalizar o PDF com logo e textos (<a href="#parte9">PARTE 9</a>)</li>
+        <li><strong>10.</strong> Testar: passar um veículo acima do limite e verificar se chega o email</li>
+    </ul>
+
+    <hr>
+
+    <!-- DADOS TÉCNICOS -->
+    <h2 id="dados-tecnicos">Dados Técnicos (para quem precisa)</h2>
+
+    <h3>Endereço do servidor</h3>
     <table>
         <thead>
-            <tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr>
+            <tr><th>O quê</th><th>Endereço</th></tr>
         </thead>
         <tbody>
-            <tr><td>GET</td><td><code>/api/config</code></td><td>Retorna SUPABASE_URL e ANON_KEY</td></tr>
-            <tr><td>POST</td><td><code>/api/captura</code></td><td>Recebe capturas das câmeras</td></tr>
-            <tr><td>GET</td><td><code>/api/heartbeat</code></td><td>Heartbeat das câmeras</td></tr>
+            <tr><td>URL principal</td><td><code>https://protector-lombada.vercel.app</code></td></tr>
+            <tr><td>Endpoint de capturas</td><td><code>/placa</code> (roteado para <code>/api/captura.js</code>)</td></tr>
+            <tr><td>Endpoint de heartbeat</td><td><code>/api/heartbeat</code></td></tr>
+            <tr><td>Painel admin</td><td><code>/admin</code></td></tr>
+            <tr><td>Dashboard</td><td><code>/</code> (raiz)</td></tr>
         </tbody>
     </table>
 
-    <h3>Endpoints Admin (requer <code>super_admin</code>)</h3>
+    <h3>Como a câmera é identificada</h3>
+    <ol>
+        <li>O sistema tenta identificar pelo <strong>token</strong> na URL (método antigo)</li>
+        <li>Se não tiver token, identifica pelo <strong>serial number</strong> que vem no corpo do JSON (<code>AlarmInfoPlate.serialno</code>)</li>
+        <li>Se não encontrar por nenhum dos dois, registra erro no log</li>
+    </ol>
 
+    <h3>Banco de dados</h3>
     <table>
         <thead>
-            <tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr>
+            <tr><th>Item</th><th>Detalhe</th></tr>
         </thead>
         <tbody>
-            <tr><td>GET</td><td><code>/api/admin/clientes</code></td><td>Listar todos os clientes</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/clientes</code></td><td>Criar novo cliente</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/clientes</code></td><td>Atualizar cliente</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/clientes</code></td><td>Desativar cliente (soft delete)</td></tr>
-            <tr><td>GET</td><td><code>/api/admin/usuarios</code></td><td>Listar usuários</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/usuarios</code></td><td>Criar usuário</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/usuarios</code></td><td>Atualizar usuário</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/usuarios</code></td><td>Desativar usuário</td></tr>
-            <tr><td>GET</td><td><code>/api/admin/cameras</code></td><td>Listar câmeras</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/cameras</code></td><td>Criar câmera (gera token)</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/cameras</code></td><td>Atualizar câmera</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/cameras</code></td><td>Desativar câmera</td></tr>
+            <tr><td>Plataforma</td><td>Supabase (PostgreSQL)</td></tr>
+            <tr><td>Tabelas principais</td><td><code>clientes</code>, <code>cameras</code>, <code>capturas</code>, <code>veiculos</code>, <code>usuarios</code>, <code>email_destinatarios</code></td></tr>
+            <tr><td>Armazenamento de fotos</td><td>Supabase Storage (bucket <code>capturas-fotos</code>)</td></tr>
         </tbody>
     </table>
 
-    <h3>Endpoints Admin/Cliente (requer <code>admin_cliente</code> ou superior)</h3>
+    <h3>Limites</h3>
+    <ul>
+        <li>Máximo 120 requisições por minuto por câmera</li>
+        <li>Capturas são apagadas automaticamente após 15 dias</li>
+        <li>Câmera é considerada Offline se não enviar dados em 5 minutos</li>
+    </ul>
 
+    <h3>Variáveis de ambiente (Vercel)</h3>
     <table>
         <thead>
-            <tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr>
+            <tr><th>Variável</th><th>Para que serve</th></tr>
         </thead>
         <tbody>
-            <tr><td>GET</td><td><code>/api/admin/veiculos</code></td><td>Listar veículos do cliente</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/veiculos</code></td><td>Cadastrar veículo</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/veiculos</code></td><td>Atualizar veículo</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/veiculos</code></td><td>Desativar veículo</td></tr>
-            <tr><td>GET</td><td><code>/api/admin/emails</code></td><td>Listar destinatários</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/emails</code></td><td>Adicionar destinatário</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/emails</code></td><td>Atualizar destinatário</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/emails</code></td><td>Desativar destinatário</td></tr>
-            <tr><td>GET</td><td><code>/api/admin/dashboard</code></td><td>Dados do dashboard</td></tr>
+            <tr><td><code>SUPABASE_URL</code></td><td>Endereço do banco de dados</td></tr>
+            <tr><td><code>SUPABASE_SERVICE_KEY</code></td><td>Chave de acesso admin ao banco</td></tr>
+            <tr><td><code>SUPABASE_ANON_KEY</code></td><td>Chave pública (usada no frontend)</td></tr>
+            <tr><td><code>CRON_SECRET</code></td><td>Senha para o job de limpeza automática</td></tr>
+            <tr><td><code>SMTP_HOST</code></td><td>Servidor de email</td></tr>
+            <tr><td><code>SMTP_PORT</code></td><td>Porta do email (465)</td></tr>
+            <tr><td><code>SMTP_SECURE</code></td><td>Usar SSL (true)</td></tr>
+            <tr><td><code>SMTP_USER</code></td><td>Email que envia os alertas</td></tr>
+            <tr><td><code>SMTP_PASS</code></td><td>Senha do email</td></tr>
         </tbody>
     </table>
-
-    <hr>
-
-    <!-- Section 13 -->
-    <h2 id="deploy-infraestrutura">13. Deploy e Infraestrutura</h2>
-
-    <h3>Vercel</h3>
-    <p>O projeto está configurado para deploy automático no Vercel.</p>
-
-    <p><strong>Arquivo <code>vercel.json</code>:</strong></p>
-    <ul>
-        <li>Rotas API: <code>/api/*</code> &rarr; Serverless Functions</li>
-        <li>Dashboard: <code>/</code> &rarr; <code>/dashboard/index.html</code></li>
-        <li>Admin: <code>/admin</code> &rarr; <code>/admin/index.html</code></li>
-        <li>Cron: Execução diária as 06:00 UTC</li>
-    </ul>
-
-    <h3>Passo a Passo do Deploy</h3>
-    <ol>
-        <li>Conecte o repositório GitHub ao Vercel</li>
-        <li>Configure as variáveis de ambiente (seção 3)</li>
-        <li>Deploy automático a cada push na branch <code>master</code></li>
-    </ol>
-
-    <h3>Domínio Personalizado</h3>
-    <ol>
-        <li>No Vercel, va em <strong>Settings &gt; Domains</strong></li>
-        <li>Adicione seu domínio (ex: <code>lombada.seudominio.com.br</code>)</li>
-        <li>Configure o DNS (CNAME para <code>cname.vercel-dns.com</code>)</li>
-    </ol>
-
-    <hr>
-
-    <!-- Section 14 -->
-    <h2 id="cron-jobs">14. Cron Jobs (Limpeza Automática)</h2>
-
-    <h3>Configuração</h3>
-    <p>Definido no <code>vercel.json</code>:</p>
-
-<pre><code>{
-  "crons": [{
-    "path": "/api/cron-limpeza",
-    "schedule": "0 6 * * *"
-  }]
-}</code></pre>
-
-    <h3>Funcionamento</h3>
-    <ul>
-        <li><strong>Horário:</strong> Todos os dias as 06:00 UTC (03:00 Brasília)</li>
-        <li><strong>Ação:</strong> Remove capturas com mais de 15 dias</li>
-        <li><strong>Inclui:</strong> Deleta registros do banco + fotos do Storage</li>
-        <li><strong>Autenticação:</strong> <code>Authorization: Bearer {CRON_SECRET}</code></li>
-    </ul>
-
-    <hr>
-
-    <!-- Section 15 -->
-    <h2 id="troubleshooting">15. Troubleshooting</h2>
-
-    <h3>Câmera não aparece como Online</h3>
-    <ol>
-        <li>Verifique se o token está correto na URL da câmera</li>
-        <li>Verifique se a câmera tem acesso à internet (HTTPS porta 443)</li>
-        <li>Verifique nos logs do Vercel se a requisição está chegando</li>
-        <li>Teste manualmente:</li>
-    </ol>
-
-<pre><code>curl -X POST "https://seudominio.vercel.app/api/captura?token=TOKEN_DA_CAMERA" \
-  -H "Content-Type: application/json" \
-  -d '{"AlarmInfoPlate":{"serialno":"TEST","result":{"PlateResult":{"license":"TEST123","speed":20,"confidence":180,"imageFile":"data:image/jpeg;base64,/9j/4AAQ"}}}}'</code></pre>
-
-    <h3>Emails não estão sendo enviados</h3>
-    <ol>
-        <li>Verifique as variáveis SMTP no Vercel</li>
-        <li>Teste a conexão SMTP:</li>
-    </ol>
-
-<pre><code>telnet mail.seudominio.com 465</code></pre>
-
-    <ol start="3">
-        <li>Verifique se há destinatários cadastrados para o cliente</li>
-        <li>Verifique se a velocidade da captura excede o limite do cliente</li>
-        <li>Verifique nos logs do Vercel por erros de envio</li>
-    </ol>
-
-    <h3>Fotos não aparecem no dashboard</h3>
-    <ol>
-        <li>Verifique se o bucket <code>capturas-fotos</code> existe no Supabase</li>
-        <li>Verifique as políticas RLS do Storage</li>
-        <li>Execute a migration <code>migration-storage-rls.sql</code> se necessário</li>
-    </ol>
-
-    <h3>Erro 429 (Too Many Requests)</h3>
-    <ul>
-        <li>A câmera está enviando mais de 120 requisições por minuto</li>
-        <li>Verifique a configuração de frequência de envio na câmera</li>
-        <li>Ajuste o intervalo minimo entre capturas na interface da câmera</li>
-    </ul>
-
-    <h3>Usuário não consegue fazer login</h3>
-    <ol>
-        <li>Verifique se o usuário existe na tabela <code>usuarios</code> E no <code>auth.users</code></li>
-        <li>Verifique se o campo <code>ativo = true</code></li>
-        <li>Verifique se o <code>auth_id</code> está correto</li>
-        <li>Resete a senha pelo painel admin (PUT <code>/api/admin/usuarios</code>)</li>
-    </ol>
-
-    <hr>
-
-    <!-- Checklist -->
-    <h2 id="checklist-novo-cliente">Checklist para Novo Cliente</h2>
-    <ul>
-        <li>Criar cliente no painel admin</li>
-        <li>Criar usuário admin_cliente</li>
-        <li>Criar câmera(s) e anotar token(s)</li>
-        <li>Configurar câmera física com a URL + token</li>
-        <li>Cadastrar destinatários de email</li>
-        <li>Importar lista de veículos (Excel)</li>
-        <li>Personalizar PDF (título, logo, rodapé)</li>
-        <li>Testar captura e envio de email</li>
-        <li>Enviar credenciais de acesso ao cliente</li>
-    </ul>
 
     <hr>
 
     <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.0.1 | Build 2ea9b40 | Março 2026<br>
-        <em>Sistema de Lombada Educativa Inteligente</em>
+        <strong>Protector Traffic Control</strong> — Lombada Educativa Inteligente — v2.0 | Março 2026
     </p>
 
 </main>
