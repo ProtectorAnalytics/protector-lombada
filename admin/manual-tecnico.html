@@ -462,7 +462,7 @@
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
             <tr><td><code>user_id</code></td><td>UUID (FK)</td><td>Referência ao auth.users (admin_cliente)</td></tr>
             <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do condomínio/empresa</td></tr>
-            <tr><td><code>local_via</code></td><td>TEXT</td><td>Rua/via onde a lombada esta instalada</td></tr>
+            <tr><td><code>local_via</code></td><td>TEXT</td><td>Rua/via onde a lombada está instalada</td></tr>
             <tr><td><code>cidade_uf</code></td><td>TEXT</td><td>Cidade/UF</td></tr>
             <tr><td><code>cep</code></td><td>TEXT</td><td>CEP</td></tr>
             <tr><td><code>endereco</code></td><td>TEXT</td><td>Endereço completo</td></tr>
@@ -536,11 +536,11 @@
         </thead>
         <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
-            <tr><td><code>camera_id</code></td><td>UUID (FK)</td><td>Camera que realizou a captura</td></tr>
+            <tr><td><code>camera_id</code></td><td>UUID (FK)</td><td>Câmera que realizou a captura</td></tr>
             <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
             <tr><td><code>placa</code></td><td>TEXT</td><td>Placa detectada</td></tr>
             <tr><td><code>velocidade</code></td><td>INTEGER</td><td>Velocidade registrada (km/h)</td></tr>
-            <tr><td><code>pixels</code></td><td>INTEGER</td><td>Nivel de confianca (0-200)</td></tr>
+            <tr><td><code>pixels</code></td><td>INTEGER</td><td>Nível de confiança (0-200)</td></tr>
             <tr><td><code>tipo_veiculo</code></td><td>TEXT</td><td>Tipo detectado</td></tr>
             <tr><td><code>cor_veiculo</code></td><td>TEXT</td><td>Cor detectada</td></tr>
             <tr><td><code>foto_path</code></td><td>TEXT</td><td>Caminho no Storage</td></tr>
@@ -583,13 +583,13 @@
         <li>Na seção <strong>Clientes</strong>, clique em <strong>"Novo Cliente"</strong></li>
         <li>Preencha os campos:
             <ul>
-                <li><strong>Nome</strong>: Nome do condomínio/empresa (ex: "Condominio Jardim das Flores")</li>
-                <li><strong>Local/Via</strong>: Via onde a lombada esta instalada (ex: "Rua das Palmeiras")</li>
-                <li><strong>Cidade/UF</strong>: (ex: "Sao Paulo/SP")</li>
-                <li><strong>Limite de Velocidade</strong>: Velocidade maxima em km/h (padrão: 30)</li>
+                <li><strong>Nome</strong>: Nome do condomínio/empresa (ex: "Condomínio Jardim das Flores")</li>
+                <li><strong>Local/Via</strong>: Via onde a lombada está instalada (ex: "Rua das Palmeiras")</li>
+                <li><strong>Cidade/UF</strong>: (ex: "São Paulo/SP")</li>
+                <li><strong>Limite de Velocidade</strong>: Velocidade máxima em km/h (padrão: 30)</li>
                 <li><strong>CNPJ</strong>: CNPJ do cliente</li>
                 <li><strong>Telefone</strong>: Telefone de contato</li>
-                <li><strong>Contato</strong>: Nome do responsavel</li>
+                <li><strong>Contato</strong>: Nome do responsável</li>
             </ul>
         </li>
         <li>Clique em <strong>"Salvar"</strong></li>
@@ -601,9 +601,9 @@
   -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "nome": "Condominio Jardim das Flores",
+    "nome": "Condomínio Jardim das Flores",
     "local_via": "Rua das Palmeiras",
-    "cidade_uf": "Sao Paulo/SP",
+    "cidade_uf": "São Paulo/SP",
     "limite_velocidade": 30,
     "cnpj": "12345678000199",
     "telefone": "11999887766",
@@ -615,27 +615,27 @@
     <!-- Section 6 -->
     <h2 id="cadastrar-usuarios">6. Cadastrar Usuários</h2>
 
-    <h3>Roles (Papeis)</h3>
+    <h3>Roles (Papéis)</h3>
 
     <table>
         <thead>
-            <tr><th>Role</th><th>Permissoes</th></tr>
+            <tr><th>Role</th><th>Permissões</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>super_admin</code></td><td>Acesso total: todos os clientes, cameras, usuarios</td></tr>
-            <tr><td><code>admin_cliente</code></td><td>Gerencia 1 cliente: cameras, veiculos, emails, capturas</td></tr>
-            <tr><td><code>operador</code></td><td>Somente visualizacao do dashboard do cliente</td></tr>
+            <tr><td><code>super_admin</code></td><td>Acesso total: todos os clientes, câmeras, usuários</td></tr>
+            <tr><td><code>admin_cliente</code></td><td>Gerencia 1 cliente: câmeras, veículos, emails, capturas</td></tr>
+            <tr><td><code>operador</code></td><td>Somente visualização do dashboard do cliente</td></tr>
         </tbody>
     </table>
 
-    <h4>6.1. Criar Usuario Admin do Cliente</h4>
+    <h4>6.1. Criar Usuário Admin do Cliente</h4>
     <ol>
-        <li>No painel admin, secao <strong>Usuarios</strong></li>
-        <li>Clique em <strong>"Novo Usuario"</strong></li>
+        <li>No painel admin, seção <strong>Usuários</strong></li>
+        <li>Clique em <strong>"Novo Usuário"</strong></li>
         <li>Preencha:
             <ul>
-                <li><strong>Email</strong>: email do usuario</li>
-                <li><strong>Senha</strong>: minimo 6 caracteres</li>
+                <li><strong>Email</strong>: email do usuário</li>
+                <li><strong>Senha</strong>: mínimo 6 caracteres</li>
                 <li><strong>Nome</strong>: nome completo</li>
                 <li><strong>Cliente</strong>: selecione o cliente associado</li>
                 <li><strong>Role</strong>: selecione <code>admin_cliente</code></li>
@@ -644,7 +644,7 @@
         <li>Clique em <strong>"Criar"</strong></li>
     </ol>
 
-    <blockquote><p><strong>Importante:</strong> O primeiro usuario <code>admin_cliente</code> de um cliente sera automaticamente vinculado como administrador principal daquele cliente.</p></blockquote>
+    <blockquote><p><strong>Importante:</strong> O primeiro usuario <code>admin_cliente</code> de um cliente será automaticamente vinculado como administrador principal daquele cliente.</p></blockquote>
 
     <h4>6.2. Via API</h4>
 <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/usuarios \
@@ -668,14 +668,14 @@
 
     <h3>7.1. Pelo Painel Admin</h3>
     <ol>
-        <li>Na seção <strong>Cameras</strong>, clique em <strong>"Nova Camera"</strong></li>
+        <li>Na seção <strong>Câmeras</strong>, clique em <strong>"Nova Câmera"</strong></li>
         <li>Selecione o <strong>cliente</strong></li>
-        <li>Informe o <strong>nome</strong> descritivo (ex: "Camera Entrada Principal")</li>
+        <li>Informe o <strong>nome</strong> descritivo (ex: "Câmera Entrada Principal")</li>
         <li>Clique em <strong>"Criar"</strong></li>
-        <li><strong>COPIE O TOKEN GERADO</strong> - ele sera exibido apenas uma vez</li>
+        <li><strong>COPIE O TOKEN GERADO</strong> - ele será exibido apenas uma vez</li>
     </ol>
 
-    <blockquote><p><strong>IMPORTANTE:</strong> O token e gerado automaticamente (32 caracteres hexadecimais). Guarde-o em local seguro. Este token sera configurado na camera fisica.</p></blockquote>
+    <blockquote><p><strong>IMPORTANTE:</strong> O token é gerado automaticamente (32 caracteres hexadecimais). Guarde-o em local seguro. Este token será configurado na câmera física.</p></blockquote>
 
     <h3>7.2. Via API</h3>
 <pre><code>curl -X POST https://seudominio.vercel.app/api/admin/cameras \
@@ -683,13 +683,13 @@
   -H "Content-Type: application/json" \
   -d '{
     "cliente_id": "UUID_DO_CLIENTE",
-    "nome": "Camera Entrada Principal"
+    "nome": "Câmera Entrada Principal"
   }'</code></pre>
 
     <p><strong>Resposta:</strong></p>
 <pre><code>{
   "id": "uuid-da-camera",
-  "nome": "Camera Entrada Principal",
+  "nome": "Câmera Entrada Principal",
   "token": "a1b2c3d4e5f6...32chars",
   "ativa": true
 }</code></pre>
@@ -698,7 +698,7 @@
     <ul>
         <li>32 caracteres hexadecimais (gerado via <code>crypto.randomBytes(16)</code>)</li>
         <li>Único por câmera</li>
-        <li>Imutavel apos criacao</li>
+        <li>Imutável após criação</li>
         <li>Usado na URL de envio de capturas</li>
     </ul>
 
@@ -707,10 +707,10 @@
     <!-- Section 8 -->
     <h2 id="configurar-camera-fisica">8. Configurar Câmera Física (ALPHADIGI)</h2>
 
-    <h3>8.1. Acesse a Interface da Camera</h3>
+    <h3>8.1. Acesse a Interface da Câmera</h3>
     <ol>
-        <li>Conecte-se a camera via navegador (IP local da camera)</li>
-        <li>Acesse <strong>Configuracoes &gt; Rede &gt; Servidor HTTP</strong></li>
+        <li>Conecte-se à câmera via navegador (IP local da câmera)</li>
+        <li>Acesse <strong>Configurações &gt; Rede &gt; Servidor HTTP</strong></li>
     </ol>
 
     <h3>8.2. Configure o Endpoint de Envio</h3>
@@ -729,7 +729,7 @@
     </table>
 
     <h3>8.3. Formato do Payload Esperado (AlarmInfoPlate)</h3>
-    <p>A camera ALPHADIGI envia automaticamente neste formato:</p>
+    <p>A câmera ALPHADIGI envia automaticamente neste formato:</p>
 
 <pre><code>{
   "AlarmInfoPlate": {
@@ -752,16 +752,16 @@
   }
 }</code></pre>
 
-    <h3>8.4. Autenticacao da Camera</h3>
+    <h3>8.4. Autenticação da Câmera</h3>
 
     <p><strong>Metodo primario:</strong> Token na URL</p>
 <pre><code>POST /api/captura?token=a1b2c3d4e5f6...</code></pre>
 
-    <p><strong>Metodo secundario (fallback):</strong> Numero de serie</p>
+    <p><strong>Método secundário (fallback):</strong> Número de série</p>
     <ul>
-        <li>Se o token nao for fornecido, o sistema busca pelo campo <code>serialno</code> no payload</li>
-        <li>O numero de serie deve estar cadastrado no campo <code>serial_number</code> da tabela <code>cameras</code></li>
-        <li>Para usar este metodo, edite a camera e adicione o serial:</li>
+        <li>Se o token não for fornecido, o sistema busca pelo campo <code>serialno</code> no payload</li>
+        <li>O número de série deve estar cadastrado no campo <code>serial_number</code> da tabela <code>cameras</code></li>
+        <li>Para usar este método, edite a câmera e adicione o serial:</li>
     </ul>
 
 <pre><code>curl -X PUT https://seudominio.vercel.app/api/admin/cameras \
@@ -773,17 +773,17 @@
   }'</code></pre>
 
     <h3>8.5. Verificar Funcionamento</h3>
-    <p>Apos configurar, verifique:</p>
+    <p>Após configurar, verifique:</p>
     <ol>
-        <li><strong>Heartbeat:</strong> A camera envia sinais periodicos
+        <li><strong>Heartbeat:</strong> A câmera envia sinais periódicos
             <ul>
-                <li>No dashboard, o status da camera aparece como <strong>"Online"</strong> (verde)</li>
-                <li>A camera e considerada offline se nao enviar dados em 5 minutos</li>
+                <li>No dashboard, o status da câmera aparece como <strong>"Online"</strong> (verde)</li>
+                <li>A câmera é considerada offline se não enviar dados em 5 minutos</li>
             </ul>
         </li>
-        <li><strong>Teste de captura:</strong> Passe um veiculo na frente da camera
+        <li><strong>Teste de captura:</strong> Passe um veículo na frente da câmera
             <ul>
-                <li>Verifique no dashboard se a captura aparece na seção "Ultimas Capturas"</li>
+                <li>Verifique no dashboard se a captura aparece na seção "Últimas Capturas"</li>
                 <li>Verifique se a foto foi armazenada corretamente</li>
             </ul>
         </li>
@@ -800,8 +800,8 @@
         <li>Na seção <strong>"Emails de Alerta"</strong>, clique em <strong>"Adicionar"</strong></li>
         <li>Preencha nome, email e tipo:
             <ul>
-                <li><strong>alerta</strong>: recebe notificacoes de velocidade acima do limite</li>
-                <li><strong>relatorio</strong>: recebe relatorios periodicos</li>
+                <li><strong>alerta</strong>: recebe notificações de velocidade acima do limite</li>
+                <li><strong>relatorio</strong>: recebe relatórios periódicos</li>
                 <li><strong>todos</strong>: recebe tudo</li>
             </ul>
         </li>
@@ -827,21 +827,21 @@
 <pre><code>Camera envia POST /api/captura?token=xxx
          |
          v
-   +-- Autenticacao --+
-   | Token valido?    |--Nao--&gt; 401 Unauthorized
-   | Camera ativa?    |--Nao--&gt; 403 Forbidden
-   | Cliente ativo?   |--Nao--&gt; 403 Forbidden
+   +-- Autenticação --+
+   | Token válido?    |--Não--&gt; 401 Unauthorized
+   | Camera ativa?    |--Não--&gt; 403 Forbidden
+   | Cliente ativo?   |--Não--&gt; 403 Forbidden
    +--------+---------+
             | Sim
             v
    +-- Rate Limiting --+
-   | &lt; 120 req/min?   |--Nao--&gt; 429 Too Many Requests
+   | &lt; 120 req/min?   |--Não--&gt; 429 Too Many Requests
    +--------+----------+
             | Sim
             v
    +-- Parsing Payload ---------------+
    | Extrair: placa, velocidade,      |
-   | confianca, cor, tipo, foto       |
+   | confiança, cor, tipo, foto       |
    | Normalizar placa (uppercase)     |
    | Velocidade: radarSpeed &gt; speed   |
    +--------+-------------------------+
@@ -862,21 +862,21 @@
             |
             v
    +-- Verificar Velocidade ----------+
-   | velocidade &gt; limite_cliente?     |--Nao--&gt; 200 OK (fim)
+   | velocidade &gt; limite_cliente?     |--Não--&gt; 200 OK (fim)
    +--------+-------------------------+
             | Sim (infracao)
             v
    +-- Gerar PDF ---------------------+
-   | Dados da captura + veiculo       |
-   | Historico ultimos 30 dias        |
+   | Dados da captura + veículo       |
+   | Histórico últimos 30 dias        |
    | Logotipo do cliente              |
    +--------+-------------------------+
             |
             v
    +-- Enviar Email ------------------+
-   | Para todos destinatarios         |
+   | Para todos destinatários         |
    | tipo = 'alerta' ou 'todos'      |
-   | Anexo: PDF da notificacao        |
+   | Anexo: PDF da notificação        |
    +--------+-------------------------+
             |
             v
@@ -892,34 +892,34 @@
     <h2 id="geracao-pdf-notificacao">11. Geração de PDF e Notificação</h2>
 
     <h3>Estrutura do PDF</h3>
-    <p>O PDF gerado automaticamente contem:</p>
+    <p>O PDF gerado automaticamente contém:</p>
     <ol>
-        <li><strong>Cabecalho</strong>: Logotipo + titulo personalizado do cliente</li>
-        <li><strong>Dados da Infracao</strong>:
+        <li><strong>Cabeçalho/strong>: Logotipo + título personalizado do cliente</li>
+        <li><strong>Dados da Infração</strong>:
             <ul>
                 <li>Placa do veículo</li>
                 <li>Velocidade registrada vs limite permitido</li>
                 <li>Data e hora</li>
-                <li>Camera que registrou</li>
+                <li>Câmera que registrou</li>
             </ul>
         </li>
-        <li><strong>Foto da Captura</strong>: Imagem do veiculo no momento</li>
-        <li><strong>Dados do Proprietario</strong> (se cadastrado):
+        <li><strong>Foto da Captura</strong>: Imagem do veículo no momento</li>
+        <li><strong>Dados do Proprietário</strong> (se cadastrado):
             <ul>
                 <li>Nome do morador</li>
                 <li>Unidade/apartamento</li>
             </ul>
         </li>
-        <li><strong>Historico de Passagens</strong>: Ultimas 30 passagens do veiculo (tabela)</li>
-        <li><strong>Rodape</strong>: Texto personalizado do cliente</li>
+        <li><strong>Histórico de Passagens</strong>: Últimas 30 passagens do veículo (tabela)</li>
+        <li><strong>Rodapé/strong>: Texto personalizado do cliente</li>
     </ol>
 
-    <h3>Personalizacao do PDF</h3>
+    <h3>Personalização do PDF</h3>
     <p>Via painel admin ou API, edite o cliente:</p>
 <pre><code>{
   "pdf_titulo": "CONDOMINIO JARDIM DAS FLORES",
   "pdf_subtitulo": "Lombada Educativa - Controle de Velocidade",
-  "pdf_rodape": "Este documento e meramente educativo e nao tem valor de multa.",
+  "pdf_rodape": "Este documento é meramente educativo e não tem valor de multa.",
   "pdf_logo_url": "https://seusite.com/logo.png"
 }</code></pre>
 
@@ -928,11 +928,11 @@
     <!-- Section 12 -->
     <h2 id="endpoints-da-api">12. Endpoints da API</h2>
 
-    <h3>Autenticacao</h3>
+    <h3>Autenticação</h3>
     <p>Todos os endpoints admin requerem header:</p>
 <pre><code>Authorization: Bearer &lt;JWT_TOKEN_SUPABASE&gt;</code></pre>
 
-    <h3>Endpoints Publicos</h3>
+    <h3>Endpoints Públicos</h3>
 
     <table>
         <thead>
@@ -940,8 +940,8 @@
         </thead>
         <tbody>
             <tr><td>GET</td><td><code>/api/config</code></td><td>Retorna SUPABASE_URL e ANON_KEY</td></tr>
-            <tr><td>POST</td><td><code>/api/captura</code></td><td>Recebe capturas das cameras</td></tr>
-            <tr><td>GET</td><td><code>/api/heartbeat</code></td><td>Heartbeat das cameras</td></tr>
+            <tr><td>POST</td><td><code>/api/captura</code></td><td>Recebe capturas das câmeras</td></tr>
+            <tr><td>GET</td><td><code>/api/heartbeat</code></td><td>Heartbeat das câmeras</td></tr>
         </tbody>
     </table>
 
@@ -956,14 +956,14 @@
             <tr><td>POST</td><td><code>/api/admin/clientes</code></td><td>Criar novo cliente</td></tr>
             <tr><td>PUT</td><td><code>/api/admin/clientes</code></td><td>Atualizar cliente</td></tr>
             <tr><td>DELETE</td><td><code>/api/admin/clientes</code></td><td>Desativar cliente (soft delete)</td></tr>
-            <tr><td>GET</td><td><code>/api/admin/usuarios</code></td><td>Listar usuarios</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/usuarios</code></td><td>Criar usuario</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/usuarios</code></td><td>Atualizar usuario</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/usuarios</code></td><td>Desativar usuario</td></tr>
-            <tr><td>GET</td><td><code>/api/admin/cameras</code></td><td>Listar cameras</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/cameras</code></td><td>Criar camera (gera token)</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/cameras</code></td><td>Atualizar camera</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/cameras</code></td><td>Desativar camera</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/usuarios</code></td><td>Listar usuários</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/usuarios</code></td><td>Criar usuário</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/usuarios</code></td><td>Atualizar usuário</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/usuarios</code></td><td>Desativar usuário</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/cameras</code></td><td>Listar câmeras</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/cameras</code></td><td>Criar câmera (gera token)</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/cameras</code></td><td>Atualizar câmera</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/cameras</code></td><td>Desativar câmera</td></tr>
         </tbody>
     </table>
 
@@ -974,14 +974,14 @@
             <tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td>GET</td><td><code>/api/admin/veiculos</code></td><td>Listar veiculos do cliente</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/veiculos</code></td><td>Cadastrar veiculo</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/veiculos</code></td><td>Atualizar veiculo</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/veiculos</code></td><td>Desativar veiculo</td></tr>
-            <tr><td>GET</td><td><code>/api/admin/emails</code></td><td>Listar destinatarios</td></tr>
-            <tr><td>POST</td><td><code>/api/admin/emails</code></td><td>Adicionar destinatario</td></tr>
-            <tr><td>PUT</td><td><code>/api/admin/emails</code></td><td>Atualizar destinatario</td></tr>
-            <tr><td>DELETE</td><td><code>/api/admin/emails</code></td><td>Desativar destinatario</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/veiculos</code></td><td>Listar veículos do cliente</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/veiculos</code></td><td>Cadastrar veículo</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/veiculos</code></td><td>Atualizar veículo</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/veiculos</code></td><td>Desativar veículo</td></tr>
+            <tr><td>GET</td><td><code>/api/admin/emails</code></td><td>Listar destinatários</td></tr>
+            <tr><td>POST</td><td><code>/api/admin/emails</code></td><td>Adicionar destinatário</td></tr>
+            <tr><td>PUT</td><td><code>/api/admin/emails</code></td><td>Atualizar destinatário</td></tr>
+            <tr><td>DELETE</td><td><code>/api/admin/emails</code></td><td>Desativar destinatário</td></tr>
             <tr><td>GET</td><td><code>/api/admin/dashboard</code></td><td>Dados do dashboard</td></tr>
         </tbody>
     </table>
@@ -992,27 +992,27 @@
     <h2 id="deploy-infraestrutura">13. Deploy e Infraestrutura</h2>
 
     <h3>Vercel</h3>
-    <p>O projeto esta configurado para deploy automatico no Vercel.</p>
+    <p>O projeto está configurado para deploy automático no Vercel.</p>
 
     <p><strong>Arquivo <code>vercel.json</code>:</strong></p>
     <ul>
         <li>Rotas API: <code>/api/*</code> &rarr; Serverless Functions</li>
         <li>Dashboard: <code>/</code> &rarr; <code>/dashboard/index.html</code></li>
         <li>Admin: <code>/admin</code> &rarr; <code>/admin/index.html</code></li>
-        <li>Cron: Execucao diaria as 06:00 UTC</li>
+        <li>Cron: Execução diária as 06:00 UTC</li>
     </ul>
 
     <h3>Passo a Passo do Deploy</h3>
     <ol>
-        <li>Conecte o repositorio GitHub ao Vercel</li>
-        <li>Configure as variaveis de ambiente (secao 3)</li>
-        <li>Deploy automatico a cada push na branch <code>master</code></li>
+        <li>Conecte o repositório GitHub ao Vercel</li>
+        <li>Configure as variáveis de ambiente (seção 3)</li>
+        <li>Deploy automático a cada push na branch <code>master</code></li>
     </ol>
 
-    <h3>Dominio Personalizado</h3>
+    <h3>Domínio Personalizado</h3>
     <ol>
         <li>No Vercel, va em <strong>Settings &gt; Domains</strong></li>
-        <li>Adicione seu dominio (ex: <code>lombada.seudominio.com.br</code>)</li>
+        <li>Adicione seu domínio (ex: <code>lombada.seudominio.com.br</code>)</li>
         <li>Configure o DNS (CNAME para <code>cname.vercel-dns.com</code>)</li>
     </ol>
 
@@ -1021,7 +1021,7 @@
     <!-- Section 14 -->
     <h2 id="cron-jobs">14. Cron Jobs (Limpeza Automática)</h2>
 
-    <h3>Configuracao</h3>
+    <h3>Configuração</h3>
     <p>Definido no <code>vercel.json</code>:</p>
 
 <pre><code>{
@@ -1033,10 +1033,10 @@
 
     <h3>Funcionamento</h3>
     <ul>
-        <li><strong>Horario:</strong> Todos os dias as 06:00 UTC (03:00 Brasilia)</li>
-        <li><strong>Acao:</strong> Remove capturas com mais de 15 dias</li>
+        <li><strong>Horário:</strong> Todos os dias as 06:00 UTC (03:00 Brasília)</li>
+        <li><strong>Ação:</strong> Remove capturas com mais de 15 dias</li>
         <li><strong>Inclui:</strong> Deleta registros do banco + fotos do Storage</li>
-        <li><strong>Autenticacao:</strong> <code>Authorization: Bearer {CRON_SECRET}</code></li>
+        <li><strong>Autenticação:</strong> <code>Authorization: Bearer {CRON_SECRET}</code></li>
     </ul>
 
     <hr>
@@ -1044,11 +1044,11 @@
     <!-- Section 15 -->
     <h2 id="troubleshooting">15. Troubleshooting</h2>
 
-    <h3>Camera nao aparece como Online</h3>
+    <h3>Câmera não aparece como Online</h3>
     <ol>
-        <li>Verifique se o token esta correto na URL da camera</li>
-        <li>Verifique se a camera tem acesso a internet (HTTPS porta 443)</li>
-        <li>Verifique nos logs do Vercel se a requisicao esta chegando</li>
+        <li>Verifique se o token está correto na URL da câmera</li>
+        <li>Verifique se a câmera tem acesso à internet (HTTPS porta 443)</li>
+        <li>Verifique nos logs do Vercel se a requisição está chegando</li>
         <li>Teste manualmente:</li>
     </ol>
 
@@ -1056,39 +1056,39 @@
   -H "Content-Type: application/json" \
   -d '{"AlarmInfoPlate":{"serialno":"TEST","result":{"PlateResult":{"license":"TEST123","speed":20,"confidence":180,"imageFile":"data:image/jpeg;base64,/9j/4AAQ"}}}}'</code></pre>
 
-    <h3>Emails nao estao sendo enviados</h3>
+    <h3>Emails não estão sendo enviados</h3>
     <ol>
-        <li>Verifique as variaveis SMTP no Vercel</li>
-        <li>Teste a conexao SMTP:</li>
+        <li>Verifique as variáveis SMTP no Vercel</li>
+        <li>Teste a conexão SMTP:</li>
     </ol>
 
 <pre><code>telnet mail.seudominio.com 465</code></pre>
 
     <ol start="3">
-        <li>Verifique se ha destinatarios cadastrados para o cliente</li>
+        <li>Verifique se há destinatários cadastrados para o cliente</li>
         <li>Verifique se a velocidade da captura excede o limite do cliente</li>
         <li>Verifique nos logs do Vercel por erros de envio</li>
     </ol>
 
-    <h3>Fotos nao aparecem no dashboard</h3>
+    <h3>Fotos não aparecem no dashboard</h3>
     <ol>
         <li>Verifique se o bucket <code>capturas-fotos</code> existe no Supabase</li>
-        <li>Verifique as politicas RLS do Storage</li>
-        <li>Execute a migration <code>migration-storage-rls.sql</code> se necessario</li>
+        <li>Verifique as políticas RLS do Storage</li>
+        <li>Execute a migration <code>migration-storage-rls.sql</code> se necessário</li>
     </ol>
 
     <h3>Erro 429 (Too Many Requests)</h3>
     <ul>
-        <li>A camera esta enviando mais de 120 requisicoes por minuto</li>
-        <li>Verifique a configuracao de frequencia de envio na camera</li>
-        <li>Ajuste o intervalo minimo entre capturas na interface da camera</li>
+        <li>A câmera está enviando mais de 120 requisições por minuto</li>
+        <li>Verifique a configuração de frequência de envio na câmera</li>
+        <li>Ajuste o intervalo minimo entre capturas na interface da câmera</li>
     </ul>
 
-    <h3>Usuario nao consegue fazer login</h3>
+    <h3>Usuário não consegue fazer login</h3>
     <ol>
-        <li>Verifique se o usuario existe na tabela <code>usuarios</code> E no <code>auth.users</code></li>
+        <li>Verifique se o usuário existe na tabela <code>usuarios</code> E no <code>auth.users</code></li>
         <li>Verifique se o campo <code>ativo = true</code></li>
-        <li>Verifique se o <code>auth_id</code> esta correto</li>
+        <li>Verifique se o <code>auth_id</code> está correto</li>
         <li>Resete a senha pelo painel admin (PUT <code>/api/admin/usuarios</code>)</li>
     </ol>
 
@@ -1098,12 +1098,12 @@
     <h2 id="checklist-novo-cliente">Checklist para Novo Cliente</h2>
     <ul>
         <li>Criar cliente no painel admin</li>
-        <li>Criar usuario admin_cliente</li>
-        <li>Criar camera(s) e anotar token(s)</li>
-        <li>Configurar camera fisica com a URL + token</li>
-        <li>Cadastrar destinatarios de email</li>
-        <li>Importar lista de veiculos (Excel)</li>
-        <li>Personalizar PDF (titulo, logo, rodape)</li>
+        <li>Criar usuário admin_cliente</li>
+        <li>Criar câmera(s) e anotar token(s)</li>
+        <li>Configurar câmera física com a URL + token</li>
+        <li>Cadastrar destinatários de email</li>
+        <li>Importar lista de veículos (Excel)</li>
+        <li>Personalizar PDF (título, logo, rodapé)</li>
         <li>Testar captura e envio de email</li>
         <li>Enviar credenciais de acesso ao cliente</li>
     </ul>
