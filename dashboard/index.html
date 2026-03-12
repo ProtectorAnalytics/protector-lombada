@@ -1452,9 +1452,16 @@
             </div>
             <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
             <button class="btn-clear" onclick="clearFilters()">Limpar</button>
-            <div style="margin-left:auto;display:flex;gap:6px;">
-              <button class="btn-export" onclick="exportExcel()" style="margin-left:0">Exportar Excel</button>
-              <button class="btn-export" onclick="exportPDF()" style="margin-left:0;background:var(--red);color:white;">Exportar PDF</button>
+            <div style="position:relative;margin-left:0">
+              <button class="btn-export" onclick="toggleExportMenu()" id="btn-exportar" style="margin-left:0">Exportar</button>
+              <div id="export-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);z-index:100;min-width:160px;overflow:hidden">
+                <button onclick="exportExcel();closeExportMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 16px;border:none;background:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);transition:background 0.15s" onmouseover="this.style.background='var(--bg-input)'" onmouseout="this.style.background='none'">
+                  <span style="color:#16a34a;font-size:16px">&#9638;</span> Excel (.xlsx)
+                </button>
+                <button onclick="exportPDF();closeExportMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 16px;border:none;background:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);transition:background 0.15s" onmouseover="this.style.background='var(--bg-input)'" onmouseout="this.style.background='none'">
+                  <span style="color:var(--red);font-size:16px">&#9638;</span> PDF (.pdf)
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1984,14 +1991,14 @@
     // STATUS DAS CAMERAS
     // ============================================
     function cameraStatus(lastSeen) {
-      if (!lastSeen) return { status: 'offline', label: 'Sem conexão', color: '#ef4444' };
+      if (!lastSeen) return { status: 'aguardando', label: 'Aguardando', color: '#3b82f6' };
       const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
       if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
-      if (mins < 5) return { status: 'online', label: `Ha ${Math.floor(mins)} min`, color: '#4ade80' };
-      if (mins < 15) return { status: 'alerta', label: `Ha ${Math.floor(mins)} min`, color: '#facc15' };
-      if (mins < 60) return { status: 'offline', label: `Ha ${Math.floor(mins)} min`, color: '#ef4444' };
-      if (mins < 1440) return { status: 'offline', label: `Ha ${Math.floor(mins / 60)}h`, color: '#ef4444' };
-      return { status: 'offline', label: `Ha ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
+      if (mins < 5) return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
+      if (mins < 15) return { status: 'alerta', label: `Há ${Math.floor(mins)} min`, color: '#facc15' };
+      if (mins < 60) return { status: 'offline', label: `Há ${Math.floor(mins)} min`, color: '#ef4444' };
+      if (mins < 1440) return { status: 'offline', label: `Há ${Math.floor(mins / 60)}h`, color: '#ef4444' };
+      return { status: 'offline', label: `Há ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
     }
 
     async function loadCamerasStatus() {
@@ -2562,6 +2569,24 @@
         alert('Erro de conexão.');
       }
     }
+
+    // ============================================
+    // EXPORT MENU
+    // ============================================
+    function toggleExportMenu() {
+      const menu = document.getElementById('export-menu');
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+    function closeExportMenu() {
+      document.getElementById('export-menu').style.display = 'none';
+    }
+    document.addEventListener('click', function(e) {
+      const btn = document.getElementById('btn-exportar');
+      const menu = document.getElementById('export-menu');
+      if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
 
     // ============================================
     // EXPORT EXCEL

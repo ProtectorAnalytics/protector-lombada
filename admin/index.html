@@ -1200,7 +1200,7 @@ async function loadCameras(clienteId) {
 }
 
 function cameraStatus(lastSeen) {
-  if (!lastSeen) return { status: 'offline', label: 'Sem conexão', color: '#ef4444' };
+  if (!lastSeen) return { status: 'aguardando', label: 'Aguardando', color: '#3b82f6' };
   const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
   if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
   if (mins < 5) return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
