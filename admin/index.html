@@ -1068,6 +1068,7 @@ function renderClientes() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openClienteModal(clientesData.find(x=>x.id==='${c.id}'))">Editar</button>
       ${c.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleCliente('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCliente('${c.id}',true)">Ativar</button>`}
+      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteCliente('${c.id}','${esc(c.nome)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -1150,6 +1151,17 @@ async function toggleCliente(id, ativar) {
   } catch (err) { toast(err.message, true); }
 }
 
+async function deleteCliente(id, nome) {
+  if (!confirm(`EXCLUIR PERMANENTEMENTE o cliente "${nome}"?\n\nIsso removerá todas as câmeras, veículos, e-mails e usuários vinculados.\n\nEsta ação NÃO pode ser desfeita!`)) return;
+  if (!confirm(`Tem certeza? Digite OK para confirmar a exclusão de "${nome}".`)) return;
+  try {
+    await api('/clientes?id=' + id + '&permanent=true', 'DELETE');
+    toast('Cliente excluído permanentemente!');
+    loadClientes();
+    loadDashboard();
+  } catch (err) { toast(err.message, true); }
+}
+
 // ============================================
 // CLIENTE DETAIL
 // ============================================
@@ -1223,6 +1235,7 @@ function renderCameras() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openCameraModal(camerasData.find(x=>x.id==='${c.id}'))">Editar</button>
       ${c.ativa ? `<button class="btn btn-danger btn-sm" onclick="toggleCamera('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCamera('${c.id}',true)">Ativar</button>`}
+      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteCamera('${c.id}','${esc(c.nome)}')">Excluir</button>
     </td>
   </tr>`;
   }).join('');
@@ -1270,6 +1283,15 @@ async function toggleCamera(id, ativar) {
   try {
     if (ativar) { await api('/cameras', 'PUT', { id, ativa: true }); toast('Câmera ativada!'); }
     else { await api('/cameras?id=' + id, 'DELETE'); toast('Câmera desativada!'); }
+    loadCameras();
+  } catch (err) { toast(err.message, true); }
+}
+
+async function deleteCamera(id, nome) {
+  if (!confirm(`EXCLUIR PERMANENTEMENTE a câmera "${nome}"?\n\nEsta ação NÃO pode ser desfeita!`)) return;
+  try {
+    await api('/cameras?id=' + id + '&permanent=true', 'DELETE');
+    toast('Câmera excluída permanentemente!');
     loadCameras();
   } catch (err) { toast(err.message, true); }
 }
@@ -1465,6 +1487,7 @@ function renderVeiculos() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openVeiculoModal(veiculosData.find(x=>x.id==='${v.id}'))">Editar</button>
       ${v.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleVeiculo('${v.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleVeiculo('${v.id}',true)">Ativar</button>`}
+      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteVeiculo('${v.id}','${esc(v.placa)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -1522,6 +1545,15 @@ async function toggleVeiculo(id, ativar) {
   } catch (err) { toast(err.message, true); }
 }
 
+async function deleteVeiculo(id, placa) {
+  if (!confirm(`EXCLUIR PERMANENTEMENTE o veículo "${placa}"?\n\nEsta ação NÃO pode ser desfeita!`)) return;
+  try {
+    await api('/veiculos?id=' + id + '&permanent=true', 'DELETE');
+    toast('Veículo excluído permanentemente!');
+    loadVeiculos();
+  } catch (err) { toast(err.message, true); }
+}
+
 // ============================================
 // USUARIOS (no detalhe do cliente)
 // ============================================
@@ -1545,6 +1577,7 @@ function renderUsuariosCli() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
       ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
+      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -1576,6 +1609,7 @@ function renderUsuariosGlobal() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
       ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
+      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -1648,6 +1682,16 @@ async function toggleUsuario(id, ativar) {
   try {
     if (ativar) { await api('/usuarios', 'PUT', { id, ativo: true }); toast('Usuário ativado!'); }
     else { await api('/usuarios?id=' + id, 'DELETE'); toast('Usuário desativado!'); }
+    loadUsuariosGlobal();
+    if (currentDetailCliente) loadUsuariosCli();
+  } catch (err) { toast(err.message, true); }
+}
+
+async function deleteUsuario(id, email) {
+  if (!confirm(`EXCLUIR PERMANENTEMENTE o usuário "${email}"?\n\nO login será removido do sistema.\n\nEsta ação NÃO pode ser desfeita!`)) return;
+  try {
+    await api('/usuarios?id=' + id + '&permanent=true', 'DELETE');
+    toast('Usuário excluído permanentemente!');
     loadUsuariosGlobal();
     if (currentDetailCliente) loadUsuariosCli();
   } catch (err) { toast(err.message, true); }

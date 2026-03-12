@@ -131,11 +131,33 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // DELETE: desativar cliente (soft delete)
+    // DELETE: desativar ou excluir cliente
     if (method === 'DELETE') {
       const { profile } = await autenticar(req, ['super_admin']);
       const clienteId = req.query.id;
+      const permanent = req.query.permanent === 'true';
       if (!clienteId) return res.status(400).json({ error: 'ID do cliente obrigatório' });
+
+      if (permanent) {
+        // Exclusão permanente: remove veículos, emails, câmeras e o cliente
+        const { data: cliente } = await supabase.from('clientes').select('nome').eq('id', clienteId).single();
+        await supabase.from('veiculos').delete().eq('cliente_id', clienteId);
+        await supabase.from('email_destinatarios').delete().eq('cliente_id', clienteId);
+        await supabase.from('cameras').delete().eq('cliente_id', clienteId);
+        await supabase.from('usuarios').delete().eq('cliente_id', clienteId);
+        const { error } = await supabase.from('clientes').delete().eq('id', clienteId);
+        if (error) throw error;
+
+        await registrarAuditoria({
+          usuarioId: profile.id,
+          acao: 'excluir',
+          tabela: 'clientes',
+          registroId: clienteId,
+          detalhes: { nome: cliente?.nome || clienteId },
+          ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
+        });
+        return res.status(200).json({ ok: true, message: 'Cliente excluído permanentemente' });
+      }
 
       const { data, error } = await supabase
         .from('clientes')
