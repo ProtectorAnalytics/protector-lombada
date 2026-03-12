@@ -508,8 +508,8 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 50px 85px 80px 1fr 150px 1fr 75px;
-      padding: 12px 16px;
+      grid-template-columns: 44px 80px 72px minmax(80px, 1fr) 140px minmax(100px, 1fr) 60px;
+      padding: 10px 14px;
       background: var(--accent);
       color: #FFFFFF;
       border-bottom: none;
@@ -517,16 +517,6 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-weight: 600;
-      align-items: center;
-    }
-    .table-header > div {
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .table-header > div:first-child {
-      text-align: left;
     }
 
     .table-body {
@@ -584,8 +574,8 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 50px 85px 80px 1fr 150px 1fr 75px;
-      padding: 8px 16px;
+      grid-template-columns: 44px 80px 72px minmax(80px, 1fr) 140px minmax(100px, 1fr) 60px;
+      padding: 6px 14px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: var(--transition);
@@ -593,26 +583,13 @@
       align-items: center;
     }
 
-    .table-row:nth-child(even) {
-      background: var(--bg-input);
-    }
-
     .table-row:hover {
       background: var(--accent-light);
-    }
-
-    .table-row > div {
-      text-align: center;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .table-row > div:first-child {
-      text-align: left;
+      padding-left: 18px;
     }
 
     .table-row .row-thumb {
-      width: 42px;
+      width: 40px;
       height: 28px;
       object-fit: cover;
       border-radius: 4px;
@@ -620,7 +597,7 @@
     }
 
     .table-row .row-no-thumb {
-      width: 42px;
+      width: 40px;
       height: 28px;
       border-radius: 4px;
       background: var(--bg-input);
@@ -632,15 +609,13 @@
     }
 
     .table-row .placa {
-      font-weight: 700;
+      font-weight: 600;
       letter-spacing: 1px;
-      font-size: 13px;
-      color: var(--text-primary);
     }
 
     .table-row .vel {
       font-weight: 700;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .table-row .vel.green { color: var(--green); }
@@ -649,31 +624,12 @@
 
     .table-row .datetime {
       color: var(--text-secondary);
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .table-row .morador-info {
       font-size: 11px;
       color: var(--text-muted);
-      white-space: normal;
-    }
-
-    .table-row .status-badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 700;
-      text-align: center;
-      letter-spacing: 0.3px;
-    }
-    .table-row .status-badge.badge-ok {
-      background: color-mix(in srgb, var(--green) 15%, transparent);
-      color: var(--green);
-    }
-    .table-row .status-badge.badge-alerta {
-      background: color-mix(in srgb, var(--red) 15%, transparent);
-      color: var(--red);
     }
 
     .table-empty {
@@ -1379,7 +1335,7 @@
         <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text-muted);letter-spacing:0.5px">
-        v1.0.2 &middot; Build 6820ff6 &middot; 2026-03-12
+        v1.0.3 &middot; Build e9bb95e &middot; 2026-03-12
       </div>
     </div>
   </div>
@@ -1570,7 +1526,7 @@
     </div>
 
     <div style="text-align:center;padding:16px 0 24px;font-size:11px;color:var(--text-muted);letter-spacing:0.3px">
-      Protector Traffic Control &middot; v1.0.2 &middot; Build 6820ff6
+      Protector Traffic Control &middot; v1.0.3 &middot; Build e9bb95e
       <br>
       <a href="/dashboard/manual.html" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:500;margin-top:4px;display:inline-block">Manual do Usuario</a>
     </div>
@@ -2159,10 +2115,10 @@
           <div>${thumbHtml}</div>
           <div class="placa">${c.placa}</div>
           <div class="vel ${velClass}">${c.velocidade} km/h</div>
-          <div style="font-size:12px;color:var(--text-secondary);font-weight:500">${radarNome}</div>
+          <div style="font-size:11px;color:var(--text-secondary);font-weight:500">${radarNome}</div>
           <div class="datetime">${dt}</div>
-          <div class="morador-info">${moradorInfo}</div>
-          <div><span class="status-badge ${isAlert ? 'badge-alerta' : 'badge-ok'}">${isAlert ? 'ALERTA' : 'OK'}</span></div>
+          <div>${moradorInfo}</div>
+          <div style="text-align:center;font-size:12px;font-weight:600;color:${isAlert ? 'var(--red)' : 'var(--green)'}">${isAlert ? 'ALERTA' : 'OK'}</div>
         </div>`;
       }).join('');
 
