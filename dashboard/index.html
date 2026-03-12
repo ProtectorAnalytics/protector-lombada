@@ -508,17 +508,25 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 52px 90px 90px minmax(120px, 1.5fr) 160px minmax(140px, 2fr) 80px;
+      grid-template-columns: 50px 85px 80px 1fr 150px 1fr 75px;
       padding: 12px 16px;
       background: var(--accent);
       color: #FFFFFF;
       border-bottom: none;
-      font-size: 11.5px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       font-weight: 600;
-      gap: 8px;
       align-items: center;
+    }
+    .table-header > div {
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .table-header > div:first-child {
+      text-align: left;
     }
 
     .table-body {
@@ -576,14 +584,13 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 52px 90px 90px minmax(120px, 1.5fr) 160px minmax(140px, 2fr) 80px;
-      padding: 10px 16px;
+      grid-template-columns: 50px 85px 80px 1fr 150px 1fr 75px;
+      padding: 8px 16px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: var(--transition);
       font-size: 13px;
       align-items: center;
-      gap: 8px;
     }
 
     .table-row:nth-child(even) {
@@ -592,29 +599,36 @@
 
     .table-row:hover {
       background: var(--accent-light);
-      padding-left: 20px;
+    }
+
+    .table-row > div {
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .table-row > div:first-child {
+      text-align: left;
     }
 
     .table-row .row-thumb {
-      width: 44px;
-      height: 30px;
+      width: 42px;
+      height: 28px;
       object-fit: cover;
-      border-radius: 5px;
+      border-radius: 4px;
       background: var(--bg-input);
-      border: 1px solid var(--border);
     }
 
     .table-row .row-no-thumb {
-      width: 44px;
-      height: 30px;
-      border-radius: 5px;
+      width: 42px;
+      height: 28px;
+      border-radius: 4px;
       background: var(--bg-input);
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--text-muted);
       font-size: 12px;
-      border: 1px solid var(--border);
     }
 
     .table-row .placa {
@@ -641,6 +655,7 @@
     .table-row .morador-info {
       font-size: 11px;
       color: var(--text-muted);
+      white-space: normal;
     }
 
     .table-row .status-badge {
@@ -2144,10 +2159,10 @@
           <div>${thumbHtml}</div>
           <div class="placa">${c.placa}</div>
           <div class="vel ${velClass}">${c.velocidade} km/h</div>
-          <div style="font-size:12px;color:var(--text-secondary);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${radarNome}</div>
+          <div style="font-size:12px;color:var(--text-secondary);font-weight:500">${radarNome}</div>
           <div class="datetime">${dt}</div>
-          <div>${moradorInfo}</div>
-          <div style="text-align:center"><span class="status-badge ${isAlert ? 'badge-alerta' : 'badge-ok'}">${isAlert ? 'ALERTA' : 'OK'}</span></div>
+          <div class="morador-info">${moradorInfo}</div>
+          <div><span class="status-badge ${isAlert ? 'badge-alerta' : 'badge-ok'}">${isAlert ? 'ALERTA' : 'OK'}</span></div>
         </div>`;
       }).join('');
 
