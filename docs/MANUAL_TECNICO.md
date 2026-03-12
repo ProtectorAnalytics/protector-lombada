@@ -1,6 +1,6 @@
 # Manual Tecnico - Protector Traffic Control
 ## Lombada Educativa Inteligente
-### Versao 1.0.0 | Build d58093a | Marco 2026
+### Versao 1.0.1 | Build 2ea9b40 | Marco 2026
 
 ---
 
@@ -684,4 +684,4 @@ telnet mail.seudominio.com 465
 
 ---
 
-**Protector Traffic Control** - v1.0.0 | Build d58093a | Marco 2026
+**Protector Traffic Control** - v1.0.1 | Build 2ea9b40 | Marco 2026
