@@ -1,6 +1,6 @@
 # Manual do Usuario - Protector Traffic Control
 ## Lombada Educativa Inteligente
-### Versao 1.0.1 | Build 2ea9b40 | Marco 2026
+### Versao 2.0.0 | Build 8b34a0f | Marco 2026
 
 ---
 
@@ -61,10 +61,10 @@ Quatro cards com dados atualizados automaticamente:
 
 | Card               | Descricao                                    |
 |--------------------|----------------------------------------------|
-| **Capturas Hoje**  | Total de veiculos registrados no dia         |
-| **Velocidade Media**| Velocidade media de todos os veiculos do dia|
-| **Acima do Limite**| Quantidade de veiculos acima da velocidade permitida |
-| **Cameras Online** | Quantidade de cameras funcionando            |
+| **Passagens Hoje** | Total de veiculos registrados no dia         |
+| **Alertas Hoje**   | Veiculos acima do limite de velocidade        |
+| **Vel. Maxima Hoje**| Maior velocidade registrada no dia           |
+| **Limite Configurado**| Limite de velocidade configurado para o local|
 
 ---
 
@@ -110,10 +110,12 @@ As capturas sao atualizadas automaticamente a cada **30 segundos**. O ponto verd
 
 Na secao de cameras voce pode verificar:
 
-- **Camera Online (verde):** A camera esta funcionando normalmente e enviando dados
-- **Camera Offline (vermelho):** A camera nao enviou dados nos ultimos 5 minutos
+- **Online (verde):** A camera esta funcionando e enviando dados normalmente
+- **Alerta (amarelo):** A camera nao envia dados entre 5 e 15 minutos — pode ser instabilidade de rede
+- **Offline (vermelho):** A camera nao enviou dados ha mais de 15 minutos
+- **Aguardando (azul):** A camera foi cadastrada recentemente e ainda nao enviou sua primeira captura
 
-> Se uma camera aparece como offline, verifique a conexao de internet no local. Se o problema persistir, entre em contato com o suporte tecnico.
+> Se uma camera aparece como offline, verifique a conexao de internet e energia no local. Se o problema persistir, entre em contato com o suporte tecnico.
 
 ---
 
@@ -129,7 +131,7 @@ Mostra todos os veiculos cadastrados com:
 - **Placa**
 - **Nome do morador**
 - **Unidade**
-- **Marca/modelo**
+- **Marca**
 - **Cor**
 
 **Funcionalidades:**
@@ -145,9 +147,11 @@ Para adicionar um veiculo individual:
    - **Placa** (obrigatorio) - formato ABC1D23 ou ABC1234
    - **Nome do Morador** - nome completo do proprietario
    - **Unidade** - ex: "Bloco A - Apt 101"
-   - **Marca/Modelo** - ex: "Honda Civic"
+   - **Marca** - ex: "Honda Civic"
    - **Cor** - ex: "Prata"
 3. Clique em **"Cadastrar Veiculo"**
+
+> **Vinculacao automatica:** Ao cadastrar um veiculo, todas as capturas existentes daquela placa passam a exibir imediatamente o nome do morador e unidade — sem necessidade de recarregar a pagina.
 
 ---
 
@@ -265,6 +269,9 @@ Sim. Voce pode cadastrar qualquer placa no sistema. Recomendamos preencher o cam
 ### O sistema funciona 24 horas?
 Sim. O sistema opera 24 horas por dia, 7 dias por semana. As cameras capturam veiculos durante o dia e a noite (com iluminacao infravermelha).
 
+### Por que uma camera aparece como "Aguardando"?
+O status **"Aguardando" (azul)** indica que a camera foi cadastrada no sistema mas ainda nao enviou sua primeira captura. Isso e normal para cameras recem-configuradas. Assim que a camera enviar dados, o status muda automaticamente para "Online".
+
 ### Por que uma camera aparece como "Offline"?
 Possíveis causas:
 - Queda de energia no local da camera
@@ -301,5 +308,5 @@ Em caso de duvidas ou problemas:
 
 ---
 
-**Protector Traffic Control** - v1.0.1 | Build 2ea9b40 | Marco 2026
+**Protector Traffic Control** - v2.0.0 | Build 8b34a0f | Marco 2026
 *Sistema de Lombada Educativa Inteligente*
