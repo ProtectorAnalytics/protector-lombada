@@ -28,3 +28,14 @@ Após TODA alteração de código, executar o script de versionamento antes do c
 5. `git add` dos arquivos de versão (package.json, dashboard/index.html, dashboard/manual.html)
 6. `git commit` com mensagem "bump: vX.Y.Z"
 7. `git push`
+
+## Deploy (OBRIGATÓRIO)
+
+O deploy é feito automaticamente pela **Vercel** ao detectar push no branch `master`.
+
+### Após finalizar alterações, SEMPRE:
+1. Fazer merge do branch de feature para `master`
+2. Push para `master` — a Vercel faz deploy automático
+3. Se push direto no `master` estiver bloqueado (403), criar PR e fazer merge pelo GitHub
+
+### Branch principal: `master`
