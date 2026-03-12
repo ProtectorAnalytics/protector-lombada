@@ -1,6 +1,6 @@
 # Manual do Usuario - Protector Traffic Control
 ## Lombada Educativa Inteligente
-### Versao 1.0.0 | Marco 2026
+### Versao 1.0.1 | Build 2ea9b40 | Marco 2026
 
 ---
 
@@ -301,5 +301,5 @@ Em caso de duvidas ou problemas:
 
 ---
 
-**Protector Traffic Control** - v1.0.0 | Marco 2026
+**Protector Traffic Control** - v1.0.1 | Build 2ea9b40 | Marco 2026
 *Sistema de Lombada Educativa Inteligente*
