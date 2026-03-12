@@ -459,23 +459,23 @@
             <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
-            <tr><td><code>user_id</code></td><td>UUID (FK)</td><td>Referencia ao auth.users (admin_cliente)</td></tr>
-            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do condominio/empresa</td></tr>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
+            <tr><td><code>user_id</code></td><td>UUID (FK)</td><td>Referência ao auth.users (admin_cliente)</td></tr>
+            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do condomínio/empresa</td></tr>
             <tr><td><code>local_via</code></td><td>TEXT</td><td>Rua/via onde a lombada esta instalada</td></tr>
             <tr><td><code>cidade_uf</code></td><td>TEXT</td><td>Cidade/UF</td></tr>
             <tr><td><code>cep</code></td><td>TEXT</td><td>CEP</td></tr>
-            <tr><td><code>endereco</code></td><td>TEXT</td><td>Endereco completo</td></tr>
-            <tr><td><code>limite_velocidade</code></td><td>INTEGER</td><td>Limite em km/h (padrao: 30)</td></tr>
+            <tr><td><code>endereco</code></td><td>TEXT</td><td>Endereço completo</td></tr>
+            <tr><td><code>limite_velocidade</code></td><td>INTEGER</td><td>Limite em km/h (padrão: 30)</td></tr>
             <tr><td><code>cnpj</code></td><td>TEXT</td><td>CNPJ do cliente</td></tr>
             <tr><td><code>telefone</code></td><td>TEXT</td><td>Telefone de contato</td></tr>
             <tr><td><code>contato_nome</code></td><td>TEXT</td><td>Nome do contato principal</td></tr>
-            <tr><td><code>pdf_titulo</code></td><td>TEXT</td><td>Titulo personalizado no PDF</td></tr>
-            <tr><td><code>pdf_subtitulo</code></td><td>TEXT</td><td>Subtitulo no PDF</td></tr>
-            <tr><td><code>pdf_rodape</code></td><td>TEXT</td><td>Rodape no PDF</td></tr>
+            <tr><td><code>pdf_titulo</code></td><td>TEXT</td><td>Título personalizado no PDF</td></tr>
+            <tr><td><code>pdf_subtitulo</code></td><td>TEXT</td><td>Subtítulo no PDF</td></tr>
+            <tr><td><code>pdf_rodape</code></td><td>TEXT</td><td>Rodapé no PDF</td></tr>
             <tr><td><code>pdf_logo_url</code></td><td>TEXT</td><td>URL do logotipo para o PDF</td></tr>
-            <tr><td><code>notif_auto_ativa</code></td><td>BOOLEAN</td><td>Notificacoes automaticas ativas</td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o cliente esta ativo</td></tr>
+            <tr><td><code>notif_auto_ativa</code></td><td>BOOLEAN</td><td>Notificações automáticas ativas</td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o cliente está ativo</td></tr>
         </tbody>
     </table>
 
@@ -485,13 +485,13 @@
             <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
-            <tr><td><code>auth_id</code></td><td>UUID (FK)</td><td>Referencia ao auth.users</td></tr>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
+            <tr><td><code>auth_id</code></td><td>UUID (FK)</td><td>Referência ao auth.users</td></tr>
             <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do usuario</td></tr>
+            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do usuário</td></tr>
             <tr><td><code>email</code></td><td>TEXT</td><td>Email</td></tr>
             <tr><td><code>role</code></td><td>TEXT</td><td><code>super_admin</code>, <code>admin_cliente</code>, ou <code>operador</code></td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o usuario esta ativo</td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o usuário está ativo</td></tr>
         </tbody>
     </table>
 
@@ -501,14 +501,14 @@
             <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
             <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
             <tr><td><code>nome</code></td><td>TEXT</td><td>Nome descritivo (ex: "Entrada A")</td></tr>
-            <tr><td><code>token</code></td><td>TEXT (UNIQUE)</td><td>Token de autenticacao (32 hex)</td></tr>
-            <tr><td><code>serial_number</code></td><td>TEXT</td><td>Numero de serie da camera (fallback)</td></tr>
-            <tr><td><code>ativa</code></td><td>BOOLEAN</td><td>Se a camera esta ativa</td></tr>
-            <tr><td><code>last_seen</code></td><td>TIMESTAMP</td><td>Ultima comunicacao</td></tr>
-            <tr><td><code>last_capture_id</code></td><td>UUID</td><td>Ultima captura registrada</td></tr>
+            <tr><td><code>token</code></td><td>TEXT (UNIQUE)</td><td>Token de autenticação (32 hex)</td></tr>
+            <tr><td><code>serial_number</code></td><td>TEXT</td><td>Número de série da câmera (fallback)</td></tr>
+            <tr><td><code>ativa</code></td><td>BOOLEAN</td><td>Se a câmera está ativa</td></tr>
+            <tr><td><code>last_seen</code></td><td>TIMESTAMP</td><td>Última comunicação</td></tr>
+            <tr><td><code>last_capture_id</code></td><td>UUID</td><td>Última captura registrada</td></tr>
         </tbody>
     </table>
 
@@ -518,14 +518,14 @@
             <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
             <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>placa</code></td><td>TEXT</td><td>Placa do veiculo (uppercase)</td></tr>
-            <tr><td><code>nome_morador</code></td><td>TEXT</td><td>Nome do proprietario/morador</td></tr>
+            <tr><td><code>placa</code></td><td>TEXT</td><td>Placa do veículo (uppercase)</td></tr>
+            <tr><td><code>nome_morador</code></td><td>TEXT</td><td>Nome do proprietário/morador</td></tr>
             <tr><td><code>unidade</code></td><td>TEXT</td><td>Unidade/apartamento</td></tr>
-            <tr><td><code>marca</code></td><td>TEXT</td><td>Marca/modelo do veiculo</td></tr>
-            <tr><td><code>cor</code></td><td>TEXT</td><td>Cor do veiculo</td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o registro esta ativo</td></tr>
+            <tr><td><code>marca</code></td><td>TEXT</td><td>Marca/modelo do veículo</td></tr>
+            <tr><td><code>cor</code></td><td>TEXT</td><td>Cor do veículo</td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se o registro está ativo</td></tr>
         </tbody>
     </table>
 
@@ -535,7 +535,7 @@
             <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
             <tr><td><code>camera_id</code></td><td>UUID (FK)</td><td>Camera que realizou a captura</td></tr>
             <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
             <tr><td><code>placa</code></td><td>TEXT</td><td>Placa detectada</td></tr>
@@ -545,8 +545,8 @@
             <tr><td><code>cor_veiculo</code></td><td>TEXT</td><td>Cor detectada</td></tr>
             <tr><td><code>foto_path</code></td><td>TEXT</td><td>Caminho no Storage</td></tr>
             <tr><td><code>timestamp</code></td><td>TIMESTAMP</td><td>Data/hora da captura</td></tr>
-            <tr><td><code>notificado</code></td><td>BOOLEAN</td><td>Se a notificacao foi enviada</td></tr>
-            <tr><td><code>notificado_em</code></td><td>TIMESTAMP</td><td>Data/hora do envio da notificacao</td></tr>
+            <tr><td><code>notificado</code></td><td>BOOLEAN</td><td>Se a notificação foi enviada</td></tr>
+            <tr><td><code>notificado_em</code></td><td>TIMESTAMP</td><td>Data/hora do envio da notificação</td></tr>
         </tbody>
     </table>
 
@@ -556,12 +556,12 @@
             <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
+            <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador único</td></tr>
             <tr><td><code>cliente_id</code></td><td>UUID (FK)</td><td>Cliente vinculado</td></tr>
-            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do destinatario</td></tr>
+            <tr><td><code>nome</code></td><td>TEXT</td><td>Nome do destinatário</td></tr>
             <tr><td><code>email</code></td><td>TEXT</td><td>Email</td></tr>
             <tr><td><code>tipo</code></td><td>TEXT</td><td><code>alerta</code>, <code>relatorio</code>, ou <code>todos</code></td></tr>
-            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se esta ativo</td></tr>
+            <tr><td><code>ativo</code></td><td>BOOLEAN</td><td>Se está ativo</td></tr>
         </tbody>
     </table>
 
@@ -575,18 +575,18 @@
     <h4>5.1. Acesse o Painel Admin</h4>
     <ol>
         <li>Abra <code>https://seudominio.vercel.app/admin</code></li>
-        <li>Faca login com credenciais de <strong>super_admin</strong></li>
+        <li>Faça login com credenciais de <strong>super_admin</strong></li>
     </ol>
 
     <h4>5.2. Crie o Cliente</h4>
     <ol>
-        <li>Na secao <strong>Clientes</strong>, clique em <strong>"Novo Cliente"</strong></li>
+        <li>Na seção <strong>Clientes</strong>, clique em <strong>"Novo Cliente"</strong></li>
         <li>Preencha os campos:
             <ul>
-                <li><strong>Nome</strong>: Nome do condominio/empresa (ex: "Condominio Jardim das Flores")</li>
+                <li><strong>Nome</strong>: Nome do condomínio/empresa (ex: "Condominio Jardim das Flores")</li>
                 <li><strong>Local/Via</strong>: Via onde a lombada esta instalada (ex: "Rua das Palmeiras")</li>
                 <li><strong>Cidade/UF</strong>: (ex: "Sao Paulo/SP")</li>
-                <li><strong>Limite de Velocidade</strong>: Velocidade maxima em km/h (padrao: 30)</li>
+                <li><strong>Limite de Velocidade</strong>: Velocidade maxima em km/h (padrão: 30)</li>
                 <li><strong>CNPJ</strong>: CNPJ do cliente</li>
                 <li><strong>Telefone</strong>: Telefone de contato</li>
                 <li><strong>Contato</strong>: Nome do responsavel</li>
@@ -651,7 +651,7 @@
   -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@condominio.com",
+    "email": "admin@condomínio.com",
     "senha": "senha123",
     "nome": "Carlos Silva",
     "cliente_id": "UUID_DO_CLIENTE",
@@ -668,7 +668,7 @@
 
     <h3>7.1. Pelo Painel Admin</h3>
     <ol>
-        <li>Na secao <strong>Cameras</strong>, clique em <strong>"Nova Camera"</strong></li>
+        <li>Na seção <strong>Cameras</strong>, clique em <strong>"Nova Camera"</strong></li>
         <li>Selecione o <strong>cliente</strong></li>
         <li>Informe o <strong>nome</strong> descritivo (ex: "Camera Entrada Principal")</li>
         <li>Clique em <strong>"Criar"</strong></li>
@@ -697,7 +697,7 @@
     <h3>7.3. Formato do Token</h3>
     <ul>
         <li>32 caracteres hexadecimais (gerado via <code>crypto.randomBytes(16)</code>)</li>
-        <li>Unico por camera</li>
+        <li>Único por câmera</li>
         <li>Imutavel apos criacao</li>
         <li>Usado na URL de envio de capturas</li>
     </ul>
@@ -783,7 +783,7 @@
         </li>
         <li><strong>Teste de captura:</strong> Passe um veiculo na frente da camera
             <ul>
-                <li>Verifique no dashboard se a captura aparece na secao "Ultimas Capturas"</li>
+                <li>Verifique no dashboard se a captura aparece na seção "Ultimas Capturas"</li>
                 <li>Verifique se a foto foi armazenada corretamente</li>
             </ul>
         </li>
@@ -796,8 +796,8 @@
 
     <h3>9.1. Pelo Dashboard do Cliente</h3>
     <ol>
-        <li>Faca login no dashboard como <code>admin_cliente</code></li>
-        <li>Na secao <strong>"Emails de Alerta"</strong>, clique em <strong>"Adicionar"</strong></li>
+        <li>Faça login no dashboard como <code>admin_cliente</code></li>
+        <li>Na seção <strong>"Emails de Alerta"</strong>, clique em <strong>"Adicionar"</strong></li>
         <li>Preencha nome, email e tipo:
             <ul>
                 <li><strong>alerta</strong>: recebe notificacoes de velocidade acima do limite</li>
@@ -815,7 +815,7 @@
   -d '{
     "cliente_id": "UUID_DO_CLIENTE",
     "nome": "Portaria Central",
-    "email": "portaria@condominio.com",
+    "email": "portaria@condomínio.com",
     "tipo": "alerta"
   }'</code></pre>
 
@@ -897,7 +897,7 @@
         <li><strong>Cabecalho</strong>: Logotipo + titulo personalizado do cliente</li>
         <li><strong>Dados da Infracao</strong>:
             <ul>
-                <li>Placa do veiculo</li>
+                <li>Placa do veículo</li>
                 <li>Velocidade registrada vs limite permitido</li>
                 <li>Data e hora</li>
                 <li>Camera que registrou</li>
