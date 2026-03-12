@@ -270,7 +270,7 @@
       <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:13px;text-decoration:none;">Esqueci minha senha</a>
 
       <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
-        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperacao:</div>
+        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperação:</div>
         <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado">
         <button onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERACAO</button>
         <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;"></div>
@@ -585,13 +585,13 @@ async function initApp() {
     // Detectar recuperacao de senha
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        const newPassword = prompt('Digite sua nova senha (minimo 6 caracteres):');
+        const newPassword = prompt('Digite sua nova senha (mínimo 6 caracteres):');
         if (newPassword && newPassword.length >= 6) {
           const { error } = await sb.auth.updateUser({ password: newPassword });
           if (error) {
             alert('Erro ao alterar senha: ' + error.message);
           } else {
-            alert('Senha alterada com sucesso! Faca login com a nova senha.');
+            alert('Senha alterada com sucesso! Faça login com a nova senha.');
             await sb.auth.signOut();
             window.location.reload();
           }
@@ -663,7 +663,7 @@ async function doResetPassword() {
     msgEl.textContent = 'Link enviado! Verifique sua caixa de entrada e spam.';
   } catch {
     msgEl.style.color = 'var(--red)';
-    msgEl.textContent = 'Erro de conexao. Tente novamente.';
+    msgEl.textContent = 'Erro de conexão. Tente novamente.';
   }
 }
 

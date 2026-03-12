@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Tecnico - Protector Traffic Control</title>
+    <title>Manual Técnico - Protector Traffic Control</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -317,47 +317,47 @@
 
 <!-- Sidebar TOC -->
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-title">Sumario</div>
-    <a href="#visao-geral-da-arquitetura">1. Visao Geral da Arquitetura</a>
-    <a href="#stack-tecnologica">2. Stack Tecnologica</a>
-    <a href="#variaveis-de-ambiente">3. Variaveis de Ambiente</a>
+    <div class="sidebar-title">Sumário</div>
+    <a href="#visao-geral-da-arquitetura">1. Visão Geral da Arquitetura</a>
+    <a href="#stack-tecnologica">2. Stack Tecnológica</a>
+    <a href="#variaveis-de-ambiente">3. Variáveis de Ambiente</a>
     <a href="#banco-de-dados">4. Banco de Dados (Supabase)</a>
     <a href="#cadastrar-novo-cliente">5. Cadastrar Novo Cliente</a>
-    <a href="#cadastrar-usuarios">6. Cadastrar Usuarios</a>
-    <a href="#cadastrar-cameras">7. Cadastrar Cameras</a>
-    <a href="#configurar-camera-fisica">8. Configurar Camera Fisica (ALPHADIGI)</a>
-    <a href="#configurar-destinatarios-email">9. Configurar Destinatarios de Email</a>
+    <a href="#cadastrar-usuarios">6. Cadastrar Usuários</a>
+    <a href="#cadastrar-cameras">7. Cadastrar Câmeras</a>
+    <a href="#configurar-camera-fisica">8. Configurar Câmera Física (ALPHADIGI)</a>
+    <a href="#configurar-destinatarios-email">9. Configurar Destinatários de Email</a>
     <a href="#fluxo-de-captura">10. Fluxo de Captura (Pipeline)</a>
-    <a href="#geracao-pdf-notificacao">11. Geracao de PDF e Notificacao</a>
+    <a href="#geracao-pdf-notificacao">11. Geração de PDF e Notificação</a>
     <a href="#endpoints-da-api">12. Endpoints da API</a>
     <a href="#deploy-infraestrutura">13. Deploy e Infraestrutura</a>
-    <a href="#cron-jobs">14. Cron Jobs (Limpeza Automatica)</a>
+    <a href="#cron-jobs">14. Cron Jobs (Limpeza Automática)</a>
     <a href="#troubleshooting">15. Troubleshooting</a>
 </aside>
 
 <!-- Main Content -->
 <main class="main">
 
-    <h1>Manual Tecnico</h1>
+    <h1>Manual Técnico</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versao 1.0.0 | Build d58093a | Marco 2026</p>
+    <p class="version">Versão 1.0.0 | Build d58093a | Março 2026</p>
 
     <hr>
 
     <!-- Section 1 -->
-    <h2 id="visao-geral-da-arquitetura">1. Visao Geral da Arquitetura</h2>
+    <h2 id="visao-geral-da-arquitetura">1. Visão Geral da Arquitetura</h2>
 
 <pre><code>┌─────────────────────┐     ┌──────────────────────────────┐
 │  Camera ALPHADIGI   │────&gt;│  Vercel Serverless (API)     │
 │  (LPR - Leitura de  │     │  POST /api/captura           │
 │   Placas + Radar)   │     │                              │
 └─────────────────────┘     │  ┌────────────────────────┐  │
-                            │  │ Validacao do Token      │  │
+                            │  │ Validação do Token      │  │
                             │  │ Rate Limiting (120/min) │  │
-                            │  │ Normalizacao de Dados   │  │
+                            │  │ Normalização de Dados   │  │
                             │  │ Upload de Foto          │  │
                             │  │ Registro da Captura     │  │
-                            │  │ Geracao de PDF          │  │
+                            │  │ Geração de PDF          │  │
                             │  │ Envio de Email          │  │
                             │  └────────────────────────┘  │
                             └──────────┬───────────────────┘
@@ -365,7 +365,7 @@
                             ┌──────────▼───────────────────┐
                             │  Supabase                     │
                             │  - PostgreSQL (dados)         │
-                            │  - Auth (autenticacao)        │
+                            │  - Auth (autenticação)        │
                             │  - Storage (fotos capturas)   │
                             └──────────┬───────────────────┘
                                        │
@@ -378,7 +378,7 @@
     <hr>
 
     <!-- Section 2 -->
-    <h2 id="stack-tecnologica">2. Stack Tecnologica</h2>
+    <h2 id="stack-tecnologica">2. Stack Tecnológica</h2>
 
     <table>
         <thead>
@@ -400,19 +400,19 @@
     <hr>
 
     <!-- Section 3 -->
-    <h2 id="variaveis-de-ambiente">3. Variaveis de Ambiente</h2>
+    <h2 id="variaveis-de-ambiente">3. Variáveis de Ambiente</h2>
     <p>Configurar no painel do Vercel em <strong>Settings &gt; Environment Variables</strong>:</p>
 
-    <h3>Obrigatorias</h3>
+    <h3>Obrigatórias</h3>
 
     <table>
         <thead>
-            <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
+            <tr><th>Variável</th><th>Descrição</th><th>Exemplo</th></tr>
         </thead>
         <tbody>
             <tr><td><code>SUPABASE_URL</code></td><td>URL do projeto Supabase</td><td><code>https://abc123.supabase.co</code></td></tr>
             <tr><td><code>SUPABASE_SERVICE_KEY</code></td><td>Service Role Key (acesso admin)</td><td><code>eyJhbGciOiJI...</code></td></tr>
-            <tr><td><code>SUPABASE_ANON_KEY</code></td><td>Anon Key (acesso publico, usado no frontend)</td><td><code>eyJhbGciOiJI...</code></td></tr>
+            <tr><td><code>SUPABASE_ANON_KEY</code></td><td>Anon Key (acesso público, usado no frontend)</td><td><code>eyJhbGciOiJI...</code></td></tr>
             <tr><td><code>CRON_SECRET</code></td><td>Token para autenticar cron jobs</td><td><code>uuid-v4-aleatorio</code></td></tr>
         </tbody>
     </table>
@@ -421,7 +421,7 @@
 
     <table>
         <thead>
-            <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
+            <tr><th>Variável</th><th>Descrição</th><th>Exemplo</th></tr>
         </thead>
         <tbody>
             <tr><td><code>SMTP_HOST</code></td><td>Servidor SMTP</td><td><code>mail.seudominio.com.br</code></td></tr>
@@ -436,7 +436,7 @@
 
     <table>
         <thead>
-            <tr><th>Variavel</th><th>Descricao</th><th>Exemplo</th></tr>
+            <tr><th>Variável</th><th>Descrição</th><th>Exemplo</th></tr>
         </thead>
         <tbody>
             <tr><td><code>GMAIL_USER</code></td><td>Conta Gmail</td><td><code>seu@gmail.com</code></td></tr>
@@ -444,7 +444,7 @@
         </tbody>
     </table>
 
-    <blockquote><p><strong>Nota:</strong> Para Gmail, gerar senha de app em: Google Account &gt; Seguranca &gt; Senhas de app</p></blockquote>
+    <blockquote><p><strong>Nota:</strong> Para Gmail, gerar senha de app em: Google Account &gt; Segurança &gt; Senhas de app</p></blockquote>
 
     <hr>
 
@@ -456,7 +456,7 @@
     <h4><code>clientes</code></h4>
     <table>
         <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
@@ -482,7 +482,7 @@
     <h4><code>usuarios</code></h4>
     <table>
         <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
@@ -498,7 +498,7 @@
     <h4><code>cameras</code></h4>
     <table>
         <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
@@ -515,7 +515,7 @@
     <h4><code>veiculos</code></h4>
     <table>
         <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
@@ -532,7 +532,7 @@
     <h4><code>capturas</code></h4>
     <table>
         <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
@@ -553,7 +553,7 @@
     <h4><code>email_destinatarios</code></h4>
     <table>
         <thead>
-            <tr><th>Coluna</th><th>Tipo</th><th>Descricao</th></tr>
+            <tr><th>Coluna</th><th>Tipo</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>Identificador unico</td></tr>
@@ -613,7 +613,7 @@
     <hr>
 
     <!-- Section 6 -->
-    <h2 id="cadastrar-usuarios">6. Cadastrar Usuarios</h2>
+    <h2 id="cadastrar-usuarios">6. Cadastrar Usuários</h2>
 
     <h3>Roles (Papeis)</h3>
 
@@ -664,7 +664,7 @@
     <hr>
 
     <!-- Section 7 -->
-    <h2 id="cadastrar-cameras">7. Cadastrar Cameras</h2>
+    <h2 id="cadastrar-cameras">7. Cadastrar Câmeras</h2>
 
     <h3>7.1. Pelo Painel Admin</h3>
     <ol>
@@ -705,7 +705,7 @@
     <hr>
 
     <!-- Section 8 -->
-    <h2 id="configurar-camera-fisica">8. Configurar Camera Fisica (ALPHADIGI)</h2>
+    <h2 id="configurar-camera-fisica">8. Configurar Câmera Física (ALPHADIGI)</h2>
 
     <h3>8.1. Acesse a Interface da Camera</h3>
     <ol>
@@ -721,7 +721,7 @@
         </thead>
         <tbody>
             <tr><td><strong>Protocolo</strong></td><td>HTTPS</td></tr>
-            <tr><td><strong>Metodo</strong></td><td>POST</td></tr>
+            <tr><td><strong>Método</strong></td><td>POST</td></tr>
             <tr><td><strong>URL de Destino</strong></td><td><code>https://seudominio.vercel.app/api/captura?token=SEU_TOKEN</code></td></tr>
             <tr><td><strong>Content-Type</strong></td><td><code>application/json</code></td></tr>
             <tr><td><strong>Porta</strong></td><td>443</td></tr>
@@ -792,7 +792,7 @@
     <hr>
 
     <!-- Section 9 -->
-    <h2 id="configurar-destinatarios-email">9. Configurar Destinatarios de Email</h2>
+    <h2 id="configurar-destinatarios-email">9. Configurar Destinatários de Email</h2>
 
     <h3>9.1. Pelo Dashboard do Cliente</h3>
     <ol>
@@ -889,7 +889,7 @@
     <hr>
 
     <!-- Section 11 -->
-    <h2 id="geracao-pdf-notificacao">11. Geracao de PDF e Notificacao</h2>
+    <h2 id="geracao-pdf-notificacao">11. Geração de PDF e Notificação</h2>
 
     <h3>Estrutura do PDF</h3>
     <p>O PDF gerado automaticamente contem:</p>
@@ -936,7 +936,7 @@
 
     <table>
         <thead>
-            <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
+            <tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td>GET</td><td><code>/api/config</code></td><td>Retorna SUPABASE_URL e ANON_KEY</td></tr>
@@ -949,7 +949,7 @@
 
     <table>
         <thead>
-            <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
+            <tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td>GET</td><td><code>/api/admin/clientes</code></td><td>Listar todos os clientes</td></tr>
@@ -971,7 +971,7 @@
 
     <table>
         <thead>
-            <tr><th>Metodo</th><th>Endpoint</th><th>Descricao</th></tr>
+            <tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr>
         </thead>
         <tbody>
             <tr><td>GET</td><td><code>/api/admin/veiculos</code></td><td>Listar veiculos do cliente</td></tr>
@@ -1019,7 +1019,7 @@
     <hr>
 
     <!-- Section 14 -->
-    <h2 id="cron-jobs">14. Cron Jobs (Limpeza Automatica)</h2>
+    <h2 id="cron-jobs">14. Cron Jobs (Limpeza Automática)</h2>
 
     <h3>Configuracao</h3>
     <p>Definido no <code>vercel.json</code>:</p>
@@ -1111,7 +1111,7 @@
     <hr>
 
     <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.0.0 | Build d58093a | Marco 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.0.0 | Build d58093a | Março 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 

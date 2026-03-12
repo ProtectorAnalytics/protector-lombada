@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
 
   // Apenas POST
   if (method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo nao permitido' });
+    return res.status(405).json({ error: 'Método não permitido' });
   }
 
   try {
@@ -74,13 +74,13 @@ module.exports = async function handler(req, res) {
       if (!camera) {
         const logIp = dados.AlarmInfoPlate?.ipaddr || dados.AlarmInfoPlate?.ip || req.headers['x-forwarded-for'] || '';
         const logMac = dados.AlarmInfoPlate?.macaddr || dados.AlarmInfoPlate?.mac || '';
-        await logError(`Camera nao encontrada | token: ${token || 'none'} | type: ${dataType}`, {
+        await logError(`Câmera não encontrada | token: ${token || 'none'} | type: ${dataType}`, {
           token, dataType, url,
           serialno: serialno || 'none',
           ip: logIp || 'none',
           mac: logMac || 'none',
         });
-        return res.status(401).json({ error: 'Camera nao identificada' });
+        return res.status(401).json({ error: 'Câmera não identificada' });
       }
     }
 
@@ -88,7 +88,7 @@ module.exports = async function handler(req, res) {
     const rateCheck = checkRateLimit(camera.id);
     if (!rateCheck.allowed) {
       res.setHeader('Retry-After', Math.ceil(rateCheck.resetIn / 1000));
-      return res.status(429).json({ error: 'Muitas requisicoes. Tente novamente em breve.' });
+      return res.status(429).json({ error: 'Muitas requisições. Tente novamente em breve.' });
     }
 
     const cliente = camera.clientes;
@@ -138,8 +138,8 @@ module.exports = async function handler(req, res) {
     const imageBase64 = normalized.imageBase64 || normalized.image || normalized.foto || '';
 
     if (!placa) {
-      await logError('Placa vazia apos normalizacao', { placa });
-      return res.status(400).json({ error: 'Placa nao fornecida' });
+      await logError('Placa vazia após normalização', { placa });
+      return res.status(400).json({ error: 'Placa não fornecida' });
     }
 
     // Decodificar e comprimir foto (~415KB -> ~60-80KB)
@@ -243,8 +243,8 @@ module.exports = async function handler(req, res) {
 
         await markNotificado(captura.id);
       } catch (notifErr) {
-        await logError(`Erro notificacao: ${notifErr.message}`, { placa, velocidade });
-        console.error('Erro na notificacao:', notifErr.message);
+        await logError(`Erro notificação: ${notifErr.message}`, { placa, velocidade });
+        console.error('Erro na notificação:', notifErr.message);
       }
     }
 
@@ -270,7 +270,7 @@ function parseBody(req) {
         try {
           resolve(JSON.parse(body));
         } catch {
-          reject(new Error('JSON invalido'));
+          reject(new Error('JSON inválido'));
         }
       });
       req.on('error', reject);

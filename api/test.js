@@ -72,7 +72,7 @@ async function handleCleanup(req, res) {
 async function handleCompress(req, res) {
   const secret = req.query.secret;
   if (secret !== 'protector2026') {
-    return res.status(401).json({ error: 'Nao autorizado' });
+    return res.status(401).json({ error: 'Não autorizado' });
   }
 
   const sharp = require('sharp');

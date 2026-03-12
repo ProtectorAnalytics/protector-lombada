@@ -1327,7 +1327,7 @@
 
       <!-- Formulario de recuperacao (oculto por padrao) -->
       <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
-        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperacao:</div>
+        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperação:</div>
         <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado">
         <button onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERACAO</button>
         <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;"></div>
@@ -1351,7 +1351,7 @@
       </div>
       <div class="user-info">
         <span id="topbar-email"></span>
-        <button class="btn-veiculos" id="btn-topbar-veiculos" onclick="abrirModalVeiculo()" style="display:none">Veiculos</button>
+        <button class="btn-veiculos" id="btn-topbar-veiculos" onclick="abrirModalVeiculo()" style="display:none">Veículos</button>
         <span class="loading-dot" id="polling-dot" title="Atualizando..."></span>
         <button class="btn-logout" onclick="doLogout()">Sair</button>
       </div>
@@ -1365,7 +1365,7 @@
             <div class="stat-card">
               <div class="label">Passagens Hoje</div>
               <div class="value orange" id="stat-total">0</div>
-              <div class="unit">veiculos</div>
+              <div class="unit">veículos</div>
             </div>
             <div class="stat-card">
               <div class="label">Alertas Hoje</div>
@@ -1582,7 +1582,7 @@
       <div class="vm-body" id="vm-body-importar" style="display:none">
         <div style="margin-bottom:20px">
           <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Exportar Veiculos</h4>
-          <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Baixe a lista completa de veiculos cadastrados em formato Excel.</p>
+          <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Baixe a lista completa de veículos cadastrados em formato Excel.</p>
           <button class="vm-btn-primary" onclick="exportarVeiculosExcel()" style="width:auto;padding:10px 20px">Exportar Excel</button>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:20px">
@@ -1634,16 +1634,16 @@
         const cfg = await resp.json();
         sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
-        // Detectar se o usuario veio pelo link de recuperacao de senha
+        // Detectar se o usuario veio pelo link de recuperação de senha
         sb.auth.onAuthStateChange(async (event, session) => {
           if (event === 'PASSWORD_RECOVERY') {
-            const newPassword = prompt('Digite sua nova senha (minimo 6 caracteres):');
+            const newPassword = prompt('Digite sua nova senha (mínimo 6 caracteres):');
             if (newPassword && newPassword.length >= 6) {
               const { error } = await sb.auth.updateUser({ password: newPassword });
               if (error) {
                 alert('Erro ao alterar senha: ' + error.message);
               } else {
-                alert('Senha alterada com sucesso! Faca login com a nova senha.');
+                alert('Senha alterada com sucesso! Faça login com a nova senha.');
                 await sb.auth.signOut();
                 window.location.reload();
               }
@@ -1746,7 +1746,7 @@
         msgEl.textContent = 'Link enviado! Verifique sua caixa de entrada e spam.';
       } catch {
         msgEl.style.color = 'var(--red)';
-        msgEl.textContent = 'Erro de conexao. Tente novamente.';
+        msgEl.textContent = 'Erro de conexão. Tente novamente.';
       }
     }
 
@@ -1791,7 +1791,7 @@
         .single();
 
       if (error || !data) {
-        document.getElementById('login-error').textContent = 'Nenhum cliente vinculado a este usuario.';
+        document.getElementById('login-error').textContent = 'Nenhum cliente vinculado a este usuário.';
         await sb.auth.signOut();
         return;
       }
@@ -1972,7 +1972,7 @@
     // STATUS DAS CAMERAS
     // ============================================
     function cameraStatus(lastSeen) {
-      if (!lastSeen) return { status: 'offline', label: 'Sem conexao', color: '#ef4444' };
+      if (!lastSeen) return { status: 'offline', label: 'Sem conexão', color: '#ef4444' };
       const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
       if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
       if (mins < 5) return { status: 'online', label: `Ha ${Math.floor(mins)} min`, color: '#4ade80' };
@@ -2005,7 +2005,7 @@
           </div>`;
         }).join('');
       } catch (err) {
-        console.error('Erro cameras:', err);
+        console.error('Erro câmeras:', err);
       }
     }
 
@@ -2177,13 +2177,13 @@
           renderVeiculos();
         }
       } catch (err) {
-        console.error('Erro ao carregar veiculos:', err);
+        console.error('Erro ao carregar veículos:', err);
       }
     }
 
     function renderVeiculos() {
       const btn = document.getElementById('btn-topbar-veiculos');
-      if (btn) btn.textContent = `Veiculos (${veiculosList.length})`;
+      if (btn) btn.textContent = `Veículos (${veiculosList.length})`;
       document.getElementById('vm-count').textContent = `(${veiculosList.length})`;
       vmListaFiltered = [...veiculosList];
       vmListaPage = 1;
@@ -2251,7 +2251,7 @@
       const data = vmListaFiltered;
 
       if (data.length === 0) {
-        lista.innerHTML = '<div class="vm-result-empty">Nenhum veiculo encontrado</div>';
+        lista.innerHTML = '<div class="vm-result-empty">Nenhum veículo encontrado</div>';
         pgEl.innerHTML = '';
         return;
       }
@@ -2297,7 +2297,7 @@
     // ============================================
     function exportarVeiculosExcel() {
       if (veiculosList.length === 0) {
-        alert('Nenhum veiculo para exportar.');
+        alert('Nenhum veículo para exportar.');
         return;
       }
       const rows = veiculosList.map(v => ({
@@ -2384,12 +2384,12 @@
           previewEl.innerHTML = `
             <div style="background:var(--bg-input);border-radius:8px;padding:12px;font-size:13px">
               <div style="margin-bottom:6px"><strong>${rows.length}</strong> linhas lidas do arquivo</div>
-              <div style="margin-bottom:6px;color:var(--green)"><strong>${newOnes.length}</strong> novos veiculos para importar</div>
-              ${dupes > 0 ? `<div style="color:var(--orange)"><strong>${dupes}</strong> ja cadastrados (serao ignorados)</div>` : ''}
+              <div style="margin-bottom:6px;color:var(--green)"><strong>${newOnes.length}</strong> novos veículos para importar</div>
+              ${dupes > 0 ? `<div style="color:var(--orange)"><strong>${dupes}</strong> já cadastrados (serão ignorados)</div>` : ''}
               ${importQueue.length > 0 ? `
                 <div style="margin-top:10px">
                   <button class="vm-btn-primary" onclick="executarImport()" style="width:auto;padding:10px 24px">
-                    Importar ${importQueue.length} veiculos
+                    Importar ${importQueue.length} veículos
                   </button>
                 </div>
               ` : '<div style="margin-top:6px;color:var(--text-muted)">Nada para importar.</div>'}
@@ -2408,7 +2408,7 @@
       const previewEl = document.getElementById('vm-import-preview');
       const errorEl = document.getElementById('vm-import-error');
       const token = (await sb.auth.getSession()).data.session?.access_token;
-      if (!token) { errorEl.textContent = 'Sessao expirada.'; return; }
+      if (!token) { errorEl.textContent = 'Sessão expirada.'; return; }
 
       let ok = 0, fail = 0;
       previewEl.innerHTML = `<div style="background:var(--bg-input);border-radius:8px;padding:12px;font-size:13px">
@@ -2441,7 +2441,7 @@
 
       previewEl.innerHTML = `
         <div style="background:#dcfce7;border-radius:8px;padding:12px;font-size:13px;color:#15803d">
-          Importacao concluida! <strong>${ok}</strong> veiculos cadastrados${fail > 0 ? `, <strong style="color:var(--red)">${fail}</strong> falharam` : ''}.
+          Importação concluída! <strong>${ok}</strong> veículos cadastrados${fail > 0 ? `, <strong style="color:var(--red)">${fail}</strong> falharam` : ''}.
         </div>
       `;
 
@@ -2464,24 +2464,24 @@
       errorEl.textContent = '';
 
       if (!placa) {
-        errorEl.textContent = 'Placa e obrigatoria.';
+        errorEl.textContent = 'Placa é obrigatória.';
         return;
       }
 
       if (!isValidPlacaLocal(placa)) {
-        errorEl.textContent = 'Placa invalida. Use formato ABC1234 ou ABC1D23.';
+        errorEl.textContent = 'Placa inválida. Use formato ABC1234 ou ABC1D23.';
         return;
       }
 
       // Check duplicate
       if (veiculosList.some(v => v.placa === placa)) {
-        errorEl.textContent = 'Esta placa ja esta cadastrada.';
+        errorEl.textContent = 'Esta placa já está cadastrada.';
         return;
       }
 
       const token = (await sb.auth.getSession()).data.session?.access_token;
       if (!token) {
-        errorEl.textContent = 'Sessao expirada. Faca login novamente.';
+        errorEl.textContent = 'Sessão expirada. Faça login novamente.';
         return;
       }
 
@@ -2505,7 +2505,7 @@
         const result = await resp.json();
 
         if (!resp.ok) {
-          errorEl.textContent = result.error || 'Erro ao cadastrar veiculo.';
+          errorEl.textContent = result.error || 'Erro ao cadastrar veículo.';
           return;
         }
 
@@ -2514,12 +2514,12 @@
         // Refresh cache for plate cross-reference in captures
         await loadVeiculosCache();
       } catch (err) {
-        errorEl.textContent = 'Erro de conexao. Tente novamente.';
+        errorEl.textContent = 'Erro de conexão. Tente novamente.';
       }
     }
 
     async function removerVeiculo(id, placa) {
-      if (!confirm(`Deseja remover o veiculo ${placa}?`)) return;
+      if (!confirm(`Deseja remover o veículo ${placa}?`)) return;
 
       const token = (await sb.auth.getSession()).data.session?.access_token;
       if (!token) return;
@@ -2535,10 +2535,10 @@
           await loadVeiculosCache();
         } else {
           const result = await resp.json();
-          alert(result.error || 'Erro ao remover veiculo.');
+          alert(result.error || 'Erro ao remover veículo.');
         }
       } catch {
-        alert('Erro de conexao.');
+        alert('Erro de conexão.');
       }
     }
 
@@ -2564,8 +2564,8 @@
           'Status': c.velocidade > limite ? 'ALERTA' : 'OK',
           'Morador': veiculo?.nome_morador || '',
           'Unidade': veiculo?.unidade || '',
-          'Tipo Veiculo': c.tipo_veiculo || '',
-          'Cor Veiculo': c.cor_veiculo || '',
+          'Tipo Veículo': c.tipo_veiculo || '',
+          'Cor Veículo': c.cor_veiculo || '',
         };
       });
 
@@ -2609,7 +2609,7 @@
       doc.text('PROTECTOR TRAFFIC CONTROL', pageW / 2, 10, { align: 'center' });
       doc.setFontSize(9);
       doc.setFont(undefined, 'normal');
-      doc.text('Relatorio de Capturas - Lombada Educativa', pageW / 2, 16, { align: 'center' });
+      doc.text('Relatório de Capturas - Lombada Educativa', pageW / 2, 16, { align: 'center' });
 
       // --- Info do cliente ---
       doc.setTextColor(30, 41, 59);
@@ -2775,7 +2775,7 @@
 
       // Photo
       if (photoUrl) {
-        html += `<img class="modal-photo" src="${photoUrl}" alt="Foto do veiculo">`;
+        html += `<img class="modal-photo" src="${photoUrl}" alt="Foto do veículo">`;
       } else {
         html += `<div class="modal-no-photo">Sem foto disponivel</div>`;
       }
@@ -2818,13 +2818,13 @@
           <div class="morador-grid">
             <div><span>Morador</span><strong>${veiculo.nome_morador || '---'}</strong></div>
             <div><span>Unidade</span><strong>${veiculo.unidade || '---'}</strong></div>
-            <div><span>Veiculo</span><strong>${[veiculo.marca, veiculo.modelo].filter(Boolean).join(' ') || '---'} ${veiculo.cor || ''}</strong></div>
+            <div><span>Veículo</span><strong>${[veiculo.marca, veiculo.modelo].filter(Boolean).join(' ') || '---'} ${veiculo.cor || ''}</strong></div>
           </div>
         </div>`;
       } else {
         html += `<div class="modal-morador" style="border-left-color:var(--text-muted);opacity:0.6">
           <h4>Veiculo nao cadastrado</h4>
-          <div style="font-size:12px;color:var(--text-muted)">Cadastre este veiculo no painel administrativo para identificar o morador.</div>
+          <div style="font-size:12px;color:var(--text-muted)">Cadastre este veículo no painel administrativo para identificar o morador.</div>
         </div>`;
       }
 
@@ -2898,7 +2898,7 @@
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(80, 80, 80);
-      doc.text('Transitar em velocidade superior a maxima permitida', pageW / 2, 27, { align: 'center' });
+      doc.text('Transitar em velocidade superior à máxima permitida', pageW / 2, 27, { align: 'center' });
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
@@ -2999,7 +2999,7 @@
       doc.setFontSize(7);
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(150, 150, 150);
-      doc.text('Velocidades igual ou inferior a 10km/h serao registradas com velocidade igual a 1 neste relatorio.', pageW / 2, y, { align: 'center' });
+      doc.text('Velocidades igual ou inferior a 10km/h serão registradas com velocidade igual a 1 neste relatório.', pageW / 2, y, { align: 'center' });
 
       y += 6;
       doc.setFont('helvetica', 'bold');
@@ -3011,7 +3011,7 @@
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
-      doc.text('Ultimas passagens por data / Velocidades', pageW / 2, y, { align: 'center' });
+      doc.text('Últimas passagens por data / Velocidades', pageW / 2, y, { align: 'center' });
 
       // Historico grid
       y += 5;
