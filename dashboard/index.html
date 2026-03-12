@@ -1868,7 +1868,7 @@
     // ============================================
     async function loadVeiculosCache() {
       const { data } = await sb.from('veiculos')
-        .select('placa, nome_morador, unidade, marca, modelo, cor')
+        .select('placa, nome_morador, unidade, marca, cor')
         .eq('cliente_id', currentCliente.id)
         .eq('ativo', true);
 
@@ -2870,7 +2870,7 @@
           <div class="morador-grid">
             <div><span>Morador</span><strong>${veiculo.nome_morador || '---'}</strong></div>
             <div><span>Unidade</span><strong>${veiculo.unidade || '---'}</strong></div>
-            <div><span>Veículo</span><strong>${[veiculo.marca, veiculo.modelo].filter(Boolean).join(' ') || '---'} ${veiculo.cor || ''}</strong></div>
+            <div><span>Veículo</span><strong>${veiculo.marca || '---'} ${veiculo.cor || ''}</strong></div>
           </div>
         </div>`;
       } else {
