@@ -31,8 +31,8 @@ module.exports = async function handler(req, res) {
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
 
       const { cliente_id, nome, serial_number, nome_exibicao } = body;
-      if (!cliente_id || !nome) {
-        return res.status(400).json({ error: 'Campos obrigatórios: cliente_id, nome' });
+      if (!cliente_id || !serial_number) {
+        return res.status(400).json({ error: 'Campos obrigatórios: cliente_id, serial_number' });
       }
 
       // Se tiver serial_number, verificar se já existe
@@ -50,8 +50,14 @@ module.exports = async function handler(req, res) {
 
       const token = crypto.randomBytes(16).toString('hex');
 
-      const insertData = { cliente_id, nome, token, ativa: true };
-      if (serial_number) insertData.serial_number = serial_number.trim();
+      const serialTrimmed = serial_number.trim();
+      const insertData = {
+        cliente_id,
+        nome: nome || serialTrimmed,
+        serial_number: serialTrimmed,
+        token,
+        ativa: true,
+      };
       if (nome_exibicao) insertData.nome_exibicao = nome_exibicao.trim();
 
       const { data, error } = await supabase
