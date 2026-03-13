@@ -351,7 +351,7 @@
 
     <h1>Manual da Lombada Educativa</h1>
     <p class="subtitle">Protector Traffic Control</p>
-    <p class="version">Versão 2.0 | Março 2026</p>
+    <p class="version">Versão 2.1 | Março 2026</p>
 
     <hr>
 
@@ -603,6 +603,13 @@
         <li>Clique em <strong>"Criar"</strong></li>
     </ol>
 
+    <blockquote>
+        <p><strong>IMPORTANTE — Controle de Acesso:</strong> Criar o usuário é o que dá acesso ao dashboard. O sistema usa a tabela <code>usuarios</code> para determinar qual cliente o usuário pode ver. Ao criar um usuário vinculado a um cliente, ele automaticamente enxerga as câmeras, capturas e veículos daquele condomínio. <strong>Sem esse cadastro, o usuário não verá nenhum dado no dashboard, mesmo que o cliente e câmeras estejam funcionando.</strong></p>
+    </blockquote>
+
+    <h3>O que acontece por trás</h3>
+    <p>O sistema possui uma função interna chamada <code>my_cliente_id()</code> que identifica a qual cliente o usuário logado pertence. Toda consulta ao banco (câmeras, capturas, veículos) usa essa função para filtrar os dados. Por isso, o vínculo <strong>usuário → cliente</strong> na tabela <code>usuarios</code> é obrigatório para o acesso funcionar.</p>
+
     <hr>
 
     <!-- PARTE 6 -->
@@ -723,6 +730,17 @@
     <h3>"Erro ao cadastrar câmera: serial já existe"</h3>
     <p>A câmera já foi cadastrada antes e está desativada. Peça para reativar no banco de dados.</p>
 
+    <h3>"O usuário logou mas não vê câmeras, capturas ou veículos"</h3>
+    <p>Isso acontece quando o usuário não está corretamente vinculado ao cliente. Verifique:</p>
+    <ol>
+        <li><strong>O usuário foi criado pelo painel admin?</strong> Ele precisa existir na tabela <code>usuarios</code> com o <code>cliente_id</code> correto</li>
+        <li><strong>O usuário está ativo?</strong> O campo <code>ativo</code> precisa ser <code>true</code></li>
+        <li><strong>O cliente correto foi selecionado?</strong> Confira se o vínculo aponta para o condomínio certo</li>
+    </ol>
+    <blockquote>
+        <p><strong>Regra geral:</strong> Se o dashboard está vazio para um cliente, o problema quase sempre é o cadastro do usuário. Volte à <a href="#parte5">PARTE 5</a> e confirme que o usuário está criado e vinculado.</p>
+    </blockquote>
+
     <h3>"A câmera envia mas o sistema não reconhece"</h3>
     <p>O serial cadastrado no painel não bate com o serial real da câmera. Confira:</p>
     <ol>
@@ -744,11 +762,12 @@
         <li><strong>3.</strong> Configurar a câmera física campo por campo (<a href="#parte3">PARTE 3</a>)</li>
         <li><strong>4.</strong> Reiniciar a câmera</li>
         <li><strong>5.</strong> Verificar se aparece Online no dashboard (<a href="#parte4">PARTE 4</a>)</li>
-        <li><strong>6.</strong> Criar usuário admin para o condomínio (<a href="#parte5">PARTE 5</a>)</li>
-        <li><strong>7.</strong> Cadastrar emails de alerta (<a href="#parte6">PARTE 6</a>)</li>
-        <li><strong>8.</strong> Cadastrar veículos dos moradores (<a href="#parte8">PARTE 8</a>, opcional)</li>
-        <li><strong>9.</strong> Personalizar o PDF com logo e textos (<a href="#parte9">PARTE 9</a>)</li>
-        <li><strong>10.</strong> Testar: passar um veículo acima do limite e verificar se chega o email</li>
+        <li><strong>6.</strong> Criar usuário para o condomínio — <strong>OBRIGATÓRIO para acesso ao dashboard</strong> (<a href="#parte5">PARTE 5</a>)</li>
+        <li><strong>7.</strong> Testar login: entrar com o usuário criado e confirmar que vê câmeras e capturas</li>
+        <li><strong>8.</strong> Cadastrar emails de alerta (<a href="#parte6">PARTE 6</a>)</li>
+        <li><strong>9.</strong> Cadastrar veículos dos moradores (<a href="#parte8">PARTE 8</a>, opcional)</li>
+        <li><strong>10.</strong> Personalizar o PDF com logo e textos (<a href="#parte9">PARTE 9</a>)</li>
+        <li><strong>11.</strong> Testar: passar um veículo acima do limite e verificar se chega o email</li>
     </ul>
 
     <hr>
@@ -772,8 +791,8 @@
 
     <h3>Como a câmera é identificada</h3>
     <ol>
-        <li>O sistema tenta identificar pelo <strong>token</strong> na URL (método antigo)</li>
-        <li>Se não tiver token, identifica pelo <strong>serial number</strong> que vem no corpo do JSON (<code>AlarmInfoPlate.serialno</code>)</li>
+        <li>O sistema identifica a câmera pelo <strong>número de série</strong> que vem no corpo do JSON (<code>AlarmInfoPlate.serialno</code>) — este é o método padrão</li>
+        <li>Como fallback, aceita identificação por <strong>token</strong> na URL (método legado, não recomendado para novas instalações)</li>
         <li>Se não encontrar por nenhum dos dois, registra erro no log</li>
     </ol>
 
@@ -789,12 +808,29 @@
         </tbody>
     </table>
 
-    <h3>Limites</h3>
+    <h3>Limites e Limpeza Automática</h3>
     <ul>
         <li>Máximo 120 requisições por minuto por câmera</li>
-        <li>Capturas são apagadas automaticamente após 15 dias</li>
+        <li><strong>Fotos</strong> das capturas são apagadas automaticamente após <strong>15 dias</strong> (os dados permanecem)</li>
+        <li><strong>Registros de capturas</strong> (dados sem foto) são apagados após <strong>6 meses</strong></li>
+        <li>Logs de debug são limpos automaticamente após <strong>24 horas</strong></li>
         <li>Câmera é considerada Offline se não enviar dados em 5 minutos</li>
     </ul>
+
+    <h3>Controle de Acesso (RLS)</h3>
+    <p>O banco de dados usa <strong>Row Level Security (RLS)</strong> para garantir que cada usuário veja apenas os dados do seu condomínio. Duas funções controlam isso:</p>
+
+    <table>
+        <thead>
+            <tr><th>Função</th><th>O que faz</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>my_cliente_id()</code></td><td>Retorna o <code>cliente_id</code> do usuário logado (consulta a tabela <code>usuarios</code>)</td></tr>
+            <tr><td><code>is_super_admin()</code></td><td>Retorna <code>true</code> se o usuário logado tem role <code>super_admin</code></td></tr>
+        </tbody>
+    </table>
+
+    <p><strong>Regra universal:</strong> Toda tabela (câmeras, capturas, veículos, emails) usa <code>my_cliente_id()</code> para filtrar os dados. Se o usuário não existir na tabela <code>usuarios</code> com um <code>cliente_id</code> válido, ele não verá nenhum dado. Super admins veem tudo.</p>
 
     <h3>Variáveis de ambiente (Vercel)</h3>
     <table>
@@ -817,7 +853,7 @@
     <hr>
 
     <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> — Lombada Educativa Inteligente — v2.0 | Março 2026
+        <strong>Protector Traffic Control</strong> — Lombada Educativa Inteligente — v2.1 | Março 2026
     </p>
 
 </main>

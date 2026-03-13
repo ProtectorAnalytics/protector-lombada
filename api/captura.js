@@ -142,7 +142,8 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Placa não fornecida' });
     }
 
-    // Decodificar e comprimir foto (~415KB -> ~60-80KB)
+    // Decodificar e comprimir foto (otimizado: ~150-170KB -> ~50-70KB)
+    // 800px é suficiente para identificar placa em auditoria
     let fotoBuffer = null;
     if (imageBase64) {
       const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
@@ -150,8 +151,8 @@ module.exports = async function handler(req, res) {
       if (rawBuffer.length > 100) {
         try {
           fotoBuffer = await sharp(rawBuffer)
-            .resize(1280, null, { withoutEnlargement: true })
-            .jpeg({ quality: 70 })
+            .resize(800, null, { withoutEnlargement: true })
+            .jpeg({ quality: 55, mozjpeg: true })
             .toBuffer();
         } catch (sharpErr) {
           await logError(`Sharp falhou, usando original | camera: ${camera.nome}`, {
