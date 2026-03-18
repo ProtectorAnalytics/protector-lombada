@@ -105,7 +105,7 @@
       background: #FFFFFF; border-right: 1px solid var(--border); padding: 16px 0; box-shadow: var(--shadow-sm);
     }
     .nav-item {
-      display: block; width: 100%; padding: 12px 24px; background: none; border: none; border-left: 3px solid transparent;
+      display: flex; align-items: center; gap: 9px; width: 100%; padding: 11px 24px; background: none; border: none; border-left: 3px solid transparent;
       color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
       text-align: left; cursor: pointer; transition: var(--transition);
     }
@@ -252,6 +252,145 @@
       .nav-item.active { border-bottom-color: var(--accent); border-left-color: transparent; }
       .nav-section { display: none; }
     }
+    @media (max-width: 600px) {
+      body { font-size: 16px; }
+      .form-row { grid-template-columns: 1fr; }
+      .modal-content { padding: 20px 16px; width: calc(100vw - 32px); }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-search { width: 100%; }
+    }
+
+    /* ===== UX / ACESSIBILIDADE ===== */
+
+    /* Focus ring visível para navegação por teclado */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: none;
+    }
+
+    /* Cursor pointer nos stat-cards */
+    .stat-card { cursor: default; }
+
+    /* Botão desabilitado */
+    button:disabled,
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    button.loading {
+      opacity: 0.7;
+      cursor: wait;
+      pointer-events: none;
+    }
+
+    /* Skeleton shimmer */
+    @keyframes skeleton-shimmer {
+      0% { background-position: -600px 0; }
+      100% { background-position: 600px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-primary) 25%, #dce8f4 50%, var(--bg-primary) 75%);
+      background-size: 1200px 100%;
+      animation: skeleton-shimmer 1.6s ease-in-out infinite;
+      border-radius: 6px;
+      color: transparent !important;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* Tabela: indicador de linha ativa sem layout shift */
+    .data-table tbody td:first-child {
+      border-left: 3px solid transparent;
+      transition: border-left-color 0.15s;
+    }
+    .data-table tbody tr:hover td:first-child {
+      border-left-color: var(--accent);
+    }
+
+    /* Modal: overlay fade-in */
+    @keyframes overlay-fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-overlay.active {
+      animation: overlay-fade 0.18s ease-out;
+    }
+
+    /* Toast: slide-up */
+    @keyframes toast-slide-up {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .toast.visible {
+      animation: toast-slide-up 0.22s ease-out forwards;
+    }
+
+    /* Sidebar nav: indicador ativo mais visível */
+    .nav-item { position: relative; }
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* Badge de status com melhor hierarquia */
+    .badge-active, .badge-inactive, .badge-role, .badge-tipo {
+      white-space: nowrap;
+      font-size: 11px;
+    }
+
+    /* Linha da tabela de auditoria */
+    .audit-row-critical td { background: #fef2f2 !important; }
+    .audit-row-critical td:first-child { border-left-color: var(--red) !important; }
+
+    /* Tab indicator melhorado */
+    .tab-btn:hover {
+      background: var(--accent-light);
+    }
+    .tab-btn.active {
+      background: var(--accent-light);
+    }
+
+    /* Back link com seta animada */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap 0.2s;
+    }
+    .back-link:hover { gap: 8px; }
+
+    /* Token cell com botão copy melhorado */
+    .copy-btn {
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .copy-btn:hover {
+      background: var(--accent-light);
+      border-radius: 4px;
+    }
+
+    /* Respeitar preferência de movimento reduzido */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -263,17 +402,20 @@
       <h1>TRAFFIC CONTROL</h1>
       <div class="subtitle">Lombada Educativa</div>
       <div class="badge">PAINEL ADMIN</div>
-      <input type="email" id="login-email" placeholder="E-mail">
-      <input type="password" id="login-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
-      <button onclick="doLogin()">ENTRAR</button>
-      <div class="login-error" id="login-error"></div>
+      <label for="login-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail</label>
+      <input type="email" id="login-email" placeholder="E-mail" autocomplete="email" aria-label="E-mail administrativo">
+      <label for="login-password" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Senha</label>
+      <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password" aria-label="Senha administrativa" onkeydown="if(event.key==='Enter')doLogin()">
+      <button type="button" onclick="doLogin()">ENTRAR</button>
+      <div class="login-error" id="login-error" role="alert" aria-live="polite"></div>
       <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:13px;text-decoration:none;">Esqueci minha senha</a>
 
       <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
         <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperação:</div>
-        <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado">
-        <button onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERACAO</button>
-        <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;"></div>
+        <label for="reset-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail para recuperação</label>
+        <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado" autocomplete="email">
+        <button type="button" onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERAÇÃO</button>
+        <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
         <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
       </div>
     </div>
@@ -288,24 +430,42 @@
       </div>
       <div class="user-info">
         <span id="topbar-user"></span>
-        <button class="btn-logout" onclick="doLogout()">Sair</button>
+        <button type="button" class="btn-logout" onclick="doLogout()" aria-label="Encerrar sessão">Sair</button>
       </div>
     </div>
 
     <div class="admin-layout">
       <nav class="sidebar-nav">
         <div class="nav-section">Principal</div>
-        <button class="nav-item active" onclick="showPage('dashboard')">Dashboard</button>
-        <button class="nav-item" onclick="showPage('clientes')">Clientes</button>
+        <button type="button" class="nav-item active" onclick="showPage('dashboard')" aria-current="page">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
+        <button type="button" class="nav-item" onclick="showPage('clientes')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Clientes
+        </button>
         <div class="nav-section">Gerenciamento</div>
-        <button class="nav-item" onclick="showPage('usuarios')">Usuários</button>
-        <button class="nav-item" onclick="showPage('audit')">Auditoria</button>
-        <div class="nav-section">Documentacao</div>
-        <a class="nav-item" href="/admin/manual-tecnico.html" target="_blank" style="text-decoration:none;text-align:left">Manual Tecnico</a>
-        <a class="nav-item" href="/admin/manual-usuario.html" target="_blank" style="text-decoration:none;text-align:left">Manual do Usuario</a>
+        <button type="button" class="nav-item" onclick="showPage('usuarios')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Usuários
+        </button>
+        <button type="button" class="nav-item" onclick="showPage('audit')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+          Auditoria
+        </button>
+        <div class="nav-section">Documentação</div>
+        <a class="nav-item" href="/admin/manual-tecnico.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:left" aria-label="Manual Técnico (abre em nova aba)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Manual Técnico
+        </a>
+        <a class="nav-item" href="/admin/manual-usuario.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:left" aria-label="Manual do Usuário (abre em nova aba)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Manual do Usuário
+        </a>
       </nav>
 
-      <div class="admin-content">
+      <main class="admin-content" id="admin-main" role="main">
 
         <!-- PAGE: Dashboard -->
         <div class="page active" id="page-dashboard">
@@ -552,7 +712,7 @@
   </div>
 
   <!-- TOAST -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 // ============================================
