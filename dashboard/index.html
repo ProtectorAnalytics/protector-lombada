@@ -356,14 +356,32 @@
     .recent-card .rc-vel.orange { color: #F97316; }
     .recent-card .rc-vel.red { color: #EF4444; text-shadow: 0 0 8px rgba(239,68,68,0.5); }
 
-    /* Info bar: location + timestamp below image */
+    /* Info bar: name ↔ timestamp in one line */
     .recent-card .rc-info {
-      font-size: 10px;
-      color: var(--text-secondary);
-      line-height: 1.3;
-      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 5px 8px;
       border-top: 1px solid var(--border);
       background: var(--bg-card);
+      min-height: 28px;
+    }
+    .recent-card .rc-info .rc-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .recent-card .rc-info .rc-time {
+      font-size: 10px;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .recent-card .rc-badge {
@@ -1669,14 +1687,14 @@
       <div class="sidebar">
         <!-- Chart: Passagens por Hora -->
         <div class="sidebar-card">
-          <h3>Passagens por Hora</h3>
+          <h3 id="title-hourly">Passagens por Hora</h3>
           <div class="chart-container">
             <canvas id="chart-hourly"></canvas>
           </div>
         </div>
           <!-- Indicadores Rapidos -->
           <div class="sidebar-card" id="sidebar-indicators">
-            <h3>Indicadores do Dia</h3>
+            <h3 id="title-indicators">Indicadores do Período</h3>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
               <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
                 <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Vel. Média</div>
@@ -1689,7 +1707,7 @@
                 <div style="font-size:10px;color:var(--text-muted)">dentro do limite</div>
               </div>
               <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Hora Pico</div>
+                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px" id="lbl-hora-pico">Hora Pico</div>
                 <div style="font-size:22px;font-weight:700;color:var(--orange)" id="ind-hora-pico">--</div>
                 <div style="font-size:10px;color:var(--text-muted)">maior fluxo</div>
               </div>
@@ -1703,7 +1721,7 @@
 
           <!-- Alertas ultimos 7 dias mini chart -->
           <div class="sidebar-card">
-            <h3>Alertas - Últimos 7 Dias</h3>
+            <h3 id="title-alerts7d">Alertas por Dia</h3>
             <div style="height:90px;position:relative">
               <canvas id="chart-alerts-7d" style="width:100%;height:100%"></canvas>
             </div>
@@ -1711,7 +1729,7 @@
 
           <!-- Ranking -->
           <div class="sidebar-card">
-            <h3>Top 10 Placas (15 dias)</h3>
+            <h3 id="title-ranking">Top 10 Placas</h3>
             <ul class="ranking-list" id="ranking-list">
               <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
             </ul>
@@ -2143,7 +2161,8 @@
           <div class="rc-placa">${c.placa}</div>
           <div class="rc-vel ${velClass}">${c.velocidade} <span style="font-size:13px">km/h</span></div>
           <div class="rc-info">
-            ${hora} &middot; ${data_str}${radarNome ? '<br><span style="font-size:10px;color:var(--accent);font-weight:600">' + radarNome + '</span>' : ''}${morador ? '<br>' + morador : ''}
+            <span class="rc-name">${morador || radarNome || '<span style="color:var(--text-muted)">N/C</span>'}</span>
+            <span class="rc-time">${hora}&nbsp;·&nbsp;${data_str}</span>
           </div>
         </div>`;
       }).join('');
@@ -2350,7 +2369,13 @@
       renderPage();
     }
 
-    function applyFilters() { loadCapturas(); }
+    function applyFilters() {
+      loadCapturas();
+      loadHourlyChart();
+      loadIndicators();
+      loadAlerts7d();
+      loadRanking();
+    }
 
     function clearFilters() {
       const today = new Date().toISOString().slice(0, 10);
@@ -3308,26 +3333,67 @@
     }
 
     // ============================================
-    // HOURLY CHART (Canvas)
+    // HELPER: lê os filtros ativos do painel
+    // ============================================
+    function getActiveFilters() {
+      const today = new Date().toISOString().slice(0, 10);
+      const dateStart = document.getElementById('filter-date-start').value || today;
+      const dateEnd   = document.getElementById('filter-date-end').value   || today;
+      const timeStart = document.getElementById('filter-time-start').value || '00:00';
+      const timeEnd   = document.getElementById('filter-time-end').value   || '23:59';
+      const cameraId  = document.getElementById('filter-camera').value;
+      const placa     = document.getElementById('filter-placa').value.toUpperCase().trim();
+      const velMin    = parseInt(document.getElementById('filter-vel-min').value) || 0;
+      const velMax    = parseInt(document.getElementById('filter-vel-max').value) || 999;
+      const isSingleDay = dateStart === dateEnd;
+      const label = isSingleDay
+        ? new Date(dateStart + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' })
+        : `${new Date(dateStart+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}–${new Date(dateEnd+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`;
+      return {
+        tsStart: dateStart + 'T' + timeStart + ':00',
+        tsEnd:   dateEnd   + 'T' + timeEnd   + ':59',
+        cameraId, placa, velMin, velMax, isSingleDay, label
+      };
+    }
+
+    // ============================================
+    // HOURLY CHART (Canvas) — respeita filtros
     // ============================================
     async function loadHourlyChart() {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      const f = getActiveFilters();
 
-      const { data } = await sb.from('capturas')
+      let q = sb.from('capturas')
         .select('timestamp')
         .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', todayStart.toISOString());
+        .gte('timestamp', f.tsStart)
+        .lte('timestamp', f.tsEnd);
+      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
+      if (f.placa)    q = q.ilike('placa', `%${f.placa}%`);
 
-      const hours = new Array(24).fill(0);
-      if (data) {
-        data.forEach(c => {
-          const h = new Date(c.timestamp).getHours();
-          hours[h]++;
-        });
+      const { data } = await q;
+
+      if (f.isSingleDay) {
+        // Agrupa por hora
+        const hours = new Array(24).fill(0);
+        if (data) data.forEach(c => { hours[new Date(c.timestamp).getHours()]++; });
+        document.getElementById('title-hourly').textContent = `Passagens por Hora · ${f.label}`;
+        drawAreaChart('chart-hourly', hours);
+      } else {
+        // Agrupa por dia
+        const d0 = new Date(f.tsStart); d0.setHours(0,0,0,0);
+        const d1 = new Date(f.tsEnd);   d1.setHours(0,0,0,0);
+        const diffDays = Math.round((d1 - d0) / 86400000) + 1;
+        const buckets = new Array(Math.min(diffDays, 60)).fill(0);
+        if (data) {
+          data.forEach(c => {
+            const ts = new Date(c.timestamp); ts.setHours(0,0,0,0);
+            const idx = Math.round((ts - d0) / 86400000);
+            if (idx >= 0 && idx < buckets.length) buckets[idx]++;
+          });
+        }
+        document.getElementById('title-hourly').textContent = `Passagens por Dia · ${f.label}`;
+        drawAreaChart('chart-hourly', buckets);
       }
-
-      drawAreaChart('chart-hourly', hours);
     }
 
     // Animated area/mountain chart
@@ -3509,16 +3575,23 @@
     }
 
     // ============================================
-    // SIDEBAR INDICATORS
+    // SIDEBAR INDICATORS — respeita filtros
     // ============================================
     async function loadIndicators() {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      const f = getActiveFilters();
+      document.getElementById('title-indicators').textContent = `Indicadores · ${f.label}`;
 
-      const { data } = await sb.from('capturas')
+      let q = sb.from('capturas')
         .select('placa, velocidade, timestamp')
         .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', todayStart.toISOString());
+        .gte('timestamp', f.tsStart)
+        .lte('timestamp', f.tsEnd);
+      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
+      if (f.placa)    q = q.ilike('placa', `%${f.placa}%`);
+      if (f.velMin > 0)   q = q.gte('velocidade', f.velMin);
+      if (f.velMax < 999) q = q.lte('velocidade', f.velMax);
+
+      const { data } = await q;
 
       if (!data || data.length === 0) {
         document.getElementById('ind-vel-media').textContent = '--';
@@ -3543,13 +3616,25 @@
       confEl.textContent = pct + '%';
       confEl.style.color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
 
-      // Hora pico
-      const hourCounts = new Array(24).fill(0);
-      data.forEach(c => { hourCounts[new Date(c.timestamp).getHours()]++; });
-      const peakHour = hourCounts.indexOf(Math.max(...hourCounts));
-      document.getElementById('ind-hora-pico').textContent = `${peakHour}h`;
+      // Hora/Dia pico
+      if (f.isSingleDay) {
+        document.getElementById('lbl-hora-pico').textContent = 'Hora Pico';
+        const hourCounts = new Array(24).fill(0);
+        data.forEach(c => { hourCounts[new Date(c.timestamp).getHours()]++; });
+        const peakHour = hourCounts.indexOf(Math.max(...hourCounts));
+        document.getElementById('ind-hora-pico').textContent = `${peakHour}h`;
+      } else {
+        document.getElementById('lbl-hora-pico').textContent = 'Dia Pico';
+        const dayCounts = {};
+        data.forEach(c => {
+          const dk = new Date(c.timestamp).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+          dayCounts[dk] = (dayCounts[dk] || 0) + 1;
+        });
+        const peakDay = Object.entries(dayCounts).sort((a,b)=>b[1]-a[1])[0];
+        document.getElementById('ind-hora-pico').textContent = peakDay ? peakDay[0] : '--';
+      }
 
-      // Reincidentes (placas com 2+ alertas hoje)
+      // Reincidentes (placas com 2+ alertas no período)
       const alertsByPlaca = {};
       data.filter(c => c.velocidade > limite).forEach(c => {
         alertsByPlaca[c.placa] = (alertsByPlaca[c.placa] || 0) + 1;
@@ -3559,41 +3644,55 @@
     }
 
     // ============================================
-    // ALERTS 7-DAY MINI CHART
+    // ALERTS MINI CHART — respeita filtros
     // ============================================
     async function loadAlerts7d() {
-      const days = [];
-      const labels = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        d.setHours(0, 0, 0, 0);
-        days.push(d);
-        labels.push(d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''));
-      }
+      const f = getActiveFilters();
 
-      const startDate = days[0].toISOString();
-      const { data } = await sb.from('capturas')
-        .select('velocidade, timestamp')
-        .eq('cliente_id', currentCliente.id)
-        .gt('velocidade', currentCliente.limite_velocidade)
-        .gte('timestamp', startDate);
+      const d0 = new Date(f.tsStart); d0.setHours(0,0,0,0);
+      const d1 = new Date(f.tsEnd);   d1.setHours(0,0,0,0);
+      const diffDays = Math.round((d1 - d0) / 86400000) + 1;
 
-      const counts = new Array(7).fill(0);
-      if (data) {
-        data.forEach(c => {
-          const ts = new Date(c.timestamp);
-          ts.setHours(0, 0, 0, 0);
-          for (let i = 0; i < 7; i++) {
-            if (ts.getTime() === days[i].getTime()) {
-              counts[i]++;
-              break;
-            }
-          }
+      // Para períodos > 30 dias, agrupar em semanas (máx 12 barras)
+      // Para <= 30 dias, usar dias (máx 30 barras)
+      const useWeeks = diffDays > 30;
+      let buckets, labels;
+
+      if (useWeeks) {
+        const nWeeks = Math.min(Math.ceil(diffDays / 7), 12);
+        buckets = new Array(nWeeks).fill(0);
+        labels  = buckets.map((_, i) => `S${i + 1}`);
+      } else {
+        buckets = new Array(diffDays).fill(0);
+        labels  = buckets.map((_, i) => {
+          const d = new Date(d0); d.setDate(d0.getDate() + i);
+          return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
         });
       }
 
-      drawMiniAreaChart('chart-alerts-7d', counts, labels);
+      let q = sb.from('capturas')
+        .select('velocidade, timestamp')
+        .eq('cliente_id', currentCliente.id)
+        .gt('velocidade', currentCliente.limite_velocidade)
+        .gte('timestamp', f.tsStart)
+        .lte('timestamp', f.tsEnd);
+      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
+      if (f.placa)    q = q.ilike('placa', `%${f.placa}%`);
+
+      const { data } = await q;
+      if (data) {
+        data.forEach(c => {
+          const ts = new Date(c.timestamp); ts.setHours(0,0,0,0);
+          const dayIdx = Math.round((ts - d0) / 86400000);
+          if (dayIdx < 0) return;
+          const idx = useWeeks ? Math.floor(dayIdx / 7) : dayIdx;
+          if (idx < buckets.length) buckets[idx]++;
+        });
+      }
+
+      const periodLabel = diffDays === 1 ? f.label : `${diffDays} dias`;
+      document.getElementById('title-alerts7d').textContent = `Alertas · ${periodLabel}`;
+      drawMiniAreaChart('chart-alerts-7d', buckets, labels);
     }
 
     function drawMiniAreaChart(canvasId, data, labels) {
@@ -3696,37 +3795,47 @@
     }
 
     // ============================================
-    // RANKING
+    // RANKING — respeita filtros
     // ============================================
     async function loadRanking() {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 15);
+      const f = getActiveFilters();
+      document.getElementById('title-ranking').textContent = `Top 10 Placas · ${f.label}`;
 
-      const { data } = await sb.from('capturas')
-        .select('placa')
+      let q = sb.from('capturas')
+        .select('placa, velocidade')
         .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', cutoff.toISOString());
+        .gte('timestamp', f.tsStart)
+        .lte('timestamp', f.tsEnd);
+      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
+
+      const { data } = await q;
 
       if (!data || data.length === 0) {
         document.getElementById('ranking-list').innerHTML =
-          '<li class="ranking-item" style="color:var(--text-muted)">Sem dados</li>';
+          '<li class="ranking-item" style="color:var(--text-muted)">Sem dados no período</li>';
         return;
       }
 
       const counts = {};
-      data.forEach(c => { counts[c.placa] = (counts[c.placa] || 0) + 1; });
+      const alerts = {};
+      const limite = currentCliente.limite_velocidade;
+      data.forEach(c => {
+        counts[c.placa] = (counts[c.placa] || 0) + 1;
+        if (c.velocidade > limite) alerts[c.placa] = (alerts[c.placa] || 0) + 1;
+      });
 
       const sorted = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
 
-      document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => `
-        <li class="ranking-item" onclick="document.getElementById('filter-placa').value='${item[0]}';applyFilters()">
+      document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => {
+        const hasAlert = (alerts[item[0]] || 0) > 0;
+        return `<li class="ranking-item" onclick="document.getElementById('filter-placa').value='${item[0]}';applyFilters()">
           <span class="pos">${i + 1}.</span>
-          <span class="placa">${item[0]}</span>
-          <span class="count">${item[1]}x</span>
-        </li>
-      `).join('');
+          <span class="placa" style="${hasAlert ? 'color:var(--red)' : ''}">${item[0]}</span>
+          <span class="count">${item[1]}x${hasAlert ? ` <span style="color:var(--red);font-size:9px">${alerts[item[0]]}⚠</span>` : ''}</span>
+        </li>`;
+      }).join('');
     }
   </script>
 </body>
