@@ -531,6 +531,18 @@
       .trust-item { padding: 20px 12px; }
     }
 
+    /* ===== VIDEO ===== */
+    .video-wrap {
+      position: relative; margin-top: 48px; padding-bottom: 56.25%; /* 16:9 */
+      height: 0; overflow: hidden; border-radius: var(--radius-lg);
+      box-shadow: 0 32px 64px rgba(0,0,0,0.4), 0 0 0 1px var(--border-light);
+      max-width: 900px; margin-left: auto; margin-right: auto;
+    }
+    .video-wrap iframe {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      border-radius: var(--radius-lg);
+    }
+
     /* ===== CONTACT ===== */
     .contact-section { padding: 120px 0; background: var(--bg-dark); position: relative; }
     .contact-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
@@ -845,6 +857,27 @@
           <div class="step-title">Alerta enviado</div>
           <div class="step-desc">E-mail com PDF completo chega para os responsáveis do condomínio.</div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VÍDEO -->
+  <section class="section" id="video">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">Veja na prática</div>
+        <h2 class="section-title reveal">Lombada Educativa <span class="gradient-text">em ação</span></h2>
+        <p class="section-desc centered reveal">Veja como a câmera detecta, lê a placa e mede a velocidade em tempo real.</p>
+      </div>
+      <div class="video-wrap reveal">
+        <iframe
+          src="https://www.youtube.com/embed/S36LFrrpRc0?rel=0&modestbranding=1"
+          title="Lombada Educativa — ALPHADIGI"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
       </div>
     </div>
   </section>
