@@ -207,39 +207,45 @@
     /* ===== HERO ===== */
     .hero {
       min-height: 100vh; display: flex; align-items: center;
-      padding: 120px 0 80px; position: relative; overflow: hidden;
+      padding: 120px 0 60px; position: relative; overflow: hidden;
     }
 
-    /* Orbs background */
+    .hero-bg {
+      background: url('https://images.unsplash.com/photo-1596395463384-3b899f28e498?w=1920&q=80&auto=format&fit=crop') center center / cover no-repeat;
+    }
+    .hero-bg-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(180deg,
+        rgba(5,10,24,0.92) 0%,
+        rgba(5,10,24,0.80) 40%,
+        rgba(5,10,24,0.95) 100%
+      );
+    }
+
     .hero-orb {
-      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 1;
       animation: float 8s ease-in-out infinite;
     }
     .hero-orb-1 {
-      width: 600px; height: 600px; top: -150px; right: -100px;
-      background: radial-gradient(circle, rgba(4,107,210,0.15) 0%, transparent 70%);
+      width: 500px; height: 500px; top: -100px; right: -50px;
+      background: radial-gradient(circle, rgba(4,107,210,0.2) 0%, transparent 70%);
     }
     .hero-orb-2 {
-      width: 400px; height: 400px; bottom: -50px; left: -100px;
-      background: radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 70%);
+      width: 350px; height: 350px; bottom: 10%; left: -80px;
+      background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
       animation-delay: 3s;
     }
-    .hero-orb-3 {
-      width: 300px; height: 300px; top: 30%; left: 40%;
-      background: radial-gradient(circle, rgba(52,211,153,0.06) 0%, transparent 70%);
-      animation-delay: 5s;
-    }
 
-    .hero-inner {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
-      position: relative; z-index: 1;
+    .hero-center {
+      text-align: center; max-width: 800px; margin: 0 auto 64px;
     }
 
     .hero-badge {
       display: inline-flex; align-items: center; gap: 10px;
-      background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);
+      background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25);
       padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 600;
       color: var(--green); margin-bottom: 28px;
+      backdrop-filter: blur(8px);
       animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
     }
     .hero-badge-dot {
@@ -249,13 +255,13 @@
     }
 
     .hero h1 {
-      font-size: clamp(36px, 5.5vw, 60px); font-weight: 800; line-height: 1.05;
+      font-size: clamp(36px, 5.5vw, 64px); font-weight: 800; line-height: 1.05;
       letter-spacing: -2px; margin-bottom: 24px;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.3);
       animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
     }
     .hero-desc {
-      font-size: 19px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 36px;
-      max-width: 480px;
+      font-size: 19px; color: var(--text-secondary); line-height: 1.8;
       animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
     }
     .hero-actions {
@@ -263,40 +269,44 @@
       animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
     }
 
-    /* Hero visual - floating mockup */
-    .hero-visual {
-      position: relative; animation: fade-in 1s ease 0.6s both;
+    /* Service Cards */
+    .service-cards {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+      animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
     }
-    .hero-visual-img {
-      width: 100%; height: 500px; object-fit: cover; object-position: center;
-      border-radius: var(--radius-lg);
-      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border-light);
-      animation: float 6s ease-in-out infinite;
+    .service-card {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-lg); padding: 32px 28px;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative; overflow: hidden;
     }
-
-    /* Floating badges on hero image */
-    .hero-float {
-      position: absolute; background: var(--bg-card); border: 1px solid var(--border-light);
-      border-radius: 14px; padding: 14px 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      backdrop-filter: blur(12px); animation: float 5s ease-in-out infinite;
+    .service-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      opacity: 0; transition: opacity 0.3s;
     }
-    .hero-float-1 {
-      top: 12%; right: -20px; animation-delay: 1s;
+    .service-card:hover {
+      border-color: rgba(255,255,255,0.15);
+      transform: translateY(-8px);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.3), 0 0 80px rgba(4,107,210,0.08);
     }
-    .hero-float-2 {
-      bottom: 18%; left: -24px; animation-delay: 2.5s;
+    .service-card:hover::before { opacity: 1; }
+    .service-card-icon {
+      width: 52px; height: 52px; border-radius: 14px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(4,107,210,0.1); border: 1px solid rgba(4,107,210,0.2);
     }
-    .hero-float-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-    .hero-float-value { font-size: 22px; font-weight: 800; margin-top: 2px; }
-    .hero-float-value.green { color: var(--green); }
-    .hero-float-value.orange { color: var(--cta); }
-
-    /* Glow ring around hero image */
-    .hero-glow {
-      position: absolute; inset: -2px; border-radius: var(--radius-lg);
-      background: linear-gradient(135deg, var(--accent), transparent 40%, var(--cta));
-      opacity: 0.3; z-index: -1; filter: blur(1px);
+    .service-card-icon svg { width: 24px; height: 24px; color: var(--accent-light); }
+    .service-card-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .service-card-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
+    .service-card-metric {
+      display: flex; align-items: baseline; gap: 8px;
+      padding-top: 16px; border-top: 1px solid var(--border);
     }
+    .service-card-metric-value { font-size: 24px; font-weight: 800; color: var(--accent-light); }
+    .service-card-metric-label { font-size: 13px; color: var(--text-muted); }
 
     /* ===== TRUST BAR ===== */
     .trust-bar {
@@ -491,15 +501,17 @@
     /* ===== RESPONSIVE ===== */
     @media (max-width: 1024px) {
       .hero { min-height: auto; padding: 100px 0 60px; }
-      .hero-inner, .problem-grid, .showcase-grid, .contact-inner { grid-template-columns: 1fr; gap: 48px; }
-      .hero-visual { max-width: 500px; margin: 0 auto; }
+      .hero-center { margin-bottom: 48px; }
+      .service-cards { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
+      .problem-grid, .showcase-grid, .contact-inner { grid-template-columns: 1fr; gap: 48px; }
       .benefits-grid { grid-template-columns: repeat(2, 1fr); }
       .steps-visual { grid-template-columns: repeat(2, 1fr); gap: 32px; }
       .steps-line { display: none; }
     }
     @media (max-width: 768px) {
       .section { padding: 80px 0; }
-      .hero { min-height: auto; padding: 80px 0 48px; }
+      .hero { min-height: auto; padding: 80px 0 40px; }
+      .service-cards { gap: 16px; }
       .trust-grid { grid-template-columns: repeat(2, 1fr); }
       .benefits-grid { grid-template-columns: 1fr; }
       .steps-visual { grid-template-columns: 1fr; gap: 24px; }
@@ -603,51 +615,60 @@
   </nav>
 
   <!-- HERO -->
-  <section class="hero">
+  <section class="hero hero-bg">
+    <div class="hero-bg-overlay" aria-hidden="true"></div>
     <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
     <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
-    <div class="hero-orb hero-orb-3" aria-hidden="true"></div>
 
-    <div class="container">
-      <div class="hero-inner">
-        <div>
-          <div class="hero-badge">
-            <span class="hero-badge-dot"></span>
-            Sistema ativo 24 horas
+    <div class="container" style="position:relative;z-index:2">
+      <div class="hero-center">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          Sistema ativo 24 horas
+        </div>
+        <h1>Proteja quem mora<br>no seu <span class="gradient-text">condomínio</span></h1>
+        <p class="hero-desc" style="max-width:600px;margin:0 auto 40px;text-align:center">
+          Lombada educativa inteligente que identifica veículos em alta velocidade e notifica automaticamente a administração. Segurança viária sem burocracia.
+        </p>
+        <div class="hero-actions" style="justify-content:center">
+          <a href="#contato" class="btn btn-cta btn-lg">Solicitar proposta</a>
+          <a href="/dashboard" class="btn btn-glass btn-lg">Ver dashboard</a>
+        </div>
+      </div>
+
+      <!-- Service Cards -->
+      <div class="service-cards">
+        <div class="service-card reveal">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8l5 3-5 3V8z"/></svg>
           </div>
-          <h1>Proteja quem mora no seu <span class="gradient-text">condomínio</span></h1>
-          <p class="hero-desc">
-            Lombada educativa inteligente que identifica veículos em alta velocidade e notifica automaticamente a administração. Segurança viária sem burocracia.
-          </p>
-          <div class="hero-actions">
-            <a href="#solucao" class="btn btn-cta btn-lg">Conhecer a solução</a>
-            <a href="/dashboard" class="btn btn-glass btn-lg">Ver dashboard</a>
+          <div class="service-card-title">Leitura de placas</div>
+          <div class="service-card-desc">Câmera com radar integrado identifica placa e velocidade de cada veículo automaticamente.</div>
+          <div class="service-card-metric">
+            <span class="service-card-metric-value">99.5%</span>
+            <span class="service-card-metric-label">de precisão</span>
           </div>
         </div>
-
-        <div class="hero-visual">
-          <div class="hero-glow" aria-hidden="true"></div>
-          <img
-            alt="Via interna de condomínio residencial com câmera de monitoramento de velocidade"
-            class="hero-visual-img"
-            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop"
-            srcset="
-              https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80&auto=format&fit=crop 400w,
-              https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop 800w,
-              https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80&auto=format&fit=crop 1200w
-            "
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            width="800" height="500"
-            loading="eager"
-            fetchpriority="high"
-          >
-          <div class="hero-float hero-float-1" aria-hidden="true">
-            <div class="hero-float-label">Alertas hoje</div>
-            <div class="hero-float-value orange">12</div>
+        <div class="service-card reveal reveal-delay-1">
+          <div class="service-card-icon" style="background:rgba(249,115,22,0.1);border-color:rgba(249,115,22,0.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--cta)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
-          <div class="hero-float hero-float-2" aria-hidden="true">
-            <div class="hero-float-label">Câmeras online</div>
-            <div class="hero-float-value green">3</div>
+          <div class="service-card-title">Alerta com PDF</div>
+          <div class="service-card-desc">Notificação automática por e-mail com foto, placa, velocidade e identificação do morador.</div>
+          <div class="service-card-metric">
+            <span class="service-card-metric-value" style="color:var(--cta)">&lt;30s</span>
+            <span class="service-card-metric-label">para notificar</span>
+          </div>
+        </div>
+        <div class="service-card reveal reveal-delay-2">
+          <div class="service-card-icon" style="background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="service-card-title">Dashboard ao vivo</div>
+          <div class="service-card-desc">Painel em tempo real com todas as passagens, câmeras e alertas. Acesso pelo navegador.</div>
+          <div class="service-card-metric">
+            <span class="service-card-metric-value" style="color:var(--green)">24/7</span>
+            <span class="service-card-metric-label">monitoramento</span>
           </div>
         </div>
       </div>
