@@ -71,7 +71,7 @@ async function handleCleanup(req, res) {
 // ── COMPRESS ─────────────────────────────────────────────
 async function handleCompress(req, res) {
   const secret = req.query.secret;
-  if (secret !== 'protector2026') {
+  if (!secret || secret !== process.env.CRON_SECRET) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
@@ -118,8 +118,8 @@ async function handleCompress(req, res) {
     comprimida: { tamanho: `${(compressed.length / 1024).toFixed(1)} KB`, dimensoes: `${compMeta.width}x${compMeta.height}` },
     reducao: `${((1 - compressed.length / originalBuffer.length) * 100).toFixed(1)}%`,
     links: {
-      original: `/api/test?action=compress&secret=protector2026&mode=original`,
-      comprimida: `/api/test?action=compress&secret=protector2026&mode=compressed`,
+      original: `/api/test?action=compress&secret=CRON_SECRET&mode=original`,
+      comprimida: `/api/test?action=compress&secret=CRON_SECRET&mode=compressed`,
     }
   });
 }

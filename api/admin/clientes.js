@@ -105,14 +105,25 @@ module.exports = async function handler(req, res) {
         return res.status(403).json({ error: 'Sem acesso a este cliente' });
       }
 
-      // Remover campos que não podem ser editados
-      delete campos.user_id;
-      delete campos.criado_em;
-      delete campos.emails_notificacao;
+      // Whitelist: aceitar apenas campos permitidos
+      const CAMPOS_PERMITIDOS = [
+        'nome', 'local_via', 'cidade_uf', 'cep', 'endereco',
+        'limite_velocidade', 'cnpj', 'telefone', 'contato_nome',
+        'pdf_titulo', 'pdf_subtitulo', 'pdf_rodape', 'pdf_logo_url',
+        'notif_auto_ativa', 'ativo',
+      ];
+      const camposFiltrados = {};
+      for (const key of CAMPOS_PERMITIDOS) {
+        if (campos[key] !== undefined) camposFiltrados[key] = campos[key];
+      }
+
+      if (Object.keys(camposFiltrados).length === 0) {
+        return res.status(400).json({ error: 'Nenhum campo válido para atualizar' });
+      }
 
       const { data, error } = await supabase
         .from('clientes')
-        .update(campos)
+        .update(camposFiltrados)
         .eq('id', id)
         .select()
         .single();
