@@ -434,10 +434,41 @@
       display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; margin-top: 56px;
     }
     .showcase-img-wrap { position: relative; }
+    /* Monitor mockup */
+    .monitor-frame {
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .monitor-topbar {
+      width: 100%; background: #1C1C1E; border-radius: 12px 12px 0 0;
+      padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+      border: 1px solid rgba(255,255,255,0.08); border-bottom: none;
+    }
+    .monitor-dots { display: flex; gap: 6px; }
+    .monitor-dots .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #FF5F56; }
+    .dot-yellow { background: #FFBD2E; }
+    .dot-green { background: #27C93F; }
+    .monitor-url {
+      font-size: 11px; color: var(--text-muted); font-family: 'SF Mono', Consolas, monospace;
+      background: rgba(255,255,255,0.06); padding: 4px 16px; border-radius: 6px;
+      letter-spacing: 0.3px;
+    }
+    .monitor-screen {
+      width: 100%; border: 1px solid rgba(255,255,255,0.08); border-top: none;
+      border-radius: 0 0 4px 4px; overflow: hidden;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5);
+    }
     .showcase-img {
-      width: 100%; height: 480px; object-fit: cover; object-position: center top;
-      border-radius: var(--radius-lg); display: block;
-      box-shadow: 0 32px 64px rgba(0,0,0,0.6);
+      width: 100%; height: auto; display: block;
+      object-fit: cover; object-position: top left;
+    }
+    .monitor-stand {
+      width: 60px; height: 32px; background: linear-gradient(180deg, #2A2A2E, #1C1C1E);
+      margin: 0 auto; border-radius: 0 0 2px 2px;
+    }
+    .monitor-base {
+      width: 120px; height: 8px; background: #2A2A2E; border-radius: 0 0 8px 8px;
+      margin: 0 auto;
     }
     .showcase-img-glow {
       position: absolute; inset: -40px; border-radius: 50%;
@@ -887,13 +918,27 @@
       <div class="showcase-grid">
         <div class="showcase-img-wrap reveal">
           <div class="showcase-img-glow" aria-hidden="true"></div>
-          <img
-            alt="Dashboard real do Protector Traffic Control com monitoramento de velocidade em tempo real"
-            class="showcase-img"
-            src="/images/dashboard-real.jpeg"
-            width="700" height="480"
-            loading="lazy"
-          >
+          <div class="monitor-frame">
+            <div class="monitor-topbar">
+              <div class="monitor-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <div class="monitor-url">protector-lombada.vercel.app/dashboard</div>
+              <div style="width:52px"></div>
+            </div>
+            <div class="monitor-screen">
+              <img
+                alt="Dashboard real do Protector Traffic Control com monitoramento de velocidade em tempo real"
+                class="showcase-img"
+                src="/images/dashboard-real.jpeg"
+                loading="lazy"
+              >
+            </div>
+            <div class="monitor-stand" aria-hidden="true"></div>
+            <div class="monitor-base" aria-hidden="true"></div>
+          </div>
         </div>
         <div class="showcase-features">
           <div class="showcase-feature reveal">
