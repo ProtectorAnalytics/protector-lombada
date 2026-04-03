@@ -2,6 +2,7 @@
   "version": 2,
   "builds": [
     { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "site/**", "use": "@vercel/static" },
     { "src": "dashboard/**", "use": "@vercel/static" },
     { "src": "admin/**", "use": "@vercel/static" }
   ],
@@ -19,8 +20,11 @@
     { "src": "/api/admin/dashboard", "dest": "/api/admin/dashboard.js" },
     { "src": "/admin", "dest": "/admin/index.html" },
     { "src": "/admin/(.*)", "dest": "/admin/$1" },
+    { "src": "/dashboard", "dest": "/dashboard/index.html" },
+    { "src": "/dashboard/(.*)", "dest": "/dashboard/$1" },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
-    { "src": "/(.*)", "dest": "/dashboard/$1" }
+    { "src": "^/$", "dest": "/site/index.html" },
+    { "src": "/(.*)", "dest": "/site/$1" }
   ],
   "crons": [
     {

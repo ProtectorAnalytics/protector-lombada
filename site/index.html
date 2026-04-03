@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protector Lombada Educativa — Controle de Velocidade para Condominios</title>
+  <meta name="description" content="Sistema inteligente de monitoramento de velocidade para condominios. Cameras ALPHADIGI com leitura de placa, alertas automaticos e relatorios em tempo real.">
+  <link rel="icon" type="image/png" href="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-dark: #0B1120;
+      --bg-section: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #253449;
+      --accent: #046BD2;
+      --accent-light: #3B82F6;
+      --accent-glow: rgba(4, 107, 210, 0.15);
+      --cta: #F97316;
+      --cta-hover: #EA580C;
+      --green: #22C55E;
+      --red: #EF4444;
+      --yellow: #FACC15;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --border: #1E293B;
+      --border-light: #334155;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== UTILITIES ===== */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 100px 0; }
+    .section-alt { background: var(--bg-section); }
+    .text-accent { color: var(--accent-light); }
+    .text-secondary { color: var(--text-secondary); }
+    .text-center { text-align: center; }
+
+    .section-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent-light); margin-bottom: 16px;
+    }
+    .section-label::before {
+      content: ''; display: block; width: 24px; height: 2px; background: var(--accent-light); border-radius: 1px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px); font-weight: 800; line-height: 1.2;
+      margin-bottom: 16px; letter-spacing: -0.5px;
+    }
+
+    .section-desc {
+      font-size: 17px; color: var(--text-secondary); max-width: 640px; line-height: 1.7;
+    }
+    .section-desc.centered { margin: 0 auto; }
+
+    /* ===== NAV ===== */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(11, 17, 32, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; align-items: center; height: 72px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-brand img { height: 40px; width: auto; }
+    .nav-brand-text { display: flex; flex-direction: column; }
+    .nav-brand-name { font-size: 16px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+    .nav-brand-sub { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link {
+      color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
+      padding: 8px 16px; border-radius: 8px; transition: var(--transition);
+    }
+    .nav-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 24px; border-radius: 10px; font-family: inherit;
+      font-size: 14px; font-weight: 600; text-decoration: none; border: none;
+      cursor: pointer; transition: var(--transition); white-space: nowrap;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(4,107,210,0.4); }
+    .btn-cta { background: var(--cta); color: #fff; }
+    .btn-cta:hover { background: var(--cta-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(249,115,22,0.4); }
+    .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid var(--border-light); }
+    .btn-outline:hover { border-color: var(--accent-light); color: var(--accent-light); background: var(--accent-glow); }
+    .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: 12px; }
+
+    .nav-mobile-toggle {
+      display: none; background: none; border: none; color: var(--text-primary);
+      padding: 8px; cursor: pointer; border-radius: 8px;
+    }
+    .nav-mobile-toggle:hover { background: rgba(255,255,255,0.05); }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding: 160px 0 100px;
+      background: var(--bg-dark);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; right: -200px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(4,107,210,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -100px; left: -100px;
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+      position: relative; z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-glow); border: 1px solid rgba(4,107,210,0.3);
+      padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 500;
+      color: var(--accent-light); margin-bottom: 24px;
+    }
+    .hero-badge-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1;
+      letter-spacing: -1px; margin-bottom: 20px;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--accent-light), var(--cta));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc {
+      font-size: 18px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;
+      max-width: 500px;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* Hero visual - dashboard mockup */
+    .hero-visual {
+      background: var(--bg-card); border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow);
+      position: relative;
+    }
+    .hero-visual::before {
+      content: ''; position: absolute; inset: -1px; border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, rgba(4,107,210,0.3), transparent 50%, rgba(249,115,22,0.2));
+      z-index: -1; padding: 1px;
+    }
+
+    .mock-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .mock-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+    .mock-live { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); font-weight: 600; }
+    .mock-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 1.5s ease-in-out infinite; }
+
+    .mock-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .mock-stat {
+      background: var(--bg-dark); border-radius: 10px; padding: 14px; text-align: center;
+      border: 1px solid var(--border);
+    }
+    .mock-stat-value { font-size: 24px; font-weight: 700; }
+    .mock-stat-value.blue { color: var(--accent-light); }
+    .mock-stat-value.green { color: var(--green); }
+    .mock-stat-value.orange { color: var(--cta); }
+    .mock-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    .mock-capture {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-dark); border-radius: 10px; padding: 12px; margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .mock-capture:last-child { margin-bottom: 0; }
+    .mock-plate {
+      background: var(--red); color: #fff; font-weight: 700; font-size: 13px;
+      padding: 4px 10px; border-radius: 6px; font-family: 'Plus Jakarta Sans', monospace;
+      letter-spacing: 1px;
+    }
+    .mock-speed { font-size: 18px; font-weight: 700; }
+    .mock-speed.alert { color: var(--red); }
+    .mock-speed.ok { color: var(--green); }
+    .mock-time { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+    .mock-status-badge {
+      font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .mock-status-badge.alert { background: rgba(239,68,68,0.15); color: var(--red); }
+    .mock-status-badge.ok { background: rgba(34,197,94,0.15); color: var(--green); }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+      padding: 48px 0;
+      background: var(--bg-section);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center;
+    }
+    .stat-item-value {
+      font-size: clamp(28px, 4vw, 40px); font-weight: 800; color: var(--accent-light);
+      line-height: 1;
+    }
+    .stat-item-label { font-size: 14px; color: var(--text-muted); margin-top: 8px; font-weight: 500; }
+
+    /* ===== FEATURES ===== */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px;
+    }
+    .feature-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px; transition: var(--transition);
+    }
+    .feature-card:hover {
+      border-color: var(--accent); background: var(--bg-card-hover);
+      transform: translateY(-4px); box-shadow: 0 8px 32px rgba(4,107,210,0.1);
+    }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; background: var(--accent-glow);
+    }
+    .feature-icon svg { width: 24px; height: 24px; color: var(--accent-light); }
+    .feature-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ===== HOW IT WORKS ===== */
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 48px; }
+    .step { text-align: center; position: relative; }
+    .step:not(:last-child)::after {
+      content: ''; position: absolute; top: 32px; left: calc(50% + 40px); right: calc(-50% + 40px);
+      height: 2px; background: var(--border-light);
+    }
+    .step-number {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--accent-glow); border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 800; color: var(--accent-light);
+      margin: 0 auto 16px; position: relative; z-index: 1;
+    }
+    .step-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ===== INTEGRATION ===== */
+    .integration-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-top: 48px;
+    }
+    .integration-list { display: flex; flex-direction: column; gap: 16px; }
+    .integration-item {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; transition: var(--transition);
+    }
+    .integration-item:hover { border-color: var(--accent); }
+    .integration-icon {
+      width: 40px; height: 40px; min-width: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--accent-glow);
+    }
+    .integration-icon svg { width: 20px; height: 20px; color: var(--accent-light); }
+    .integration-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .integration-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+    .integration-visual {
+      background: var(--bg-card); border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg); padding: 32px; text-align: center;
+    }
+    .integration-url {
+      background: var(--bg-dark); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 24px; font-family: 'SF Mono', Consolas, monospace;
+      font-size: 14px; color: var(--green); margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .integration-url .protocol { color: var(--text-muted); }
+    .integration-url .path { color: var(--cta); }
+
+    .integration-flow {
+      display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;
+    }
+    .flow-node {
+      background: var(--bg-dark); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px; font-size: 12px; font-weight: 600;
+      color: var(--text-secondary); text-align: center; min-width: 100px;
+    }
+    .flow-node.active { border-color: var(--accent); color: var(--accent-light); }
+    .flow-arrow { color: var(--text-muted); font-size: 18px; }
+
+    /* ===== CTA ===== */
+    .cta-section {
+      padding: 100px 0;
+      background: linear-gradient(135deg, var(--bg-section) 0%, var(--bg-dark) 100%);
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 800px; height: 400px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(4,107,210,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-content {
+      text-align: center; position: relative; z-index: 1; max-width: 640px; margin: 0 auto;
+    }
+    .cta-actions { display: flex; gap: 16px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      padding: 32px 0; border-top: 1px solid var(--border);
+      background: var(--bg-dark);
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-text { font-size: 13px; color: var(--text-muted); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-link { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    .footer-link:hover { color: var(--text-primary); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero-visual { max-width: 560px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+      .step::after { display: none; }
+      .integration-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .section { padding: 64px 0; }
+      .hero { padding: 120px 0 64px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; gap: 20px; }
+      .mock-stats { grid-template-columns: repeat(3, 1fr); }
+      .nav-links .nav-link { display: none; }
+      .nav-mobile-toggle { display: block; }
+      .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn { width: 100%; }
+      .cta-actions { flex-direction: column; align-items: center; }
+      .cta-actions .btn { width: 100%; max-width: 320px; }
+      .mock-stats { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+      .mock-stat { padding: 10px 8px; }
+      .mock-stat-value { font-size: 18px; }
+    }
+
+    /* ===== A11Y ===== */
+    :focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" role="navigation" aria-label="Navegacao principal">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand" aria-label="Protector Lombada - Pagina inicial">
+        <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Protector" width="40" height="40">
+        <div class="nav-brand-text">
+          <span class="nav-brand-name">Protector</span>
+          <span class="nav-brand-sub">Lombada Educativa</span>
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
+        <a href="#como-funciona" class="nav-link">Como Funciona</a>
+        <a href="#integracao" class="nav-link">Integracao</a>
+        <a href="/dashboard" class="btn btn-outline" style="font-size:13px;padding:8px 18px">Dashboard</a>
+        <a href="/admin" class="btn btn-primary" style="font-size:13px;padding:8px 18px">Admin</a>
+      </div>
+      <button class="nav-mobile-toggle" onclick="toggleMobile()" aria-label="Abrir menu" aria-expanded="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Monitoramento em tempo real
+          </div>
+          <h1>Controle de velocidade <span class="highlight">inteligente</span> para condominios</h1>
+          <p class="hero-desc">
+            Cameras ALPHADIGI com leitura automatica de placas, medicao por radar e alertas instantaneos. Seguranca viaria com tecnologia, sem burocracia.
+          </p>
+          <div class="hero-actions">
+            <a href="/dashboard" class="btn btn-cta btn-lg">Acessar Dashboard</a>
+            <a href="#como-funciona" class="btn btn-outline btn-lg">Como Funciona</a>
+          </div>
+        </div>
+
+        <!-- Dashboard mockup -->
+        <div class="hero-visual" aria-hidden="true">
+          <div class="mock-header">
+            <span class="mock-title">Dashboard — Monitoramento</span>
+            <span class="mock-live"><span class="mock-live-dot"></span>Ao vivo</span>
+          </div>
+          <div class="mock-stats">
+            <div class="mock-stat"><div class="mock-stat-value blue">147</div><div class="mock-stat-label">Passagens hoje</div></div>
+            <div class="mock-stat"><div class="mock-stat-value orange">12</div><div class="mock-stat-label">Alertas</div></div>
+            <div class="mock-stat"><div class="mock-stat-value green">3</div><div class="mock-stat-label">Cameras online</div></div>
+          </div>
+          <div class="mock-capture">
+            <span class="mock-plate">QRT4A58</span>
+            <span class="mock-speed alert">52 km/h</span>
+            <span class="mock-status-badge alert">Alerta</span>
+            <span class="mock-time">14:32</span>
+          </div>
+          <div class="mock-capture">
+            <span class="mock-plate">BKL7E91</span>
+            <span class="mock-speed ok">22 km/h</span>
+            <span class="mock-status-badge ok">OK</span>
+            <span class="mock-time">14:31</span>
+          </div>
+          <div class="mock-capture">
+            <span class="mock-plate">MNP3C47</span>
+            <span class="mock-speed alert">41 km/h</span>
+            <span class="mock-status-badge alert">Alerta</span>
+            <span class="mock-time">14:29</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-item-value">24/7</div>
+          <div class="stat-item-label">Monitoramento continuo</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-value">&lt;2s</div>
+          <div class="stat-item-label">Tempo de deteccao</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-value">99.5%</div>
+          <div class="stat-item-label">Precisao na leitura</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-value">30s</div>
+          <div class="stat-item-label">Alerta por email</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section section-alt" id="funcionalidades">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label">Funcionalidades</div>
+        <h2 class="section-title">Tudo que seu condominio precisa</h2>
+        <p class="section-desc centered">Do radar a notificacao — um sistema completo que funciona de forma autonoma.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="feature-title">Monitoramento em tempo real</div>
+          <div class="feature-desc">Dashboard ao vivo com todas as passagens, velocidades e fotos. Atualizacao automatica a cada 30 segundos.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="feature-title">Notificacao com PDF</div>
+          <div class="feature-desc">Alertas automaticos por email com PDF anexo contendo foto do veiculo, placa, velocidade e historico.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8l5 3-5 3V8z"/></svg>
+          </div>
+          <div class="feature-title">Cameras ALPHADIGI</div>
+          <div class="feature-desc">Integracao nativa com cameras de leitura de placa e radar. Identificacao automatica por numero de serie.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="feature-title">Identificacao de moradores</div>
+          <div class="feature-desc">Cadastro de veiculos vinculados a moradores. O PDF mostra automaticamente nome, unidade e historico.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="feature-title">Multi-tenant seguro</div>
+          <div class="feature-desc">Cada condominio ve apenas seus dados. Isolamento total por cliente com controle de acesso por perfil.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="feature-title">Painel administrativo</div>
+          <div class="feature-desc">Gestao completa de clientes, cameras, usuarios, emails e configuracoes de PDF. Tudo pelo navegador.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="como-funciona">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label">Como funciona</div>
+        <h2 class="section-title">Do radar ao email em segundos</h2>
+        <p class="section-desc centered">Processo 100% automatizado. Nenhuma intervencao manual necessaria apos a instalacao.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-title">Camera detecta</div>
+          <div class="step-desc">A camera ALPHADIGI le a placa e mede a velocidade com radar integrado.</div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-title">Dados enviados</div>
+          <div class="step-desc">Placa, velocidade e foto sao transmitidos automaticamente via HTTPS.</div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-title">Sistema processa</div>
+          <div class="step-desc">O servidor identifica a camera, salva os dados e verifica o limite de velocidade.</div>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-title">Alerta enviado</div>
+          <div class="step-desc">Se excedeu o limite, gera PDF com foto e envia por email para os responsaveis.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTEGRATION -->
+  <section class="section section-alt" id="integracao">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label">Integracao</div>
+        <h2 class="section-title">Instalacao simples, operacao autonoma</h2>
+        <p class="section-desc centered">Uma URL para todas as cameras. O sistema identifica cada uma automaticamente pelo serial.</p>
+      </div>
+      <div class="integration-grid">
+        <div class="integration-list">
+          <div class="integration-item">
+            <div class="integration-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div>
+              <div class="integration-title">URL unica universal</div>
+              <div class="integration-desc">Todas as cameras de todos os clientes apontam para o mesmo endereco. Sem tokens, sem configuracao extra.</div>
+            </div>
+          </div>
+          <div class="integration-item">
+            <div class="integration-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+              <div class="integration-title">Identificacao por serial</div>
+              <div class="integration-desc">A camera envia o numero de serie automaticamente no payload. O sistema faz o match com o cadastro.</div>
+            </div>
+          </div>
+          <div class="integration-item">
+            <div class="integration-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div>
+              <div class="integration-title">3 passos para ativar</div>
+              <div class="integration-desc">Cadastrar cliente, cadastrar camera com serial, apontar a camera para a URL. Pronto.</div>
+            </div>
+          </div>
+        </div>
+        <div class="integration-visual">
+          <div class="integration-url">
+            <span class="protocol">https://</span>seu-dominio.vercel.app<span class="path">/placa</span>
+          </div>
+          <div class="integration-flow">
+            <div class="flow-node active">Camera ALPHADIGI</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-node active">Servidor</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-node">Banco + Storage</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-node">Email + PDF</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <div class="section-label" style="justify-content:center">Acesso</div>
+        <h2 class="section-title">Acesse o sistema</h2>
+        <p class="section-desc centered">Monitore em tempo real ou gerencie clientes, cameras e configuracoes pelo painel administrativo.</p>
+        <div class="cta-actions">
+          <a href="/dashboard" class="btn btn-cta btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </a>
+          <a href="/admin" class="btn btn-primary btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            Painel Admin
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-text">Protector Sistemas de Seguranca Eletronica</div>
+        <div class="footer-links">
+          <a href="/dashboard" class="footer-link">Dashboard</a>
+          <a href="/admin" class="footer-link">Admin</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    function toggleMobile() {
+      const links = document.querySelector('.nav-links');
+      const btn = document.querySelector('.nav-mobile-toggle');
+      const isOpen = links.style.display === 'flex';
+
+      if (isOpen) {
+        links.style.display = '';
+        btn.setAttribute('aria-expanded', 'false');
+      } else {
+        links.style.cssText = 'display:flex;position:fixed;top:72px;left:0;right:0;flex-direction:column;background:rgba(11,17,32,0.98);padding:16px 24px;border-bottom:1px solid var(--border);gap:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
+        links.querySelectorAll('.nav-link').forEach(l => l.style.display = 'block');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    // Close mobile menu on link click
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        const links = document.querySelector('.nav-links');
+        links.style.display = '';
+        links.querySelectorAll('.nav-link').forEach(l => l.style.display = '');
+        document.querySelector('.nav-mobile-toggle').setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
