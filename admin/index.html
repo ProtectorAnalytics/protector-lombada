@@ -171,9 +171,6 @@
     .badge-role { background: var(--accent-light); color: var(--accent); padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
     .badge-tipo { background: #fff7ed; color: var(--orange); padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
 
-    .token-cell { font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace; font-size: 11px; color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .copy-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 14px; margin-left: 6px; }
-    .copy-btn:hover { color: var(--accent-hover); }
 
     .actions-cell { display: flex; gap: 6px; }
     .table-empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 14px; }
@@ -372,16 +369,6 @@
     }
     .back-link:hover { gap: 8px; }
 
-    /* Token cell com botão copy melhorado */
-    .copy-btn {
-      padding: 2px 6px;
-      border-radius: 4px;
-      transition: background 0.15s;
-    }
-    .copy-btn:hover {
-      background: var(--accent-light);
-      border-radius: 4px;
-    }
 
     /* Respeitar preferência de movimento reduzido */
     @media (prefers-reduced-motion: reduce) {
@@ -559,7 +546,7 @@
 
           <div class="tabs">
             <button class="tab-btn active" onclick="showTab('cameras')">Câmeras</button>
-            <button class="tab-btn" onclick="showTab('notificacao')">Notificação PDF</button>
+            <button class="tab-btn" onclick="showTab('notificacao')">PDF</button>
             <button class="tab-btn" onclick="showTab('emails')">E-mails</button>
             <button class="tab-btn" onclick="showTab('veiculos')">Veículos</button>
             <button class="tab-btn" onclick="showTab('usuarios-cli')">Usuários</button>
@@ -571,7 +558,7 @@
               <span></span>
               <button class="btn btn-primary btn-sm" onclick="openCameraModal()">+ Nova Câmera</button>
             </div>
-            <table class="data-table"><thead><tr><th>Nome</th><th>Conexão</th><th>Token</th><th>Status</th><th>Criado</th><th>Ações</th></tr></thead>
+            <table class="data-table"><thead><tr><th>Nome</th><th>Serial</th><th>Conexão</th><th>Status</th><th>Criado</th><th>Ações</th></tr></thead>
               <tbody id="cameras-body"><tr><td colspan="6" class="table-empty">Carregando...</td></tr></tbody>
             </table>
           </div>
@@ -603,41 +590,6 @@
 
               <div style="margin-top:12px;margin-bottom:8px">
                 <button class="btn btn-primary" onclick="savePdfConfig()">Salvar Configuração PDF</button>
-              </div>
-
-              <div style="border-top:1px solid var(--border);margin:20px 0"></div>
-
-              <div style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:16px;border-left:3px solid var(--green)">
-                <div style="font-size:13px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Notificação Automática por E-mail</div>
-                <div style="font-size:12px;color:var(--text-secondary)">Configure até 3 e-mails para receber automaticamente a advertência dos veículos que passaram acima da velocidade limite.</div>
-              </div>
-
-              <div class="form-group" style="margin-bottom:16px">
-                <label>Status da Notificação Automática</label>
-                <select id="f-notif-ativa" style="max-width:260px">
-                  <option value="true">Ativa - Enviar automaticamente</option>
-                  <option value="false">Desativada</option>
-                </select>
-              </div>
-
-              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-                <div class="form-group" style="margin:0">
-                  <label>E-mail 1 (principal)</label>
-                  <input type="email" id="f-notif-email1" placeholder="email@condominio.com.br">
-                </div>
-                <div class="form-group" style="margin:0">
-                  <label>E-mail 2 (opcional)</label>
-                  <input type="email" id="f-notif-email2" placeholder="sindico@condominio.com.br">
-                </div>
-                <div class="form-group" style="margin:0">
-                  <label>E-mail 3 (opcional)</label>
-                  <input type="email" id="f-notif-email3" placeholder="administracao@condominio.com.br">
-                </div>
-              </div>
-
-              <div class="form-error" id="f-notif-error"></div>
-              <div style="display:flex;gap:10px">
-                <button class="btn btn-primary" onclick="saveNotifConfig()">Salvar Notificação</button>
               </div>
             </div>
           </div>
@@ -1346,7 +1298,7 @@ async function openClienteDetail(id) {
   loadEmails(id);
   loadVeiculos(id);
   loadUsuariosCli(id);
-  loadNotifConfig();
+  loadPdfConfig();
 }
 
 // ============================================
@@ -1377,9 +1329,6 @@ function renderCameras() {
   tbody.innerHTML = camerasData.map(c => {
     const st = cameraStatus(c.last_seen);
     const lastSeenTitle = c.last_seen ? new Date(c.last_seen).toLocaleString('pt-BR') : 'Nunca conectou';
-    const serialInfo = c.serial_number
-      ? `<div style="font-size:10px;color:#64748b;margin-top:2px">Serial: ${esc(c.serial_number)}</div>`
-      : '';
     const netInfo = (c.ip_address || c.mac_address)
       ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${c.ip_address ? 'IP: ' + esc(c.ip_address) : ''}${c.ip_address && c.mac_address ? ' | ' : ''}${c.mac_address ? 'MAC: ' + esc(c.mac_address) : ''}</div>`
       : '';
@@ -1387,9 +1336,9 @@ function renderCameras() {
       ? `<div style="font-size:10px;color:#3b82f6;margin-top:1px">Exibição: ${esc(c.nome_exibicao)}</div>`
       : '';
     return `<tr>
-    <td><strong>${esc(c.nome)}</strong>${exibInfo}${serialInfo}${netInfo}</td>
+    <td><strong>${esc(c.nome)}</strong>${exibInfo}${netInfo}</td>
+    <td style="font-family:'SF Mono',Consolas,monospace;font-size:12px">${esc(c.serial_number || '---')}</td>
     <td title="${lastSeenTitle}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80;margin-right:6px;vertical-align:middle"></span>${st.label}</td>
-    <td class="token-cell">${c.token}<button class="copy-btn" onclick="copyText('${c.token}')" title="Copiar token">&#128203;</button></td>
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
     <td>${fmtDate(c.criado_em)}</td>
     <td class="actions-cell">
@@ -1549,20 +1498,13 @@ async function deleteEmail(id) {
 // ============================================
 // NOTIFICAÇÃO PDF CONFIG
 // ============================================
-function loadNotifConfig() {
+function loadPdfConfig() {
   const c = currentDetailCliente;
   if (!c) return;
   document.getElementById('f-pdf-titulo').value = c.pdf_titulo || 'NOTIFICAÇÃO ORIENTATIVA';
   document.getElementById('f-pdf-subtitulo').value = c.pdf_subtitulo || 'Transitar em velocidade superior à máxima permitida';
   document.getElementById('f-pdf-rodape').value = c.pdf_rodape || '';
   document.getElementById('f-pdf-logo').value = c.pdf_logo_url || '';
-  document.getElementById('f-notif-ativa').value = c.notif_auto_ativa ? 'true' : 'false';
-
-  const emails = c.notif_emails || [];
-  document.getElementById('f-notif-email1').value = emails[0] || '';
-  document.getElementById('f-notif-email2').value = emails[1] || '';
-  document.getElementById('f-notif-email3').value = emails[2] || '';
-  document.getElementById('f-notif-error').textContent = '';
 }
 
 async function savePdfConfig() {
@@ -1583,42 +1525,6 @@ async function savePdfConfig() {
   } catch (err) { toast(err.message, true); }
 }
 
-async function saveNotifConfig() {
-  const emails = [
-    document.getElementById('f-notif-email1').value.trim(),
-    document.getElementById('f-notif-email2').value.trim(),
-    document.getElementById('f-notif-email3').value.trim(),
-  ].filter(e => e);
-
-  const ativa = document.getElementById('f-notif-ativa').value === 'true';
-  const errEl = document.getElementById('f-notif-error');
-  errEl.textContent = '';
-
-  if (ativa && emails.length === 0) {
-    errEl.textContent = 'Informe pelo menos 1 e-mail para ativar a notificação automática.';
-    return;
-  }
-
-  // Validate emails
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  for (const e of emails) {
-    if (!emailRegex.test(e)) {
-      errEl.textContent = `E-mail inválido: ${e}`;
-      return;
-    }
-  }
-
-  try {
-    await api('/clientes', 'PUT', {
-      id: currentDetailCliente.id,
-      notif_auto_ativa: ativa,
-      notif_emails: emails,
-    });
-    currentDetailCliente.notif_auto_ativa = ativa;
-    currentDetailCliente.notif_emails = emails;
-    toast('Configuração de notificação salva!');
-  } catch (err) { toast(err.message, true); }
-}
 
 // ============================================
 // VEICULOS
