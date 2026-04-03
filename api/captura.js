@@ -264,9 +264,14 @@ function parseBody(req) {
   return new Promise((resolve, reject) => {
     const contentType = req.headers['content-type'] || '';
 
+    const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB
+
     if (contentType.includes('application/json')) {
       let body = '';
-      req.on('data', (chunk) => { body += chunk; });
+      req.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > MAX_BODY_SIZE) { req.destroy(); reject(new Error('Payload muito grande')); }
+      });
       req.on('end', () => {
         try {
           resolve(JSON.parse(body));
@@ -277,7 +282,7 @@ function parseBody(req) {
       req.on('error', reject);
     } else if (contentType.includes('multipart/form-data')) {
       const fields = {};
-      const busboy = Busboy({ headers: req.headers });
+      const busboy = Busboy({ headers: req.headers, limits: { fileSize: 10 * 1024 * 1024, fields: 20 } });
 
       busboy.on('field', (name, val) => {
         // Try to parse JSON fields (camera may send AlarmInfoPlate as a field)

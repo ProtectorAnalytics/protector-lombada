@@ -88,12 +88,20 @@ module.exports = async function handler(req, res) {
 
       if (!id) return res.status(400).json({ error: 'ID da câmera obrigatório' });
 
-      delete campos.token; // token não pode ser alterado
-      delete campos.criado_em;
+      // Whitelist: aceitar apenas campos permitidos
+      const CAMPOS_PERMITIDOS = ['nome', 'serial_number', 'nome_exibicao', 'ativa'];
+      const camposFiltrados = {};
+      for (const key of CAMPOS_PERMITIDOS) {
+        if (campos[key] !== undefined) camposFiltrados[key] = campos[key];
+      }
+
+      if (Object.keys(camposFiltrados).length === 0) {
+        return res.status(400).json({ error: 'Nenhum campo válido para atualizar' });
+      }
 
       const { data, error } = await supabase
         .from('cameras')
-        .update(campos)
+        .update(camposFiltrados)
         .eq('id', id)
         .select()
         .single();
