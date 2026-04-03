@@ -1,104 +1,116 @@
-# Guia de Implantação — Protector Lombada Educativa
+# Guia de Implantacao — Protector Lombada Educativa
+### v2.0 | Abril 2026
+
+---
+
+## Visao Geral
+
+Este guia cobre a implantacao completa do sistema, desde a criacao do banco de dados ate o primeiro cliente funcionando. Siga na ordem.
+
+**Requisitos:**
+- Conta no [Supabase](https://supabase.com) (banco de dados + storage)
+- Conta na [Vercel](https://vercel.com) (deploy + serverless)
+- Repositorio GitHub com o codigo do projeto
+- Servidor de email SMTP (cPanel ou Gmail)
+
+---
 
 ## 1. Criar Projeto no Supabase
 
 1. Acesse [supabase.com](https://supabase.com) e crie uma conta
 2. Clique em **New Project**
-3. Escolha nome, senha do banco e região (preferencialmente São Paulo)
-4. Aguarde a criação do projeto
+3. Escolha nome, senha do banco e regiao (**South America - Sao Paulo** recomendado)
+4. Aguarde a criacao do projeto
 5. Anote as credenciais em **Settings > API**:
-   - **Project URL** → `SUPABASE_URL`
-   - **anon public key** → `SUPABASE_ANON_KEY`
-   - **service_role key** → `SUPABASE_SERVICE_KEY` (manter em segredo!)
+
+| Credencial | Variavel de ambiente | Onde usar |
+|---|---|---|
+| Project URL | `SUPABASE_URL` | Backend + Frontend |
+| anon public key | `SUPABASE_ANON_KEY` | Frontend (dashboard/admin) |
+| service_role key | `SUPABASE_SERVICE_KEY` | Backend (nunca expor!) |
+
+---
 
 ## 2. Executar Schema SQL
 
-1. No Supabase, vá em **SQL Editor**
-2. Cole todo o conteúdo do arquivo `sql/schema.sql`
-3. Clique em **Run**
-4. Verifique que as 4 tabelas foram criadas em **Table Editor**
+1. No Supabase, va em **SQL Editor**
+2. Execute os scripts na seguinte ordem:
 
-## 3. Configurar Storage
+| # | Arquivo | O que faz |
+|---|---------|-----------|
+| 1 | `sql/schema.sql` | Cria tabelas, indices, RLS e bucket de fotos |
+| 2 | `sql/migration-admin.sql` | Tabela de usuarios admin |
+| 3 | `sql/migration-pdf-config.sql` | Campos de personalizacao do PDF |
+| 4 | `sql/migration-status.sql` | Campos de status das cameras |
+| 5 | `sql/migration-storage-rls.sql` | Politicas de acesso ao Storage |
 
-1. Vá em **Storage** no painel do Supabase
-2. O bucket `capturas-fotos` já deve ter sido criado pelo SQL
-3. Se não aparecer, crie manualmente:
+3. Verifique no **Table Editor** que as tabelas foram criadas: `clientes`, `cameras`, `capturas`, `veiculos`, `usuarios`, `email_destinatarios`, `audit_log`, `debug_log`
+
+---
+
+## 3. Verificar Storage
+
+1. Va em **Storage** no painel do Supabase
+2. O bucket `capturas-fotos` ja deve ter sido criado pelo `schema.sql`
+3. Se nao aparecer, crie manualmente:
    - Nome: `capturas-fotos`
-   - Public: **Não** (as fotos serão acessadas via signed URL)
+   - Public: **Nao**
 
-## 4. Criar Usuário de Autenticação
+---
 
-1. Vá em **Authentication > Users**
-2. Clique em **Add User > Create New User**
-3. Preencha e-mail e senha do administrador do condomínio
-4. Copie o **User UID** gerado
+## 4. Configurar Email SMTP
 
-## 5. Cadastrar Cliente
+O sistema envia alertas por email. Suporta SMTP generico (cPanel) ou Gmail.
 
-No **SQL Editor**, execute:
+### Opcao A: SMTP cPanel (recomendado)
 
-```sql
-INSERT INTO clientes (user_id, nome, local_via, cidade_uf, cep, endereco, limite_velocidade, emails_notificacao)
-VALUES (
-  'COLE_O_USER_UID_AQUI',
-  'Condomínio Parque das Flores',
-  'Rua Principal - Via Interna',
-  'São Paulo/SP',
-  '01234-567',
-  'Rua das Flores, 100',
-  30,
-  ARRAY['admin@condominio.com', 'portaria@condominio.com']
-);
-```
+Crie uma conta de email no cPanel do dominio (ex: `alerta@seudominio.com.br`) e anote:
 
-## 6. Cadastrar Câmera
+| Variavel | Valor |
+|---|---|
+| `SMTP_HOST` | `mail.seudominio.com.br` |
+| `SMTP_PORT` | `465` |
+| `SMTP_SECURE` | `true` |
+| `SMTP_USER` | `alerta@seudominio.com.br` |
+| `SMTP_PASS` | senha da conta |
 
-```sql
-INSERT INTO cameras (cliente_id, nome, token)
-VALUES (
-  (SELECT id FROM clientes WHERE nome = 'Condomínio Parque das Flores'),
-  'Câmera Entrada Principal',
-  'TOKEN_UNICO_SEGURO_AQUI'
-);
-```
+### Opcao B: Gmail
 
-> **Dica**: Gere um token seguro com: `openssl rand -hex 32`
+1. Ative **Verificacao em 2 etapas** em [myaccount.google.com/security](https://myaccount.google.com/security)
+2. Crie uma **Senha de app** (pesquise "App Passwords")
+3. Anote:
 
-## 7. Cadastrar Veículos (opcional)
+| Variavel | Valor |
+|---|---|
+| `SMTP_USER` | `seu-email@gmail.com` |
+| `SMTP_PASS` | senha de 16 caracteres gerada |
 
-```sql
-INSERT INTO veiculos (cliente_id, placa, nome_morador, unidade, marca, cor)
-VALUES
-  ((SELECT id FROM clientes LIMIT 1), 'RPK5F09', 'João Silva', 'Bloco A - 101', 'Toyota Corolla', 'Prata'),
-  ((SELECT id FROM clientes LIMIT 1), 'ABC1D23', 'Maria Santos', 'Bloco B - 205', 'Honda Civic', 'Preto');
-```
+(Deixe `SMTP_HOST` vazio — o sistema detecta Gmail automaticamente)
 
-## 8. Configurar Gmail App Password
+---
 
-1. Acesse [myaccount.google.com/security](https://myaccount.google.com/security)
-2. Ative **Verificação em 2 etapas** (obrigatório)
-3. Vá em **Senhas de app** (ou pesquise "App Passwords")
-4. Crie uma senha para "Outro" → nome "Protector Lombada"
-5. Copie a senha de 16 caracteres gerada → `GMAIL_APP_PASSWORD`
-
-## 9. Deploy na Vercel
+## 5. Deploy na Vercel
 
 ### Via GitHub (recomendado)
 
-1. Crie um repositório no GitHub e faça push do projeto
-2. Acesse [vercel.com](https://vercel.com) e faça login com GitHub
-3. Clique em **Add New > Project**
-4. Importe o repositório
-5. Configure as **Environment Variables**:
-   ```
-   SUPABASE_URL=https://xxx.supabase.co
-   SUPABASE_SERVICE_KEY=eyJ...
-   SUPABASE_ANON_KEY=eyJ...
-   GMAIL_USER=seu-email@gmail.com
-   GMAIL_APP_PASSWORD=abcd efgh ijkl mnop
-   CRON_SECRET=seu-uuid-secreto
-   ```
-6. Clique em **Deploy**
+1. Faca push do repositorio no GitHub
+2. Acesse [vercel.com](https://vercel.com) e faca login com GitHub
+3. Clique em **Add New > Project** e importe o repositorio
+4. Configure as **Environment Variables**:
+
+```
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_KEY=eyJ...
+SUPABASE_ANON_KEY=eyJ...
+SMTP_HOST=mail.seudominio.com.br
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=alerta@seudominio.com.br
+SMTP_PASS=sua_senha
+CRON_SECRET=gere-um-uuid-aleatorio
+```
+
+5. Clique em **Deploy**
 
 ### Via Vercel CLI
 
@@ -107,111 +119,206 @@ npm i -g vercel
 cd protector-lombada
 vercel login
 vercel --prod
-# Configure as variáveis de ambiente no dashboard da Vercel
 ```
 
-## 10. Configurar Domínio do Dashboard
+Configure as variaveis de ambiente no dashboard da Vercel apos o deploy.
 
-No `dashboard/index.html`, substitua as variáveis de configuração:
+### Cron de limpeza
 
-```javascript
-const SUPABASE_URL = 'https://seu-projeto.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJ...sua_anon_key_aqui';
-```
+O `vercel.json` ja configura o cron automatico (diario as 6h) para apagar capturas com mais de 15 dias. Para funcionar:
+- Plano **Pro** da Vercel: funciona automaticamente
+- Plano **Hobby**: use um servico externo (cron-job.org) para chamar `GET /api/cron-limpeza` com header `Authorization: Bearer SEU_CRON_SECRET`
 
-> **Importante**: Use a **anon key** (pública) no dashboard, nunca a service_role key.
+---
 
-## 11. Configurar a Câmera ALPHADIGI
+## 6. Criar Super Admin
 
-Na interface da câmera ALPHADIGI Traffic Cam:
-
-1. Acesse o menu **HTTP Push** ou **Platform Settings**
-2. Configure:
-   - **URL**: `https://seu-projeto.vercel.app/api/captura?token=TOKEN_DA_CAMERA`
-   - **Method**: POST
-   - **Format**: JSON (ou deixe padrão)
-3. Salve e teste
-
-## 12. Testar com cURL
-
-### Teste básico (JSON):
+O primeiro usuario precisa ser criado via script:
 
 ```bash
-curl -X POST "https://seu-projeto.vercel.app/api/captura?token=TOKEN_UNICO_SEGURO_AQUI" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "plate": "RPK5F09",
-    "speed": "45",
-    "time": "2025-03-21 14:57:02",
-    "pixels": "194",
-    "vehicleType": "car",
-    "vehicleColor": "silver",
-    "imageBase64": "/9j/4AAQSkZJRg=="
-  }'
+SUPABASE_URL=https://xxx.supabase.co \
+SUPABASE_SERVICE_KEY=eyJ... \
+SUPER_ADMIN_EMAIL=admin@protector.com.br \
+SUPER_ADMIN_SENHA=SuaSenhaSegura123 \
+SUPER_ADMIN_NOME="Administrador Protector" \
+node scripts/create-super-admin.js
 ```
 
-### Resposta esperada:
-```json
-{"ok": true, "id": "uuid-da-captura"}
+Apos isso, acesse o painel admin em `https://seu-dominio.vercel.app/admin` e faca login.
+
+**Todo o restante da operacao e feito pelo painel admin.** Nao e necessario SQL manual.
+
+---
+
+## 7. Adicionar Novo Cliente (Condominio)
+
+No painel admin:
+
+1. Va em **Clientes** > **+ Novo Cliente**
+2. Preencha: nome, local/via, cidade/UF, limite de velocidade, CNPJ, telefone, contato
+3. Salve
+
+---
+
+## 8. Cadastrar Camera
+
+A camera ALPHADIGI se identifica automaticamente pelo numero de serie. Nao precisa de token na URL.
+
+1. No painel admin, entre no cliente desejado
+2. Na tab **Cameras** > **+ Nova Camera**
+3. Preencha o **serial da camera** (esta na etiqueta fisica do equipamento, ou em Manutencao > Informacao do Dispositivo > Nr serie)
+4. Opcionalmente preencha o nome de exibicao
+5. Salve
+
+**URL unica para todas as cameras:**
+```
+https://seu-dominio.vercel.app/placa
 ```
 
-### Teste do cron de limpeza:
+Todas as cameras de todos os clientes apontam para essa mesma URL. O sistema identifica cada camera pelo serial que vem no payload.
 
-```bash
-curl -H "Authorization: Bearer seu-uuid-secreto" \
-  "https://seu-projeto.vercel.app/api/cron-limpeza"
-```
+---
 
-## 13. Adicionar Novo Cliente
+## 9. Configurar Camera Fisica
 
-Para cada novo condomínio:
+Veja o **MANUAL_TECNICO.md** (PARTE 3) para o passo a passo completo com todos os campos.
 
-1. Criar usuário no Supabase Auth
-2. Inserir registro na tabela `clientes` com o `user_id`
-3. Inserir câmera(s) com token(s) único(s)
-4. Cadastrar veículos (opcional, para identificação no PDF)
-5. Configurar a câmera com a URL + token
+Resumo rapido:
+- **Servidor**: `seu-dominio.vercel.app`
+- **Porta**: `443`
+- **Pasta**: `/placa`
+- **Link SSL**: habilitado
+- **Heartbeat**: habilitado, pasta `/placa`, intervalo `10`
+- **Retransmissao**: habilitada, intervalo `2s`, tempo total `100s`
+
+Apos configurar, reinicie a camera e aguarde 1-2 minutos.
+
+---
+
+## 10. Cadastrar Emails de Alerta
+
+1. No painel admin, entre no cliente
+2. Na tab **E-mails** > **+ Novo Destinatario**
+3. Preencha nome, email e tipo:
+   - `alerta` — recebe avisos de velocidade
+   - `relatorio` — recebe relatorios periodicos
+   - `todos` — recebe tudo
+
+---
+
+## 11. Personalizar PDF (opcional)
+
+1. No painel admin, entre no cliente
+2. Na tab **PDF**, configure:
+   - Titulo (ex: "NOTIFICACAO ORIENTATIVA")
+   - Subtitulo (ex: "Transitar em velocidade superior a maxima permitida")
+   - Rodape (ex: "Administracao do Condominio - Gestao 2026")
+   - URL da logo
+
+---
+
+## 12. Verificar Funcionamento
+
+1. No painel admin, a camera deve aparecer como **Online** (bolinha verde)
+2. Passe um veiculo na frente da camera
+3. A captura deve aparecer no dashboard em ate 30 segundos
+4. Se a velocidade for maior que o limite, o email de alerta deve chegar
+
+---
+
+## Checklist: Novo Condominio
+
+- [ ] Criar cliente no painel admin
+- [ ] Cadastrar camera com serial correto
+- [ ] Configurar camera fisica (servidor, porta, SSL, pasta /placa)
+- [ ] Reiniciar camera
+- [ ] Verificar status Online no admin
+- [ ] Cadastrar emails de alerta
+- [ ] Criar usuario admin_cliente para o condominio
+- [ ] Cadastrar veiculos dos moradores (opcional)
+- [ ] Personalizar PDF (opcional)
+- [ ] Testar: passar veiculo acima do limite e verificar email
+
+---
 
 ## Estrutura de Arquivos
 
 ```
 protector-lombada/
 ├── api/
-│   ├── captura.js          ← Recebe dados da câmera (POST)
-│   └── cron-limpeza.js     ← Limpeza diária (GET, cron)
+│   ├── captura.js            ← Recebe dados da camera (POST)
+│   ├── heartbeat.js          ← Health check das cameras
+│   ├── cron-limpeza.js       ← Limpeza diaria (cron)
+│   ├── config.js             ← Config publica do Supabase
+│   └── admin/
+│       ├── clientes.js       ← CRUD clientes
+│       ├── cameras.js        ← CRUD cameras
+│       ├── usuarios.js       ← CRUD usuarios
+│       ├── veiculos.js       ← CRUD veiculos
+│       ├── emails.js         ← CRUD destinatarios
+│       └── dashboard.js      ← Stats do admin
 ├── lib/
-│   ├── supabase.js         ← Cliente Supabase + helpers
-│   ├── pdf-generator.js    ← Geração do PDF (pdfkit)
-│   └── email-sender.js     ← Envio de e-mail (nodemailer)
+│   ├── supabase.js           ← Cliente Supabase + helpers
+│   ├── pdf-generator.js      ← Geracao do PDF (PDFKit)
+│   ├── email-sender.js       ← Envio de email (Nodemailer)
+│   ├── auth-middleware.js     ← Autenticacao JWT + auditoria
+│   ├── rate-limiter.js       ← Rate limit por camera
+│   └── validators.js         ← Validacao de inputs
+├── admin/
+│   └── index.html            ← Painel admin (SPA)
 ├── dashboard/
-│   └── index.html          ← Dashboard SPA
-├── sql/
-│   └── schema.sql          ← Schema do banco
+│   └── index.html            ← Dashboard monitoramento (SPA)
+├── sql/                      ← Schema + migrations
+├── scripts/
+│   └── create-super-admin.js ← Criar primeiro admin
 ├── docs/
-│   └── IMPLANTACAO.md      ← Este arquivo
+│   ├── IMPLANTACAO.md        ← Este arquivo
+│   ├── MANUAL_TECNICO.md     ← Manual do tecnico de campo
+│   └── MANUAL_USUARIO.md     ← Manual do usuario final
 ├── .env.example
 ├── package.json
 └── vercel.json
 ```
 
+---
+
 ## Troubleshooting
 
-### Câmera não envia dados
-- Verifique se a URL está correta (incluindo o token)
-- Teste a conectividade da câmera com a internet
-- Verifique os logs em **Vercel > Functions > Logs**
+### Camera aparece Offline
+1. Tem internet? Porta 443 (HTTPS) liberada?
+2. Endereco do servidor esta correto? (sem erros de digitacao)
+3. Serial cadastrado no admin bate com o serial real da camera?
+4. Link SSL esta habilitado na camera?
+5. Reiniciou a camera apos configurar?
 
-### E-mail não chega
-- Verifique se o App Password do Gmail está correto
-- Verifique se a verificação em 2 etapas está ativa
-- Confira se os e-mails estão cadastrados em `emails_notificacao`
+### Email de alerta nao chega
+1. Tem destinatario cadastrado na tab E-mails do cliente?
+2. O veiculo passou acima do limite? (abaixo do limite nao envia)
+3. Credenciais SMTP estao corretas nas variaveis de ambiente da Vercel?
+4. Verifique caixa de spam
+5. Veja logs em **Vercel > Functions > Logs** para erros de envio
 
-### Dashboard não carrega dados
-- Verifique se SUPABASE_URL e SUPABASE_ANON_KEY estão corretos no HTML
-- Verifique se o user_id do Auth está vinculado ao cliente
-- Confira as RLS policies no Supabase
+### Dashboard nao carrega dados
+1. Variaveis `SUPABASE_URL` e `SUPABASE_ANON_KEY` estao configuradas na Vercel?
+2. O endpoint `/api/config` esta retornando as credenciais?
+3. Confira as RLS policies no Supabase
 
-### Cron não executa
-- O cron da Vercel só funciona em projetos Pro ou com Hobby plan
-- Para Hobby: use um serviço externo (cron-job.org) para chamar a URL
-- Lembre de enviar o header `Authorization: Bearer CRON_SECRET`
+### Capturas nao aparecem mas camera esta Online
+1. A camera precisa ler uma placa para gerar captura — passe um veiculo
+2. Verifique logs da Vercel para erros no processamento
+3. Confira se o bucket `capturas-fotos` existe no Supabase Storage
+
+---
+
+## URLs do Sistema
+
+| Recurso | Endereco |
+|---|---|
+| Dashboard | `https://seu-dominio.vercel.app/` |
+| Painel Admin | `https://seu-dominio.vercel.app/admin` |
+| Endpoint capturas | `https://seu-dominio.vercel.app/placa` |
+| Endpoint heartbeat | `https://seu-dominio.vercel.app/api/heartbeat` |
+
+---
+
+**Protector Traffic Control** — Lombada Educativa — v2.0 | Abril 2026
