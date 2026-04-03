@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Protector Lombada Educativa — Controle de Velocidade para Condominios</title>
-  <meta name="description" content="Sistema inteligente de monitoramento de velocidade para condominios. Cameras ALPHADIGI com leitura de placa, alertas automaticos e relatorios em tempo real.">
+  <title>Protector Lombada Educativa — Seguranca Viaria para Condominios</title>
+  <meta name="description" content="Lombada educativa inteligente para condominios. Monitoramento de velocidade, leitura de placas e alertas automaticos para proteger quem voce ama.">
   <link rel="icon" type="image/png" href="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,377 +12,462 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg-dark: #0B1120;
-      --bg-section: #0F172A;
-      --bg-card: #1E293B;
-      --bg-card-hover: #253449;
+      --bg-dark: #050A18;
+      --bg-section: #0A1128;
+      --bg-card: #111B33;
+      --bg-card-hover: #162040;
       --accent: #046BD2;
-      --accent-light: #3B82F6;
-      --accent-glow: rgba(4, 107, 210, 0.15);
+      --accent-light: #3B9AFF;
+      --accent-glow: rgba(59,154,255,0.12);
       --cta: #F97316;
-      --cta-hover: #EA580C;
-      --green: #22C55E;
-      --red: #EF4444;
-      --yellow: #FACC15;
+      --cta-hover: #FB923C;
+      --green: #34D399;
+      --red: #F87171;
       --text-primary: #F1F5F9;
       --text-secondary: #94A3B8;
       --text-muted: #64748B;
-      --border: #1E293B;
-      --border-light: #334155;
-      --radius: 12px;
-      --radius-lg: 20px;
-      --shadow: 0 4px 24px rgba(0,0,0,0.3);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --border: rgba(255,255,255,0.06);
+      --border-light: rgba(255,255,255,0.1);
+      --glass: rgba(255,255,255,0.03);
+      --radius: 16px;
+      --radius-lg: 24px;
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg-dark);
       color: var(--text-primary);
       line-height: 1.6;
       font-size: 16px;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    /* ===== UTILITIES ===== */
+    /* ===== ANIMATIONS ===== */
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    @keyframes glow-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes count-in {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes dash-flow {
+      0% { stroke-dashoffset: 100; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes orbit {
+      from { transform: rotate(0deg) translateX(140px) rotate(0deg); }
+      to { transform: rotate(360deg) translateX(140px) rotate(-360deg); }
+    }
+
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* ===== LAYOUT ===== */
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .section { padding: 100px 0; }
-    .section-alt { background: var(--bg-section); }
-    .text-accent { color: var(--accent-light); }
-    .text-secondary { color: var(--text-secondary); }
+    .section { padding: 120px 0; position: relative; }
     .text-center { text-align: center; }
 
     .section-label {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--accent-light); margin-bottom: 16px;
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--accent-light); margin-bottom: 20px;
     }
-    .section-label::before {
-      content: ''; display: block; width: 24px; height: 2px; background: var(--accent-light); border-radius: 1px;
+    .section-label::before, .section-label::after {
+      content: ''; width: 20px; height: 1px; background: var(--accent-light); opacity: 0.5;
     }
 
     .section-title {
-      font-size: clamp(28px, 4vw, 42px); font-weight: 800; line-height: 1.2;
-      margin-bottom: 16px; letter-spacing: -0.5px;
+      font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1;
+      margin-bottom: 20px; letter-spacing: -1px;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 50%, var(--cta) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
 
     .section-desc {
-      font-size: 17px; color: var(--text-secondary); max-width: 640px; line-height: 1.7;
+      font-size: 18px; color: var(--text-secondary); max-width: 600px; line-height: 1.8;
     }
     .section-desc.centered { margin: 0 auto; }
 
     /* ===== NAV ===== */
     .nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(11, 17, 32, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(5, 10, 24, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      transition: var(--transition);
     }
     .nav-inner {
       max-width: 1200px; margin: 0 auto; padding: 0 24px;
       display: flex; justify-content: space-between; align-items: center; height: 72px;
     }
     .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-    .nav-brand img { height: 40px; width: auto; }
+    .nav-brand img { height: 40px; }
     .nav-brand-text { display: flex; flex-direction: column; }
-    .nav-brand-name { font-size: 16px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
-    .nav-brand-sub { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+    .nav-brand-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .nav-brand-sub { font-size: 10px; font-weight: 600; color: var(--accent-light); letter-spacing: 2px; text-transform: uppercase; }
 
     .nav-links { display: flex; align-items: center; gap: 8px; }
     .nav-link {
       color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
-      padding: 8px 16px; border-radius: 8px; transition: var(--transition);
+      padding: 8px 16px; border-radius: 8px; transition: all 0.2s;
     }
-    .nav-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 10px 24px; border-radius: 10px; font-family: inherit;
-      font-size: 14px; font-weight: 600; text-decoration: none; border: none;
-      cursor: pointer; transition: var(--transition); white-space: nowrap;
+      padding: 12px 28px; border-radius: 12px; font-family: inherit;
+      font-size: 15px; font-weight: 600; text-decoration: none; border: none;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
+      position: relative; overflow: hidden;
     }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(4,107,210,0.4); }
-    .btn-cta { background: var(--cta); color: #fff; }
-    .btn-cta:hover { background: var(--cta-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(249,115,22,0.4); }
-    .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid var(--border-light); }
-    .btn-outline:hover { border-color: var(--accent-light); color: var(--accent-light); background: var(--accent-glow); }
-    .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: 12px; }
+    .btn::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .btn-cta {
+      background: linear-gradient(135deg, #F97316, #FB923C);
+      color: #fff; box-shadow: 0 4px 24px rgba(249,115,22,0.3);
+    }
+    .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(249,115,22,0.5); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      color: #fff; box-shadow: 0 4px 24px rgba(4,107,210,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(4,107,210,0.5); }
+    .btn-glass {
+      background: var(--glass); color: #fff; border: 1px solid var(--border-light);
+      backdrop-filter: blur(8px);
+    }
+    .btn-glass:hover { background: rgba(255,255,255,0.08); border-color: var(--accent-light); }
+    .btn-lg { padding: 16px 36px; font-size: 16px; border-radius: 14px; }
 
     .nav-mobile-toggle {
-      display: none; background: none; border: none; color: var(--text-primary);
+      display: none; background: none; border: none; color: #fff;
       padding: 8px; cursor: pointer; border-radius: 8px;
     }
-    .nav-mobile-toggle:hover { background: rgba(255,255,255,0.05); }
 
     /* ===== HERO ===== */
     .hero {
-      padding: 160px 0 100px;
-      background: var(--bg-dark);
-      position: relative; overflow: hidden;
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 120px 0 80px; position: relative; overflow: hidden;
     }
-    .hero::before {
-      content: ''; position: absolute; top: -200px; right: -200px;
-      width: 600px; height: 600px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(4,107,210,0.08) 0%, transparent 70%);
-      pointer-events: none;
+
+    /* Orbs background */
+    .hero-orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+      animation: float 8s ease-in-out infinite;
     }
-    .hero::after {
-      content: ''; position: absolute; bottom: -100px; left: -100px;
-      width: 400px; height: 400px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%);
-      pointer-events: none;
+    .hero-orb-1 {
+      width: 600px; height: 600px; top: -150px; right: -100px;
+      background: radial-gradient(circle, rgba(4,107,210,0.15) 0%, transparent 70%);
+    }
+    .hero-orb-2 {
+      width: 400px; height: 400px; bottom: -50px; left: -100px;
+      background: radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 70%);
+      animation-delay: 3s;
+    }
+    .hero-orb-3 {
+      width: 300px; height: 300px; top: 30%; left: 40%;
+      background: radial-gradient(circle, rgba(52,211,153,0.06) 0%, transparent 70%);
+      animation-delay: 5s;
     }
 
     .hero-inner {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
       position: relative; z-index: 1;
     }
 
     .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--accent-glow); border: 1px solid rgba(4,107,210,0.3);
-      padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 500;
-      color: var(--accent-light); margin-bottom: 24px;
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);
+      padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 600;
+      color: var(--green); margin-bottom: 28px;
+      animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
     }
     .hero-badge-dot {
       width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+      box-shadow: 0 0 12px rgba(52,211,153,0.6);
+      animation: glow-pulse 2s ease-in-out infinite;
     }
 
     .hero h1 {
-      font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1;
-      letter-spacing: -1px; margin-bottom: 20px;
-    }
-    .hero h1 .highlight {
-      background: linear-gradient(135deg, var(--accent-light), var(--cta));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: clamp(36px, 5.5vw, 60px); font-weight: 800; line-height: 1.05;
+      letter-spacing: -2px; margin-bottom: 24px;
+      animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
     }
     .hero-desc {
-      font-size: 18px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;
-      max-width: 500px;
+      font-size: 19px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 36px;
+      max-width: 480px;
+      animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
     }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-actions {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+    }
 
-    /* Hero visual - dashboard mockup */
+    /* Hero visual - floating mockup */
     .hero-visual {
-      background: var(--bg-card); border: 1px solid var(--border-light);
-      border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow);
-      position: relative;
+      position: relative; animation: fade-in 1s ease 0.6s both;
     }
-    .hero-visual::before {
-      content: ''; position: absolute; inset: -1px; border-radius: var(--radius-lg);
-      background: linear-gradient(135deg, rgba(4,107,210,0.3), transparent 50%, rgba(249,115,22,0.2));
-      z-index: -1; padding: 1px;
+    .hero-visual-img {
+      width: 100%; border-radius: var(--radius-lg);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border-light);
+      animation: float 6s ease-in-out infinite;
     }
 
-    .mock-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    /* Floating badges on hero image */
+    .hero-float {
+      position: absolute; background: var(--bg-card); border: 1px solid var(--border-light);
+      border-radius: 14px; padding: 14px 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px); animation: float 5s ease-in-out infinite;
     }
-    .mock-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
-    .mock-live { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); font-weight: 600; }
-    .mock-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 1.5s ease-in-out infinite; }
+    .hero-float-1 {
+      top: 12%; right: -20px; animation-delay: 1s;
+    }
+    .hero-float-2 {
+      bottom: 18%; left: -24px; animation-delay: 2.5s;
+    }
+    .hero-float-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    .hero-float-value { font-size: 22px; font-weight: 800; margin-top: 2px; }
+    .hero-float-value.green { color: var(--green); }
+    .hero-float-value.orange { color: var(--cta); }
 
-    .mock-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-    .mock-stat {
-      background: var(--bg-dark); border-radius: 10px; padding: 14px; text-align: center;
-      border: 1px solid var(--border);
+    /* Glow ring around hero image */
+    .hero-glow {
+      position: absolute; inset: -2px; border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--accent), transparent 40%, var(--cta));
+      opacity: 0.3; z-index: -1; filter: blur(1px);
     }
-    .mock-stat-value { font-size: 24px; font-weight: 700; }
-    .mock-stat-value.blue { color: var(--accent-light); }
-    .mock-stat-value.green { color: var(--green); }
-    .mock-stat-value.orange { color: var(--cta); }
-    .mock-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
 
-    .mock-capture {
-      display: flex; align-items: center; gap: 12px;
-      background: var(--bg-dark); border-radius: 10px; padding: 12px; margin-bottom: 8px;
-      border: 1px solid var(--border);
+    /* ===== TRUST BAR ===== */
+    .trust-bar {
+      padding: 60px 0; position: relative;
+      background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-section) 100%);
     }
-    .mock-capture:last-child { margin-bottom: 0; }
-    .mock-plate {
-      background: var(--red); color: #fff; font-weight: 700; font-size: 13px;
-      padding: 4px 10px; border-radius: 6px; font-family: 'Plus Jakarta Sans', monospace;
-      letter-spacing: 1px;
+    .trust-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
     }
-    .mock-speed { font-size: 18px; font-weight: 700; }
-    .mock-speed.alert { color: var(--red); }
-    .mock-speed.ok { color: var(--green); }
-    .mock-time { font-size: 11px; color: var(--text-muted); margin-left: auto; }
-    .mock-status-badge {
-      font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
-      text-transform: uppercase; letter-spacing: 0.5px;
+    .trust-item {
+      text-align: center; padding: 28px 20px;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius); transition: all 0.4s;
     }
-    .mock-status-badge.alert { background: rgba(239,68,68,0.15); color: var(--red); }
-    .mock-status-badge.ok { background: rgba(34,197,94,0.15); color: var(--green); }
-
-    /* ===== STATS BAR ===== */
-    .stats-bar {
-      padding: 48px 0;
-      background: var(--bg-section);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+    .trust-item:hover {
+      border-color: var(--accent); background: var(--accent-glow);
+      transform: translateY(-4px);
     }
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center;
-    }
-    .stat-item-value {
-      font-size: clamp(28px, 4vw, 40px); font-weight: 800; color: var(--accent-light);
-      line-height: 1;
-    }
-    .stat-item-label { font-size: 14px; color: var(--text-muted); margin-top: 8px; font-weight: 500; }
-
-    /* ===== FEATURES ===== */
-    .features-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px;
-    }
-    .feature-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 28px; transition: var(--transition);
-    }
-    .feature-card:hover {
-      border-color: var(--accent); background: var(--bg-card-hover);
-      transform: translateY(-4px); box-shadow: 0 8px 32px rgba(4,107,210,0.1);
-    }
-    .feature-icon {
-      width: 48px; height: 48px; border-radius: 12px;
+    .trust-icon {
+      width: 48px; height: 48px; margin: 0 auto 12px;
+      background: var(--accent-glow); border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 16px; background: var(--accent-glow);
     }
-    .feature-icon svg { width: 24px; height: 24px; color: var(--accent-light); }
-    .feature-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
-    .feature-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+    .trust-icon svg { width: 24px; height: 24px; color: var(--accent-light); }
+    .trust-value {
+      font-size: clamp(28px, 4vw, 36px); font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent-light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .trust-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+    /* ===== PROBLEM / SOLUTION ===== */
+    .problem-section {
+      padding: 120px 0; position: relative; overflow: hidden;
+      background: var(--bg-section);
+    }
+    .problem-section::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.3;
+    }
+    .problem-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    }
+    .problem-img-wrap {
+      position: relative; border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .problem-img {
+      width: 100%; height: 400px; object-fit: cover; border-radius: var(--radius-lg);
+      filter: brightness(0.7);
+    }
+    .problem-img-overlay {
+      position: absolute; inset: 0; border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, transparent 40%, rgba(5,10,24,0.9) 100%);
+    }
+    .problem-img-text {
+      position: absolute; bottom: 24px; left: 24px; right: 24px;
+      font-size: 20px; font-weight: 700; line-height: 1.3;
+    }
+    .problem-img-text span { color: var(--red); }
+
+    /* ===== BENEFITS ===== */
+    .benefits-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px;
+    }
+    .benefit-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 36px 28px;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden;
+    }
+    .benefit-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .benefit-card:hover { border-color: var(--accent); transform: translateY(-6px); }
+    .benefit-card:hover::before { opacity: 1; }
+    .benefit-icon {
+      width: 56px; height: 56px; border-radius: 16px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--accent-glow), rgba(249,115,22,0.08));
+      border: 1px solid var(--border);
+    }
+    .benefit-icon svg { width: 28px; height: 28px; color: var(--accent-light); }
+    .benefit-title { font-size: 19px; font-weight: 700; margin-bottom: 10px; }
+    .benefit-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
 
     /* ===== HOW IT WORKS ===== */
-    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 48px; }
-    .step { text-align: center; position: relative; }
-    .step:not(:last-child)::after {
-      content: ''; position: absolute; top: 32px; left: calc(50% + 40px); right: calc(-50% + 40px);
-      height: 2px; background: var(--border-light);
+    .steps-visual {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 56px;
+      position: relative;
     }
+    .steps-line {
+      position: absolute; top: 40px; left: 12.5%; right: 12.5%; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--cta));
+      opacity: 0.3; z-index: 0;
+    }
+    .step-card {
+      text-align: center; padding: 0 16px; position: relative; z-index: 1;
+    }
+    .step-icon-wrap {
+      width: 80px; height: 80px; margin: 0 auto 20px; position: relative;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: var(--bg-card); border: 2px solid var(--accent);
+      box-shadow: 0 0 40px rgba(4,107,210,0.2);
+      transition: all 0.3s;
+    }
+    .step-card:hover .step-icon-wrap {
+      box-shadow: 0 0 60px rgba(4,107,210,0.4); transform: scale(1.08);
+    }
+    .step-icon-wrap svg { width: 32px; height: 32px; color: var(--accent-light); }
     .step-number {
-      width: 64px; height: 64px; border-radius: 50%;
-      background: var(--accent-glow); border: 2px solid var(--accent);
+      position: absolute; top: -6px; right: -6px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--cta); color: #fff; font-size: 12px; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px; font-weight: 800; color: var(--accent-light);
-      margin: 0 auto 16px; position: relative; z-index: 1;
     }
     .step-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
     .step-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 
-    /* ===== INTEGRATION ===== */
-    .integration-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-top: 48px;
+    /* ===== SHOWCASE ===== */
+    .showcase-section { padding: 120px 0; background: var(--bg-section); overflow: hidden; }
+    .showcase-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; margin-top: 56px;
     }
-    .integration-list { display: flex; flex-direction: column; gap: 16px; }
-    .integration-item {
+    .showcase-img-wrap { position: relative; }
+    .showcase-img {
+      width: 100%; border-radius: var(--radius-lg);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.4), 0 0 0 1px var(--border-light);
+    }
+    .showcase-img-glow {
+      position: absolute; inset: -40px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(4,107,210,0.1) 0%, transparent 70%);
+      z-index: -1; pointer-events: none;
+    }
+
+    .showcase-features { display: flex; flex-direction: column; gap: 20px; }
+    .showcase-feature {
       display: flex; gap: 16px; align-items: flex-start;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 20px; transition: var(--transition);
+      padding: 20px; border-radius: var(--radius);
+      background: var(--glass); border: 1px solid var(--border);
+      transition: all 0.3s;
     }
-    .integration-item:hover { border-color: var(--accent); }
-    .integration-icon {
-      width: 40px; height: 40px; min-width: 40px; border-radius: 10px;
+    .showcase-feature:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .showcase-check {
+      width: 32px; height: 32px; min-width: 32px; border-radius: 10px;
+      background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2);
       display: flex; align-items: center; justify-content: center;
-      background: var(--accent-glow);
     }
-    .integration-icon svg { width: 20px; height: 20px; color: var(--accent-light); }
-    .integration-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-    .integration-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-
-    .integration-visual {
-      background: var(--bg-card); border: 1px solid var(--border-light);
-      border-radius: var(--radius-lg); padding: 32px; text-align: center;
-    }
-    .integration-url {
-      background: var(--bg-dark); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px 24px; font-family: 'SF Mono', Consolas, monospace;
-      font-size: 14px; color: var(--green); margin-bottom: 24px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .integration-url .protocol { color: var(--text-muted); }
-    .integration-url .path { color: var(--cta); }
-
-    .integration-flow {
-      display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;
-    }
-    .flow-node {
-      background: var(--bg-dark); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px 16px; font-size: 12px; font-weight: 600;
-      color: var(--text-secondary); text-align: center; min-width: 100px;
-    }
-    .flow-node.active { border-color: var(--accent); color: var(--accent-light); }
-    .flow-arrow { color: var(--text-muted); font-size: 18px; }
+    .showcase-check svg { width: 16px; height: 16px; color: var(--green); }
+    .showcase-feat-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .showcase-feat-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
 
     /* ===== CTA ===== */
     .cta-section {
-      padding: 100px 0;
-      background: linear-gradient(135deg, var(--bg-section) 0%, var(--bg-dark) 100%);
-      position: relative; overflow: hidden;
+      padding: 140px 0; position: relative; overflow: hidden;
+      background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-section) 50%, var(--bg-dark) 100%);
     }
-    .cta-section::before {
-      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 800px; height: 400px; border-radius: 50%;
-      background: radial-gradient(ellipse, rgba(4,107,210,0.08) 0%, transparent 70%);
-      pointer-events: none;
+    .cta-orb {
+      position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none;
+    }
+    .cta-orb-1 {
+      width: 500px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(4,107,210,0.12) 0%, transparent 70%);
+    }
+    .cta-orb-2 {
+      width: 300px; height: 300px; bottom: 0; right: 10%;
+      background: radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%);
     }
     .cta-content {
       text-align: center; position: relative; z-index: 1; max-width: 640px; margin: 0 auto;
     }
-    .cta-actions { display: flex; gap: 16px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+    .cta-actions { display: flex; gap: 16px; justify-content: center; margin-top: 40px; flex-wrap: wrap; }
 
     /* ===== FOOTER ===== */
     .footer {
-      padding: 32px 0; border-top: 1px solid var(--border);
+      padding: 40px 0; border-top: 1px solid var(--border);
       background: var(--bg-dark);
     }
     .footer-inner {
       display: flex; justify-content: space-between; align-items: center;
     }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand img { height: 28px; opacity: 0.6; }
     .footer-text { font-size: 13px; color: var(--text-muted); }
     .footer-links { display: flex; gap: 24px; }
     .footer-link { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
-    .footer-link:hover { color: var(--text-primary); }
+    .footer-link:hover { color: #fff; }
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 1024px) {
-      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
-      .hero-visual { max-width: 560px; }
-      .features-grid { grid-template-columns: repeat(2, 1fr); }
-      .steps { grid-template-columns: repeat(2, 1fr); }
-      .step::after { display: none; }
-      .integration-grid { grid-template-columns: 1fr; }
+      .hero-inner, .problem-grid, .showcase-grid { grid-template-columns: 1fr; gap: 48px; }
+      .hero-visual { max-width: 500px; margin: 0 auto; }
+      .benefits-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps-visual { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+      .steps-line { display: none; }
     }
-
     @media (max-width: 768px) {
-      .section { padding: 64px 0; }
-      .hero { padding: 120px 0 64px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .steps { grid-template-columns: 1fr; gap: 20px; }
-      .mock-stats { grid-template-columns: repeat(3, 1fr); }
+      .section { padding: 80px 0; }
+      .hero { padding: 100px 0 60px; min-height: auto; }
+      .trust-grid { grid-template-columns: repeat(2, 1fr); }
+      .benefits-grid { grid-template-columns: 1fr; }
+      .steps-visual { grid-template-columns: 1fr; gap: 24px; }
       .nav-links .nav-link { display: none; }
       .nav-mobile-toggle { display: block; }
+      .hero-float { display: none; }
       .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
       .footer-links { justify-content: center; }
+      .problem-img { height: 280px; }
     }
-
     @media (max-width: 480px) {
-      .hero-actions { flex-direction: column; }
-      .hero-actions .btn { width: 100%; }
-      .cta-actions { flex-direction: column; align-items: center; }
-      .cta-actions .btn { width: 100%; max-width: 320px; }
-      .mock-stats { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-      .mock-stat { padding: 10px 8px; }
-      .mock-stat-value { font-size: 18px; }
+      .hero-actions, .cta-actions { flex-direction: column; align-items: stretch; }
+      .btn-lg { width: 100%; justify-content: center; }
+      .trust-grid { gap: 12px; }
+      .trust-item { padding: 20px 12px; }
     }
 
     /* ===== A11Y ===== */
@@ -390,6 +475,7 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
       html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; }
     }
   </style>
 </head>
@@ -398,19 +484,19 @@
   <!-- NAV -->
   <nav class="nav" role="navigation" aria-label="Navegacao principal">
     <div class="nav-inner">
-      <a href="/" class="nav-brand" aria-label="Protector Lombada - Pagina inicial">
+      <a href="/" class="nav-brand" aria-label="Pagina inicial">
         <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Protector" width="40" height="40">
         <div class="nav-brand-text">
           <span class="nav-brand-name">Protector</span>
           <span class="nav-brand-sub">Lombada Educativa</span>
         </div>
       </a>
-      <div class="nav-links">
-        <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
+      <div class="nav-links" id="nav-links">
+        <a href="#beneficios" class="nav-link">Beneficios</a>
         <a href="#como-funciona" class="nav-link">Como Funciona</a>
-        <a href="#integracao" class="nav-link">Integracao</a>
-        <a href="/dashboard" class="btn btn-outline" style="font-size:13px;padding:8px 18px">Dashboard</a>
-        <a href="/admin" class="btn btn-primary" style="font-size:13px;padding:8px 18px">Admin</a>
+        <a href="#solucao" class="nav-link">Solucao</a>
+        <a href="/dashboard" class="btn btn-glass" style="font-size:13px;padding:8px 20px">Dashboard</a>
+        <a href="/admin" class="btn btn-primary" style="font-size:13px;padding:8px 20px">Acessar</a>
       </div>
       <button class="nav-mobile-toggle" onclick="toggleMobile()" aria-label="Abrir menu" aria-expanded="false">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -420,219 +506,264 @@
 
   <!-- HERO -->
   <section class="hero">
+    <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb-3" aria-hidden="true"></div>
+
     <div class="container">
       <div class="hero-inner">
         <div>
           <div class="hero-badge">
             <span class="hero-badge-dot"></span>
-            Monitoramento em tempo real
+            Sistema ativo 24 horas
           </div>
-          <h1>Controle de velocidade <span class="highlight">inteligente</span> para condominios</h1>
+          <h1>Proteja quem mora no seu <span class="gradient-text">condominio</span></h1>
           <p class="hero-desc">
-            Cameras ALPHADIGI com leitura automatica de placas, medicao por radar e alertas instantaneos. Seguranca viaria com tecnologia, sem burocracia.
+            Lombada educativa inteligente que identifica veiculos em alta velocidade e notifica automaticamente a administracao. Seguranca viaria sem burocracia.
           </p>
           <div class="hero-actions">
-            <a href="/dashboard" class="btn btn-cta btn-lg">Acessar Dashboard</a>
-            <a href="#como-funciona" class="btn btn-outline btn-lg">Como Funciona</a>
+            <a href="#solucao" class="btn btn-cta btn-lg">Conhecer a solucao</a>
+            <a href="/dashboard" class="btn btn-glass btn-lg">Ver dashboard</a>
           </div>
         </div>
 
-        <!-- Dashboard mockup -->
-        <div class="hero-visual" aria-hidden="true">
-          <div class="mock-header">
-            <span class="mock-title">Dashboard — Monitoramento</span>
-            <span class="mock-live"><span class="mock-live-dot"></span>Ao vivo</span>
+        <div class="hero-visual">
+          <div class="hero-glow" aria-hidden="true"></div>
+          <img
+            src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&h=500&fit=crop&q=80"
+            alt="Condominio residencial moderno com via interna"
+            class="hero-visual-img"
+            width="800" height="500"
+            loading="eager"
+          >
+          <div class="hero-float hero-float-1" aria-hidden="true">
+            <div class="hero-float-label">Alertas hoje</div>
+            <div class="hero-float-value orange">12</div>
           </div>
-          <div class="mock-stats">
-            <div class="mock-stat"><div class="mock-stat-value blue">147</div><div class="mock-stat-label">Passagens hoje</div></div>
-            <div class="mock-stat"><div class="mock-stat-value orange">12</div><div class="mock-stat-label">Alertas</div></div>
-            <div class="mock-stat"><div class="mock-stat-value green">3</div><div class="mock-stat-label">Cameras online</div></div>
-          </div>
-          <div class="mock-capture">
-            <span class="mock-plate">QRT4A58</span>
-            <span class="mock-speed alert">52 km/h</span>
-            <span class="mock-status-badge alert">Alerta</span>
-            <span class="mock-time">14:32</span>
-          </div>
-          <div class="mock-capture">
-            <span class="mock-plate">BKL7E91</span>
-            <span class="mock-speed ok">22 km/h</span>
-            <span class="mock-status-badge ok">OK</span>
-            <span class="mock-time">14:31</span>
-          </div>
-          <div class="mock-capture">
-            <span class="mock-plate">MNP3C47</span>
-            <span class="mock-speed alert">41 km/h</span>
-            <span class="mock-status-badge alert">Alerta</span>
-            <span class="mock-time">14:29</span>
+          <div class="hero-float hero-float-2" aria-hidden="true">
+            <div class="hero-float-label">Cameras online</div>
+            <div class="hero-float-value green">3</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- STATS BAR -->
-  <section class="stats-bar">
+  <!-- TRUST BAR -->
+  <section class="trust-bar">
     <div class="container">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-item-value">24/7</div>
-          <div class="stat-item-label">Monitoramento continuo</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-item-value">&lt;2s</div>
-          <div class="stat-item-label">Tempo de deteccao</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-item-value">99.5%</div>
-          <div class="stat-item-label">Precisao na leitura</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-item-value">30s</div>
-          <div class="stat-item-label">Alerta por email</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section class="section section-alt" id="funcionalidades">
-    <div class="container">
-      <div class="text-center">
-        <div class="section-label">Funcionalidades</div>
-        <h2 class="section-title">Tudo que seu condominio precisa</h2>
-        <p class="section-desc centered">Do radar a notificacao — um sistema completo que funciona de forma autonoma.</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
+      <div class="trust-grid">
+        <div class="trust-item reveal">
+          <div class="trust-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
-          <div class="feature-title">Monitoramento em tempo real</div>
-          <div class="feature-desc">Dashboard ao vivo com todas as passagens, velocidades e fotos. Atualizacao automatica a cada 30 segundos.</div>
+          <div class="trust-value">24/7</div>
+          <div class="trust-label">Monitoramento continuo</div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <div class="trust-item reveal reveal-delay-1">
+          <div class="trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           </div>
-          <div class="feature-title">Notificacao com PDF</div>
-          <div class="feature-desc">Alertas automaticos por email com PDF anexo contendo foto do veiculo, placa, velocidade e historico.</div>
+          <div class="trust-value">&lt;2s</div>
+          <div class="trust-label">Deteccao instantanea</div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8l5 3-5 3V8z"/></svg>
+        <div class="trust-item reveal reveal-delay-2">
+          <div class="trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
-          <div class="feature-title">Cameras ALPHADIGI</div>
-          <div class="feature-desc">Integracao nativa com cameras de leitura de placa e radar. Identificacao automatica por numero de serie.</div>
+          <div class="trust-value">99.5%</div>
+          <div class="trust-label">Precisao na leitura</div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="trust-item reveal reveal-delay-3">
+          <div class="trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </div>
-          <div class="feature-title">Identificacao de moradores</div>
-          <div class="feature-desc">Cadastro de veiculos vinculados a moradores. O PDF mostra automaticamente nome, unidade e historico.</div>
+          <div class="trust-value">30s</div>
+          <div class="trust-label">Alerta por email</div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="problem-section">
+    <div class="container">
+      <div class="problem-grid">
+        <div class="problem-img-wrap reveal">
+          <img
+            src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=700&h=400&fit=crop&q=80"
+            alt="Area residencial com criancas"
+            class="problem-img"
+            width="700" height="400"
+            loading="lazy"
+          >
+          <div class="problem-img-overlay"></div>
+          <div class="problem-img-text">
+            Veiculos em <span>alta velocidade</span> colocam em risco a vida de moradores todos os dias.
+          </div>
+        </div>
+        <div class="reveal reveal-delay-2">
+          <div class="section-label">O problema</div>
+          <h2 class="section-title">Velocidade excessiva em vias internas</h2>
+          <p class="section-desc">
+            Criancas brincando, idosos caminhando, pets passeando. Condominios precisam de controle real sobre a velocidade — nao apenas placas que ninguem respeita.
+          </p>
+          <p class="section-desc" style="margin-top:16px">
+            A Lombada Educativa da Protector resolve isso com <strong style="color:#fff">tecnologia de verdade</strong>: detecta, registra e notifica automaticamente.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFITS -->
+  <section class="section" id="beneficios">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">Beneficios</div>
+        <h2 class="section-title reveal">Por que condominios <span class="gradient-text">confiam</span> na nossa solucao</h2>
+        <p class="section-desc centered reveal">Resultado imediato. Funcionamento autonomo. Sem necessidade de porteiros ou vigias monitorando.</p>
+      </div>
+      <div class="benefits-grid">
+        <div class="benefit-card reveal">
+          <div class="benefit-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <div class="feature-title">Multi-tenant seguro</div>
-          <div class="feature-desc">Cada condominio ve apenas seus dados. Isolamento total por cliente com controle de acesso por perfil.</div>
+          <div class="benefit-title">Reducao imediata de velocidade</div>
+          <div class="benefit-desc">Moradores mudam o comportamento ao saber que estao sendo monitorados. O efeito educativo comeca no primeiro dia.</div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
+        <div class="benefit-card reveal reveal-delay-1">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="benefit-title">Notificacao automatica com foto</div>
+          <div class="benefit-desc">A administracao recebe por email um relatorio com foto, placa, velocidade e identificacao do morador. Sem esforco manual.</div>
+        </div>
+        <div class="benefit-card reveal reveal-delay-2">
+          <div class="benefit-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
-          <div class="feature-title">Painel administrativo</div>
-          <div class="feature-desc">Gestao completa de clientes, cameras, usuarios, emails e configuracoes de PDF. Tudo pelo navegador.</div>
+          <div class="benefit-title">Dashboard em tempo real</div>
+          <div class="benefit-desc">Acompanhe todas as passagens ao vivo pelo navegador. Veja quem entrou, a que velocidade e a que horas.</div>
+        </div>
+        <div class="benefit-card reveal reveal-delay-1">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="benefit-title">Identifica o morador</div>
+          <div class="benefit-desc">O sistema cruza a placa com o cadastro de veiculos e ja inclui nome e unidade do morador no relatorio.</div>
+        </div>
+        <div class="benefit-card reveal reveal-delay-2">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="benefit-title">Funciona sozinho</div>
+          <div class="benefit-desc">Apos instalado, o sistema opera 24 horas por dia de forma autonoma. Nenhum operador necessario.</div>
+        </div>
+        <div class="benefit-card reveal reveal-delay-3">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8l5 3-5 3V8z"/></svg>
+          </div>
+          <div class="benefit-title">Registro visual completo</div>
+          <div class="benefit-desc">Cada passagem gera foto do veiculo com placa legivel, velocidade e horario. Historico completo para auditoria.</div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- HOW IT WORKS -->
-  <section class="section" id="como-funciona">
+  <section class="section" id="como-funciona" style="background:var(--bg-section)">
     <div class="container">
       <div class="text-center">
-        <div class="section-label">Como funciona</div>
-        <h2 class="section-title">Do radar ao email em segundos</h2>
-        <p class="section-desc centered">Processo 100% automatizado. Nenhuma intervencao manual necessaria apos a instalacao.</p>
+        <div class="section-label reveal">Como funciona</div>
+        <h2 class="section-title reveal">Do radar ao email em <span class="gradient-text">segundos</span></h2>
+        <p class="section-desc centered reveal">Processo 100% automatizado. Nenhuma intervencao manual apos a instalacao.</p>
       </div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
+      <div class="steps-visual">
+        <div class="steps-line" aria-hidden="true"></div>
+        <div class="step-card reveal">
+          <div class="step-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8l5 3-5 3V8z"/></svg>
+            <span class="step-number">1</span>
+          </div>
           <div class="step-title">Camera detecta</div>
-          <div class="step-desc">A camera ALPHADIGI le a placa e mede a velocidade com radar integrado.</div>
+          <div class="step-desc">A camera le a placa e mede a velocidade com radar integrado.</div>
         </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <div class="step-title">Dados enviados</div>
-          <div class="step-desc">Placa, velocidade e foto sao transmitidos automaticamente via HTTPS.</div>
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span class="step-number">2</span>
+          </div>
+          <div class="step-title">Dados transmitidos</div>
+          <div class="step-desc">Placa, velocidade e foto sao enviados automaticamente pela internet.</div>
         </div>
-        <div class="step">
-          <div class="step-number">3</div>
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span class="step-number">3</span>
+          </div>
           <div class="step-title">Sistema processa</div>
-          <div class="step-desc">O servidor identifica a camera, salva os dados e verifica o limite de velocidade.</div>
+          <div class="step-desc">Verifica o limite, identifica o morador e gera o relatorio.</div>
         </div>
-        <div class="step">
-          <div class="step-number">4</div>
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span class="step-number">4</span>
+          </div>
           <div class="step-title">Alerta enviado</div>
-          <div class="step-desc">Se excedeu o limite, gera PDF com foto e envia por email para os responsaveis.</div>
+          <div class="step-desc">Email com PDF completo chega para os responsaveis do condominio.</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- INTEGRATION -->
-  <section class="section section-alt" id="integracao">
+  <!-- SHOWCASE -->
+  <section class="showcase-section" id="solucao">
     <div class="container">
       <div class="text-center">
-        <div class="section-label">Integracao</div>
-        <h2 class="section-title">Instalacao simples, operacao autonoma</h2>
-        <p class="section-desc centered">Uma URL para todas as cameras. O sistema identifica cada uma automaticamente pelo serial.</p>
+        <div class="section-label reveal">A solucao</div>
+        <h2 class="section-title reveal">Tudo em um <span class="gradient-text">unico painel</span></h2>
+        <p class="section-desc centered reveal">Acompanhe tudo pelo navegador. Sem instalar nada. Acesso de qualquer lugar.</p>
       </div>
-      <div class="integration-grid">
-        <div class="integration-list">
-          <div class="integration-item">
-            <div class="integration-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            </div>
-            <div>
-              <div class="integration-title">URL unica universal</div>
-              <div class="integration-desc">Todas as cameras de todos os clientes apontam para o mesmo endereco. Sem tokens, sem configuracao extra.</div>
-            </div>
-          </div>
-          <div class="integration-item">
-            <div class="integration-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            </div>
-            <div>
-              <div class="integration-title">Identificacao por serial</div>
-              <div class="integration-desc">A camera envia o numero de serie automaticamente no payload. O sistema faz o match com o cadastro.</div>
-            </div>
-          </div>
-          <div class="integration-item">
-            <div class="integration-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-            <div>
-              <div class="integration-title">3 passos para ativar</div>
-              <div class="integration-desc">Cadastrar cliente, cadastrar camera com serial, apontar a camera para a URL. Pronto.</div>
-            </div>
-          </div>
+      <div class="showcase-grid">
+        <div class="showcase-img-wrap reveal">
+          <div class="showcase-img-glow" aria-hidden="true"></div>
+          <img
+            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&h=480&fit=crop&q=80"
+            alt="Painel de monitoramento com graficos e dados em tempo real"
+            class="showcase-img"
+            width="700" height="480"
+            loading="lazy"
+          >
         </div>
-        <div class="integration-visual">
-          <div class="integration-url">
-            <span class="protocol">https://</span>seu-dominio.vercel.app<span class="path">/placa</span>
+        <div class="showcase-features">
+          <div class="showcase-feature reveal">
+            <div class="showcase-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="showcase-feat-title">Passagens ao vivo</div>
+              <div class="showcase-feat-desc">Cada veiculo que passa aparece no painel com foto, placa, velocidade e horario.</div>
+            </div>
           </div>
-          <div class="integration-flow">
-            <div class="flow-node active">Camera ALPHADIGI</div>
-            <span class="flow-arrow">&rarr;</span>
-            <div class="flow-node active">Servidor</div>
-            <span class="flow-arrow">&rarr;</span>
-            <div class="flow-node">Banco + Storage</div>
-            <span class="flow-arrow">&rarr;</span>
-            <div class="flow-node">Email + PDF</div>
+          <div class="showcase-feature reveal reveal-delay-1">
+            <div class="showcase-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="showcase-feat-title">Alertas visuais</div>
+              <div class="showcase-feat-desc">Veiculos acima do limite ficam destacados em vermelho com indicador de alerta.</div>
+            </div>
+          </div>
+          <div class="showcase-feature reveal reveal-delay-2">
+            <div class="showcase-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="showcase-feat-title">Status das cameras</div>
+              <div class="showcase-feat-desc">Veja em tempo real quais cameras estao ativas, com indicadores de saude.</div>
+            </div>
+          </div>
+          <div class="showcase-feature reveal reveal-delay-3">
+            <div class="showcase-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="showcase-feat-title">Relatorio em PDF</div>
+              <div class="showcase-feat-desc">Cada notificacao gera um documento com logo do condominio, foto e dados completos.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -641,19 +772,20 @@
 
   <!-- CTA -->
   <section class="cta-section">
+    <div class="cta-orb cta-orb-1" aria-hidden="true"></div>
+    <div class="cta-orb cta-orb-2" aria-hidden="true"></div>
     <div class="container">
       <div class="cta-content">
-        <div class="section-label" style="justify-content:center">Acesso</div>
-        <h2 class="section-title">Acesse o sistema</h2>
-        <p class="section-desc centered">Monitore em tempo real ou gerencie clientes, cameras e configuracoes pelo painel administrativo.</p>
-        <div class="cta-actions">
+        <div class="section-label reveal">Comece agora</div>
+        <h2 class="section-title reveal" style="font-size:clamp(28px,5vw,48px)">Proteja seu condominio com <span class="gradient-text">inteligencia</span></h2>
+        <p class="section-desc centered reveal">Acesse o painel de monitoramento ou entre em contato para implantar no seu condominio.</p>
+        <div class="cta-actions reveal reveal-delay-1">
           <a href="/dashboard" class="btn btn-cta btn-lg">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Dashboard
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Acessar Dashboard
           </a>
-          <a href="/admin" class="btn btn-primary btn-lg">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            Painel Admin
+          <a href="/admin" class="btn btn-glass btn-lg">
+            Painel Administrativo
           </a>
         </div>
       </div>
@@ -664,7 +796,10 @@
   <footer class="footer">
     <div class="container">
       <div class="footer-inner">
-        <div class="footer-text">Protector Sistemas de Seguranca Eletronica</div>
+        <div class="footer-brand">
+          <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="" width="28" height="28">
+          <span class="footer-text">Protector Sistemas de Seguranca Eletronica</span>
+        </div>
         <div class="footer-links">
           <a href="/dashboard" class="footer-link">Dashboard</a>
           <a href="/admin" class="footer-link">Admin</a>
@@ -674,40 +809,51 @@
   </footer>
 
   <script>
-    // Mobile menu toggle
-    function toggleMobile() {
-      const links = document.querySelector('.nav-links');
-      const btn = document.querySelector('.nav-mobile-toggle');
-      const isOpen = links.style.display === 'flex';
+    // Reveal on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Mobile menu
+    function toggleMobile() {
+      const links = document.getElementById('nav-links');
+      const btn = document.querySelector('.nav-mobile-toggle');
+      const isOpen = links.dataset.open === 'true';
       if (isOpen) {
-        links.style.display = '';
+        links.style.cssText = '';
+        links.querySelectorAll('.nav-link').forEach(l => l.style.display = '');
+        links.dataset.open = 'false';
         btn.setAttribute('aria-expanded', 'false');
       } else {
-        links.style.cssText = 'display:flex;position:fixed;top:72px;left:0;right:0;flex-direction:column;background:rgba(11,17,32,0.98);padding:16px 24px;border-bottom:1px solid var(--border);gap:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
+        links.style.cssText = 'display:flex;position:fixed;top:72px;left:0;right:0;flex-direction:column;background:rgba(5,10,24,0.98);padding:16px 24px;border-bottom:1px solid var(--border);gap:8px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)';
         links.querySelectorAll('.nav-link').forEach(l => l.style.display = 'block');
+        links.dataset.open = 'true';
         btn.setAttribute('aria-expanded', 'true');
       }
     }
 
-    // Close mobile menu on link click
+    // Close mobile on link click
     document.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', () => {
-        const links = document.querySelector('.nav-links');
-        links.style.display = '';
+        const links = document.getElementById('nav-links');
+        links.style.cssText = '';
         links.querySelectorAll('.nav-link').forEach(l => l.style.display = '');
-        document.querySelector('.nav-mobile-toggle').setAttribute('aria-expanded', 'false');
+        links.dataset.open = 'false';
       });
     });
 
-    // Smooth scroll for anchor links
+    // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
+      anchor.addEventListener('click', function(e) {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   </script>
