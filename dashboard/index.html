@@ -1588,7 +1588,7 @@
             <div class="unit">acima do limite</div>
           </div>
           <div class="stat-card">
-            <div class="label">Vel. Maxima Hoje</div>
+            <div class="label">Vel. Máxima Hoje</div>
             <div class="value red" id="stat-maxvel">0</div>
             <div class="unit">km/h</div>
           </div>
@@ -1638,14 +1638,14 @@
               <input type="number" id="filter-vel-max" placeholder="999" min="0">
             </div>
             <div>
-              <label>Camera</label><br>
+              <label>Câmera</label><br>
               <select id="filter-camera">
                 <option value="">Todas</option>
               </select>
             </div>
             <div class="filter-check">
               <input type="checkbox" id="filter-alertas-only">
-              <label for="filter-alertas-only" style="text-transform:none;font-size:12px;cursor:pointer">So alertas</label>
+              <label for="filter-alertas-only" style="text-transform:none;font-size:12px;cursor:pointer">Só alertas</label>
             </div>
             <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
             <button class="btn-clear" onclick="clearFilters()">Limpar</button>
@@ -1740,7 +1740,7 @@
     <div style="text-align:center;padding:16px 0 24px;font-size:11px;color:var(--text-muted);letter-spacing:0.3px">
       Protector Traffic Control &middot; v1.0.1 &middot; Build 2ea9b40
       <br>
-      <a href="/dashboard/manual.html" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:500;margin-top:4px;display:inline-block">Manual do Usuario</a>
+      <a href="/dashboard/manual.html" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:500;margin-top:4px;display:inline-block">Manual do Usuário</a>
     </div>
 
   </div>
@@ -1749,7 +1749,7 @@
   <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
     <div class="vm-box">
       <div class="vm-header">
-        <h3 id="vm-title">Veiculos Cadastrados <span id="vm-count" style="font-size:13px;color:var(--text-secondary);font-weight:400"></span></h3>
+        <h3 id="vm-title">Veículos Cadastrados <span id="vm-count" style="font-size:13px;color:var(--text-secondary);font-weight:400"></span></h3>
         <button class="modal-close" onclick="fecharModalVeiculo()">&times;</button>
       </div>
       <div class="vm-tabs">
@@ -1795,7 +1795,7 @@
         </div>
         <div class="vm-actions">
           <button class="vm-btn-cancel" onclick="vmSwitchTab('lista')">Cancelar</button>
-          <button class="vm-btn-primary" onclick="salvarVeiculo()">Cadastrar Veiculo</button>
+          <button class="vm-btn-primary" onclick="salvarVeiculo()">Cadastrar Veículo</button>
         </div>
         <div class="vm-error" id="vf-error"></div>
       </div>
@@ -1803,12 +1803,12 @@
       <!-- Tab Importar/Exportar -->
       <div class="vm-body" id="vm-body-importar" style="display:none">
         <div style="margin-bottom:20px">
-          <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Exportar Veiculos</h4>
+          <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Exportar Veículos</h4>
           <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Baixe a lista completa de veículos cadastrados em formato Excel.</p>
           <button class="vm-btn-primary" onclick="exportarVeiculosExcel()" style="width:auto;padding:10px 20px">Exportar Excel</button>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:20px">
-          <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Importar Veiculos</h4>
+          <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Importar Veículos</h4>
           <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">Envie um arquivo Excel (.xlsx) com as colunas:</p>
           <p style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px;font-family:'SF Mono',Consolas,monospace">PLACA | MORADOR | UNIDADE | MARCA | COR</p>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
@@ -2516,10 +2516,10 @@
           btns += `<button class="${p === vmListaPage ? 'active' : ''}" onclick="vmListaGoTo(${p})">${p}</button>`;
         }
         btns += `<button onclick="vmListaGoTo(${vmListaPage + 1})" ${vmListaPage === totalPages ? 'disabled' : ''}>&rsaquo;</button>`;
-        btns += `<span style="margin-left:8px;color:var(--text-muted);font-size:11px">${data.length} veiculos</span>`;
+        btns += `<span style="margin-left:8px;color:var(--text-muted);font-size:11px">${data.length} veículos</span>`;
         pgEl.innerHTML = btns;
       } else {
-        pgEl.innerHTML = `<span style="color:var(--text-muted);font-size:11px">${data.length} veiculos</span>`;
+        pgEl.innerHTML = `<span style="color:var(--text-muted);font-size:11px">${data.length} veículos</span>`;
       }
     }
 
@@ -2911,7 +2911,7 @@
       doc.text(`Alertas: ${totalAlertas}`, margin + col4 * 1.5, summaryY, { align: 'center' });
       doc.setTextColor(4, 107, 210);
       doc.text(`Vel. Media: ${velMedia} km/h`, margin + col4 * 2.5, summaryY, { align: 'center' });
-      doc.text(`Vel. Maxima: ${velMax} km/h`, margin + col4 * 3.5, summaryY, { align: 'center' });
+      doc.text(`Vel. Máxima: ${velMax} km/h`, margin + col4 * 3.5, summaryY, { align: 'center' });
 
       // --- Tabela ---
       y += 16;
@@ -3076,7 +3076,7 @@
       // Morador section
       if (veiculo) {
         html += `<div class="modal-morador">
-          <h4>Veiculo Cadastrado</h4>
+          <h4>Veículo Cadastrado</h4>
           <div class="morador-grid">
             <div><span>Morador</span><strong>${veiculo.nome_morador || '---'}</strong></div>
             <div><span>Unidade</span><strong>${veiculo.unidade || '---'}</strong></div>
@@ -3085,7 +3085,7 @@
         </div>`;
       } else {
         html += `<div class="modal-morador" style="border-left-color:var(--text-muted);opacity:0.6">
-          <h4>Veiculo nao cadastrado</h4>
+          <h4>Veículo não cadastrado</h4>
           <div style="font-size:12px;color:var(--text-muted)">Cadastre este veículo no painel administrativo para identificar o morador.</div>
         </div>`;
       }
@@ -3093,7 +3093,7 @@
       // Historico de velocidades
       if (historico && historico.length > 1) {
         html += `<div class="modal-historico">
-          <h4>Ultimas Passagens desta Placa (${historico.length})</h4>
+          <h4>Últimas Passagens desta Placa (${historico.length})</h4>
           <div class="historico-grid">
             ${historico.map(h => {
               const hts = new Date(h.timestamp);

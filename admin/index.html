@@ -694,7 +694,7 @@ async function initApp() {
     const cfg = await resp.json();
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
-    // Detectar recuperacao de senha
+    // Detectar recuperação de senha
     sb.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         const newPassword = prompt('Digite sua nova senha (mínimo 6 caracteres):');
