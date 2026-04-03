@@ -188,7 +188,10 @@ module.exports = async function handler(req, res) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 1e6) { req.destroy(); reject(new Error('Payload muito grande')); }
+    });
     req.on('end', () => resolve(body));
     req.on('error', reject);
   });

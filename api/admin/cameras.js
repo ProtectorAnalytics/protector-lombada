@@ -1,5 +1,6 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
 const crypto = require('crypto');
+const { isValidUUID, isValidSerial } = require('../../lib/validators');
 
 module.exports = async function handler(req, res) {
   try {
@@ -10,7 +11,7 @@ module.exports = async function handler(req, res) {
       const { profile } = await autenticar(req, ['super_admin', 'admin_cliente', 'operador']);
       const clienteId = req.query.cliente_id || profile.cliente_id;
 
-      if (!clienteId) return res.status(400).json({ error: 'cliente_id obrigatório' });
+      if (!clienteId || !isValidUUID(clienteId)) return res.status(400).json({ error: 'cliente_id obrigatório e deve ser UUID válido' });
       if (!verificarAcessoCliente(profile, clienteId)) {
         return res.status(403).json({ error: 'Sem acesso a este cliente' });
       }
@@ -31,8 +32,11 @@ module.exports = async function handler(req, res) {
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
 
       const { cliente_id, nome, serial_number, nome_exibicao } = body;
-      if (!cliente_id || !serial_number) {
-        return res.status(400).json({ error: 'Campos obrigatórios: cliente_id, serial_number' });
+      if (!cliente_id || !isValidUUID(cliente_id)) {
+        return res.status(400).json({ error: 'cliente_id obrigatório e deve ser UUID válido' });
+      }
+      if (!serial_number || !isValidSerial(serial_number)) {
+        return res.status(400).json({ error: 'serial_number obrigatório (1-64 caracteres alfanuméricos)' });
       }
 
       // Se tiver serial_number, verificar se já existe
@@ -175,7 +179,10 @@ module.exports = async function handler(req, res) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 1e6) { req.destroy(); reject(new Error('Payload muito grande')); }
+    });
     req.on('end', () => resolve(body));
     req.on('error', reject);
   });

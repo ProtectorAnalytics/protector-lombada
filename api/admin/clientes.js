@@ -1,5 +1,4 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
-const crypto = require('crypto');
 const { isValidVelocidade, isValidCNPJ, isValidTelefone, isValidCEP, sanitize } = require('../../lib/validators');
 
 module.exports = async function handler(req, res) {
@@ -205,7 +204,10 @@ module.exports = async function handler(req, res) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 1e6) { req.destroy(); reject(new Error('Payload muito grande')); }
+    });
     req.on('end', () => resolve(body));
     req.on('error', reject);
   });
