@@ -14,6 +14,7 @@ const {
 const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
 const { checkRateLimit } = require('../lib/rate-limiter');
+const { isValidToken, parseTimestamp } = require('../lib/validators');
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -28,7 +29,7 @@ async function logError(message, data) {
       raw_body: message,
       parsed_json: typeof data === 'object' ? data : { value: data },
     });
-  } catch { /* ignore log errors */ }
+  } catch (logErr) { console.error('Falha ao gravar log:', logErr.message); }
 }
 
 module.exports = async function handler(req, res) {
@@ -56,6 +57,9 @@ module.exports = async function handler(req, res) {
     let camera = null;
 
     if (token) {
+      if (!isValidToken(token)) {
+        return res.status(400).json({ error: 'Formato de token inválido' });
+      }
       camera = await findCameraByToken(token);
     }
 
@@ -131,7 +135,9 @@ module.exports = async function handler(req, res) {
     // Extrair campos
     const placa = (normalized.plate || normalized.placa || '').toUpperCase().trim();
     const velocidade = parseInt(normalized.speed || normalized.velocidade || '0', 10);
-    const timestamp = normalized.time || normalized.timestamp || new Date().toISOString();
+    const rawTimestamp = normalized.time || normalized.timestamp || null;
+    const parsedTs = rawTimestamp ? parseTimestamp(rawTimestamp) : null;
+    const timestamp = parsedTs ? parsedTs.toISOString() : new Date().toISOString();
     const pixels = parseInt(normalized.pixels || '0', 10);
     const tipoVeiculo = normalized.vehicleType || normalized.tipo_veiculo || '';
     const corVeiculo = normalized.vehicleColor || normalized.cor_veiculo || '';

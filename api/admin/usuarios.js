@@ -79,8 +79,12 @@ module.exports = async function handler(req, res) {
         .single();
 
       if (error) {
-        // Rollback: deletar usuário do Auth
-        await supabase.auth.admin.deleteUser(authData.user.id);
+        // Rollback: deletar usuário do Auth se perfil falhou
+        try {
+          await supabase.auth.admin.deleteUser(authData.user.id);
+        } catch (rollbackErr) {
+          console.error('Falha no rollback do auth user:', rollbackErr.message);
+        }
         throw error;
       }
 
@@ -120,13 +124,17 @@ module.exports = async function handler(req, res) {
 
       if (!id) return res.status(400).json({ error: 'ID do usuário obrigatório' });
 
-      delete campos.auth_id;
-      delete campos.criado_em;
+      // Whitelist de campos permitidos
+      const CAMPOS_PERMITIDOS = ['nome', 'email', 'role', 'cliente_id', 'ativo'];
+      const camposFiltrados = {};
+      for (const key of CAMPOS_PERMITIDOS) {
+        if (campos[key] !== undefined) camposFiltrados[key] = campos[key];
+      }
 
       // Atualizar perfil
       const { data, error } = await supabase
         .from('usuarios')
-        .update(campos)
+        .update(camposFiltrados)
         .eq('id', id)
         .select()
         .single();
@@ -219,7 +227,10 @@ module.exports = async function handler(req, res) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > 1e6) { req.destroy(); reject(new Error('Payload muito grande')); }
+    });
     req.on('end', () => resolve(body));
     req.on('error', reject);
   });
