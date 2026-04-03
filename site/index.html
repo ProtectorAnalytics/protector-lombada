@@ -5,8 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Protector Lombada Educativa — Segurança Viária para Condomínios</title>
   <meta name="description" content="Lombada educativa inteligente para condomínios. Monitoramento de velocidade, leitura de placas e alertas automáticos para proteger quem você ama.">
+
+  <!-- Open Graph / Redes Sociais -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://protector-lombada.vercel.app/">
+  <meta property="og:title" content="Protector Lombada Educativa — Segurança Viária para Condomínios">
+  <meta property="og:description" content="Lombada educativa inteligente que identifica veículos em alta velocidade e notifica automaticamente a administração. Segurança viária sem burocracia.">
+  <meta property="og:image" content="https://protector-lombada.vercel.app/og-image.jpg">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Protector Lombada Educativa">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Protector Lombada Educativa — Segurança Viária para Condomínios">
+  <meta name="twitter:description" content="Lombada educativa inteligente que identifica veículos em alta velocidade e notifica automaticamente a administração.">
+  <meta name="twitter:image" content="https://protector-lombada.vercel.app/og-image.jpg">
+
+  <!-- SEO Técnico -->
+  <link rel="canonical" href="https://protector-lombada.vercel.app/">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Protector Sistemas de Segurança Eletrônica">
+  <meta name="keywords" content="lombada educativa, condomínio, segurança viária, controle de velocidade, câmera lombada, monitoramento condomínio">
+
+  <!-- Dados Estruturados -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Protector Lombada Educativa",
+    "description": "Lombada educativa inteligente que identifica veículos em alta velocidade e notifica automaticamente a administração do condomínio.",
+    "brand": { "@type": "Brand", "name": "Protector Sistemas de Segurança Eletrônica" },
+    "offers": {
+      "@type": "Offer",
+      "availability": "https://schema.org/InStock",
+      "priceCurrency": "BRL",
+      "seller": { "@type": "Organization", "name": "Protector Sistemas de Segurança Eletrônica" }
+    }
+  }
+  </script>
+
+  <!-- Preload assets críticos -->
   <link rel="icon" type="image/png" href="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="dns-prefetch" href="https://appps.com.br">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -225,7 +268,8 @@
       position: relative; animation: fade-in 1s ease 0.6s both;
     }
     .hero-visual-img {
-      width: 100%; border-radius: var(--radius-lg);
+      width: 100%; height: 500px; object-fit: cover; object-position: center;
+      border-radius: var(--radius-lg);
       box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border-light);
       animation: float 6s ease-in-out infinite;
     }
@@ -301,7 +345,8 @@
       position: relative; border-radius: var(--radius-lg); overflow: hidden;
     }
     .problem-img {
-      width: 100%; height: 400px; object-fit: cover; border-radius: var(--radius-lg);
+      width: 100%; height: 400px; object-fit: cover; object-position: center;
+      border-radius: var(--radius-lg); display: block;
       filter: brightness(0.7);
     }
     .problem-img-overlay {
@@ -380,8 +425,9 @@
     }
     .showcase-img-wrap { position: relative; }
     .showcase-img {
-      width: 100%; border-radius: var(--radius-lg);
-      box-shadow: 0 40px 80px rgba(0,0,0,0.4), 0 0 0 1px var(--border-light);
+      width: 100%; height: 480px; object-fit: cover; object-position: center top;
+      border-radius: var(--radius-lg); display: block;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.6);
     }
     .showcase-img-glow {
       position: absolute; inset: -40px; border-radius: 50%;
@@ -444,7 +490,8 @@
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 1024px) {
-      .hero-inner, .problem-grid, .showcase-grid { grid-template-columns: 1fr; gap: 48px; }
+      .hero { min-height: auto; padding: 100px 0 60px; }
+      .hero-inner, .problem-grid, .showcase-grid, .contact-inner { grid-template-columns: 1fr; gap: 48px; }
       .hero-visual { max-width: 500px; margin: 0 auto; }
       .benefits-grid { grid-template-columns: repeat(2, 1fr); }
       .steps-visual { grid-template-columns: repeat(2, 1fr); gap: 32px; }
@@ -452,16 +499,18 @@
     }
     @media (max-width: 768px) {
       .section { padding: 80px 0; }
-      .hero { padding: 100px 0 60px; min-height: auto; }
+      .hero { min-height: auto; padding: 80px 0 48px; }
       .trust-grid { grid-template-columns: repeat(2, 1fr); }
       .benefits-grid { grid-template-columns: 1fr; }
       .steps-visual { grid-template-columns: 1fr; gap: 24px; }
       .nav-links .nav-link { display: none; }
       .nav-mobile-toggle { display: block; }
       .hero-float { display: none; }
-      .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
-      .footer-links { justify-content: center; }
       .problem-img { height: 280px; }
+      .contact-form { padding: 28px 20px; }
+      .footer-top { grid-template-columns: 1fr; gap: 40px; }
+      .footer-nav-col { gap: 32px; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
     }
     @media (max-width: 480px) {
       .hero-actions, .cta-actions { flex-direction: column; align-items: stretch; }
@@ -469,6 +518,54 @@
       .trust-grid { gap: 12px; }
       .trust-item { padding: 20px 12px; }
     }
+
+    /* ===== CONTACT ===== */
+    .contact-section { padding: 120px 0; background: var(--bg-dark); position: relative; }
+    .contact-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .contact-channels { display: flex; flex-direction: column; gap: 16px; margin-top: 36px; }
+    .contact-btn {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 16px 24px; border-radius: var(--radius); font-size: 15px; font-weight: 600;
+      text-decoration: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid var(--border);
+    }
+    .contact-btn-whatsapp { background: rgba(37,211,102,0.08); border-color: rgba(37,211,102,0.3); color: #25D366; }
+    .contact-btn-whatsapp:hover { background: rgba(37,211,102,0.15); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,211,102,0.2); }
+    .contact-btn-email { background: var(--glass); color: var(--text-secondary); }
+    .contact-btn-email:hover { background: var(--accent-glow); border-color: var(--accent); color: var(--text-primary); transform: translateY(-2px); }
+    .contact-form {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 40px 36px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.3px; }
+    .form-group input, .form-group textarea {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px; font-family: inherit; font-size: 14px;
+      color: var(--text-primary); outline: none; transition: border-color 0.2s, box-shadow 0.2s; resize: vertical;
+    }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-muted); }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .form-submit-btn { width: 100%; margin-top: 8px; }
+    .form-privacy { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 12px; }
+
+    /* ===== FOOTER EXPANDED ===== */
+    .footer { background: var(--bg-dark); border-top: 1px solid var(--border); padding: 64px 0 32px; }
+    .footer-top { display: grid; grid-template-columns: 1.2fr 1fr; gap: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+    .footer-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .footer-brand img { border-radius: 8px; }
+    .footer-brand-name { font-size: 16px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+    .footer-brand-sub { font-size: 10px; font-weight: 600; color: var(--accent-light); letter-spacing: 2px; text-transform: uppercase; }
+    .footer-tagline { font-size: 14px; color: var(--text-muted); line-height: 1.7; max-width: 300px; }
+    .footer-nav-col { display: flex; gap: 48px; }
+    .footer-nav-group { display: flex; flex-direction: column; gap: 12px; }
+    .footer-nav-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+    .footer-link { font-size: 14px; color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+    .footer-link:hover { color: var(--text-primary); }
+    .footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .footer-copy { font-size: 13px; color: var(--text-muted); }
+    .footer-legal { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-muted); }
+    .footer-link-sm { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    .footer-link-sm:hover { color: var(--text-secondary); }
 
     /* ===== A11Y ===== */
     :focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
@@ -495,6 +592,7 @@
         <a href="#beneficios" class="nav-link">Benefícios</a>
         <a href="#como-funciona" class="nav-link">Como Funciona</a>
         <a href="#solucao" class="nav-link">Solução</a>
+        <a href="#contato" class="nav-link">Contato</a>
         <a href="/dashboard" class="btn btn-glass" style="font-size:13px;padding:8px 20px">Dashboard</a>
         <a href="/admin" class="btn btn-primary" style="font-size:13px;padding:8px 20px">Acessar</a>
       </div>
@@ -530,11 +628,18 @@
         <div class="hero-visual">
           <div class="hero-glow" aria-hidden="true"></div>
           <img
-            src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&h=500&fit=crop&q=80"
-            alt="Condomínio residencial moderno com via interna"
+            alt="Via interna de condomínio residencial com câmera de monitoramento de velocidade"
             class="hero-visual-img"
+            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop"
+            srcset="
+              https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80&auto=format&fit=crop 400w,
+              https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop 800w,
+              https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80&auto=format&fit=crop 1200w
+            "
+            sizes="(max-width: 1024px) 100vw, 50vw"
             width="800" height="500"
             loading="eager"
+            fetchpriority="high"
           >
           <div class="hero-float hero-float-1" aria-hidden="true">
             <div class="hero-float-label">Alertas hoje</div>
@@ -591,9 +696,15 @@
       <div class="problem-grid">
         <div class="problem-img-wrap reveal">
           <img
-            src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=700&h=400&fit=crop&q=80"
-            alt="Área residencial com crianças"
+            alt="Criança brincando em via interna de condomínio residencial"
             class="problem-img"
+            src="https://images.unsplash.com/photo-1471286174890-9c112ac6fd52?w=700&q=80&auto=format&fit=crop"
+            srcset="
+              https://images.unsplash.com/photo-1471286174890-9c112ac6fd52?w=400&q=80&auto=format&fit=crop 400w,
+              https://images.unsplash.com/photo-1471286174890-9c112ac6fd52?w=700&q=80&auto=format&fit=crop 700w,
+              https://images.unsplash.com/photo-1471286174890-9c112ac6fd52?w=1000&q=80&auto=format&fit=crop 1000w
+            "
+            sizes="(max-width: 1024px) 100vw, 50vw"
             width="700" height="400"
             loading="lazy"
           >
@@ -729,9 +840,15 @@
         <div class="showcase-img-wrap reveal">
           <div class="showcase-img-glow" aria-hidden="true"></div>
           <img
-            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&h=480&fit=crop&q=80"
-            alt="Painel de monitoramento com gráficos e dados em tempo real"
+            alt="Interface de monitoramento com dados de velocidade e câmeras em tempo real"
             class="showcase-img"
+            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&q=80&auto=format&fit=crop"
+            srcset="
+              https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&q=80&auto=format&fit=crop 400w,
+              https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&q=80&auto=format&fit=crop 700w,
+              https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80&auto=format&fit=crop 1200w
+            "
+            sizes="(max-width: 1024px) 100vw, 50vw"
             width="700" height="480"
             loading="lazy"
           >
@@ -780,14 +897,64 @@
         <h2 class="section-title reveal" style="font-size:clamp(28px,5vw,48px)">Proteja seu condomínio com <span class="gradient-text">inteligência</span></h2>
         <p class="section-desc centered reveal">Acesse o painel de monitoramento ou entre em contato para implantar no seu condomínio.</p>
         <div class="cta-actions reveal reveal-delay-1">
-          <a href="/dashboard" class="btn btn-cta btn-lg">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Acessar Dashboard
+          <a href="#contato" class="btn btn-cta btn-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Solicitar proposta
           </a>
-          <a href="/admin" class="btn btn-glass btn-lg">
-            Painel Administrativo
-          </a>
+          <a href="/dashboard" class="btn btn-glass btn-lg">Ver dashboard</a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTATO -->
+  <section class="contact-section" id="contato">
+    <div class="container">
+      <div class="contact-inner">
+        <div class="contact-info reveal">
+          <div class="section-label">Fale conosco</div>
+          <h2 class="section-title">Implante no seu<br><span class="gradient-text">condomínio</span></h2>
+          <p class="section-desc">
+            Entre em contato para receber uma proposta personalizada. Atendemos condomínios residenciais e comerciais em todo o Brasil.
+          </p>
+          <div class="contact-channels">
+            <a href="https://wa.me/5527999820888?text=Olá!%20Tenho%20interesse%20na%20Lombada%20Educativa%20Protector." class="contact-btn contact-btn-whatsapp" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Chamar no WhatsApp
+            </a>
+            <a href="mailto:contato@protectorsistemas.com.br" class="contact-btn contact-btn-email">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,12 2,6"></polyline></svg>
+              Enviar e-mail
+            </a>
+          </div>
+        </div>
+        <form class="contact-form reveal reveal-delay-2" id="lead-form" novalidate>
+          <div class="form-group">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" name="nome" placeholder="Seu nome" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="seu@email.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="condominio">Nome do condomínio</label>
+            <input type="text" id="condominio" name="condominio" placeholder="Ex: Residencial das Flores" required>
+          </div>
+          <div class="form-group">
+            <label for="cidade">Cidade / Estado</label>
+            <input type="text" id="cidade" name="cidade" placeholder="Ex: São Paulo - SP" required>
+          </div>
+          <div class="form-group">
+            <label for="mensagem">Mensagem (opcional)</label>
+            <textarea id="mensagem" name="mensagem" rows="3" placeholder="Conte um pouco sobre o seu condomínio..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-cta btn-lg form-submit-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            Solicitar proposta
+          </button>
+          <p class="form-privacy">Seus dados são confidenciais e não serão compartilhados.</p>
+        </form>
       </div>
     </div>
   </section>
@@ -795,14 +962,39 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="" width="28" height="28">
-          <span class="footer-text">Protector Sistemas de Segurança Eletrônica</span>
+      <div class="footer-top">
+        <div class="footer-brand-col">
+          <div class="footer-brand">
+            <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Protector Sistemas de Segurança Eletrônica" width="36" height="36">
+            <div>
+              <div class="footer-brand-name">Protector</div>
+              <div class="footer-brand-sub">Lombada Educativa</div>
+            </div>
+          </div>
+          <p class="footer-tagline">Segurança viária inteligente para condomínios.<br>Detecta, registra e notifica automaticamente.</p>
         </div>
-        <div class="footer-links">
-          <a href="/dashboard" class="footer-link">Dashboard</a>
-          <a href="/admin" class="footer-link">Admin</a>
+        <div class="footer-nav-col">
+          <div class="footer-nav-group">
+            <div class="footer-nav-title">Produto</div>
+            <a href="#beneficios" class="footer-link">Benefícios</a>
+            <a href="#como-funciona" class="footer-link">Como funciona</a>
+            <a href="#solucao" class="footer-link">Solução</a>
+            <a href="/dashboard" class="footer-link">Dashboard</a>
+          </div>
+          <div class="footer-nav-group">
+            <div class="footer-nav-title">Empresa</div>
+            <a href="#contato" class="footer-link">Contato</a>
+            <a href="mailto:contato@protectorsistemas.com.br" class="footer-link">E-mail</a>
+            <a href="/admin" class="footer-link">Área do cliente</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">&copy; 2026 Protector Sistemas de Segurança Eletrônica. Todos os direitos reservados.</p>
+        <div class="footer-legal">
+          <a href="/privacidade" class="footer-link-sm">Política de Privacidade</a>
+          <span>&middot;</span>
+          <a href="/termos" class="footer-link-sm">Termos de Uso</a>
         </div>
       </div>
     </div>
@@ -856,6 +1048,26 @@
         if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
+
+    // Lead Form
+    const leadForm = document.getElementById('lead-form');
+    if (leadForm) {
+      leadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('.form-submit-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="20 6 9 17 4 12"></polyline></svg> Enviado com sucesso!';
+        btn.style.background = 'linear-gradient(135deg, #34D399, #10B981)';
+        btn.disabled = true;
+        // TODO: Integrar com backend, Formspree, EmailJS ou webhook
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = '';
+          btn.disabled = false;
+          this.reset();
+        }, 4000);
+      });
+    }
   </script>
 </body>
 </html>
