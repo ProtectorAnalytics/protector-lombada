@@ -3,3 +3,6 @@ node_modules/
 .vercel/
 *.log
 .vercel
+.DS_Store
+.claude/
+backup-historico/
