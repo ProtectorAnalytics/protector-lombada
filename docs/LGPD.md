@@ -117,7 +117,7 @@ Para prestar o serviço, a Protector utiliza os seguintes suboperadores:
 
 | Suboperador | Finalidade | Localização dos dados |
 |---|---|---|
-| **Supabase** (Supabase Inc.) | Banco de dados e storage | Região Sul-América (São Paulo) |
+| **Supabase** (Supabase Inc.) | Banco de dados e storage | Região América do Sul (São Paulo) |
 | **Vercel** (Vercel Inc.) | Hospedagem serverless | Multi-região |
 | **Provedor SMTP** (cPanel ou Gmail) | Envio de e-mails | Conforme escolha do cliente |
 

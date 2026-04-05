@@ -68,7 +68,7 @@ O Protector Traffic Control é uma aplicação **serverless multi-tenant** que i
    - Foto do veículo (signed URL do Storage)
    - Placa, velocidade, limite, data/hora
    - Nome do morador + unidade (lookup em `veiculos` pela placa)
-   - Histórico de últimas 30 passagens da placa
+   - Histórico das últimas 30 passagens da placa
 2. `lib/email-sender.js` busca destinatários do cliente (tipo `alerta` ou `todos`)
 3. **Nodemailer** envia e-mail com PDF anexo via SMTP configurado
 4. `capturas.notificado` é marcado como `true`
@@ -151,7 +151,7 @@ A câmera ALPHADIGI envia o serial embutido no payload automaticamente. O backen
 ### Por que serverless (Vercel Functions)
 
 - **Custo**: pagamos por invocação, não por servidor ocioso
-- **Escala automática**: lidam com picos (horário de pico do condomínio) sem intervenção
+- **Escala automática**: lida com picos (horário de pico do condomínio) sem intervenção
 - **Zero ops**: sem gerenciamento de infraestrutura
 - **Cold start mitigado**: Fluid Compute reutiliza instâncias entre requests
 
