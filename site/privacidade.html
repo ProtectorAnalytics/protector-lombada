@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidade — Protector Lombada Educativa</title>
+  <meta name="description" content="Política de Privacidade da Protector Sistemas de Segurança — tratamento de dados pessoais, LGPD, direitos do titular e canal do Encarregado (DPO).">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://protector-lombada.vercel.app/privacidade">
+  <meta property="og:title" content="Política de Privacidade — Protector">
+  <meta property="og:description" content="Política de Privacidade em conformidade com a LGPD (Lei 13.709/2018).">
+  <meta property="og:locale" content="pt_BR">
+
+  <link rel="canonical" href="https://protector-lombada.vercel.app/privacidade">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Protector Sistemas de Segurança Eletrônica">
+
+  <link rel="icon" type="image/png" href="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-dark: #050A18;
+      --bg-section: #0A1128;
+      --bg-card: #111B33;
+      --bg-card-hover: #162040;
+      --accent: #046BD2;
+      --accent-light: #3B9AFF;
+      --accent-glow: rgba(59,154,255,0.12);
+      --cta: #F97316;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --border: rgba(255,255,255,0.06);
+      --border-light: rgba(255,255,255,0.1);
+      --glass: rgba(255,255,255,0.03);
+      --radius: 16px;
+      --radius-lg: 24px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.7;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ===== NAV ===== */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(5, 10, 24, 0.85);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px; color: var(--text-primary);
+    }
+    .nav-brand img { width: 36px; height: 36px; }
+    .nav-brand-text { font-weight: 700; font-size: 18px; }
+    .nav-brand-sub { font-size: 12px; color: var(--text-muted); }
+    .nav-back {
+      padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 8px;
+      color: var(--text-secondary); font-size: 14px; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-back:hover { background: var(--glass); color: var(--text-primary); text-decoration: none; }
+
+    /* ===== HEADER ===== */
+    .header {
+      padding: 80px 24px 60px;
+      text-align: center;
+      background: radial-gradient(ellipse at center top, var(--accent-glow), transparent 70%);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-label {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--accent-light); margin-bottom: 20px;
+    }
+    .header-title {
+      font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1;
+      margin-bottom: 20px; letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 50%, var(--cta) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .header-meta {
+      font-size: 14px; color: var(--text-muted);
+    }
+
+    /* ===== CONTENT ===== */
+    .content {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+    .content h2 {
+      font-size: 26px; font-weight: 700; color: var(--text-primary);
+      margin-top: 48px; margin-bottom: 16px; letter-spacing: -0.3px;
+      scroll-margin-top: 80px;
+    }
+    .content h2:first-child { margin-top: 0; }
+    .content h3 {
+      font-size: 19px; font-weight: 600; color: var(--accent-light);
+      margin-top: 28px; margin-bottom: 10px;
+    }
+    .content p {
+      color: var(--text-secondary); margin-bottom: 14px;
+    }
+    .content ul, .content ol {
+      color: var(--text-secondary); margin: 12px 0 14px 24px;
+    }
+    .content li {
+      margin-bottom: 6px;
+    }
+    .content strong { color: var(--text-primary); font-weight: 600; }
+
+    .callout {
+      background: var(--glass);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--accent-light);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .callout-title {
+      font-weight: 700; color: var(--accent-light); font-size: 13px;
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .callout p { margin-bottom: 0; }
+
+    .table-wrap {
+      overflow-x: auto; margin: 20px 0;
+      border: 1px solid var(--border-light); border-radius: var(--radius);
+    }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
+    }
+    th, td {
+      padding: 14px 18px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: var(--bg-card);
+      color: var(--text-primary); font-weight: 700;
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    td { color: var(--text-secondary); }
+    tr:last-child td { border-bottom: none; }
+
+    .company-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin: 32px 0;
+    }
+    .company-card-title {
+      font-weight: 700; color: var(--text-primary); font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .company-field {
+      display: flex; gap: 16px; padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .company-field:last-child { border-bottom: none; }
+    .company-field-label {
+      font-size: 13px; color: var(--text-muted); min-width: 140px; font-weight: 500;
+    }
+    .company-field-value {
+      font-size: 14px; color: var(--text-primary); flex: 1;
+    }
+
+    .toc {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 40px;
+    }
+    .toc-title {
+      font-size: 13px; font-weight: 700; color: var(--accent-light);
+      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
+    }
+    .toc ol {
+      margin-left: 20px; color: var(--text-secondary);
+    }
+    .toc li { margin-bottom: 6px; }
+    .toc a { color: var(--text-secondary); }
+    .toc a:hover { color: var(--accent-light); }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .footer p { margin-bottom: 6px; }
+    .footer a { color: var(--text-secondary); }
+
+    @media (max-width: 640px) {
+      .header { padding: 50px 20px 40px; }
+      .content { padding: 40px 20px 80px; }
+      .company-card { padding: 24px; }
+      .company-field { flex-direction: column; gap: 4px; }
+      .company-field-label { min-width: auto; }
+      th, td { padding: 10px 12px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Protector">
+        <div>
+          <div class="nav-brand-text">Protector</div>
+          <div class="nav-brand-sub">Lombada Educativa</div>
+        </div>
+      </a>
+      <a href="/" class="nav-back">← Voltar ao site</a>
+    </div>
+  </nav>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-label">LGPD · Lei 13.709/2018</div>
+    <h1 class="header-title">Política de Privacidade</h1>
+    <p class="header-meta">Versão 1.0 · Vigente a partir de abril de 2026</p>
+  </header>
+
+  <!-- ===== CONTENT ===== -->
+  <main class="content">
+
+    <!-- Sumário -->
+    <div class="toc">
+      <div class="toc-title">Conteúdo</div>
+      <ol>
+        <li><a href="#quem-somos">Quem somos</a></li>
+        <li><a href="#aplicacao">A quem esta política se aplica</a></li>
+        <li><a href="#dados-controladora">Dados tratados como Controladora</a></li>
+        <li><a href="#dados-operadora">Dados tratados como Operadora</a></li>
+        <li><a href="#base-legal">Base legal</a></li>
+        <li><a href="#compartilhamento">Com quem compartilhamos dados</a></li>
+        <li><a href="#seguranca">Como protegemos os dados</a></li>
+        <li><a href="#direitos">Seus direitos</a></li>
+        <li><a href="#dpo">Encarregado (DPO)</a></li>
+        <li><a href="#alteracoes">Alterações nesta Política</a></li>
+        <li><a href="#legislacao">Legislação aplicável</a></li>
+      </ol>
+    </div>
+
+    <!-- 1. Quem somos -->
+    <h2 id="quem-somos">1. Quem somos</h2>
+    <p>
+      Esta é a Política de Privacidade da <strong>Glauber Varjão do Nascimento</strong>
+      (nome fantasia <strong>Protector — Sistemas de Segurança</strong>), doravante
+      denominada <strong>"Protector Sistemas"</strong> ou <strong>"nós"</strong>.
+    </p>
+
+    <div class="company-card">
+      <div class="company-card-title">Dados da Operadora</div>
+      <div class="company-field">
+        <div class="company-field-label">Razão social</div>
+        <div class="company-field-value">Glauber Varjão do Nascimento</div>
+      </div>
+      <div class="company-field">
+        <div class="company-field-label">Nome fantasia</div>
+        <div class="company-field-value">Protector — Sistemas de Segurança</div>
+      </div>
+      <div class="company-field">
+        <div class="company-field-label">CNPJ</div>
+        <div class="company-field-value">21.747.444/0001-65</div>
+      </div>
+      <div class="company-field">
+        <div class="company-field-label">Endereço</div>
+        <div class="company-field-value">
+          Av. Luís Viana Filho, 1821 — Shopping Amazônia, Loja 13<br>
+          Saboeiro · Salvador/BA · CEP 41.180-000
+        </div>
+      </div>
+      <div class="company-field">
+        <div class="company-field-label">Telefone</div>
+        <div class="company-field-value">(71) 9271-3295</div>
+      </div>
+      <div class="company-field">
+        <div class="company-field-label">Contato DPO</div>
+        <div class="company-field-value"><a href="mailto:dpo@appps.com.br">dpo@appps.com.br</a></div>
+      </div>
+    </div>
+
+    <p>
+      A Protector Sistemas desenvolve e opera o <strong>Protector Traffic Control</strong>,
+      uma plataforma de Lombada Educativa Inteligente para condomínios, vias privadas e
+      empreendimentos que contratam o serviço.
+    </p>
+
+    <!-- 2. Aplicação -->
+    <h2 id="aplicacao">2. A quem esta política se aplica</h2>
+    <p>Esta política se aplica a:</p>
+    <ol>
+      <li><strong>Visitantes do site institucional</strong> da Protector Sistemas</li>
+      <li><strong>Clientes contratantes</strong> do sistema Protector Traffic Control (condomínios, empresas, vias privadas)</li>
+      <li><strong>Titulares de dados</strong> (moradores, proprietários, visitantes) cujas informações eventualmente passem pelos nossos sistemas em razão da contratação feita por um cliente</li>
+    </ol>
+
+    <h3>Nosso papel na LGPD</h3>
+    <ul>
+      <li><strong>Para visitantes do site e clientes diretos</strong>, a Protector Sistemas atua como <strong>Controladora</strong>: coleta e trata dados para comunicação comercial, suporte e execução do contrato.</li>
+      <li><strong>Para os dados capturados pelas câmeras instaladas nos empreendimentos contratantes</strong> (placas, fotos de veículos, velocidades), a Protector Sistemas atua exclusivamente como <strong>Operadora</strong>. O <strong>Controlador</strong> desses dados é sempre o cliente contratante, que define a finalidade, a base legal e o uso dos dados conforme sua convenção, regulamento ou política interna.</li>
+    </ul>
+
+    <div class="callout">
+      <div class="callout-title">Atenção — moradores e visitantes</div>
+      <p>
+        Se você é morador, proprietário ou visitante de um empreendimento onde há câmeras
+        Protector instaladas e deseja exercer seus direitos sobre os dados capturados,
+        a solicitação deve ser feita <strong>primeiro ao empreendimento contratante</strong>
+        (síndico, administração, setor responsável). Caso não obtenha resposta adequada, você
+        pode acionar o Encarregado da Protector Sistemas em
+        <a href="mailto:dpo@appps.com.br">dpo@appps.com.br</a>.
+      </p>
+    </div>
+
+    <!-- 3. Dados Controladora -->
+    <h2 id="dados-controladora">3. Quais dados tratamos como Controladora</h2>
+
+    <h3>3.1 Visitantes do site</h3>
+    <p>Quando você visita nosso site institucional, podemos coletar:</p>
+    <ul>
+      <li>Endereço IP e informações técnicas do navegador (para estatísticas agregadas)</li>
+      <li>Dados de contato informados voluntariamente em formulários (nome, e-mail, telefone, mensagem)</li>
+      <li>Cookies estritamente necessários para o funcionamento do site</li>
+    </ul>
+
+    <h3>3.2 Clientes contratantes</h3>
+    <p>Quando uma empresa ou condomínio contrata o Protector Traffic Control, coletamos:</p>
+    <ul>
+      <li>Razão social, CNPJ, endereço</li>
+      <li>Nome, cargo, e-mail e telefone do responsável pelo contrato</li>
+      <li>Dados de faturamento</li>
+    </ul>
+    <p>
+      Estes dados são utilizados para execução do contrato, faturamento, suporte técnico e
+      comunicações administrativas.
+    </p>
+
+    <!-- 4. Dados Operadora -->
+    <h2 id="dados-operadora">4. Dados tratados como Operadora (dados capturados pelo sistema)</h2>
+    <p>
+      Quando um cliente contratante opera câmeras do Protector Traffic Control, o sistema trata,
+      <strong>em nome do Controlador (cliente)</strong>, os seguintes dados:
+    </p>
+    <ul>
+      <li><strong>Placa do veículo</strong> (reconhecida por OCR da câmera)</li>
+      <li><strong>Foto do veículo</strong> no momento da passagem</li>
+      <li><strong>Velocidade</strong> medida pelo radar</li>
+      <li><strong>Data, hora e câmera</strong> onde a passagem ocorreu</li>
+    </ul>
+    <p>E, quando o cliente contratante opta por cadastrar moradores, também:</p>
+    <ul>
+      <li><strong>Nome e unidade</strong> do morador/proprietário</li>
+      <li><strong>Marca e cor</strong> do veículo</li>
+      <li><strong>E-mail</strong> dos destinatários de alertas configurados pelo cliente</li>
+    </ul>
+
+    <div class="callout">
+      <div class="callout-title">O que o sistema não faz</div>
+      <p>
+        O sistema <strong>não realiza reconhecimento facial</strong>, não coleta CPF, RG,
+        endereço residencial, dados financeiros ou dados sensíveis na acepção do art. 5º, II
+        da LGPD.
+      </p>
+    </div>
+
+    <h3>Finalidade</h3>
+    <p>
+      A finalidade desses dados é <strong>definida exclusivamente pelo cliente contratante</strong>
+      (Controlador), conforme sua convenção condominial, regulamento interno ou política corporativa.
+      A Protector Sistemas, como Operadora, executa o tratamento de acordo com as instruções recebidas.
+    </p>
+
+    <h3>Retenção</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tipo de dado</th><th>Prazo de retenção</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Foto da passagem</td><td>15 dias corridos</td></tr>
+          <tr><td>Metadados (placa, velocidade, data/hora)</td><td>6 meses corridos</td></tr>
+          <tr><td>Cadastros de veículo e destinatários</td><td>Enquanto o contrato com o cliente estiver ativo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Prazos são executados por rotinas automatizadas no banco de dados.</p>
+
+    <!-- 5. Base legal -->
+    <h2 id="base-legal">5. Base legal</h2>
+    <p>A Protector Sistemas trata dados pessoais com fundamento nas seguintes bases legais da LGPD:</p>
+    <ul>
+      <li><strong>Execução de contrato</strong> (art. 7º, V) — para prestação dos serviços ao cliente contratante e manutenção do relacionamento comercial</li>
+      <li><strong>Cumprimento de obrigação legal</strong> (art. 7º, II) — quando há norma aplicável</li>
+      <li><strong>Legítimo interesse</strong> (art. 7º, IX) — para melhoria do serviço, segurança do sistema e prevenção de fraudes, sempre respeitando os direitos e liberdades fundamentais do titular</li>
+    </ul>
+    <p>
+      Para os dados tratados <strong>como Operadora</strong> (capturados pelas câmeras instaladas
+      nos empreendimentos contratantes), a base legal é <strong>definida pelo Controlador</strong>
+      (cliente) e documentada em seu próprio Relatório de Impacto à Proteção de Dados Pessoais (RIPD).
+    </p>
+
+    <!-- 6. Compartilhamento -->
+    <h2 id="compartilhamento">6. Com quem compartilhamos dados</h2>
+    <p>
+      Os dados tratados pela Protector Sistemas são compartilhados apenas com os
+      <strong>subprocessadores técnicos</strong> estritamente necessários à operação do serviço:
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Subprocessador</th><th>Função</th><th>Localização</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Supabase</strong></td>
+            <td>Banco de dados e armazenamento de arquivos</td>
+            <td>sa-east-1 (São Paulo, Brasil)</td>
+          </tr>
+          <tr>
+            <td><strong>Vercel</strong></td>
+            <td>Hospedagem serverless</td>
+            <td>Multi-região</td>
+          </tr>
+          <tr>
+            <td><strong>Provedor SMTP</strong></td>
+            <td>Envio de e-mails transacionais</td>
+            <td>Conforme provedor contratado</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      A Protector Sistemas <strong>não vende, não cede e não comercializa</strong> dados pessoais
+      a terceiros. Compartilhamentos adicionais ocorrem apenas quando houver obrigação legal ou
+      ordem judicial.
+    </p>
+
+    <!-- 7. Segurança -->
+    <h2 id="seguranca">7. Como protegemos os dados</h2>
+    <p>A Protector Sistemas adota medidas técnicas e administrativas de segurança, incluindo:</p>
+    <ul>
+      <li>Conexão criptografada (HTTPS/TLS) em todos os acessos</li>
+      <li>Criptografia dos dados em repouso no banco de dados e no armazenamento de arquivos</li>
+      <li>Controle de acesso baseado em funções (<code>super_admin</code>, <code>admin_cliente</code>, <code>operador</code>)</li>
+      <li>Row Level Security (RLS) no banco de dados, garantindo isolamento entre clientes contratantes</li>
+      <li>Bucket de fotos privado, com acesso apenas por URL assinada de curta duração</li>
+      <li>Rate limiting em endpoints públicos</li>
+      <li>Log de auditoria das operações administrativas</li>
+      <li>Revisão periódica de usuários ativos e credenciais</li>
+    </ul>
+    <p>
+      Dados pessoais são armazenados no Supabase, região <strong>sa-east-1 (São Paulo, Brasil)</strong>,
+      mantendo os dados em território nacional.
+    </p>
+
+    <!-- 8. Direitos -->
+    <h2 id="direitos">8. Seus direitos (art. 18 LGPD)</h2>
+    <p>Você, titular de dados pessoais, tem o direito de solicitar, a qualquer momento:</p>
+    <ol>
+      <li><strong>Confirmação</strong> da existência de tratamento</li>
+      <li><strong>Acesso</strong> aos dados</li>
+      <li><strong>Correção</strong> de dados incompletos, inexatos ou desatualizados</li>
+      <li><strong>Anonimização, bloqueio ou eliminação</strong> de dados desnecessários, excessivos ou tratados em desconformidade com a LGPD</li>
+      <li><strong>Portabilidade</strong> dos dados a outro fornecedor</li>
+      <li><strong>Eliminação</strong> dos dados tratados com seu consentimento</li>
+      <li><strong>Informação</strong> sobre entidades com as quais houve uso compartilhado</li>
+      <li><strong>Informação</strong> sobre a possibilidade de não consentir e as consequências da negativa</li>
+      <li><strong>Revogação</strong> do consentimento, quando aplicável</li>
+    </ol>
+
+    <h3>Como exercer seus direitos</h3>
+    <ul>
+      <li>
+        <strong>Se você é visitante do site ou cliente contratante direto:</strong>
+        envie sua solicitação para <a href="mailto:dpo@appps.com.br">dpo@appps.com.br</a>.
+        Responderemos no prazo legal de 15 dias corridos.
+      </li>
+      <li>
+        <strong>Se você é morador, proprietário ou visitante de um empreendimento que utiliza
+        o Protector Traffic Control:</strong>
+        a solicitação deve ser feita primeiro ao <strong>empreendimento contratante</strong>
+        (síndico, administração, setor responsável). Caso a solicitação não seja atendida,
+        você pode nos contatar em <a href="mailto:dpo@appps.com.br">dpo@appps.com.br</a>
+        — atuaremos como intermediários junto ao Controlador.
+      </li>
+    </ul>
+
+    <!-- 9. DPO -->
+    <h2 id="dpo">9. Encarregado pelo Tratamento de Dados (DPO)</h2>
+    <div class="company-card">
+      <div class="company-field">
+        <div class="company-field-label">Nome</div>
+        <div class="company-field-value">Glauber Varjão do Nascimento</div>
+      </div>
+      <div class="company-field">
+        <div class="company-field-label">Função</div>
+        <div class="company-field-value">Encarregado pelo Tratamento de Dados Pessoais</div>
+      </div>
+      <div class="company-field">
+        <div class="company-field-label">E-mail</div>
+        <div class="company-field-value">
+          <a href="mailto:dpo@appps.com.br">dpo@appps.com.br</a>
+        </div>
+      </div>
+    </div>
+    <p>
+      O Encarregado é o canal oficial de comunicação entre a Protector Sistemas, os titulares
+      de dados e a Autoridade Nacional de Proteção de Dados (ANPD).
+    </p>
+
+    <!-- 10. Alterações -->
+    <h2 id="alteracoes">10. Alterações nesta Política</h2>
+    <p>
+      Esta Política de Privacidade pode ser atualizada periodicamente para refletir mudanças
+      em nossos serviços ou na legislação aplicável. A versão vigente será sempre publicada
+      nesta página, com a data da última atualização indicada no topo. Alterações relevantes
+      serão comunicadas aos clientes contratantes ativos.
+    </p>
+
+    <!-- 11. Legislação -->
+    <h2 id="legislacao">11. Legislação aplicável e foro</h2>
+    <p>
+      Esta Política de Privacidade é regida pelas leis da República Federativa do Brasil,
+      em especial pela <strong>Lei nº 13.709/2018 (LGPD)</strong>. Fica eleito o foro da
+      Comarca de <strong>Salvador/BA</strong> para dirimir quaisquer controvérsias, com
+      renúncia a qualquer outro, por mais privilegiado que seja.
+    </p>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <p><strong>Protector — Sistemas de Segurança</strong></p>
+    <p>CNPJ 21.747.444/0001-65 · Salvador/BA</p>
+    <p>Contato DPO: <a href="mailto:dpo@appps.com.br">dpo@appps.com.br</a></p>
+    <p style="margin-top: 20px;">
+      <a href="/">Voltar ao site</a> · <a href="/dashboard">Portal do Cliente</a>
+    </p>
+    <p style="margin-top: 16px; color: var(--text-muted); font-size: 12px;">
+      Versão 1.0 · Abril 2026
+    </p>
+  </footer>
+
+</body>
+</html>
