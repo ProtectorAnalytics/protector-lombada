@@ -229,6 +229,15 @@
 
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-weight: 700; }
+    .form-group .hint { display: block; font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .form-group .field-error { display: none; font-size: 12px; color: var(--red); margin-top: 6px; font-weight: 600; line-height: 1.4; text-transform: none; letter-spacing: 0; }
+    .form-group.has-error .field-error { display: block; }
+    .form-group.has-error input,
+    .form-group.has-error select,
+    .form-group.has-error textarea {
+      border-color: var(--red) !important;
+      box-shadow: 0 0 0 3px rgba(220,38,38,0.15) !important;
+    }
     .form-group input, .form-group select {
       width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
       color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s;
@@ -237,6 +246,48 @@
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
     .form-error { color: var(--red); font-size: 13px; margin-top: 8px; }
+
+    /* Confirmação customizada */
+    .confirm-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,0.7); backdrop-filter: blur(6px);
+      z-index: 2000; justify-content: center; align-items: center;
+      padding: 20px;
+    }
+    .confirm-overlay.active { display: flex; animation: overlay-fade 0.18s ease-out; }
+    .confirm-box {
+      background: #fff; border-radius: 16px; width: 100%; max-width: 440px;
+      padding: 28px 32px; box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+      text-align: left; animation: modal-slide-in 0.22s ease-out;
+    }
+    @keyframes modal-slide-in {
+      from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .confirm-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: #fef2f2; border: 1px solid rgba(220,38,38,0.2);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .confirm-icon svg { width: 24px; height: 24px; color: var(--red); }
+    .confirm-title { font-size: 19px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.3px; }
+    .confirm-message { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 22px; }
+    .confirm-message strong { color: var(--text-primary); }
+    .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .confirm-btn {
+      padding: 10px 20px; border-radius: 8px; font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; border: 1px solid transparent;
+    }
+    .confirm-btn-cancel {
+      background: transparent; color: var(--text-secondary); border-color: var(--border);
+    }
+    .confirm-btn-cancel:hover { background: var(--bg-input); color: var(--text-primary); }
+    .confirm-btn-danger {
+      background: var(--red); color: #fff;
+    }
+    .confirm-btn-danger:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
 
     /* Toast */
     .toast {
@@ -751,6 +802,25 @@
   <!-- TOAST -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <!-- CONFIRMAÇÃO CUSTOMIZADA -->
+  <div class="confirm-overlay" id="confirm-overlay" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <div class="confirm-box">
+      <div class="confirm-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h3 class="confirm-title" id="confirm-title">Confirmar ação</h3>
+      <p class="confirm-message" id="confirm-message">Tem certeza que deseja continuar?</p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-btn confirm-btn-cancel" id="confirm-cancel">Cancelar</button>
+        <button type="button" class="confirm-btn confirm-btn-danger" id="confirm-ok">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 // ============================================
 // STATE
@@ -970,6 +1040,51 @@ function toast(msg, isError = false) {
   el.textContent = msg;
   el.className = isError ? 'toast error visible' : 'toast visible';
   setTimeout(() => el.classList.remove('visible'), 3000);
+}
+
+// ============================================
+// CONFIRMAÇÃO CUSTOMIZADA (substitui confirm() nativo)
+// ============================================
+/**
+ * Exibe um modal de confirmação estilizado e retorna Promise<boolean>.
+ * Uso:
+ *   if (await confirmarAcao({ titulo: 'Excluir cliente?', mensagem: 'Esta ação é irreversível.' })) { ... }
+ */
+function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?', textoOk = 'Confirmar', textoCancel = 'Cancelar' } = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('confirm-overlay');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-message');
+    const okBtn = document.getElementById('confirm-ok');
+    const cancelBtn = document.getElementById('confirm-cancel');
+
+    titleEl.textContent = titulo;
+    msgEl.innerHTML = mensagem;
+    okBtn.textContent = textoOk;
+    cancelBtn.textContent = textoCancel;
+
+    overlay.classList.add('active');
+    // Foco no cancelar por segurança (evita confirmação acidental com Enter)
+    setTimeout(() => cancelBtn.focus(), 50);
+
+    const close = (result) => {
+      overlay.classList.remove('active');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onEsc);
+      resolve(result);
+    };
+    const onOk = () => close(true);
+    const onCancel = () => close(false);
+    const onBackdrop = (e) => { if (e.target === overlay) close(false); };
+    const onEsc = (e) => { if (e.key === 'Escape') close(false); };
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onEsc);
+  });
 }
 
 // ============================================
@@ -1280,22 +1395,62 @@ function openClienteModal(cliente = null) {
   const title = isEdit ? 'Editar Cliente' : 'Novo Cliente';
   openModal(title, `
     <div class="form-row">
-      <div class="form-group"><label>Nome *</label><input id="f-cli-nome" value="${esc(cliente?.nome || '')}"></div>
-      <div class="form-group"><label>CNPJ</label><input id="f-cli-cnpj" value="${esc(cliente?.cnpj || '')}"></div>
+      <div class="form-group">
+        <label>Nome *</label>
+        <input id="f-cli-nome" value="${esc(cliente?.nome || '')}" autocomplete="organization">
+        <div class="field-error" data-for="f-cli-nome"></div>
+        <span class="hint">Nome do condomínio ou empreendimento como aparecerá no PDF de notificação</span>
+      </div>
+      <div class="form-group">
+        <label>CNPJ</label>
+        <input id="f-cli-cnpj" value="${esc(cliente?.cnpj || '')}" placeholder="00.000.000/0000-00" inputmode="numeric">
+        <div class="field-error" data-for="f-cli-cnpj"></div>
+        <span class="hint">14 dígitos, com ou sem formatação</span>
+      </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Local / Via *</label><input id="f-cli-via" value="${esc(cliente?.local_via || '')}"></div>
-      <div class="form-group"><label>Cidade/UF *</label><input id="f-cli-cidade" value="${esc(cliente?.cidade_uf || '')}"></div>
+      <div class="form-group">
+        <label>Local / Via *</label>
+        <input id="f-cli-via" value="${esc(cliente?.local_via || '')}">
+        <div class="field-error" data-for="f-cli-via"></div>
+        <span class="hint">Ex: "Via interna — portaria → clube"</span>
+      </div>
+      <div class="form-group">
+        <label>Cidade/UF *</label>
+        <input id="f-cli-cidade" value="${esc(cliente?.cidade_uf || '')}" placeholder="Salvador/BA">
+        <div class="field-error" data-for="f-cli-cidade"></div>
+      </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>CEP</label><input id="f-cli-cep" value="${esc(cliente?.cep || '')}"></div>
-      <div class="form-group"><label>Endereço</label><input id="f-cli-endereco" value="${esc(cliente?.endereco || '')}"></div>
+      <div class="form-group">
+        <label>CEP</label>
+        <input id="f-cli-cep" value="${esc(cliente?.cep || '')}" placeholder="00000-000" inputmode="numeric">
+        <div class="field-error" data-for="f-cli-cep"></div>
+      </div>
+      <div class="form-group">
+        <label>Endereço</label>
+        <input id="f-cli-endereco" value="${esc(cliente?.endereco || '')}">
+      </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Limite Velocidade (km/h)</label><input type="number" id="f-cli-limite" value="${cliente?.limite_velocidade || 30}"></div>
-      <div class="form-group"><label>Telefone</label><input id="f-cli-telefone" value="${esc(cliente?.telefone || '')}"></div>
+      <div class="form-group">
+        <label>Limite Velocidade (km/h)</label>
+        <input type="number" id="f-cli-limite" value="${cliente?.limite_velocidade || 30}" min="1" max="200">
+        <div class="field-error" data-for="f-cli-limite"></div>
+        <span class="hint">Velocidade máxima permitida na via interna</span>
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input id="f-cli-telefone" value="${esc(cliente?.telefone || '')}" placeholder="(71) 99999-9999" inputmode="tel">
+        <div class="field-error" data-for="f-cli-telefone"></div>
+        <span class="hint">10 ou 11 dígitos, com ou sem formatação</span>
+      </div>
     </div>
-    <div class="form-group"><label>Contato (responsável)</label><input id="f-cli-contato" value="${esc(cliente?.contato_nome || '')}"></div>
+    <div class="form-group">
+      <label>Contato (responsável)</label>
+      <input id="f-cli-contato" value="${esc(cliente?.contato_nome || '')}">
+      <span class="hint">Pessoa responsável pelo contrato (síndico, administrador)</span>
+    </div>
 
     <div class="form-group" style="padding:14px;background:rgba(4,107,210,0.08);border:1px solid rgba(59,154,255,0.25);border-radius:10px;margin-top:8px">
       <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-weight:500">
@@ -1318,6 +1473,8 @@ function openClienteModal(cliente = null) {
 }
 
 async function saveCliente(id) {
+  limparErrosCampo();
+
   const body = {
     nome: document.getElementById('f-cli-nome').value.trim(),
     local_via: document.getElementById('f-cli-via').value.trim(),
@@ -1331,8 +1488,30 @@ async function saveCliente(id) {
     blur_automatico: document.getElementById('f-cli-blur').checked,
   };
 
-  if (!body.nome || !body.local_via || !body.cidade_uf) {
-    document.getElementById('f-cli-error').textContent = 'Preencha os campos obrigatórios (*).';
+  // Validação client-side com erros inline
+  const erros = [];
+  if (!body.nome) erros.push(['f-cli-nome', 'Nome é obrigatório']);
+  if (!body.local_via) erros.push(['f-cli-via', 'Local/Via é obrigatório']);
+  if (!body.cidade_uf) erros.push(['f-cli-cidade', 'Cidade/UF é obrigatório']);
+
+  const cnpjDigits = body.cnpj.replace(/\D/g, '');
+  if (body.cnpj && cnpjDigits.length !== 14) erros.push(['f-cli-cnpj', 'CNPJ deve ter 14 dígitos']);
+
+  const telDigits = body.telefone.replace(/\D/g, '');
+  if (body.telefone && telDigits.length !== 10 && telDigits.length !== 11) {
+    erros.push(['f-cli-telefone', 'Telefone deve ter 10 ou 11 dígitos']);
+  }
+
+  const cepDigits = body.cep.replace(/\D/g, '');
+  if (body.cep && cepDigits.length !== 8) erros.push(['f-cli-cep', 'CEP deve ter 8 dígitos']);
+
+  if (body.limite_velocidade < 1 || body.limite_velocidade > 200) {
+    erros.push(['f-cli-limite', 'Limite deve estar entre 1 e 200 km/h']);
+  }
+
+  if (erros.length > 0) {
+    erros.forEach(([fieldId, msg]) => mostrarErroCampo(fieldId, msg));
+    focarPrimeiroErro();
     return;
   }
 
@@ -1349,7 +1528,39 @@ async function saveCliente(id) {
     loadClientes();
     loadDashboard();
   } catch (err) {
+    // Erro do servidor: mostra no rodapé
     document.getElementById('f-cli-error').textContent = err.message;
+  }
+}
+
+// ============================================
+// HELPERS DE VALIDAÇÃO INLINE
+// ============================================
+function mostrarErroCampo(fieldId, mensagem) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+  const group = input.closest('.form-group');
+  if (!group) return;
+  group.classList.add('has-error');
+  const errorDiv = group.querySelector('.field-error');
+  if (errorDiv) errorDiv.textContent = mensagem;
+}
+
+function limparErrosCampo() {
+  document.querySelectorAll('.form-group.has-error').forEach(g => {
+    g.classList.remove('has-error');
+    const e = g.querySelector('.field-error');
+    if (e) e.textContent = '';
+  });
+  const generalError = document.getElementById('f-cli-error');
+  if (generalError) generalError.textContent = '';
+}
+
+function focarPrimeiroErro() {
+  const first = document.querySelector('.form-group.has-error input, .form-group.has-error select, .form-group.has-error textarea');
+  if (first) {
+    first.focus();
+    first.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 
@@ -1368,8 +1579,13 @@ async function toggleCliente(id, ativar) {
 }
 
 async function deleteCliente(id, nome) {
-  if (!confirm(`EXCLUIR PERMANENTEMENTE o cliente "${nome}"?\n\nIsso removerá todas as câmeras, veículos, e-mails e usuários vinculados.\n\nEsta ação NÃO pode ser desfeita!`)) return;
-  if (!confirm(`Tem certeza? Digite OK para confirmar a exclusão de "${nome}".`)) return;
+  const confirmado = await confirmarAcao({
+    titulo: 'Excluir cliente permanentemente?',
+    mensagem: `Você vai excluir <strong>"${esc(nome)}"</strong> e todos os dados vinculados: câmeras, veículos, e-mails e usuários deste cliente.<br><br>Esta ação <strong>não pode ser desfeita</strong>.`,
+    textoOk: 'Sim, excluir permanentemente',
+    textoCancel: 'Cancelar',
+  });
+  if (!confirmado) return;
   try {
     await api('/clientes?id=' + id + '&permanent=true', 'DELETE');
     toast('Cliente excluído permanentemente!');
@@ -1501,7 +1717,13 @@ async function toggleCamera(id, ativar) {
 }
 
 async function deleteCamera(id, nome) {
-  if (!confirm(`EXCLUIR PERMANENTEMENTE a câmera "${nome}"?\n\nEsta ação NÃO pode ser desfeita!`)) return;
+  const confirmado = await confirmarAcao({
+    titulo: 'Excluir câmera permanentemente?',
+    mensagem: `Você vai excluir a câmera <strong>"${esc(nome)}"</strong>.<br><br>Esta ação <strong>não pode ser desfeita</strong>. As capturas já registradas permanecem no histórico.`,
+    textoOk: 'Sim, excluir',
+    textoCancel: 'Cancelar',
+  });
+  if (!confirmado) return;
   try {
     await api('/cameras?id=' + id + '&permanent=true', 'DELETE');
     toast('Câmera excluída permanentemente!');
@@ -1591,7 +1813,13 @@ async function saveEmail(id) {
 }
 
 async function deleteEmail(id) {
-  if (!confirm('Remover este destinatário?')) return;
+  const confirmado = await confirmarAcao({
+    titulo: 'Remover destinatário?',
+    mensagem: 'Este e-mail não receberá mais alertas e notificações deste cliente.',
+    textoOk: 'Remover',
+    textoCancel: 'Cancelar',
+  });
+  if (!confirmado) return;
   try {
     await api('/emails?id=' + id, 'DELETE');
     toast('Destinatário removido!');
@@ -1716,7 +1944,13 @@ async function toggleVeiculo(id, ativar) {
 }
 
 async function deleteVeiculo(id, placa) {
-  if (!confirm(`EXCLUIR PERMANENTEMENTE o veículo "${placa}"?\n\nEsta ação NÃO pode ser desfeita!`)) return;
+  const confirmado = await confirmarAcao({
+    titulo: 'Excluir veículo permanentemente?',
+    mensagem: `Você vai excluir o veículo com placa <strong>${esc(placa)}</strong> do cadastro.<br><br>Esta ação <strong>não pode ser desfeita</strong>.`,
+    textoOk: 'Sim, excluir',
+    textoCancel: 'Cancelar',
+  });
+  if (!confirmado) return;
   try {
     await api('/veiculos?id=' + id + '&permanent=true', 'DELETE');
     toast('Veículo excluído permanentemente!');
@@ -1858,7 +2092,13 @@ async function toggleUsuario(id, ativar) {
 }
 
 async function deleteUsuario(id, email) {
-  if (!confirm(`EXCLUIR PERMANENTEMENTE o usuário "${email}"?\n\nO login será removido do sistema.\n\nEsta ação NÃO pode ser desfeita!`)) return;
+  const confirmado = await confirmarAcao({
+    titulo: 'Excluir usuário permanentemente?',
+    mensagem: `Você vai remover o login <strong>${esc(email)}</strong> do sistema. A pessoa perderá acesso imediatamente.<br><br>Esta ação <strong>não pode ser desfeita</strong>.`,
+    textoOk: 'Sim, excluir',
+    textoCancel: 'Cancelar',
+  });
+  if (!confirmado) return;
   try {
     await api('/usuarios?id=' + id + '&permanent=true', 'DELETE');
     toast('Usuário excluído permanentemente!');
@@ -2114,7 +2354,13 @@ async function responderDireito(ev, id) {
 
   // Se marcou como atendida e não escreveu resposta, avisar
   if ((status === 'atendida' || status === 'rejeitada') && !resposta_dpo) {
-    if (!confirm('Você não escreveu uma resposta. Tem certeza que quer marcar sem texto?')) return false;
+    const ok = await confirmarAcao({
+      titulo: 'Marcar sem resposta escrita?',
+      mensagem: 'Você não escreveu uma resposta para o titular. Ele não receberá e-mail e o registro ficará sem texto de resposta.<br><br>Recomendado: escreva uma resposta antes de salvar.',
+      textoOk: 'Salvar sem texto',
+      textoCancel: 'Voltar e escrever',
+    });
+    if (!ok) return false;
   }
 
   try {
