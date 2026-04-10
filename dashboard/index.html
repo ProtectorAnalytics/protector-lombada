@@ -43,6 +43,7 @@
       color: var(--text-primary);
       min-height: 100vh;
       font-size: 14px;
+      line-height: 1.5;
       color-scheme: dark;
     }
 
@@ -377,7 +378,7 @@
       flex: 1;
     }
     .recent-card .rc-info .rc-time {
-      font-size: 10px;
+      font-size: 11px;
       font-family: 'Fira Code', monospace;
       color: var(--text-muted);
       white-space: nowrap;
@@ -388,13 +389,16 @@
       position: absolute;
       top: 6px;
       left: 6px;
-      font-size: 9px;
-      padding: 2px 6px;
+      font-size: 10px;
+      padding: 3px 8px;
       border-radius: 4px;
       font-weight: 700;
       text-transform: uppercase;
       z-index: 3;
       border: 1px solid;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .recent-card .rc-badge.ok-badge {
@@ -434,9 +438,10 @@
 
     .stat-card .label {
       color: var(--text-secondary);
-      font-size: 10px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 1px;
+      font-weight: 600;
     }
 
     .stat-card .value {
@@ -783,12 +788,12 @@
       border-color: var(--accent);
     }
     .sidebar-kpi-label {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      font-weight: 600;
-      margin-bottom: 2px;
+      font-weight: 700;
+      margin-bottom: 3px;
     }
     .sidebar-kpi-value {
       font-size: 20px;
@@ -797,9 +802,9 @@
       line-height: 1.1;
     }
     .sidebar-kpi-unit {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-muted);
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
     .chart-container canvas {
@@ -940,9 +945,11 @@
     }
 
     .modal-field .label {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-muted);
       text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     .modal-field .value {
@@ -981,9 +988,11 @@
 
     .modal-morador .morador-grid span {
       color: var(--text-muted);
-      font-size: 10px;
+      font-size: 11px;
       text-transform: uppercase;
       display: block;
+      font-weight: 600;
+      letter-spacing: 0.3px;
     }
 
     .modal-morador .morador-grid strong {
