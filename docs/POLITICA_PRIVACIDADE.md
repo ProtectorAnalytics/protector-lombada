@@ -141,8 +141,10 @@ Você, titular de dados pessoais, tem o direito de solicitar, a qualquer momento
 
 ### Como exercer seus direitos
 
-- **Se você é visitante do site ou cliente contratante direto:** envie sua solicitação para **dpo@appps.com.br**. Responderemos no prazo legal de 15 dias corridos.
-- **Se você é morador, proprietário ou visitante de um empreendimento que utiliza o Protector Traffic Control:** a Protector Sistemas atua como Operadora para esses dados. A solicitação deve ser feita primeiro ao **empreendimento contratante** (síndico, administração, setor responsável). Caso a solicitação não seja atendida, você pode nos contatar em **dpo@appps.com.br** — atuaremos como intermediários junto ao Controlador.
+Disponibilizamos o **formulário público** `/direitos-titular` no site da Protector Sistemas, que registra a solicitação com protocolo, notifica automaticamente o DPO e envia confirmação por e-mail ao solicitante.
+
+- **Se você é visitante do site ou cliente contratante direto:** preencha o formulário em `/direitos-titular` ou envie sua solicitação para **dpo@appps.com.br**. Responderemos no prazo legal de 15 dias corridos.
+- **Se você é morador, proprietário ou visitante de um empreendimento que utiliza o Protector Traffic Control:** a Protector Sistemas atua como Operadora para esses dados. A solicitação deve ser feita primeiro ao **empreendimento contratante** (síndico, administração, setor responsável). Caso a solicitação não seja atendida, use o formulário `/direitos-titular` ou nos contate em **dpo@appps.com.br** — atuaremos como intermediários junto ao Controlador.
 
 ---
 
