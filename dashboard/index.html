@@ -8,8 +8,34 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- jsPDF e XLSX são carregados sob demanda via lazyLoadExportLibs() -->
+  <script>
+    // Lazy-loader para libs de exportação (jsPDF + XLSX)
+    // Carregadas apenas quando o usuário clica em Exportar PDF/Excel
+    let _exportLibsPromise = null;
+    function lazyLoadExportLibs() {
+      if (_exportLibsPromise) return _exportLibsPromise;
+      _exportLibsPromise = Promise.all([
+        new Promise((resolve, reject) => {
+          if (window.jspdf) return resolve();
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        }),
+        new Promise((resolve, reject) => {
+          if (window.XLSX) return resolve();
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        }),
+      ]);
+      return _exportLibsPromise;
+    }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -2607,11 +2633,12 @@
     // ============================================
     // IMPORT / EXPORT VEICULOS
     // ============================================
-    function exportarVeiculosExcel() {
+    async function exportarVeiculosExcel() {
       if (veiculosList.length === 0) {
         alert('Nenhum veículo para exportar.');
         return;
       }
+      await lazyLoadExportLibs();
       const rows = veiculosList.map(v => ({
         PLACA: v.placa,
         MORADOR: v.nome_morador || '',
@@ -2626,7 +2653,8 @@
       XLSX.writeFile(wb, `veiculos_${currentCliente.nome.replace(/\s/g, '_')}.xlsx`);
     }
 
-    function downloadModeloExcel() {
+    async function downloadModeloExcel() {
+      await lazyLoadExportLibs();
       const rows = [
         { PLACA: 'ABC1D23', MORADOR: 'Joao Silva', UNIDADE: 'Bloco A - 101', MARCA: 'Honda Civic', COR: 'Prata' },
         { PLACA: 'XYZ9876', MORADOR: 'Maria Santos', UNIDADE: 'Bloco B - 202', MARCA: 'Toyota Corolla', COR: 'Branco' },
@@ -2640,7 +2668,7 @@
 
     let importQueue = [];
 
-    function previewImport(input) {
+    async function previewImport(input) {
       const file = input.files[0];
       const errorEl = document.getElementById('vm-import-error');
       const previewEl = document.getElementById('vm-import-preview');
@@ -2655,6 +2683,7 @@
       }
 
       nameEl.textContent = file.name;
+      await lazyLoadExportLibs();
 
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -2881,11 +2910,12 @@
     // ============================================
     // EXPORT EXCEL
     // ============================================
-    function exportExcel() {
+    async function exportExcel() {
       if (!lastCapturas || lastCapturas.length === 0) {
         alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
         return;
       }
+      await lazyLoadExportLibs();
 
       const limite = currentCliente.limite_velocidade;
       const rows = lastCapturas.map(c => {
@@ -2922,11 +2952,12 @@
     // ============================================
     // EXPORT PDF
     // ============================================
-    function exportPDF() {
+    async function exportPDF() {
       if (!lastCapturas || lastCapturas.length === 0) {
         alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
         return;
       }
+      await lazyLoadExportLibs();
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
