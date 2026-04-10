@@ -441,6 +441,11 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
           Auditoria
         </button>
+        <button type="button" class="nav-item" onclick="showPage('direitos')" id="nav-direitos">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Direitos LGPD
+          <span id="direitos-badge" style="display:none;background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">0</span>
+        </button>
         <div class="nav-section">Documentação</div>
         <a class="nav-item" href="/admin/manual-tecnico.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:left" aria-label="Manual Técnico (abre em nova aba)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -648,6 +653,46 @@
           </table>
         </div>
 
+        <!-- PAGE: Direitos LGPD -->
+        <div class="page" id="page-direitos">
+          <div class="page-title">
+            Solicitações LGPD
+            <span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:12px">Art. 18 · Lei 13.709/2018</span>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-row" style="margin-bottom:20px">
+            <div class="stat-card"><div class="label">Total listadas</div><div class="value blue" id="sd-total">0</div></div>
+            <div class="stat-card"><div class="label">Recebidas (aguardando)</div><div class="value orange" id="sd-recebidas">0</div></div>
+            <div class="stat-card"><div class="label">Vencidas</div><div class="value red" id="sd-vencidas">0</div></div>
+          </div>
+
+          <!-- Filtros -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="tab-btn active" onclick="filtrarDireitos('')">Todas</button>
+            <button class="tab-btn" onclick="filtrarDireitos('recebida')">Recebidas</button>
+            <button class="tab-btn" onclick="filtrarDireitos('em_analise')">Em análise</button>
+            <button class="tab-btn" onclick="filtrarDireitos('atendida')">Atendidas</button>
+            <button class="tab-btn" onclick="filtrarDireitos('','vencidas')" style="color:#F87171">Vencidas</button>
+            <button class="tab-btn" onclick="filtrarDireitos('','proximas')" style="color:#F97316">Próximas (3d)</button>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Protocolo</th>
+                <th>Solicitante</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Criada em</th>
+                <th>Prazo</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody id="direitos-body"><tr><td colspan="7" class="table-empty">Clique em uma aba para carregar</td></tr></tbody>
+          </table>
+        </div>
+
       </div>
     </div>
   </div>
@@ -814,6 +859,7 @@ async function loadProfile() {
     loadClientes();
     loadUsuariosGlobal();
     loadAudit();
+    atualizarBadgeDireitos();
   } catch (err) {
     document.getElementById('login-error').textContent = 'Erro ao carregar perfil.';
   }
@@ -857,12 +903,16 @@ function showPage(page) {
 
   // Highlight nav
   const navItems = document.querySelectorAll('.nav-item');
-  const labels = { dashboard: 'Dashboard', clientes: 'Clientes', usuarios: 'Usuários', audit: 'Auditoria' };
-  navItems.forEach(n => { if (n.textContent.trim() === labels[page]) n.classList.add('active'); });
+  const labels = { dashboard: 'Dashboard', clientes: 'Clientes', usuarios: 'Usuários', audit: 'Auditoria', direitos: 'Direitos LGPD' };
+  navItems.forEach(n => {
+    const txt = n.textContent.trim().replace(/\s*\d+\s*$/, '').trim();
+    if (txt === labels[page]) n.classList.add('active');
+  });
 
   if (page === 'clientes') loadClientes();
   if (page === 'usuarios') loadUsuariosGlobal();
   if (page === 'audit') loadAudit();
+  if (page === 'direitos') loadDireitos();
 }
 
 function showTab(tab) {
@@ -1784,6 +1834,265 @@ async function loadAudit() {
       <td style="font-size:12px;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(a.detalhes || {}))}</td>
     </tr>`).join('');
   } catch (err) { console.error(err); }
+}
+
+// ============================================
+// DIREITOS LGPD (Art. 18)
+// ============================================
+const TIPO_LABELS_FRONT = {
+  confirmacao: 'Confirmação de tratamento',
+  acesso: 'Acesso aos dados',
+  correcao: 'Correção',
+  anonimizacao: 'Anonimização/bloqueio',
+  portabilidade: 'Portabilidade',
+  eliminacao: 'Eliminação',
+  informacao_compartilhamento: 'Compartilhamento',
+  revogacao_consentimento: 'Revogação',
+  reclamacao: 'Reclamação',
+  outro: 'Outro',
+};
+
+const STATUS_LABELS = {
+  recebida: { label: 'Recebida', color: '#F97316' },
+  em_analise: { label: 'Em análise', color: '#3B9AFF' },
+  aguardando_titular: { label: 'Aguardando titular', color: '#94A3B8' },
+  encaminhada_controlador: { label: 'Encaminhada', color: '#94A3B8' },
+  atendida: { label: 'Atendida', color: '#34D399' },
+  rejeitada: { label: 'Rejeitada', color: '#F87171' },
+  cancelada: { label: 'Cancelada', color: '#64748B' },
+};
+
+function diasRestantes(prazo) {
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const p = new Date(prazo); p.setHours(0,0,0,0);
+  return Math.floor((p - hoje) / 86400000);
+}
+
+function renderPrazo(prazo, status) {
+  if (['atendida', 'rejeitada', 'cancelada'].includes(status)) {
+    return `<span style="color:var(--text-muted);font-size:12px">${fmtDate(prazo)}</span>`;
+  }
+  const dias = diasRestantes(prazo);
+  if (dias < 0) return `<span style="color:#F87171;font-weight:700">VENCIDA (${Math.abs(dias)}d)</span>`;
+  if (dias === 0) return `<span style="color:#F97316;font-weight:700">HOJE</span>`;
+  if (dias <= 3) return `<span style="color:#F97316">${dias}d</span>`;
+  return `<span style="color:var(--text-secondary)">${dias}d</span>`;
+}
+
+async function loadDireitos(filtroStatus = '', filtroUrgencia = '') {
+  try {
+    const params = new URLSearchParams();
+    if (filtroStatus) params.set('status', filtroStatus);
+    if (filtroUrgencia) params.set('urgencia', filtroUrgencia);
+    const qs = params.toString() ? `?${params}` : '';
+    const result = await api(`/admin/direitos${qs}`);
+
+    const tbody = document.getElementById('direitos-body');
+    const data = result.data || [];
+    const stats = result.stats || {};
+
+    document.getElementById('sd-total').textContent = stats.total || 0;
+    document.getElementById('sd-recebidas').textContent = stats.recebidas || 0;
+    document.getElementById('sd-vencidas').textContent = stats.vencidas || 0;
+
+    // Badge no menu lateral
+    const badge = document.getElementById('direitos-badge');
+    const pendentes = (stats.recebidas || 0) + (stats.vencidas || 0);
+    if (pendentes > 0) {
+      badge.textContent = pendentes;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Nenhuma solicitação encontrada</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(s => {
+      const st = STATUS_LABELS[s.status] || { label: s.status, color: '#94A3B8' };
+      return `<tr style="cursor:pointer" onclick="abrirDireitoDetalhe('${s.id}')">
+        <td style="font-family:monospace;font-size:12px;color:var(--accent-light)">${esc(s.protocolo)}</td>
+        <td><strong>${esc(s.nome)}</strong><br><span style="color:var(--text-muted);font-size:11px">${esc(s.email)}</span></td>
+        <td style="font-size:13px">${esc(TIPO_LABELS_FRONT[s.tipo] || s.tipo)}</td>
+        <td><span style="color:${st.color};font-weight:600;font-size:12px">● ${st.label}</span></td>
+        <td style="font-size:12px;color:var(--text-secondary)">${fmtDateTime(s.criada_em)}</td>
+        <td>${renderPrazo(s.prazo_limite, s.status)}</td>
+        <td><button class="btn-sm" onclick="event.stopPropagation();abrirDireitoDetalhe('${s.id}')">Abrir</button></td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    toast('Erro ao carregar solicitações LGPD', true);
+  }
+}
+
+function filtrarDireitos(status, urgencia = '') {
+  document.querySelectorAll('#page-direitos .tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  loadDireitos(status, urgencia);
+}
+
+async function abrirDireitoDetalhe(id) {
+  try {
+    const s = await api(`/admin/direitos?id=${id}`);
+    const tipoLabel = TIPO_LABELS_FRONT[s.tipo] || s.tipo;
+    const st = STATUS_LABELS[s.status] || { label: s.status, color: '#94A3B8' };
+    const dias = diasRestantes(s.prazo_limite);
+    const prazoInfo = ['atendida','rejeitada','cancelada'].includes(s.status)
+      ? `Encerrada em ${s.respondida_em ? fmtDateTime(s.respondida_em) : '---'}`
+      : (dias < 0 ? `VENCIDA há ${Math.abs(dias)} dia(s)` : `${dias} dia(s) restantes (até ${fmtDate(s.prazo_limite)})`);
+
+    const jaRespondida = ['atendida','rejeitada','cancelada'].includes(s.status);
+
+    const html = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Protocolo</div>
+          <div style="font-family:monospace;font-size:13px;color:var(--accent-light)">${esc(s.protocolo)}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Status</div>
+          <div style="color:${st.color};font-weight:700">● ${st.label}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Recebida em</div>
+          <div>${fmtDateTime(s.criada_em)}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Prazo legal</div>
+          <div style="color:${dias < 0 && !jaRespondida ? '#F87171' : dias <= 3 && !jaRespondida ? '#F97316' : 'var(--text-primary)'};font-weight:600">${prazoInfo}</div>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Solicitante</div>
+        <div><strong>${esc(s.nome)}</strong></div>
+        <div style="color:var(--text-secondary);font-size:13px">${esc(s.email)}${s.telefone ? ' · ' + esc(s.telefone) : ''}${s.cpf ? ' · CPF: ' + esc(s.cpf) : ''}</div>
+      </div>
+
+      ${s.empreendimento || s.placa_veiculo || s.unidade ? `
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Vínculo informado</div>
+        ${s.empreendimento ? `<div>Empreendimento: <strong>${esc(s.empreendimento)}</strong></div>` : ''}
+        ${s.placa_veiculo ? `<div>Placa: <strong>${esc(s.placa_veiculo)}</strong></div>` : ''}
+        ${s.unidade ? `<div>Unidade: <strong>${esc(s.unidade)}</strong></div>` : ''}
+      </div>
+      ` : ''}
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Tipo</div>
+        <div>${esc(tipoLabel)}</div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Descrição da solicitação</div>
+        <div style="background:rgba(0,0,0,0.15);border-left:3px solid var(--accent-light);padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.descricao)}</div>
+      </div>
+
+      ${s.resposta_dpo ? `
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Resposta do DPO</div>
+        <div style="background:rgba(4,107,210,0.1);border-left:3px solid #046BD2;padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.resposta_dpo)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">
+          ${s.respondida_por_usuario ? 'Por ' + esc(s.respondida_por_usuario.nome) + ' em ' : 'Em '}${fmtDateTime(s.respondida_em)}
+        </div>
+      </div>
+      ` : ''}
+
+      ${!jaRespondida ? `
+      <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+      <div style="font-size:13px;font-weight:700;color:var(--accent-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Responder</div>
+
+      <form id="form-direito-resposta" onsubmit="return responderDireito(event, '${s.id}')">
+        <div class="form-field" style="margin-bottom:12px">
+          <label>Novo status</label>
+          <select name="status">
+            <option value="em_analise">Em análise</option>
+            <option value="aguardando_titular">Aguardando titular</option>
+            <option value="encaminhada_controlador">Encaminhada ao Controlador</option>
+            <option value="atendida" selected>Atendida</option>
+            <option value="rejeitada">Rejeitada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+
+        <div class="form-field" style="margin-bottom:12px">
+          <label>Resposta ao titular</label>
+          <textarea name="resposta_dpo" rows="7" placeholder="Escreva a resposta que será enviada por e-mail ao titular. Inclua detalhes sobre o atendimento e, se aplicável, os dados fornecidos."></textarea>
+        </div>
+
+        <div class="form-field" style="margin-bottom:16px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" name="enviar_email" checked>
+            Enviar resposta por e-mail automaticamente ao titular (${esc(s.email)})
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar e responder</button>
+        </div>
+      </form>
+      ` : `
+      <div style="display:flex;justify-content:flex-end;margin-top:16px">
+        <button type="button" class="btn-secondary" onclick="closeModal()">Fechar</button>
+      </div>
+      `}
+    `;
+
+    openModal(`Solicitação ${s.protocolo}`, html);
+  } catch (err) {
+    console.error(err);
+    toast('Erro ao abrir detalhe', true);
+  }
+}
+
+async function responderDireito(ev, id) {
+  ev.preventDefault();
+  const form = ev.target;
+  const status = form.status.value;
+  const resposta_dpo = form.resposta_dpo.value.trim();
+  const enviar_email = form.enviar_email.checked;
+
+  // Se marcou como atendida e não escreveu resposta, avisar
+  if ((status === 'atendida' || status === 'rejeitada') && !resposta_dpo) {
+    if (!confirm('Você não escreveu uma resposta. Tem certeza que quer marcar sem texto?')) return false;
+  }
+
+  try {
+    const body = { id, status };
+    if (resposta_dpo) body.resposta_dpo = resposta_dpo;
+    body.enviar_email = enviar_email;
+
+    const result = await api('/admin/direitos', 'PUT', body);
+    toast(result.email_enviado ? 'Resposta salva e e-mail enviado' : 'Resposta salva');
+    closeModal();
+    loadDireitos();
+  } catch (err) {
+    console.error(err);
+    toast('Erro ao salvar resposta', true);
+  }
+  return false;
+}
+
+// Atualizar contador do menu ao carregar admin
+async function atualizarBadgeDireitos() {
+  try {
+    const result = await api('/admin/direitos');
+    const stats = result.stats || {};
+    const badge = document.getElementById('direitos-badge');
+    const pendentes = (stats.recebidas || 0) + (stats.vencidas || 0);
+    if (pendentes > 0) {
+      badge.textContent = pendentes;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch { /* silencioso */ }
 }
 
 // ============================================

@@ -19,6 +19,8 @@
     { "src": "/api/admin/emails", "dest": "/api/admin/emails.js" },
     { "src": "/api/admin/veiculos", "dest": "/api/admin/veiculos.js" },
     { "src": "/api/admin/dashboard", "dest": "/api/admin/dashboard.js" },
+    { "src": "/api/admin/direitos", "dest": "/api/admin/direitos.js" },
+    { "src": "/api/cron-prazos-lgpd", "dest": "/api/cron-prazos-lgpd.js" },
     { "src": "/admin", "dest": "/admin/index.html" },
     { "src": "/admin/(.*)", "dest": "/admin/$1" },
     { "src": "/dashboard", "dest": "/dashboard/index.html" },
@@ -33,6 +35,10 @@
     {
       "path": "/api/cron-limpeza",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron-prazos-lgpd",
+      "schedule": "0 9 * * *"
     }
   ]
 }
