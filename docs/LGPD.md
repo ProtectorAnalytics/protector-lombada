@@ -79,6 +79,26 @@ O texto padrão dos documentos gerados pelo sistema (PDF de notificação) traz 
 
 **Dados NÃO coletados pelo sistema:** CPF, RG, endereço residencial detalhado, dados financeiros, dados sensíveis (art. 5º, II LGPD), dados biométricos, reconhecimento facial.
 
+### 4.1 Proteção de imagem por blur automático (opcional)
+
+A Operadora disponibiliza, como feature opcional contratada por cliente, um sistema de **blur automático de pessoas** nas fotos de captura. Quando ativado pelo `super_admin` no painel administrativo da Operadora (campo `blur_automatico` da tabela `clientes`):
+
+- Toda foto que entra pelo endpoint `/api/captura` passa por detecção de objetos (modelo COCO-SSD, TensorFlow.js)
+- Pessoas, motocicletas e bicicletas detectadas com confiança ≥ 15% têm a região coberta por blur forte (sigma 30)
+- A placa do veículo-alvo, o corpo do veículo e a faixa superior de informações são **preservados**
+- O processamento falha de forma graceful: se der erro, a foto é salva sem alteração (nunca bloqueia a captura)
+
+**Quando recomendar a ativação:**
+- Câmeras instaladas em locais onde o enquadramento captura calçadas, praças ou áreas de circulação de pedestres
+- Clientes que tratam dados em áreas com alto fluxo de terceiros
+- Requisitos contratuais específicos de proteção de imagem
+
+**Limitações conhecidas:**
+- Pessoas muito pequenas/distantes (< 20px) podem não ser detectadas
+- Pessoas dentro de veículos (vidro fechado, distância, reflexo) não são detectadas
+- Latência adicional: ~500-1500ms por captura
+- Não substitui enquadramento adequado da câmera — é uma camada adicional de proteção
+
 ---
 
 ## 5. Base Legal (art. 7º LGPD)
