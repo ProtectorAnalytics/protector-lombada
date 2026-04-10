@@ -2219,20 +2219,42 @@
     }
 
     // ============================================
-    // RECENT CARDS (6 ultimas capturas)
+    // RECENT CARDS (6 ultimas capturas de placas DISTINTAS)
+    // Busca mais registros e filtra para não mostrar o mesmo veículo
+    // repetidas vezes quando passa várias vezes em sequência.
     // ============================================
     async function loadRecentCards() {
-      const { data, error } = await sb.from('capturas')
+      const { data: rawData, error } = await sb.from('capturas')
         .select('*')
         .eq('cliente_id', currentCliente.id)
         .order('timestamp', { ascending: false })
-        .limit(6);
+        .limit(60);
 
       const container = document.getElementById('recent-cards');
 
-      if (error || !data || data.length === 0) {
+      if (error || !rawData || rawData.length === 0) {
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Nenhuma captura recente</div>';
         return;
+      }
+
+      // Dedup por placa: mantém apenas a mais recente de cada placa
+      const vistas = new Set();
+      const data = [];
+      for (const c of rawData) {
+        const key = (c.placa || '').toUpperCase().trim();
+        if (!key || vistas.has(key)) continue;
+        vistas.add(key);
+        data.push(c);
+        if (data.length === 6) break;
+      }
+
+      // Se tiver menos de 6 placas distintas no último lote, completa com
+      // as próximas capturas mesmo repetindo (fallback)
+      if (data.length < 6) {
+        for (const c of rawData) {
+          if (data.length === 6) break;
+          if (!data.includes(c)) data.push(c);
+        }
       }
 
       const limite = currentCliente.limite_velocidade;
