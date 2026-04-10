@@ -15,6 +15,7 @@ const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
 const { checkRateLimit } = require('../lib/rate-limiter');
 const { isValidToken, parseTimestamp } = require('../lib/validators');
+const { blurPessoas } = require('../lib/face-blur');
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -151,6 +152,7 @@ module.exports = async function handler(req, res) {
     // Decodificar e comprimir foto (otimizado: ~150-170KB -> ~50-70KB)
     // 800px é suficiente para identificar placa em auditoria
     let fotoBuffer = null;
+    let blurInfo = null;
     if (imageBase64) {
       const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
       const rawBuffer = Buffer.from(base64Clean, 'base64');
@@ -165,6 +167,26 @@ module.exports = async function handler(req, res) {
             err: sharpErr.message, rawSize: rawBuffer.length, camera_id: camera.id,
           });
           fotoBuffer = rawBuffer; // fallback: usar original se sharp falhar
+        }
+
+        // ── LGPD Fase 4: blur automático de pessoas (se ativado no cliente) ──
+        if (fotoBuffer && cliente.blur_automatico === true) {
+          try {
+            const resultadoBlur = await blurPessoas(fotoBuffer);
+            if (resultadoBlur?.buffer) {
+              fotoBuffer = resultadoBlur.buffer;
+              blurInfo = {
+                pessoas_borradas: resultadoBlur.pessoas,
+                detectadas: resultadoBlur.detectadas,
+                erro: resultadoBlur.erro || null,
+              };
+            }
+          } catch (blurErr) {
+            // Nunca bloquear a captura por falha no blur
+            await logError(`Blur falhou, usando original | camera: ${camera.nome}`, {
+              err: blurErr.message, camera_id: camera.id, placa,
+            });
+          }
         }
       } else {
         await logError(`Imagem muito pequena (${rawBuffer.length} bytes) | camera: ${camera.nome}`, {
