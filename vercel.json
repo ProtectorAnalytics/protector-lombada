@@ -23,6 +23,7 @@
     { "src": "/dashboard", "dest": "/dashboard/index.html" },
     { "src": "/dashboard/(.*)", "dest": "/dashboard/$1" },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
+    { "src": "/privacidade", "dest": "/site/privacidade.html" },
     { "src": "^/$", "dest": "/site/index.html" },
     { "src": "/(.*)", "dest": "/site/$1" }
   ],

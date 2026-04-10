@@ -21,7 +21,7 @@ module.exports.config = {
   api: { bodyParser: false },
 };
 
-// Log only errors to database (debug_log is auto-cleaned every 6h)
+// Log only errors to database (debug_log is auto-cleaned every 6h by pg_cron, retaining max 24h)
 async function logError(message, data) {
   try {
     await supabase.from('debug_log').insert({
