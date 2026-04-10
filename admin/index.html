@@ -302,6 +302,24 @@
     .back-link { color: var(--accent); cursor: pointer; font-size: 13px; margin-bottom: 16px; display: inline-block; font-weight: 500; }
     .back-link:hover { text-decoration: underline; }
 
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 16px; font-size: 13px;
+      color: var(--text-muted);
+    }
+    .breadcrumb-link {
+      color: var(--text-secondary); text-decoration: none;
+      font-weight: 500; padding: 4px 8px; border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .breadcrumb-link:hover { color: var(--accent); background: var(--accent-light); }
+    .breadcrumb svg { color: var(--text-muted); flex-shrink: 0; }
+    .breadcrumb-current {
+      color: var(--text-primary); font-weight: 600;
+      padding: 4px 8px;
+    }
+
     .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
     .tab-btn {
       padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent;
@@ -633,7 +651,11 @@
 
         <!-- PAGE: Detalhe Cliente -->
         <div class="page" id="page-cliente-detail">
-          <span class="back-link" onclick="showPage('clientes')">&larr; Voltar aos Clientes</span>
+          <nav class="breadcrumb" aria-label="breadcrumb">
+            <a href="#" onclick="showPage('clientes');return false" class="breadcrumb-link">Clientes</a>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            <span class="breadcrumb-current" id="detail-breadcrumb-nome"></span>
+          </nav>
           <div class="detail-header">
             <div class="page-title" id="detail-nome" style="margin-bottom:0"></div>
             <button class="btn btn-ghost btn-sm" onclick="openClienteModal(currentDetailCliente)">Editar</button>
@@ -1603,6 +1625,8 @@ async function openClienteDetail(id) {
 
   currentDetailCliente = cliente;
   document.getElementById('detail-nome').textContent = cliente.nome;
+  const bc = document.getElementById('detail-breadcrumb-nome');
+  if (bc) bc.textContent = cliente.nome;
   document.getElementById('detail-info').innerHTML = `
     <div class="detail-field"><div class="label">Cidade/UF</div><div class="value">${esc(cliente.cidade_uf)}</div></div>
     <div class="detail-field"><div class="label">Local/Via</div><div class="value">${esc(cliente.local_via)}</div></div>

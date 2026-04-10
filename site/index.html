@@ -629,6 +629,25 @@
       html { scroll-behavior: auto; }
       .reveal { opacity: 1; transform: none; }
     }
+
+    /* ===== BACK TO TOP ===== */
+    .back-to-top {
+      position: fixed; bottom: 24px; right: 24px; z-index: 90;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      color: #fff; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(4,107,210,0.35);
+      opacity: 0; pointer-events: none;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .back-to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .back-to-top:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(4,107,210,0.5); }
+    .back-to-top:focus-visible { outline: 3px solid var(--accent-light); outline-offset: 3px; }
+    @media (max-width: 768px) {
+      .back-to-top { bottom: 16px; right: 16px; width: 44px; height: 44px; }
+    }
   </style>
 </head>
 <body>
@@ -1084,6 +1103,11 @@
     </div>
   </footer>
 
+  <!-- BACK TO TOP -->
+  <button class="back-to-top" id="back-to-top" aria-label="Voltar ao topo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
   <script>
     // Reveal on scroll
     const observer = new IntersectionObserver((entries) => {
@@ -1095,6 +1119,20 @@
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Back to top button — mostra após 600px de scroll
+    const backToTopBtn = document.getElementById('back-to-top');
+    if (backToTopBtn) {
+      let scrollRaf = null;
+      window.addEventListener('scroll', () => {
+        if (scrollRaf) return;
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = null;
+          if (window.scrollY > 600) backToTopBtn.classList.add('visible');
+          else backToTopBtn.classList.remove('visible');
+        });
+      }, { passive: true });
+    }
 
     // Mobile menu
     function toggleMobile() {
