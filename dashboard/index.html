@@ -726,9 +726,25 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px;
+      padding: 12px;
       box-shadow: var(--shadow-sm);
       transition: var(--transition);
+      min-height: 0;
+    }
+
+    /* Card que ocupa o espaço restante da sidebar (Top 10) */
+    .sidebar-card.sidebar-card-flex {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-card.sidebar-card-flex .ranking-list {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      margin-right: -4px;
+      padding-right: 4px;
     }
 
     .sidebar-card:hover {
@@ -738,15 +754,52 @@
 
     .sidebar-card h3 {
       color: var(--accent);
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 8px;
     }
 
     .chart-container {
-      height: 180px;
+      height: 130px;
       position: relative;
+    }
+
+    /* KPIs compactos na sidebar */
+    .sidebar-kpis {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .sidebar-kpi {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+      border: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .sidebar-kpi:hover {
+      border-color: var(--accent);
+    }
+    .sidebar-kpi-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .sidebar-kpi-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.1;
+    }
+    .sidebar-kpi-unit {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
     }
 
     .chart-container canvas {
@@ -760,19 +813,18 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 8px;
-      margin: 0 -8px;
+      padding: 7px 10px;
+      margin: 0 -4px;
       border-bottom: 1px solid var(--border);
       border-radius: 6px;
       font-size: 13px;
       cursor: pointer;
-      transition: var(--transition);
+      transition: background 0.15s, color 0.15s;
     }
 
     .ranking-item:hover {
       color: var(--accent);
       background: var(--accent-light);
-      transform: translateX(4px);
     }
     .ranking-item:last-child { border-bottom: none; }
 
@@ -780,17 +832,23 @@
       color: var(--accent);
       font-weight: 700;
       width: 22px;
+      font-size: 12px;
     }
 
     .ranking-item .placa {
       font-weight: 600;
       flex: 1;
       letter-spacing: 1px;
+      font-family: 'Fira Code', monospace;
     }
 
     .ranking-item .count {
       color: var(--text-secondary);
-      font-size: 12px;
+      font-size: 11px;
+      background: var(--bg-input);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
     }
 
     /* ===== MODAL ===== */
@@ -1685,62 +1743,69 @@
 
       <!-- RIGHT: sidebar unificada — analytics de altura total -->
       <div class="sidebar">
-        <!-- Chart: Passagens por Hora -->
+        <!-- Indicadores Rapidos — 4 KPIs compactos em grid 2×2 -->
+        <div class="sidebar-card" id="sidebar-indicators">
+          <h3 id="title-indicators">Indicadores do Período</h3>
+          <div class="sidebar-kpis">
+            <div class="sidebar-kpi">
+              <div class="sidebar-kpi-label">Vel. Média</div>
+              <div class="sidebar-kpi-value" id="ind-vel-media">--</div>
+              <div class="sidebar-kpi-unit">km/h</div>
+            </div>
+            <div class="sidebar-kpi">
+              <div class="sidebar-kpi-label">Conformidade</div>
+              <div class="sidebar-kpi-value" id="ind-conformidade" style="color:var(--green)">--</div>
+              <div class="sidebar-kpi-unit">no limite</div>
+            </div>
+            <div class="sidebar-kpi">
+              <div class="sidebar-kpi-label" id="lbl-hora-pico">Hora Pico</div>
+              <div class="sidebar-kpi-value" id="ind-hora-pico" style="color:var(--orange)">--</div>
+              <div class="sidebar-kpi-unit">maior fluxo</div>
+            </div>
+            <div class="sidebar-kpi">
+              <div class="sidebar-kpi-label">Reincidentes</div>
+              <div class="sidebar-kpi-value" id="ind-reincidentes" style="color:var(--red)">--</div>
+              <div class="sidebar-kpi-unit">+2 alertas</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart: Passagens por Hora (compacto) -->
         <div class="sidebar-card">
           <h3 id="title-hourly">Passagens por Hora</h3>
           <div class="chart-container">
             <canvas id="chart-hourly"></canvas>
           </div>
         </div>
-          <!-- Indicadores Rapidos -->
-          <div class="sidebar-card" id="sidebar-indicators">
-            <h3 id="title-indicators">Indicadores do Período</h3>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Vel. Média</div>
-                <div style="font-size:22px;font-weight:700;color:var(--accent)" id="ind-vel-media">--</div>
-                <div style="font-size:10px;color:var(--text-muted)">km/h</div>
-              </div>
-              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Conformidade</div>
-                <div style="font-size:22px;font-weight:700" id="ind-conformidade">--</div>
-                <div style="font-size:10px;color:var(--text-muted)">dentro do limite</div>
-              </div>
-              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px" id="lbl-hora-pico">Hora Pico</div>
-                <div style="font-size:22px;font-weight:700;color:var(--orange)" id="ind-hora-pico">--</div>
-                <div style="font-size:10px;color:var(--text-muted)">maior fluxo</div>
-              </div>
-              <div style="background:var(--bg-input);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Reincidentes</div>
-                <div style="font-size:22px;font-weight:700;color:var(--red)" id="ind-reincidentes">--</div>
-                <div style="font-size:10px;color:var(--text-muted)">placas +2 alertas</div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Alertas ultimos 7 dias mini chart -->
-          <div class="sidebar-card">
-            <h3 id="title-alerts7d">Alertas por Dia</h3>
-            <div style="height:90px;position:relative">
-              <canvas id="chart-alerts-7d" style="width:100%;height:100%"></canvas>
-            </div>
-          </div>
+        <!-- Ranking Top 10 — ocupa todo o espaço restante -->
+        <div class="sidebar-card sidebar-card-flex">
+          <h3 id="title-ranking">Top 10 Placas</h3>
+          <ul class="ranking-list" id="ranking-list">
+            <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
+          </ul>
+        </div>
 
-          <!-- Ranking -->
-          <div class="sidebar-card">
-            <h3 id="title-ranking">Top 10 Placas</h3>
-            <ul class="ranking-list" id="ranking-list">
-              <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
-            </ul>
-          </div>
+        <!-- Alertas 7 dias escondido (removido da vista para dar espaço ao Top 10) -->
+        <canvas id="chart-alerts-7d" style="display:none"></canvas>
+        <span id="title-alerts7d" style="display:none"></span>
       </div>
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:11px;color:var(--text-muted);letter-spacing:0.3px">
       Protector Traffic Control &middot; v1.0.1 &middot; Build 2ea9b40
       <br>
-      <a href="/dashboard/manual.html" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:500;margin-top:4px;display:inline-block">Manual do Usuário</a>
+      <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <a href="/dashboard/manual.html" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Manual do Usuário
+        </a>
+        <span style="color:var(--text-muted);opacity:0.4">·</span>
+        <a href="/dashboard/novidades.html" target="_blank" style="color:var(--orange);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6m0 0l-3-3m3 3l3-3"/><path d="M19 10l1 4a7 7 0 1 1-4-4l4 1"/></svg>
+          Novidades
+        </a>
+      </div>
     </div>
 
   </div>
