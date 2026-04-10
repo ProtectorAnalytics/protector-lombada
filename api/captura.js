@@ -120,9 +120,29 @@ module.exports = async function handler(req, res) {
     let normalized = dados;
     if (dados.AlarmInfoPlate) {
       const plate = alarm.result?.PlateResult || {};
-      // Speed: prefer radarSpeed (actual radar measurement) over plate.speed
-      const radarSpeed = plate.radarSpeed?.Speed?.PerHour || 0;
-      const finalSpeed = radarSpeed || plate.speed || 0;
+      // Speed: a câmera ALPHADIGI pode retornar velocidade em vários campos
+      // dependendo do modelo/firmware. Tenta todos os locais conhecidos antes
+      // de desistir e retornar 0.
+      const tryNum = (v) => {
+        if (v === null || v === undefined || v === '') return 0;
+        const n = typeof v === 'number' ? v : parseFloat(v);
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+      };
+      const finalSpeed =
+        tryNum(plate.radarSpeed?.Speed?.PerHour) ||
+        tryNum(plate.radarSpeed?.speed?.perHour) ||
+        tryNum(plate.radarSpeed?.PerHour) ||
+        tryNum(plate.radarSpeed?.perHour) ||
+        tryNum(plate.radarSpeed) ||
+        tryNum(plate.speed) ||
+        tryNum(plate.Speed) ||
+        tryNum(plate.speedKmh) ||
+        tryNum(plate.velocity) ||
+        tryNum(alarm.speed) ||
+        tryNum(alarm.Speed) ||
+        tryNum(dados.speed) ||
+        0;
+
       normalized = {
         placa: plate.license || '',
         velocidade: finalSpeed,
@@ -131,6 +151,18 @@ module.exports = async function handler(req, res) {
         tipo_veiculo: plate.type || '',
         cor_veiculo: String(plate.carColor || ''),
       };
+
+      // Debug: se velocidade terminou em 0 mesmo com placa lida, logar
+      // o payload completo para investigação posterior. debug_log tem
+      // cleanup de 24h via pg_cron, sem poluir o banco.
+      if (finalSpeed === 0 && plate.license) {
+        const plateKeys = Object.keys(plate).join(',');
+        const plateJson = JSON.stringify(plate).slice(0, 1500);
+        await logError(
+          `vel=0 com placa ${plate.license} | camera ${camera.nome} | keys: ${plateKeys}`,
+          { plate_json: plateJson, alarm_keys: Object.keys(alarm).join(',') }
+        );
+      }
     }
 
     // Extrair campos
