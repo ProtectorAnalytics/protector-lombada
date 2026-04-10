@@ -163,9 +163,24 @@ Os titulares (moradores, proprietários, visitantes com veículos registrados) t
 
 ### Canal oficial do Encarregado (DPO) da Operadora
 
-**E-mail:** dpo@appps.com.br
+| Canal | Endereço |
+|---|---|
+| Formulário público | `/direitos-titular` — gera protocolo, notifica o DPO e envia confirmação por e-mail |
+| E-mail direto | dpo@appps.com.br |
 
-O Encarregado atende, no prazo legal de **15 dias corridos**, as solicitações de titulares que recorrerem diretamente à Operadora. Nesses casos, a solicitação é encaminhada ao Controlador responsável pelo tratamento daquele titular e o Encarregado atua como intermediário.
+O Encarregado atende, no prazo legal de **15 dias corridos** (Art. 19 LGPD), as solicitações de titulares que recorrerem diretamente à Operadora. Nesses casos, a solicitação é encaminhada ao Controlador responsável pelo tratamento daquele titular e o Encarregado atua como intermediário.
+
+### Tabela de solicitações
+
+Todas as solicitações recebidas pelo formulário são registradas na tabela `solicitacoes_titular` com:
+
+- Protocolo único
+- Dados do solicitante e vínculo informado
+- Tipo de solicitação (conforme art. 18)
+- Status do atendimento (`recebida` → `em_analise` → `atendida`, etc.)
+- Prazo legal calculado automaticamente (15 dias a partir do recebimento)
+- IP e user-agent de origem (para auditoria)
+- Resposta do DPO registrada ao término
 
 ---
 

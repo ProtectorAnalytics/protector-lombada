@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exercer Direitos LGPD — Protector Sistemas</title>
+  <meta name="description" content="Formulário para exercer seus direitos previstos na LGPD (Art. 18). Canal oficial do Encarregado (DPO) da Protector Sistemas.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://protector-lombada.vercel.app/direitos-titular">
+
+  <link rel="icon" type="image/png" href="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-dark: #050A18;
+      --bg-section: #0A1128;
+      --bg-card: #111B33;
+      --bg-card-hover: #162040;
+      --accent: #046BD2;
+      --accent-light: #3B9AFF;
+      --accent-glow: rgba(59,154,255,0.12);
+      --cta: #F97316;
+      --cta-hover: #FB923C;
+      --green: #34D399;
+      --red: #F87171;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --border: rgba(255,255,255,0.06);
+      --border-light: rgba(255,255,255,0.12);
+      --glass: rgba(255,255,255,0.03);
+      --radius: 16px;
+      --radius-lg: 24px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ===== NAV ===== */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(5, 10, 24, 0.85);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px; color: var(--text-primary);
+    }
+    .nav-brand img { width: 36px; height: 36px; }
+    .nav-brand-text { font-weight: 700; font-size: 18px; }
+    .nav-brand-sub { font-size: 12px; color: var(--text-muted); }
+    .nav-back {
+      padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 8px;
+      color: var(--text-secondary); font-size: 14px; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-back:hover { background: var(--glass); color: var(--text-primary); text-decoration: none; }
+
+    /* ===== HEADER ===== */
+    .header {
+      padding: 80px 24px 60px;
+      text-align: center;
+      background: radial-gradient(ellipse at center top, var(--accent-glow), transparent 70%);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-label {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--accent-light); margin-bottom: 20px;
+    }
+    .header-title {
+      font-size: clamp(32px, 5vw, 48px); font-weight: 800; line-height: 1.1;
+      margin-bottom: 20px; letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 50%, var(--cta) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .header-desc {
+      font-size: 16px; color: var(--text-secondary);
+      max-width: 680px; margin: 0 auto; line-height: 1.7;
+    }
+
+    /* ===== CONTENT ===== */
+    .content {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    .info-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--accent-light);
+      border-radius: var(--radius);
+      padding: 22px 26px;
+      margin-bottom: 32px;
+    }
+    .info-box-title {
+      font-weight: 700; color: var(--accent-light); font-size: 13px;
+      text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px;
+    }
+    .info-box p {
+      color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;
+    }
+    .info-box p:last-child { margin-bottom: 0; }
+
+    /* ===== FORM ===== */
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+    }
+    .form-section {
+      margin-bottom: 36px;
+    }
+    .form-section-title {
+      font-size: 14px; font-weight: 700; color: var(--accent-light);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      margin-bottom: 18px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .form-field-full { grid-column: 1 / -1; }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-field label {
+      font-size: 13px; font-weight: 600; color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .form-field label .required { color: var(--red); margin-left: 4px; }
+    .form-field .hint {
+      font-size: 12px; color: var(--text-muted); margin-top: 4px;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      transition: all 0.2s;
+      resize: none;
+    }
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      outline: none;
+      border-color: var(--accent-light);
+      background: rgba(0,0,0,0.4);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .form-field input::placeholder,
+    .form-field textarea::placeholder { color: var(--text-muted); }
+    .form-field textarea { min-height: 140px; line-height: 1.6; }
+    .form-field select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 14px;
+      padding-right: 40px;
+    }
+    .form-field option { background: var(--bg-dark); color: var(--text-primary); }
+
+    /* Honeypot (hidden from users) */
+    .hp-field { position: absolute; left: -9999px; top: -9999px; visibility: hidden; }
+
+    .consent-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      margin-top: 8px;
+    }
+    .consent-row input[type="checkbox"] {
+      width: 18px; height: 18px; flex-shrink: 0;
+      margin-top: 2px;
+      accent-color: var(--accent-light);
+      cursor: pointer;
+    }
+    .consent-row label {
+      font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 28px;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(4, 107, 210, 0.4);
+    }
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Success / Error */
+    .result {
+      display: none;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 28px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .result.show { display: block; }
+    .result.success {
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      color: #34D399;
+    }
+    .result.error {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: #F87171;
+    }
+    .result strong { color: inherit; font-weight: 700; }
+    .result .protocolo {
+      display: inline-block;
+      background: rgba(0,0,0,0.4);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .footer p { margin-bottom: 6px; }
+    .footer a { color: var(--text-secondary); }
+
+    @media (max-width: 640px) {
+      .header { padding: 50px 20px 40px; }
+      .content { padding: 40px 20px 80px; }
+      .form-card { padding: 24px 20px; }
+      .form-grid { grid-template-columns: 1fr; gap: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <img src="https://appps.com.br/wp-content/uploads/2024/07/logo-proti.png" alt="Protector">
+        <div>
+          <div class="nav-brand-text">Protector</div>
+          <div class="nav-brand-sub">Lombada Educativa</div>
+        </div>
+      </a>
+      <a href="/privacidade" class="nav-back">← Política de Privacidade</a>
+    </div>
+  </nav>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-label">LGPD · Art. 18 · Lei 13.709/2018</div>
+    <h1 class="header-title">Exercer seus direitos</h1>
+    <p class="header-desc">
+      Use este canal para solicitar confirmação, acesso, correção, eliminação, portabilidade
+      ou qualquer outro direito previsto na Lei Geral de Proteção de Dados (LGPD).
+      Respondemos no prazo legal de <strong>15 dias corridos</strong>.
+    </p>
+  </header>
+
+  <!-- ===== CONTENT ===== -->
+  <main class="content">
+
+    <!-- Aviso importante -->
+    <div class="info-box">
+      <div class="info-box-title">Antes de continuar</div>
+      <p>
+        Se você é <strong>morador, proprietário ou visitante de um empreendimento</strong>
+        (condomínio, via privada) que utiliza o sistema Protector Traffic Control, a Protector
+        Sistemas atua como <strong>Operadora</strong>, não Controladora, para esses dados.
+      </p>
+      <p>
+        Nessa hipótese, a solicitação deve ser feita <strong>primeiro ao empreendimento
+        contratante</strong> (síndico, administração). Caso não obtenha resposta adequada,
+        use este formulário — atuaremos como intermediários junto ao Controlador.
+      </p>
+    </div>
+
+    <!-- Resultado (sucesso/erro) -->
+    <div id="result" class="result"></div>
+
+    <!-- Formulário -->
+    <form id="lgpd-form" class="form-card" novalidate>
+
+      <!-- Seção: Identificação -->
+      <div class="form-section">
+        <div class="form-section-title">1. Identificação do solicitante</div>
+        <div class="form-grid">
+          <div class="form-field form-field-full">
+            <label for="nome">Nome completo <span class="required">*</span></label>
+            <input type="text" id="nome" name="nome" required maxlength="200" autocomplete="name">
+          </div>
+
+          <div class="form-field">
+            <label for="email">E-mail <span class="required">*</span></label>
+            <input type="email" id="email" name="email" required maxlength="200" autocomplete="email">
+            <div class="hint">Receberá confirmação e resposta neste e-mail</div>
+          </div>
+
+          <div class="form-field">
+            <label for="telefone">Telefone</label>
+            <input type="tel" id="telefone" name="telefone" maxlength="30" autocomplete="tel" placeholder="(71) 99999-9999">
+          </div>
+
+          <div class="form-field form-field-full">
+            <label for="cpf">CPF (opcional)</label>
+            <input type="text" id="cpf" name="cpf" maxlength="20" placeholder="000.000.000-00">
+            <div class="hint">Só informe se necessário para localizar seus dados</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Vínculo -->
+      <div class="form-section">
+        <div class="form-section-title">2. Vínculo com empreendimento (se aplicável)</div>
+        <div class="form-grid">
+          <div class="form-field form-field-full">
+            <label for="empreendimento">Nome do empreendimento</label>
+            <input type="text" id="empreendimento" name="empreendimento" maxlength="200" placeholder="Ex: Condomínio Praia do Castelo">
+          </div>
+
+          <div class="form-field">
+            <label for="placa_veiculo">Placa do veículo</label>
+            <input type="text" id="placa_veiculo" name="placa_veiculo" maxlength="20" placeholder="ABC1D23" style="text-transform:uppercase">
+          </div>
+
+          <div class="form-field">
+            <label for="unidade">Unidade/apartamento</label>
+            <input type="text" id="unidade" name="unidade" maxlength="100" placeholder="Ex: Bloco A - Apt 101">
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Solicitação -->
+      <div class="form-section">
+        <div class="form-section-title">3. Sua solicitação</div>
+        <div class="form-grid">
+          <div class="form-field form-field-full">
+            <label for="tipo">Tipo de solicitação <span class="required">*</span></label>
+            <select id="tipo" name="tipo" required>
+              <option value="">Selecione uma opção...</option>
+              <option value="confirmacao">Confirmação da existência de tratamento</option>
+              <option value="acesso">Acesso aos dados</option>
+              <option value="correcao">Correção de dados incompletos ou inexatos</option>
+              <option value="anonimizacao">Anonimização, bloqueio ou eliminação</option>
+              <option value="portabilidade">Portabilidade a outro fornecedor</option>
+              <option value="eliminacao">Eliminação dos dados</option>
+              <option value="informacao_compartilhamento">Informação sobre compartilhamento</option>
+              <option value="revogacao_consentimento">Revogação do consentimento</option>
+              <option value="reclamacao">Reclamação ou oposição</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+
+          <div class="form-field form-field-full">
+            <label for="descricao">Descreva sua solicitação <span class="required">*</span></label>
+            <textarea id="descricao" name="descricao" required minlength="10" maxlength="4000"
+              placeholder="Descreva com o máximo de detalhe possível: quais dados, período, motivação, tentativas anteriores de contato com o empreendimento (se aplicável), etc."></textarea>
+            <div class="hint">Mínimo 10 caracteres. Quanto mais contexto, mais rápida a análise.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Honeypot -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="website">Website (não preencha)</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <!-- Consentimento -->
+      <div class="consent-row">
+        <input type="checkbox" id="consentimento" name="consentimento" required>
+        <label for="consentimento">
+          Autorizo a Protector Sistemas a tratar os dados pessoais informados neste formulário
+          para o fim específico de atender à minha solicitação, conforme a
+          <a href="/privacidade" target="_blank">Política de Privacidade</a>.
+          Concordo que minha solicitação e a resposta do DPO sejam registradas para fins de
+          comprovação de atendimento à LGPD.
+        </label>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13"/>
+          <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+        Enviar solicitação
+      </button>
+    </form>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <p><strong>Protector — Sistemas de Segurança</strong></p>
+    <p>CNPJ 21.747.444/0001-65 · Salvador/BA</p>
+    <p>Contato DPO: <a href="mailto:dpo@appps.com.br">dpo@appps.com.br</a></p>
+    <p style="margin-top: 20px;">
+      <a href="/">Voltar ao site</a> · <a href="/privacidade">Política de Privacidade</a>
+    </p>
+  </footer>
+
+  <script>
+    const form = document.getElementById('lgpd-form');
+    const result = document.getElementById('result');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      result.className = 'result';
+      result.innerHTML = '';
+
+      const data = {
+        nome: form.nome.value.trim(),
+        email: form.email.value.trim(),
+        telefone: form.telefone.value.trim(),
+        cpf: form.cpf.value.trim(),
+        empreendimento: form.empreendimento.value.trim(),
+        placa_veiculo: form.placa_veiculo.value.trim(),
+        unidade: form.unidade.value.trim(),
+        tipo: form.tipo.value,
+        descricao: form.descricao.value.trim(),
+        consentimento: form.consentimento.checked,
+        website: form.website.value, // honeypot
+      };
+
+      // Validação básica client-side
+      if (!data.nome || !data.email || !data.tipo || !data.descricao || !data.consentimento) {
+        result.className = 'result show error';
+        result.innerHTML = '<strong>Preencha todos os campos obrigatórios</strong> e aceite os termos de consentimento.';
+        result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Enviando...';
+
+      try {
+        const res = await fetch('/api/direitos-titular', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const body = await res.json();
+
+        if (res.ok) {
+          result.className = 'result show success';
+          const prazo = body.prazo_limite
+            ? new Date(body.prazo_limite).toLocaleDateString('pt-BR')
+            : '15 dias';
+          result.innerHTML = `
+            <strong>✓ Solicitação recebida com sucesso.</strong><br>
+            Um e-mail de confirmação foi enviado para <strong>${data.email}</strong>.<br>
+            O Encarregado (DPO) responderá até <strong>${prazo}</strong>.<br>
+            <div class="protocolo">Protocolo: ${body.protocolo}</div>
+          `;
+          form.reset();
+          result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          result.className = 'result show error';
+          result.innerHTML = `<strong>Não foi possível enviar.</strong><br>${body.error || 'Tente novamente em instantes.'}`;
+          result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch (err) {
+        result.className = 'result show error';
+        result.innerHTML = '<strong>Erro de conexão.</strong> Verifique sua internet e tente novamente.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13"/>
+            <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+          Enviar solicitação
+        `;
+      }
+    });
+  </script>
+
+</body>
+</html>
