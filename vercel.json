@@ -24,6 +24,7 @@
     { "src": "/admin", "dest": "/admin/index.html" },
     { "src": "/admin/(.*)", "dest": "/admin/$1" },
     { "src": "/dashboard", "dest": "/dashboard/index.html" },
+    { "src": "/dashboard/novidades", "dest": "/dashboard/novidades.html" },
     { "src": "/dashboard/(.*)", "dest": "/dashboard/$1" },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
     { "src": "/privacidade", "dest": "/site/privacidade.html" },
