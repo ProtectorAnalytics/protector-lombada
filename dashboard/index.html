@@ -382,6 +382,7 @@
     .recent-card .rc-vel.green { color: #22C55E; }
     .recent-card .rc-vel.orange { color: #F97316; }
     .recent-card .rc-vel.red { color: #EF4444; text-shadow: 0 0 8px rgba(239,68,68,0.5); }
+    .recent-card .rc-vel.unknown { color: var(--text-muted); opacity: 0.7; }
 
     /* Info bar: name ↔ timestamp in one line */
     .recent-card .rc-info {
@@ -431,6 +432,12 @@
       background: rgba(34,197,94,0.2);
       color: #22C55E;
       border-color: rgba(34,197,94,0.35);
+    }
+
+    .recent-card .rc-badge.noradar-badge {
+      background: rgba(148,163,184,0.18);
+      color: #94a3b8;
+      border-color: rgba(148,163,184,0.35);
     }
 
     /* Tabela: ocupa o espaço restante da left-panel */
@@ -725,6 +732,7 @@
     .table-row .vel.green { color: var(--green); }
     .table-row .vel.orange { color: var(--orange); }
     .table-row .vel.red { color: var(--red); }
+    .table-row .vel.unknown { color: var(--text-muted); opacity: 0.7; }
 
     .table-row .datetime {
       color: var(--text-secondary);
@@ -2263,8 +2271,11 @@
       const photoUrls = await Promise.all(data.map(c => getPhotoUrl(c.foto_path)));
 
       container.innerHTML = data.map((c, i) => {
-        const isAlert = c.velocidade > limite;
-        const velClass = c.velocidade <= limite ? 'green'
+        const velMedida = c.velocidade > 0;
+        const isAlert = velMedida && c.velocidade > limite;
+        // velClass: se não tem velocidade medida, usa "unknown" (cinza)
+        const velClass = !velMedida ? 'unknown'
+          : c.velocidade <= limite ? 'green'
           : c.velocidade <= limite + 20 ? 'orange' : 'red';
         const ts = new Date(c.timestamp);
         const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -2276,12 +2287,21 @@
           ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="Foto" loading="lazy">`
           : `<div class="rc-no-photo">&#128663;</div>`;
 
+        // Badge: ALERTA se excedeu, SEM RADAR se não há velocidade, OK caso contrário
+        const badgeClass = isAlert ? 'alert-badge' : (!velMedida ? 'noradar-badge' : 'ok-badge');
+        const badgeText = isAlert ? 'ALERTA' : (!velMedida ? 'SEM RADAR' : 'OK');
+
+        // Exibição da velocidade: — se não medida, senão valor + unidade
+        const velHtml = velMedida
+          ? `${c.velocidade} <span style="font-size:13px">km/h</span>`
+          : `<span style="font-size:22px;letter-spacing:-2px">—</span> <span style="font-size:13px">km/h</span>`;
+
         const radarNome = camerasMap[c.camera_id] || '';
         return `<div class="recent-card ${isAlert ? 'alerta' : ''}" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
-          <div class="rc-badge ${isAlert ? 'alert-badge' : 'ok-badge'}">${isAlert ? 'ALERTA' : 'OK'}</div>
+          <div class="rc-badge ${badgeClass}">${badgeText}</div>
           ${photoHtml}
           <div class="rc-placa">${c.placa}</div>
-          <div class="rc-vel ${velClass}">${c.velocidade} <span style="font-size:13px">km/h</span></div>
+          <div class="rc-vel ${velClass}">${velHtml}</div>
           <div class="rc-info">
             <span class="rc-name">${morador || radarNome || '<span style="color:var(--text-muted)">N/C</span>'}</span>
             <span class="rc-time">${hora}&nbsp;·&nbsp;${data_str}</span>
@@ -2431,11 +2451,16 @@
 
       tbody.innerHTML = pageData.map((c, pi) => {
         const globalIdx = start + pi;
-        const velClass = c.velocidade <= limite ? 'green'
+        const velMedida = c.velocidade > 0;
+        const velClass = !velMedida ? 'unknown'
+          : c.velocidade <= limite ? 'green'
           : c.velocidade <= limite + 20 ? 'orange' : 'red';
         const ts = new Date(c.timestamp);
         const dt = ts.toLocaleDateString('pt-BR') + ' ' + ts.toLocaleTimeString('pt-BR');
-        const isAlert = c.velocidade > limite;
+        const isAlert = velMedida && c.velocidade > limite;
+        const velTexto = velMedida ? `${c.velocidade} km/h` : '— km/h';
+        const statusTexto = isAlert ? 'ALERTA' : (!velMedida ? 'SEM RADAR' : 'OK');
+        const statusCor = isAlert ? 'var(--red)' : (!velMedida ? 'var(--text-muted)' : 'var(--green)');
 
         const thumbHtml = globalIdx < 50 && allThumbUrls[globalIdx]
           ? `<img class="row-thumb" src="${allThumbUrls[globalIdx]}" alt="" loading="lazy">`
@@ -2449,11 +2474,11 @@
         return `<div class="table-row" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
           <div>${thumbHtml}</div>
           <div class="placa">${c.placa}</div>
-          <div class="vel ${velClass}">${c.velocidade} km/h</div>
+          <div class="vel ${velClass}">${velTexto}</div>
           <div style="font-size:11px;color:var(--text-secondary);font-weight:500">${radarNome}</div>
           <div class="datetime">${dt}</div>
           <div>${moradorInfo}</div>
-          <div style="text-align:center;font-size:12px;font-weight:600;color:${isAlert ? 'var(--red)' : 'var(--green)'}">${isAlert ? 'ALERTA' : 'OK'}</div>
+          <div style="text-align:center;font-size:12px;font-weight:600;color:${statusCor}">${statusTexto}</div>
         </div>`;
       }).join('');
 
@@ -3144,7 +3169,8 @@
       const modal = document.getElementById('modal');
       const body = document.getElementById('modal-body');
       const limite = currentCliente.limite_velocidade;
-      const isAlert = captura.velocidade > limite;
+      const velMedidaModal = captura.velocidade > 0;
+      const isAlert = velMedidaModal && captura.velocidade > limite;
       const ts = new Date(captura.timestamp);
 
       // Show loading
@@ -3180,7 +3206,7 @@
         </div>
         <div class="modal-field">
           <div class="label">Velocidade</div>
-          <div class="value ${isAlert ? 'red' : 'green'}" style="font-size:20px">${captura.velocidade} km/h</div>
+          <div class="value ${!velMedidaModal ? '' : (isAlert ? 'red' : 'green')}" style="font-size:20px;${!velMedidaModal ? 'color:var(--text-muted)' : ''}">${velMedidaModal ? captura.velocidade + ' km/h' : '— (sem radar)'}</div>
         </div>
         <div class="modal-field">
           <div class="label">Radar</div>
