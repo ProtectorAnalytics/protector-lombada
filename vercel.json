@@ -11,6 +11,7 @@
     { "src": "/api/captura", "dest": "/api/captura.js" },
     { "src": "/api/heartbeat", "dest": "/api/heartbeat.js" },
     { "src": "/api/cron-limpeza", "dest": "/api/cron-limpeza.js" },
+    { "src": "/api/direitos-titular", "dest": "/api/direitos-titular.js" },
     { "src": "/api/test", "dest": "/api/test.js" },
     { "src": "/api/admin/clientes", "dest": "/api/admin/clientes.js" },
     { "src": "/api/admin/cameras", "dest": "/api/admin/cameras.js" },
@@ -24,6 +25,7 @@
     { "src": "/dashboard/(.*)", "dest": "/dashboard/$1" },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
     { "src": "/privacidade", "dest": "/site/privacidade.html" },
+    { "src": "/direitos-titular", "dest": "/site/direitos-titular.html" },
     { "src": "^/$", "dest": "/site/index.html" },
     { "src": "/(.*)", "dest": "/site/$1" }
   ],
