@@ -3295,6 +3295,7 @@
     // PDF NOTIFICATION GENERATOR (client-side)
     // ============================================
     async function gerarNotificacaoPDF(captura) {
+      await lazyLoadExportLibs();
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
       const limite = currentCliente.limite_velocidade;
