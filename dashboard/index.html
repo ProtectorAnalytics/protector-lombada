@@ -3303,19 +3303,30 @@
       const veiculo = veiculosCache[captura.placa];
       const velReport = captura.velocidade <= 10 ? 1 : captura.velocidade;
       const pageW = 210;
+      const pageH = 297;
       const margin = 20;
       const contentW = pageW - margin * 2;
+
+      // Logo configurável (canto superior esquerdo)
+      if (currentCliente.pdf_logo_url) {
+        try {
+          const logoData = await loadImageAsBase64(currentCliente.pdf_logo_url);
+          if (logoData) doc.addImage(logoData, 'JPEG', margin, 10, 22, 15);
+        } catch {
+          // logo indisponível, segue sem
+        }
+      }
 
       // Title
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
       doc.setTextColor(204, 0, 0);
-      doc.text('NOTIFICAÇÃO ORIENTATIVA', pageW / 2, 20, { align: 'center' });
+      doc.text(currentCliente.pdf_titulo || 'NOTIFICAÇÃO ORIENTATIVA', pageW / 2, 20, { align: 'center' });
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(80, 80, 80);
-      doc.text('Transitar em velocidade superior à máxima permitida', pageW / 2, 27, { align: 'center' });
+      doc.text(currentCliente.pdf_subtitulo || 'Transitar em velocidade superior à máxima permitida', pageW / 2, 27, { align: 'center' });
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
@@ -3462,6 +3473,14 @@
           doc.setTextColor(isAbove ? 204 : 60, isAbove ? 0 : 60, isAbove ? 0 : 60);
           doc.text(`${hVel}`, cx + cellW/2, cy + 10.5, { align: 'center' });
         });
+      }
+
+      // Rodapé configurável (fixo no pé da página)
+      if (currentCliente.pdf_rodape) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(currentCliente.pdf_rodape, pageW / 2, pageH - 10, { align: 'center' });
       }
 
       // Save
