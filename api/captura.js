@@ -155,12 +155,21 @@ module.exports = async function handler(req, res) {
       // Debug: se velocidade terminou em 0 mesmo com placa lida, logar
       // o payload completo para investigação posterior. debug_log tem
       // cleanup de 24h via pg_cron, sem poluir o banco.
+      // Stripa campos base64 (imageFile/imageFragmentFile) para enxergar
+      // speed/radarSpeed/triggerType reais sem o JSON ser truncado.
       if (finalSpeed === 0 && plate.license) {
         const plateKeys = Object.keys(plate).join(',');
-        const plateJson = JSON.stringify(plate).slice(0, 1500);
+        const { imageFile: _img, imageFragmentFile: _frag, ...plateLite } = plate;
         await logError(
           `vel=0 com placa ${plate.license} | camera ${camera.nome} | keys: ${plateKeys}`,
-          { plate_json: plateJson, alarm_keys: Object.keys(alarm).join(',') }
+          {
+            plate_json: JSON.stringify(plateLite).slice(0, 4000),
+            alarm_keys: Object.keys(alarm).join(','),
+            speed_raw: plate.speed,
+            radarSpeed_raw: plate.radarSpeed,
+            triggerType: plate.triggerType,
+            direction: plate.direction,
+          }
         );
       }
     }
@@ -181,8 +190,8 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Placa não fornecida' });
     }
 
-    // Decodificar e comprimir foto (otimizado: ~150-170KB -> ~50-70KB)
-    // 800px é suficiente para identificar placa em auditoria
+    // Decodificar e recomprimir foto preservando detalhe para zoom em auditoria
+    // (1280px / quality 82 / mozjpeg ≈ 140-180KB; antes era 800px/55 ≈ 50-70KB)
     let fotoBuffer = null;
     let blurInfo = null;
     if (imageBase64) {
@@ -191,8 +200,8 @@ module.exports = async function handler(req, res) {
       if (rawBuffer.length > 100) {
         try {
           fotoBuffer = await sharp(rawBuffer)
-            .resize(800, null, { withoutEnlargement: true })
-            .jpeg({ quality: 55, mozjpeg: true })
+            .resize(1280, null, { withoutEnlargement: true })
+            .jpeg({ quality: 82, mozjpeg: true })
             .toBuffer();
         } catch (sharpErr) {
           await logError(`Sharp falhou, usando original | camera: ${camera.nome}`, {
