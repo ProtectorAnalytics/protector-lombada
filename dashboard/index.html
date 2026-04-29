@@ -2062,6 +2062,16 @@
     let veiculosCache = {};
     let lastCapturas = []; // store last filtered captures for export
 
+    // "Hoje" no fuso local (BRT). new Date().toISOString() retorna UTC,
+    // o que vira o dia seguinte após 21h em BRT — bug do filtro default.
+    function todayLocalISO() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
     async function initApp() {
       try {
         const resp = await fetch('/api/config');
@@ -2254,7 +2264,7 @@
       document.getElementById('btn-topbar-veiculos').style.display = '';
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocalISO();
       document.getElementById('filter-date-start').value = today;
       document.getElementById('filter-date-end').value = today;
 
@@ -2629,7 +2639,7 @@
     }
 
     function clearFilters() {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocalISO();
       document.getElementById('filter-date-start').value = today;
       document.getElementById('filter-time-start').value = '00:00';
       document.getElementById('filter-date-end').value = today;
@@ -3096,7 +3106,7 @@
       }));
       ws['!cols'] = colWidths;
 
-      const dateStr = new Date().toISOString().slice(0, 10);
+      const dateStr = todayLocalISO();
       XLSX.writeFile(wb, `capturas_${currentCliente.nome.replace(/\s+/g, '_')}_${dateStr}.xlsx`);
     }
 
@@ -3140,7 +3150,7 @@
       doc.setTextColor(100, 116, 139);
       doc.text(`${currentCliente.local_via} | ${currentCliente.cidade_uf} | Limite: ${limite} km/h`, margin, y + 5);
 
-      const dateStr = new Date().toISOString().slice(0, 10);
+      const dateStr = todayLocalISO();
       const filterStart = document.getElementById('filter-date-start').value || dateStr;
       const filterEnd = document.getElementById('filter-date-end').value || dateStr;
       doc.text(`Período: ${filterStart} a ${filterEnd} | Total de registros: ${lastCapturas.length}`, margin, y + 10);
@@ -3656,7 +3666,7 @@
     // HELPER: lê os filtros ativos do painel
     // ============================================
     function getActiveFilters() {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocalISO();
       const dateStart = document.getElementById('filter-date-start').value || today;
       const dateEnd   = document.getElementById('filter-date-end').value   || today;
       const timeStart = document.getElementById('filter-time-start').value || '00:00';
