@@ -1,5 +1,4 @@
 const Busboy = require('busboy');
-const sharp = require('sharp');
 const {
   findCameraByToken,
   findCameraBySerial,
@@ -190,28 +189,20 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Placa não fornecida' });
     }
 
-    // Decodificar e recomprimir foto preservando detalhe para zoom em auditoria
-    // (1280px / quality 82 / mozjpeg ≈ 140-180KB; antes era 800px/55 ≈ 50-70KB)
+    // Foto: preservar a imagem original que chega da câmera (sem resize,
+    // sem recompressão JPEG). Tamanho típico ALPHADIGI: 200KB-2MB.
+    // Quando blur LGPD está ativo no cliente, o módulo de blur recompacta
+    // internamente — inevitável, mas mantemos quality alta dentro dele.
     let fotoBuffer = null;
     let blurInfo = null;
     if (imageBase64) {
       const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
       const rawBuffer = Buffer.from(base64Clean, 'base64');
       if (rawBuffer.length > 100) {
-        try {
-          fotoBuffer = await sharp(rawBuffer)
-            .resize(1280, null, { withoutEnlargement: true })
-            .jpeg({ quality: 82, mozjpeg: true })
-            .toBuffer();
-        } catch (sharpErr) {
-          await logError(`Sharp falhou, usando original | camera: ${camera.nome}`, {
-            err: sharpErr.message, rawSize: rawBuffer.length, camera_id: camera.id,
-          });
-          fotoBuffer = rawBuffer; // fallback: usar original se sharp falhar
-        }
+        fotoBuffer = rawBuffer;
 
         // ── LGPD Fase 4: blur automático de pessoas (se ativado no cliente) ──
-        if (fotoBuffer && cliente.blur_automatico === true) {
+        if (cliente.blur_automatico === true) {
           try {
             const resultadoBlur = await blurPessoas(fotoBuffer);
             if (resultadoBlur?.buffer) {
