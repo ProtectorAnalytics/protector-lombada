@@ -3517,6 +3517,7 @@
 
       // Corpo de texto custom (opcional, por cliente — opt-in)
       // Renderiza apenas se currentCliente.pdf_corpo_texto estiver preenchido.
+      // Pág 1 = advertência textual + assinatura. Pág 2 = evidência.
       let bodyY = headerY + 10;
       if (currentCliente.pdf_corpo_texto && currentCliente.pdf_corpo_texto.trim()) {
         const corpoTexto = currentCliente.pdf_corpo_texto
@@ -3530,7 +3531,7 @@
         doc.setFontSize(9);
         doc.setTextColor(34, 34, 34);
         const linhas = doc.splitTextToSize(corpoTexto, contentW);
-        const lineHeight = 4.2;
+        const lineHeight = 4.4;
         let textY = headerY + 16;
         linhas.forEach((linha) => {
           if (textY > pageH - margin - 5) {
@@ -3540,12 +3541,31 @@
           doc.text(linha, margin, textY);
           textY += lineHeight;
         });
-        bodyY = textY + 2;
-        if (bodyY > pageH - margin - 60) {
-          doc.addPage();
-          bodyY = margin;
-        }
-        doc.line(margin, bodyY, pageW - margin, bodyY);
+
+        // Quebra dura: evidência sempre na próxima página, com um
+        // mini-cabeçalho referenciando a notificação.
+        doc.addPage();
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(
+          `EVIDÊNCIA DA OCORRÊNCIA — PLACA ${captura.placa}`,
+          pageW / 2,
+          margin,
+          { align: 'center' }
+        );
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+          `Radar ${radarNomePdf || '—'} · ${ts.toLocaleDateString('pt-BR')} ${ts.toLocaleTimeString('pt-BR')} · ${velReport} km/h`,
+          pageW / 2,
+          margin + 5,
+          { align: 'center' }
+        );
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, margin + 9, pageW - margin, margin + 9);
+        bodyY = margin + 9;
       }
 
       // Table 1: Placa | Morador | Unidade
