@@ -34,13 +34,17 @@ module.exports = async function handler(req, res) {
       supabase.from('cameras').select('id, cliente_id, last_seen').eq('ativa', true),
     ]);
 
-    // Calcular status online/offline das câmeras
+    // Calcular status online/offline das câmeras.
+    // Thresholds calibrados pra realidade de lombada educativa: condomínio
+    // pode ficar horas sem carro. Câmeras com heartbeat configurado batem
+    // sozinhas; as sem heartbeat só atualizam last_seen quando passa
+    // veículo. 30min/6h equilibra os dois cenários sem mascarar quedas.
     const camerasStatusData = camerasStatusRes.data || [];
-    const cincoMinAtras = new Date(Date.now() - 5 * 60000).toISOString();
-    const quinzeMinAtras = new Date(Date.now() - 15 * 60000).toISOString();
-    const camerasOnline = camerasStatusData.filter(c => c.last_seen && c.last_seen > cincoMinAtras).length;
-    const camerasAlerta = camerasStatusData.filter(c => c.last_seen && c.last_seen <= cincoMinAtras && c.last_seen > quinzeMinAtras).length;
-    const camerasOffline = camerasStatusData.filter(c => !c.last_seen || c.last_seen <= quinzeMinAtras).length;
+    const trintaMinAtras = new Date(Date.now() - 30 * 60000).toISOString();
+    const seisHorasAtras = new Date(Date.now() - 6 * 60 * 60000).toISOString();
+    const camerasOnline = camerasStatusData.filter(c => c.last_seen && c.last_seen > trintaMinAtras).length;
+    const camerasAlerta = camerasStatusData.filter(c => c.last_seen && c.last_seen <= trintaMinAtras && c.last_seen > seisHorasAtras).length;
+    const camerasOffline = camerasStatusData.filter(c => !c.last_seen || c.last_seen <= seisHorasAtras).length;
 
     // Agrupar status por cliente
     const statusPorCliente = {};
@@ -49,7 +53,7 @@ module.exports = async function handler(req, res) {
         statusPorCliente[cam.cliente_id] = { online: 0, total: 0 };
       }
       statusPorCliente[cam.cliente_id].total++;
-      if (cam.last_seen && cam.last_seen > cincoMinAtras) {
+      if (cam.last_seen && cam.last_seen > trintaMinAtras) {
         statusPorCliente[cam.cliente_id].online++;
       }
     }
