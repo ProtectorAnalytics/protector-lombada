@@ -1718,6 +1718,7 @@
     }
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+  <script src="/js/camera-status.js"></script>
 </head>
 <body>
 
@@ -2457,15 +2458,10 @@
     // ============================================
     // STATUS DAS CAMERAS
     // ============================================
+    // cameraStatus vem de /js/camera-status.js (mesma lib usada pelo
+    // admin e pelo server). Wrapper preserva a API local.
     function cameraStatus(lastSeen) {
-      // Lombada educativa fica horas sem evento; thresholds 30min/6h.
-      if (!lastSeen) return { status: 'aguardando', label: 'Aguardando', color: '#3b82f6' };
-      const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
-      if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
-      if (mins < 30) return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
-      if (mins < 360) return { status: 'alerta', label: `Há ${Math.floor(mins / 60)}h`, color: '#facc15' };
-      if (mins < 1440) return { status: 'offline', label: `Há ${Math.floor(mins / 60)}h`, color: '#ef4444' };
-      return { status: 'offline', label: `Há ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
+      return window.cameraStatusLib.cameraStatus(lastSeen);
     }
 
     async function loadCamerasStatus() {

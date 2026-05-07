@@ -489,6 +489,7 @@
     }
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+  <script src="/js/camera-status.js"></script>
 </head>
 <body>
 
@@ -1656,17 +1657,11 @@ async function loadCameras(clienteId) {
   } catch (err) { console.error(err); }
 }
 
+// cameraStatus vem de /js/camera-status.js (lib única, mesma usada
+// pelo painel cliente e pelo server-side). Wrapper preserva a API
+// histórica desse arquivo.
 function cameraStatus(lastSeen) {
-  // Thresholds calibrados pra lombada educativa (longos intervalos
-  // sem evento são normais): online < 30min, alerta 30min-6h,
-  // offline > 6h.
-  if (!lastSeen) return { status: 'aguardando', label: 'Aguardando', color: '#3b82f6' };
-  const mins = (Date.now() - new Date(lastSeen).getTime()) / 60000;
-  if (mins < 1) return { status: 'online', label: 'Agora', color: '#4ade80' };
-  if (mins < 30) return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
-  if (mins < 360) return { status: 'alerta', label: `Há ${Math.floor(mins / 60)}h`, color: '#facc15' };
-  if (mins < 1440) return { status: 'offline', label: `Há ${Math.floor(mins / 60)}h`, color: '#ef4444' };
-  return { status: 'offline', label: `Há ${Math.floor(mins / 1440)}d`, color: '#ef4444' };
+  return window.cameraStatusLib.cameraStatus(lastSeen);
 }
 
 function renderCameras() {
