@@ -284,6 +284,7 @@ module.exports = async function handler(req, res) {
           fotoBuffer,
           historico,
           cameraNome: camera.nome || '',
+          camera,
         });
 
         const destinatarios = await getDestinatarios(cliente.id, 'alerta');
