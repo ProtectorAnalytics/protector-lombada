@@ -3471,16 +3471,18 @@
       const contentW = pageW - margin * 2;
 
       // Logo (canto superior esquerdo): cliente.pdf_logo_url tem
-      // prioridade, default cai pra logo oficial Protector.
+      // prioridade, default cai pra logo oficial Protector. Mime do
+      // dataURL é detectado por loadImageAsBase64 (PNG preserva alpha).
       try {
         const logoUrl = currentCliente.pdf_logo_url || '/images/logo-protector.png';
         const logoData = await loadImageAsBase64(logoUrl);
         if (logoData) {
+          const fmt = logoData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
           if (currentCliente.pdf_logo_url) {
-            doc.addImage(logoData, 'JPEG', margin, 10, 22, 15);
+            doc.addImage(logoData, fmt, margin, 10, 22, 15);
           } else {
             // logo Protector é wide (1424×296) — mantém aspecto
-            doc.addImage(logoData, 'PNG', margin, 9, 32, 32 * (296 / 1424));
+            doc.addImage(logoData, fmt, margin, 9, 32, 32 * (296 / 1424));
           }
         }
       } catch {
@@ -3800,6 +3802,9 @@
 
     // Load image from URL as base64 for jsPDF
     function loadImageAsBase64(url) {
+      // PNG preserva transparência — necessário pra logo sem fundo.
+      // JPEG só pra fotos (menor, sem alpha).
+      const isPng = /\.png(\?.*)?$/i.test(url);
       return new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -3809,7 +3814,7 @@
           canvas.height = img.naturalHeight;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
+          resolve(isPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.85));
         };
         img.onerror = () => resolve(null);
         img.src = url;
