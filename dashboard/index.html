@@ -3551,33 +3551,11 @@
       }
 
       // ============================================
-      // CORPO DE TEXTO CUSTOM (opt-in)
-      // ============================================
-      let bodyY = headerEndY;
-      if (usaCorpoCustom) {
-        const corpoTexto = currentCliente.pdf_corpo_texto
-          .replace(/\{\{DATA_OCORRENCIA\}\}/g, ts.toLocaleDateString('pt-BR'))
-          .replace(/\{\{HORA_OCORRENCIA\}\}/g, ts.toLocaleTimeString('pt-BR'))
-          .replace(/\{\{ID_RADAR\}\}/g, radarNomePdf || '—')
-          .replace(/\{\{PLACA_VEICULO\}\}/g, captura.placa)
-          .replace(/\{\{VELOCIDADE_REGISTRADA\}\}/g, `${velReport} km/h`);
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.setTextColor(34, 34, 34);
-        const linhas = doc.splitTextToSize(corpoTexto, contentW);
-        const lineHeight = 3.6;
-        let textY = headerEndY + 5;
-        linhas.forEach((linha) => {
-          doc.text(linha, margin, textY);
-          textY += lineHeight;
-        });
-        bodyY = textY + 2;
-      }
-
-      // ============================================
       // TABELAS PLACA / VELOCIDADE
       // ============================================
+      // Ordem (a pedido do cliente PARAISO DO MAR):
+      //   cabeçalho → medição (tabelas + foto) → histórico → termo
+      const bodyY = headerEndY;
       const col3 = contentW / 3;
       let y = bodyY + (usaCorpoCustom ? 3 : 5);
 
@@ -3657,47 +3635,82 @@
       doc.setTextColor(0, 0, 0);
       doc.text(currentCliente.nome, pageW / 2, y, { align: 'center' });
 
-      // Histórico só no layout original — quando o PDF tem corpo formal
-      // ele já é a notificação completa, e o grid vira ruído.
-      if (!usaCorpoCustom) {
-        y += 5;
+      // ============================================
+      // HISTÓRICO ÚLTIMAS PASSAGENS
+      // ============================================
+      // Modo padrão: até 30 (3 linhas). Modo custom: 20 (2 linhas) para
+      // sobrar espaço pro termo formal abaixo.
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(usaCorpoCustom ? 7 : 8);
+      doc.setTextColor(100, 100, 100);
+      const labelHistorico = usaCorpoCustom
+        ? 'Últimas 20 passagens por data / velocidade'
+        : 'Últimas passagens por data / Velocidades';
+      doc.text(labelHistorico, pageW / 2, y, { align: 'center' });
+
+      y += usaCorpoCustom ? 4 : 5;
+      const historicoFull = await loadHistoricoPlaca(captura.placa);
+      const historico = usaCorpoCustom ? historicoFull.slice(0, 20) : historicoFull;
+      if (historico && historico.length > 0) {
+        const cellW = contentW / 10;
+        const cellH = usaCorpoCustom ? 11 : 12;
+        historico.forEach((h, i) => {
+          const col = i % 10;
+          const row = Math.floor(i / 10);
+          const cx = margin + col * cellW;
+          const cy = y + row * cellH;
+
+          if (cy + cellH > pageH - 15) return;
+
+          doc.setDrawColor(200, 200, 200);
+          doc.rect(cx, cy, cellW, cellH);
+
+          const hts = new Date(h.timestamp);
+          const hVel = h.velocidade <= 10 ? 1 : h.velocidade;
+          const isAbove = hVel > limite;
+
+          doc.setFontSize(5);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(120, 120, 120);
+          doc.text(hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'}), cx + cellW/2, cy + (usaCorpoCustom ? 3 : 3.5), { align: 'center' });
+          doc.text(hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), cx + cellW/2, cy + (usaCorpoCustom ? 6 : 6.5), { align: 'center' });
+
+          doc.setFontSize(usaCorpoCustom ? 7 : 8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(isAbove ? 204 : 60, isAbove ? 0 : 60, isAbove ? 0 : 60);
+          doc.text(`${hVel}`, cx + cellW/2, cy + (usaCorpoCustom ? 9.5 : 10.5), { align: 'center' });
+        });
+        const linhasGrid = Math.ceil(historico.length / 10);
+        y += linhasGrid * cellH;
+      }
+
+      // ============================================
+      // TERMO / CORPO DE TEXTO CUSTOM (abaixo do histórico)
+      // ============================================
+      if (usaCorpoCustom) {
+        y += 3;
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, y, pageW - margin, y);
+        y += 3;
+
+        const corpoTexto = currentCliente.pdf_corpo_texto
+          .replace(/\{\{DATA_OCORRENCIA\}\}/g, ts.toLocaleDateString('pt-BR'))
+          .replace(/\{\{HORA_OCORRENCIA\}\}/g, ts.toLocaleTimeString('pt-BR'))
+          .replace(/\{\{ID_RADAR\}\}/g, radarNomePdf || '—')
+          .replace(/\{\{PLACA_VEICULO\}\}/g, captura.placa)
+          .replace(/\{\{VELOCIDADE_REGISTRADA\}\}/g, `${velReport} km/h`);
+
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text('Últimas passagens por data / Velocidades', pageW / 2, y, { align: 'center' });
-
-        y += 5;
-        const historico = await loadHistoricoPlaca(captura.placa);
-        if (historico && historico.length > 0) {
-          const cellW = contentW / 10;
-          const cellH = 12;
-          historico.forEach((h, i) => {
-            const col = i % 10;
-            const row = Math.floor(i / 10);
-            const cx = margin + col * cellW;
-            const cy = y + row * cellH;
-
-            if (cy + cellH > 280) return;
-
-            doc.setDrawColor(200, 200, 200);
-            doc.rect(cx, cy, cellW, cellH);
-
-            const hts = new Date(h.timestamp);
-            const hVel = h.velocidade <= 10 ? 1 : h.velocidade;
-            const isAbove = hVel > limite;
-
-            doc.setFontSize(5);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(120, 120, 120);
-            doc.text(hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'}), cx + cellW/2, cy + 3.5, { align: 'center' });
-            doc.text(hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), cx + cellW/2, cy + 6.5, { align: 'center' });
-
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(isAbove ? 204 : 60, isAbove ? 0 : 60, isAbove ? 0 : 60);
-            doc.text(`${hVel}`, cx + cellW/2, cy + 10.5, { align: 'center' });
-          });
-        }
+        doc.setFontSize(7.5);
+        doc.setTextColor(34, 34, 34);
+        const linhas = doc.splitTextToSize(corpoTexto, contentW);
+        const lineHeight = 3.2;
+        linhas.forEach((linha) => {
+          if (y > pageH - 14) return; // não invade rodapé fixo
+          doc.text(linha, margin, y);
+          y += lineHeight;
+        });
       }
 
       // No modo compacto a marca foi tirada do header, repõe no rodapé.
