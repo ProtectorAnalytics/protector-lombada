@@ -1703,6 +1703,10 @@ function openCameraModal(camera = null) {
     <div class="form-group"><label>Nome de Exibição</label><input id="f-cam-exibicao" value="${esc(camera?.nome_exibicao || '')}" placeholder="Ex: Clube Mata (nome curto p/ dashboard)"></div>
     <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Nome curto exibido no dashboard. Se vazio, usa o serial.</div>
     <div class="form-group"><label>Nome Técnico</label><input id="f-cam-nome" value="${esc(camera?.nome || '')}" placeholder="Ex: CPC-LOMB01-CLUBEMATA (opcional)"></div>
+    <div class="form-group"><label>Modelo do equipamento</label><input id="f-cam-modelo" value="${esc(camera?.modelo || '')}" placeholder="Ex: ALPHADIGI ITS-9C"></div>
+    <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Aparece no rodapé auditável do PDF de notificação.</div>
+    <div class="form-group"><label>Firmware</label><input id="f-cam-firmware" value="${esc(camera?.firmware || '')}" placeholder="Ex: V4.32.05"></div>
+    <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Versão do firmware da câmera. ALPHADIGI não expõe automaticamente — preencha manualmente.</div>
     ${isEdit ? `<div class="form-group"><label>Token (não editável)</label><input value="${camera.token}" disabled></div>` : ''}
     <div class="form-error" id="f-cam-error"></div>
     <div class="form-actions">
@@ -1716,10 +1720,18 @@ async function saveCamera(id) {
   const serial_number = document.getElementById('f-cam-serial').value.trim();
   const nome_exibicao = document.getElementById('f-cam-exibicao').value.trim();
   const nome = document.getElementById('f-cam-nome').value.trim();
+  const modelo = document.getElementById('f-cam-modelo').value.trim();
+  const firmware = document.getElementById('f-cam-firmware').value.trim();
   if (!serial_number) { document.getElementById('f-cam-error').textContent = 'Serial da câmera obrigatório.'; return; }
 
   try {
-    const payload = { serial_number, nome: nome || null, nome_exibicao: nome_exibicao || null };
+    const payload = {
+      serial_number,
+      nome: nome || null,
+      nome_exibicao: nome_exibicao || null,
+      modelo: modelo || null,
+      firmware: firmware || null,
+    };
 
     if (id) {
       await api('/cameras', 'PUT', { id, ...payload });

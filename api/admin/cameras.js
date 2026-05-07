@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
       const { profile } = await autenticar(req, ['super_admin']);
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
 
-      const { cliente_id, nome, serial_number, nome_exibicao } = body;
+      const { cliente_id, nome, serial_number, nome_exibicao, modelo, firmware } = body;
       if (!cliente_id || !isValidUUID(cliente_id)) {
         return res.status(400).json({ error: 'cliente_id obrigatório e deve ser UUID válido' });
       }
@@ -63,6 +63,8 @@ module.exports = async function handler(req, res) {
         ativa: true,
       };
       if (nome_exibicao) insertData.nome_exibicao = nome_exibicao.trim();
+      if (modelo) insertData.modelo = String(modelo).trim();
+      if (firmware) insertData.firmware = String(firmware).trim();
 
       const { data, error } = await supabase
         .from('cameras')
@@ -93,7 +95,7 @@ module.exports = async function handler(req, res) {
       if (!id) return res.status(400).json({ error: 'ID da câmera obrigatório' });
 
       // Whitelist: aceitar apenas campos permitidos
-      const CAMPOS_PERMITIDOS = ['nome', 'serial_number', 'nome_exibicao', 'ativa'];
+      const CAMPOS_PERMITIDOS = ['nome', 'serial_number', 'nome_exibicao', 'ativa', 'modelo', 'firmware'];
       const camposFiltrados = {};
       for (const key of CAMPOS_PERMITIDOS) {
         if (campos[key] !== undefined) camposFiltrados[key] = campos[key];
