@@ -1,4 +1,5 @@
 const { autenticar, supabase } = require('../../lib/auth-middleware');
+const { countByStatus, statusByCliente } = require('../../site/js/camera-status');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -34,29 +35,15 @@ module.exports = async function handler(req, res) {
       supabase.from('cameras').select('id, cliente_id, last_seen').eq('ativa', true),
     ]);
 
-    // Calcular status online/offline das câmeras.
-    // Thresholds calibrados pra realidade de lombada educativa: condomínio
-    // pode ficar horas sem carro. Câmeras com heartbeat configurado batem
-    // sozinhas; as sem heartbeat só atualizam last_seen quando passa
-    // veículo. 30min/6h equilibra os dois cenários sem mascarar quedas.
+    // Status online/offline das câmeras: lógica única em
+    // site/js/camera-status.js (mesma usada pelo browser do admin e
+    // do painel cliente). Mudou aqui? Mudou em todo lugar.
     const camerasStatusData = camerasStatusRes.data || [];
-    const trintaMinAtras = new Date(Date.now() - 30 * 60000).toISOString();
-    const seisHorasAtras = new Date(Date.now() - 6 * 60 * 60000).toISOString();
-    const camerasOnline = camerasStatusData.filter(c => c.last_seen && c.last_seen > trintaMinAtras).length;
-    const camerasAlerta = camerasStatusData.filter(c => c.last_seen && c.last_seen <= trintaMinAtras && c.last_seen > seisHorasAtras).length;
-    const camerasOffline = camerasStatusData.filter(c => !c.last_seen || c.last_seen <= seisHorasAtras).length;
-
-    // Agrupar status por cliente
-    const statusPorCliente = {};
-    for (const cam of camerasStatusData) {
-      if (!statusPorCliente[cam.cliente_id]) {
-        statusPorCliente[cam.cliente_id] = { online: 0, total: 0 };
-      }
-      statusPorCliente[cam.cliente_id].total++;
-      if (cam.last_seen && cam.last_seen > trintaMinAtras) {
-        statusPorCliente[cam.cliente_id].online++;
-      }
-    }
+    const totals = countByStatus(camerasStatusData);
+    const camerasOnline = totals.online;
+    const camerasAlerta = totals.alerta;
+    const camerasOffline = totals.offline;
+    const statusPorCliente = statusByCliente(camerasStatusData);
 
     // Últimas 10 capturas (global)
     const { data: ultimasCapturas } = await supabase
