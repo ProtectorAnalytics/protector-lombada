@@ -3473,53 +3473,88 @@
         }
       }
 
-      // Title
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(204, 0, 0);
-      doc.text(currentCliente.pdf_titulo || 'NOTIFICAÇÃO ORIENTATIVA', pageW / 2, 20, { align: 'center' });
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(80, 80, 80);
-      doc.text(currentCliente.pdf_subtitulo || 'Transitar em velocidade superior à máxima permitida', pageW / 2, 27, { align: 'center' });
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(currentCliente.nome, pageW / 2, 34, { align: 'center' });
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text(currentCliente.local_via || '', pageW / 2, 40, { align: 'center' });
-      doc.text(currentCliente.cidade_uf || '', pageW / 2, 45, { align: 'center' });
-
-      // Radar name
       const radarNomePdf = camerasMapFull[captura.camera_id] || '';
-      let headerY = 45;
-      if (radarNomePdf) {
-        headerY += 5;
+      const usaCorpoCustom = !!(currentCliente.pdf_corpo_texto && currentCliente.pdf_corpo_texto.trim());
+
+      // ============================================
+      // CABEÇALHO
+      // ============================================
+      let headerEndY;
+      if (usaCorpoCustom) {
+        // Cabeçalho compacto — sacrifica respiro vertical pra dar espaço
+        // ao corpo formal de advertência sem perder identidade visual.
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(204, 0, 0);
+        doc.text(currentCliente.pdf_titulo || 'NOTIFICAÇÃO ORIENTATIVA', pageW / 2, 16, { align: 'center' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(currentCliente.nome, pageW / 2, 23, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        const linhaLocal = [currentCliente.local_via, currentCliente.cidade_uf].filter(Boolean).join('  ·  ');
+        if (linhaLocal) doc.text(linhaLocal, pageW / 2, 28, { align: 'center' });
+
+        const radarPrefix = radarNomePdf ? `Radar: ${radarNomePdf}  ·  ` : '';
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(4, 107, 210);
+        doc.text(`${radarPrefix}Protector Traffic Control - Lombada Educativa`, pageW / 2, 33, { align: 'center' });
+
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, 36, pageW - margin, 36);
+        headerEndY = 36;
+      } else {
+        // Cabeçalho original (clientes sem corpo de texto custom)
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(204, 0, 0);
+        doc.text(currentCliente.pdf_titulo || 'NOTIFICAÇÃO ORIENTATIVA', pageW / 2, 20, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        doc.text(currentCliente.pdf_subtitulo || 'Transitar em velocidade superior à máxima permitida', pageW / 2, 27, { align: 'center' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(currentCliente.nome, pageW / 2, 34, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text(currentCliente.local_via || '', pageW / 2, 40, { align: 'center' });
+        doc.text(currentCliente.cidade_uf || '', pageW / 2, 45, { align: 'center' });
+
+        let headerY = 45;
+        if (radarNomePdf) {
+          headerY += 5;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.setTextColor(51, 51, 51);
+          doc.text('Radar: ' + radarNomePdf, pageW / 2, headerY, { align: 'center' });
+        }
+
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
-        doc.setTextColor(51, 51, 51);
-        doc.text('Radar: ' + radarNomePdf, pageW / 2, headerY, { align: 'center' });
+        doc.setTextColor(4, 107, 210);
+        doc.text('Protector Traffic Control - Lombada Educativa', pageW / 2, headerY + 6, { align: 'center' });
+
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, headerY + 10, pageW - margin, headerY + 10);
+        headerEndY = headerY + 10;
       }
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(4, 107, 210);
-      doc.text('Protector Traffic Control - Lombada Educativa', pageW / 2, headerY + 6, { align: 'center' });
-
-      // Line
-      doc.setDrawColor(200, 200, 200);
-      doc.line(margin, headerY + 10, pageW - margin, headerY + 10);
-
-      // Corpo de texto custom (opcional, por cliente — opt-in)
-      // Renderiza apenas se currentCliente.pdf_corpo_texto estiver preenchido.
-      // Pág 1 = advertência textual + assinatura. Pág 2 = evidência.
-      let bodyY = headerY + 10;
-      if (currentCliente.pdf_corpo_texto && currentCliente.pdf_corpo_texto.trim()) {
+      // ============================================
+      // CORPO DE TEXTO CUSTOM (opt-in)
+      // ============================================
+      let bodyY = headerEndY;
+      if (usaCorpoCustom) {
         const corpoTexto = currentCliente.pdf_corpo_texto
           .replace(/\{\{DATA_OCORRENCIA\}\}/g, ts.toLocaleDateString('pt-BR'))
           .replace(/\{\{HORA_OCORRENCIA\}\}/g, ts.toLocaleTimeString('pt-BR'))
@@ -3528,101 +3563,77 @@
           .replace(/\{\{VELOCIDADE_REGISTRADA\}\}/g, `${velReport} km/h`);
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setTextColor(34, 34, 34);
         const linhas = doc.splitTextToSize(corpoTexto, contentW);
-        const lineHeight = 4.4;
-        let textY = headerY + 16;
+        const lineHeight = 3.6;
+        let textY = headerEndY + 5;
         linhas.forEach((linha) => {
-          if (textY > pageH - margin - 5) {
-            doc.addPage();
-            textY = margin;
-          }
           doc.text(linha, margin, textY);
           textY += lineHeight;
         });
-
-        // Quebra dura: evidência sempre na próxima página, com um
-        // mini-cabeçalho referenciando a notificação.
-        doc.addPage();
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
-        doc.setTextColor(0, 0, 0);
-        doc.text(
-          `EVIDÊNCIA DA OCORRÊNCIA — PLACA ${captura.placa}`,
-          pageW / 2,
-          margin,
-          { align: 'center' }
-        );
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text(
-          `Radar ${radarNomePdf || '—'} · ${ts.toLocaleDateString('pt-BR')} ${ts.toLocaleTimeString('pt-BR')} · ${velReport} km/h`,
-          pageW / 2,
-          margin + 5,
-          { align: 'center' }
-        );
-        doc.setDrawColor(200, 200, 200);
-        doc.line(margin, margin + 9, pageW - margin, margin + 9);
-        bodyY = margin + 9;
+        bodyY = textY + 2;
       }
 
-      // Table 1: Placa | Morador | Unidade
+      // ============================================
+      // TABELAS PLACA / VELOCIDADE
+      // ============================================
       const col3 = contentW / 3;
-      let y = bodyY + 5;
+      let y = bodyY + (usaCorpoCustom ? 3 : 5);
 
-      doc.setFontSize(7);
+      doc.setFontSize(usaCorpoCustom ? 6.5 : 7);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(120, 120, 120);
       doc.text('PLACA VEÍCULO', margin + col3 * 0.5, y, { align: 'center' });
       doc.text('NOME MORADOR', margin + col3 * 1.5, y, { align: 'center' });
       doc.text('UNIDADE', margin + col3 * 2.5, y, { align: 'center' });
 
-      y += 7;
-      doc.setFontSize(14);
+      y += usaCorpoCustom ? 5.5 : 7;
+      doc.setFontSize(usaCorpoCustom ? 12 : 14);
       doc.setTextColor(204, 0, 0);
       doc.text(captura.placa, margin + col3 * 0.5, y, { align: 'center' });
 
-      doc.setFontSize(10);
+      doc.setFontSize(usaCorpoCustom ? 9 : 10);
       doc.setTextColor(0, 0, 0);
       doc.text(veiculo?.nome_morador || '---', margin + col3 * 1.5, y, { align: 'center' });
       doc.text(veiculo?.unidade || '---', margin + col3 * 2.5, y, { align: 'center' });
 
-      y += 6;
+      y += usaCorpoCustom ? 4 : 6;
       doc.line(margin, y, pageW - margin, y);
 
-      // Table 2: Velocidade | Data | Hora
-      y += 5;
-      doc.setFontSize(7);
+      y += usaCorpoCustom ? 4 : 5;
+      doc.setFontSize(usaCorpoCustom ? 6.5 : 7);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(120, 120, 120);
       doc.text('VELOCIDADE REGISTRADA', margin + col3 * 0.5, y, { align: 'center' });
       doc.text('DATA DA OCORRÊNCIA', margin + col3 * 1.5, y, { align: 'center' });
       doc.text('HORA DA OCORRÊNCIA', margin + col3 * 2.5, y, { align: 'center' });
 
-      y += 8;
-      doc.setFontSize(18);
+      y += usaCorpoCustom ? 6 : 8;
+      doc.setFontSize(usaCorpoCustom ? 14 : 18);
       doc.setTextColor(204, 0, 0);
       doc.text(`${velReport} km/h`, margin + col3 * 0.5, y, { align: 'center' });
 
-      doc.setFontSize(14);
+      doc.setFontSize(usaCorpoCustom ? 11 : 14);
       doc.setTextColor(0, 0, 0);
       doc.text(ts.toLocaleDateString('pt-BR'), margin + col3 * 1.5, y, { align: 'center' });
       doc.text(ts.toLocaleTimeString('pt-BR'), margin + col3 * 2.5, y, { align: 'center' });
 
-      y += 6;
+      y += usaCorpoCustom ? 4 : 6;
       doc.line(margin, y, pageW - margin, y);
 
-      // Photo
+      // ============================================
+      // FOTO
+      // ============================================
       y += 3;
       const photoUrl = await getPhotoUrl(captura.foto_path);
       if (photoUrl) {
         try {
           const imgData = await loadImageAsBase64(photoUrl);
           if (imgData) {
-            doc.addImage(imgData, 'JPEG', margin, y, contentW, contentW * 0.55);
-            y += contentW * 0.55 + 3;
+            const photoH = contentW * (usaCorpoCustom ? 0.40 : 0.55);
+            doc.addImage(imgData, 'JPEG', margin, y, contentW, photoH);
+            y += photoH + 3;
           }
         } catch {
           // skip photo
@@ -3630,58 +3641,63 @@
       }
 
       doc.line(margin, y, pageW - margin, y);
-      y += 5;
+      y += usaCorpoCustom ? 4 : 5;
 
-      // Footer note
-      doc.setFontSize(7);
+      // ============================================
+      // RODAPÉ + ASSINATURA
+      // ============================================
+      doc.setFontSize(usaCorpoCustom ? 6.5 : 7);
       doc.setFont('helvetica', 'italic');
       doc.setTextColor(150, 150, 150);
       doc.text('Velocidades iguais ou inferiores a 10 km/h serão registradas com velocidade igual a 1 neste relatório.', pageW / 2, y, { align: 'center' });
 
-      y += 6;
+      y += usaCorpoCustom ? 4 : 6;
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
+      doc.setFontSize(usaCorpoCustom ? 9 : 10);
       doc.setTextColor(0, 0, 0);
       doc.text(currentCliente.nome, pageW / 2, y, { align: 'center' });
 
-      y += 5;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Últimas passagens por data / Velocidades', pageW / 2, y, { align: 'center' });
+      // Histórico só no layout original — quando o PDF tem corpo formal
+      // ele já é a notificação completa, e o grid vira ruído.
+      if (!usaCorpoCustom) {
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Últimas passagens por data / Velocidades', pageW / 2, y, { align: 'center' });
 
-      // Historico grid
-      y += 5;
-      const historico = await loadHistoricoPlaca(captura.placa);
-      if (historico && historico.length > 0) {
-        const cellW = contentW / 10;
-        const cellH = 12;
-        historico.forEach((h, i) => {
-          const col = i % 10;
-          const row = Math.floor(i / 10);
-          const cx = margin + col * cellW;
-          const cy = y + row * cellH;
+        y += 5;
+        const historico = await loadHistoricoPlaca(captura.placa);
+        if (historico && historico.length > 0) {
+          const cellW = contentW / 10;
+          const cellH = 12;
+          historico.forEach((h, i) => {
+            const col = i % 10;
+            const row = Math.floor(i / 10);
+            const cx = margin + col * cellW;
+            const cy = y + row * cellH;
 
-          if (cy + cellH > 280) return; // page overflow protection
+            if (cy + cellH > 280) return;
 
-          doc.setDrawColor(200, 200, 200);
-          doc.rect(cx, cy, cellW, cellH);
+            doc.setDrawColor(200, 200, 200);
+            doc.rect(cx, cy, cellW, cellH);
 
-          const hts = new Date(h.timestamp);
-          const hVel = h.velocidade <= 10 ? 1 : h.velocidade;
-          const isAbove = hVel > limite;
+            const hts = new Date(h.timestamp);
+            const hVel = h.velocidade <= 10 ? 1 : h.velocidade;
+            const isAbove = hVel > limite;
 
-          doc.setFontSize(5);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(120, 120, 120);
-          doc.text(hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'}), cx + cellW/2, cy + 3.5, { align: 'center' });
-          doc.text(hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), cx + cellW/2, cy + 6.5, { align: 'center' });
+            doc.setFontSize(5);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(120, 120, 120);
+            doc.text(hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'}), cx + cellW/2, cy + 3.5, { align: 'center' });
+            doc.text(hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}), cx + cellW/2, cy + 6.5, { align: 'center' });
 
-          doc.setFontSize(8);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(isAbove ? 204 : 60, isAbove ? 0 : 60, isAbove ? 0 : 60);
-          doc.text(`${hVel}`, cx + cellW/2, cy + 10.5, { align: 'center' });
-        });
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(isAbove ? 204 : 60, isAbove ? 0 : 60, isAbove ? 0 : 60);
+            doc.text(`${hVel}`, cx + cellW/2, cy + 10.5, { align: 'center' });
+          });
+        }
       }
 
       // Rodapé configurável (fixo no pé da página)
