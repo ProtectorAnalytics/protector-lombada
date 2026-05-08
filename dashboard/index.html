@@ -1563,6 +1563,49 @@
     @media (max-width: 1200px) {
       .recent-cards { grid-template-columns: repeat(3, 1fr); } /* mantém 3 colunas */
     }
+
+    /* Compressão pra laptops 1366×768 e telas com pouca altura.
+       Mantém o layout 2 colunas; só comprime densidade pra a tabela
+       de capturas ganhar altura útil sem precisar de zoom out. */
+    @media (max-width: 1440px), (max-height: 820px) {
+      .topbar { min-height: 48px; padding: 6px 20px; }
+      .topbar .brand img { height: 32px; }
+      .topbar .brand-center h2 { font-size: 16px; letter-spacing: 0.6px; }
+      .topbar .brand-center span { font-size: 11px; }
+      .topbar .btn-veiculos, .topbar .btn-logout {
+        padding: 5px 10px; font-size: 11px;
+      }
+      .main-layout {
+        padding: 8px clamp(8px, 1.4vw, 24px);
+        gap: 8px;
+        height: calc(100vh - 48px);
+      }
+      .left-panel { gap: 8px; }
+      .sidebar { gap: 8px; }
+      .stats-row { gap: 6px; }
+      .stat-card { padding: 8px 10px; }
+      .stat-card .value { font-size: 20px; margin: 0; }
+      .stat-card .label { font-size: 10px; letter-spacing: 0.5px; }
+      .stat-card .unit { font-size: 10px; }
+      .filters-row { padding: 6px 12px; gap: 8px; }
+      .filters-row label { font-size: 10px; }
+      .filters-row input, .filters-row select {
+        padding: 4px 8px; font-size: 12px;
+      }
+      .filters-row input[type="date"] { width: 110px; }
+      .filters-row input[type="text"] { width: 80px; }
+      .filters-row select { width: 110px; }
+      .recent-cards { gap: 8px; }
+      .recent-card .rc-thumb,
+      .recent-card .rc-no-photo { height: 108px; }
+      .sidebar-card { padding: 8px 10px; }
+      .sidebar-card h3 { font-size: 10px; margin-bottom: 6px; letter-spacing: 0.6px; }
+      .chart-container { height: 100px; }
+      .sidebar-kpis { gap: 4px; }
+      .sidebar-kpi { padding: 6px 8px; }
+      .sidebar-kpi-value { font-size: 16px; }
+      .sidebar-kpi-label { font-size: 9px; }
+    }
     @media (max-width: 900px) {
       .main-layout { height: auto; overflow: auto; }
       .main-layout { grid-template-columns: 1fr; }
