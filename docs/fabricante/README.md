@@ -95,7 +95,15 @@ Estes valores precisam estar na câmera (interface QLPR Config → `Configuraç�
 
 Em caso de queda da rede, a câmera tenta reenviar a cada 2s por até 100s (~50 tentativas) — durante esse período capturas com timestamp antigo podem chegar em rajada.
 
-> **Migração do endpoint legado:** câmeras configuradas anteriormente para `http://191.252.201.142:3000` (servidor próprio aposentado) precisam ser reapontadas para `https://lombada.appps.com.br:443` com **Link SSL habilitado**. Câmeras que continuam no endpoint antigo aparecem permanentemente offline no painel, pois o servidor legado não responde mais.
+> ⚠️ **`http://191.252.201.142:3000` é o servidor da plataforma IN IOT da ALPHADIGI**, não nosso. O manual oficial (Rev01, 20/09/2023) instrui a câmera a enviar capturas pra esse endereço. Enquanto havia contrato com a IN IOT, ela re-encaminhava as capturas pro Protector. **Com o cancelamento do contrato em 24/05/2026, esse caminho deixou de funcionar.** Câmeras que continuam apontando pra `191.252.201.142:3000` mandam capturas pra um destino que não as repassa mais — e somem do painel.
+>
+> A correção é apontar o **Servidor Pri.** de cada câmera direto pro Protector:
+> - Servidor Pri.: `lombada.appps.com.br`
+> - Porta: `443`
+> - Link SSL: ✓
+> - Pastas Nr.da Placa **e** Heartbeat: `/placa`
+>
+> Isso requer acesso à rede interna do cliente (presencial ou VPN), porque sem IN IOT não há mais via remota de configuração.
 
 ## Rede local
 
@@ -106,7 +114,7 @@ Em caso de queda da rede, a câmera tenta reenviar a cada 2s por até 100s (~50 
 | IP/Máscara/Gateway | Definido pelo integrador |
 | Liberações de firewall | Saída TCP `lombada.appps.com.br:443` (HTTPS) |
 
-> Causa mais comum de "câmera offline": **DNS errado** (sem resolver `lombada.appps.com.br`), **firewall do cliente bloqueando saída HTTPS** ou **câmera ainda configurada para o IP antigo `191.252.201.142:3000`** (servidor aposentado). Validar com `nslookup lombada.appps.com.br` e `curl -I https://lombada.appps.com.br/placa` a partir da mesma sub-rede da câmera.
+> Causa mais comum de "câmera offline" pós-cancelamento da IN IOT: **câmera ainda apontando pra `191.252.201.142:3000`** (manual oficial da fábrica) — o destino existe e aceita TCP, mas não repassa mais pro Protector. Sintoma típico: "Internet: Normal" no QLPR (canal Geren. remota funciona) mas zero capturas chegam no painel. Solução: reapontar Servidor Pri. da câmera pra `lombada.appps.com.br:443`. Casos secundários: **DNS errado** (sem resolver `lombada.appps.com.br`) ou **firewall do cliente bloqueando saída HTTPS**. Validar com `nslookup lombada.appps.com.br` e `curl -I https://lombada.appps.com.br/placa` a partir da mesma sub-rede da câmera.
 
 ## Identificação da câmera
 

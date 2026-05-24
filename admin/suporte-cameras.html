@@ -299,7 +299,8 @@
     </table>
 
     <blockquote class="danger">
-        <p><strong>Endpoint legado <code>http://191.252.201.142:3000</code> foi aposentado.</strong> Câmeras ainda configuradas para esse servidor aparecem permanentemente offline no painel — é preciso reapontar para <code>https://lombada.appps.com.br:443</code> com <strong>Link SSL habilitado</strong>. Esse é o motivo mais provável de câmeras que estavam funcionando pararem todas ao mesmo tempo.</p>
+        <p><strong>Atenção: <code>http://191.252.201.142:3000</code> é o servidor da plataforma IN IOT da ALPHADIGI</strong>, não nosso. O manual oficial instrui a configurar a câmera apontando pra esse endereço. Enquanto havia contrato com a IN IOT, ela re-encaminhava as capturas pro Protector. <strong>Com o cancelamento em 24/05/2026, esse caminho deixou de funcionar.</strong></p>
+        <p>Sintoma típico: na câmera aparece <strong>"Internet: Normal"</strong> verde (porque o canal Geren. remota ainda fecha TCP com o servidor IN IOT), mas <strong>zero capturas chegam no Protector</strong>. A correção é mudar o Servidor Pri. pra <code>lombada.appps.com.br:443</code> com Link SSL habilitado.</p>
     </blockquote>
 
     <h3>Retransmissão (modo autônomo)</h3>
@@ -332,7 +333,7 @@
     <blockquote class="danger">
         <p><strong>Causas mais comuns de "câmera offline":</strong></p>
         <ol style="margin-top:8px;margin-bottom:0">
-            <li><strong>Câmera ainda apontando para o endpoint legado</strong> <code>191.252.201.142:3000</code> (servidor aposentado — não responde mais)</li>
+            <li><strong>Câmera ainda apontando pro servidor IN IOT da ALPHADIGI</strong> <code>191.252.201.142:3000</code> (padrão de fábrica conforme manual oficial — não repassa mais ao Protector desde o cancelamento do contrato em 24/05/2026)</li>
             <li>DNS errado (não consegue resolver <code>lombada.appps.com.br</code>)</li>
             <li>Firewall do cliente bloqueando saída HTTPS na porta 443</li>
             <li>IP/Gateway mal configurados (sem rota pra internet)</li>
