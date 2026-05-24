@@ -97,6 +97,16 @@ Em caso de queda da rede, a câmera tenta reenviar a cada 2s por até 100s (~50 
 - E-mail: `suporte@alphadigi.com.br` · `engenharia@alphadigi.com.br`
 - Site: https://www.alphadigi.com.br
 
+## Ferramentas internas que consomem esta documentação
+
+A partir da revisão atual, três peças do Protector usam estes manuais como referência operacional:
+
+| Ferramenta | Onde | Função |
+|---|---|---|
+| **Painel de diagnóstico** | `/admin/diagnostico.html?camera_id=<uuid>` (botão "Diagnóstico" na lista de câmeras) | Mostra status, últimos 50 eventos do `conexao_log`, IPs origem, timeline 24h e veredicto automático com ações sugeridas baseadas neste manual |
+| **Tabela `conexao_log`** | Banco Supabase, retenção 7 dias | Registra TODA requisição em `/placa` e `/heartbeat` com motivo de erro estruturado (`token_invalido`, `serial_nao_cadastrado`, `placa_vazia`, `rate_limit`, etc.), IP origem (conexão TCP) vs IP payload (declarado pela câmera), latência |
+| **Cron `cron-monitor-cameras`** | A cada 15 min, alerta WaSender | Detecta offline + "online sem capturas" e classifica causa provável (`rede_caiu`, `sensor_ou_posicionamento`, `ocr_falhando`, etc.) com ações tiradas deste manual |
+
 ## Como atualizar esta documentação
 
 Quando o fabricante publicar uma nova revisão:
