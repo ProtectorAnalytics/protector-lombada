@@ -210,7 +210,7 @@
         <a class="manual-card" href="/admin/manuais/01-Parametrizacao-IN-IOT-TCAM3130N-Rev01.pdf" target="_blank" rel="noopener noreferrer">
             <span class="tag">PRO</span>
             <div class="title">01 — Parametrização IN IOT (Rev 01)</div>
-            <div class="desc">Protocolo de comunicação da câmera, endpoints <code>/placa</code> e <code>/heartbeat</code>, servidor, porta, modo de retransmissão autônoma.</div>
+            <div class="desc">Protocolo de comunicação da câmera, endpoint <code>/placa</code> (capturas e heartbeat consolidados no mesmo path), servidor, porta SSL, modo de retransmissão autônoma.</div>
             <span class="open-pdf">Abrir PDF →</span>
         </a>
         <a class="manual-card" href="/admin/manuais/02-Boas-Praticas-Instalacao-Rev04.pdf" target="_blank" rel="noopener noreferrer">
@@ -245,8 +245,8 @@
             <tr>
                 <td><strong>Comunicação</strong></td>
                 <td>Conf. Comm → Comunicação</td>
-                <td><code>191.252.201.142:3000</code><br><span class="badge ok">Protector</span></td>
-                <td>Envia capturas (<code>/placa</code>) e heartbeats (<code>/heartbeat</code>) para o <strong>nosso sistema</strong>.</td>
+                <td><code>lombada.appps.com.br:443</code> (HTTPS)<br><span class="badge ok">Protector</span></td>
+                <td>Envia capturas e heartbeats, ambos no endpoint <code>/placa</code>. O backend distingue pelo conteúdo do payload (<code>AlarmInfoPlate</code> vs <code>heartbeat</code>).</td>
             </tr>
             <tr>
                 <td><strong>Geren. remota</strong></td>
@@ -261,23 +261,46 @@
     </blockquote>
 
     <h2 id="config-comunicacao">Configuração de Comunicação (canal Protector)</h2>
-    <p>Em <code>Configuração → Conf. Comm → Comunicação</code>:</p>
+    <p>Em <code>Configuração → Conf. Comm → Comunicação</code>. Valores validados contra a CEC-LOMB01 em produção em 24/05/2026.</p>
+
+    <h3>Conf. HTTP Push (coluna esquerda)</h3>
     <table>
         <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
         <tbody>
             <tr><td>Habilitar</td><td>✓</td></tr>
-            <tr><td>Servidor principal</td><td><code>191.252.201.142</code></td></tr>
-            <tr><td>Porta</td><td><code>3000</code></td></tr>
-            <tr><td>Porta SSL</td><td><code>443</code></td></tr>
-            <tr><td>Nr da Placa (endpoint)</td><td><code>/placa</code></td></tr>
-            <tr><td>Heartbeat (endpoint)</td><td><code>/heartbeat</code></td></tr>
+            <tr><td>Servidor Pri.</td><td><code>lombada.appps.com.br</code></td></tr>
+            <tr><td>Servidor Seg.</td><td>(vazio)</td></tr>
+            <tr><td>Porta</td><td><code>443</code></td></tr>
+            <tr><td>Timeout</td><td><code>10</code></td></tr>
+            <tr><td>Nr.da Placa</td><td>✓ Habilitar — pasta <code>/placa</code></td></tr>
             <tr><td>Img.Veículo</td><td>✓ Habilitar</td></tr>
             <tr><td>Img.Placa</td><td>✓ Habilitar</td></tr>
-            <tr><td>Autenticação</td><td>Anônimo</td></tr>
-            <tr><td>QoS (0–5)</td><td><code>1</code></td></tr>
-            <tr><td>Resultados e fotos</td><td>Carregar junto</td></tr>
+            <tr><td>GPIO</td><td>✗ (desabilitar)</td></tr>
+            <tr><td>Dados Serial</td><td>✗ (desabilitar)</td></tr>
+            <tr><td>Char Code</td><td><code>UTF-8</code></td></tr>
         </tbody>
     </table>
+
+    <h3>Heartbeat, SSL e Autenticação (coluna do meio)</h3>
+    <table>
+        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+        <tbody>
+            <tr><td>Heartbeat</td><td>✓ Habilitar — pasta <code>/placa</code> <span class="badge warn">mudou</span> (mesmo endpoint das placas; backend identifica pelo payload)</td></tr>
+            <tr><td>Intervalo</td><td><code>10</code> s</td></tr>
+            <tr><td>Protocolo</td><td><code>Desativar</code></td></tr>
+            <tr><td>Conexão curta</td><td>✗</td></tr>
+            <tr><td>Link SSL</td><td>✓ <span class="badge err">obrigatório</span> (Vercel só serve HTTPS)</td></tr>
+            <tr><td>Porta SSL</td><td><code>443</code></td></tr>
+            <tr><td>Autenticação</td><td>Anônimo</td></tr>
+            <tr><td>QoS (0–5)</td><td><code>2</code> (irrelevante para HTTP REST)</td></tr>
+            <tr><td>Resultados e fotos</td><td>Carregar junto</td></tr>
+            <tr><td>Empresa / CNPJ</td><td>(vazios — apenas informativos para a câmera)</td></tr>
+        </tbody>
+    </table>
+
+    <blockquote class="danger">
+        <p><strong>Endpoint legado <code>http://191.252.201.142:3000</code> foi aposentado.</strong> Câmeras ainda configuradas para esse servidor aparecem permanentemente offline no painel — é preciso reapontar para <code>https://lombada.appps.com.br:443</code> com <strong>Link SSL habilitado</strong>. Esse é o motivo mais provável de câmeras que estavam funcionando pararem todas ao mesmo tempo.</p>
+    </blockquote>
 
     <h3>Retransmissão (modo autônomo)</h3>
     <table>
@@ -301,16 +324,19 @@
         <thead><tr><th>Campo</th><th>Valor recomendado</th></tr></thead>
         <tbody>
             <tr><td>DNS primário</td><td><code>8.8.8.8</code> <span class="badge err">crítico</span></td></tr>
+            <tr><td>DNS secundário</td><td><code>1.1.1.1</code></td></tr>
             <tr><td>IP / Máscara / Gateway</td><td>Definido pelo integrador conforme rede local</td></tr>
-            <tr><td>Liberações de firewall</td><td>Saída TCP para <code>191.252.201.142:3000</code> e <code>:443</code></td></tr>
+            <tr><td>Liberações de firewall</td><td>Saída TCP para <code>lombada.appps.com.br:443</code> (HTTPS)</td></tr>
         </tbody>
     </table>
     <blockquote class="danger">
         <p><strong>Causas mais comuns de "câmera offline":</strong></p>
         <ol style="margin-top:8px;margin-bottom:0">
-            <li>DNS errado (não consegue resolver nomes)</li>
-            <li>Firewall do cliente bloqueando saída para porta 3000</li>
+            <li><strong>Câmera ainda apontando para o endpoint legado</strong> <code>191.252.201.142:3000</code> (servidor aposentado — não responde mais)</li>
+            <li>DNS errado (não consegue resolver <code>lombada.appps.com.br</code>)</li>
+            <li>Firewall do cliente bloqueando saída HTTPS na porta 443</li>
             <li>IP/Gateway mal configurados (sem rota pra internet)</li>
+            <li><strong>Link SSL desabilitado</strong> na câmera (Vercel só aceita HTTPS)</li>
         </ol>
     </blockquote>
 
@@ -353,7 +379,7 @@
             <tr>
                 <td>"Online" no QLPR Config mas offline no Protector</td>
                 <td>Geren. remota (IN IOT) OK, mas Comunicação (Protector) falhando</td>
-                <td>São canais separados — checar config do canal "Comunicação", firewall específico pra porta 3000</td>
+                <td>São canais separados — checar Servidor Pri. = <code>lombada.appps.com.br</code>, Porta = <code>443</code>, Link SSL habilitado e firewall HTTPS liberado</td>
             </tr>
         </tbody>
     </table>
@@ -367,7 +393,7 @@
         </li>
         <li>
             <strong>2. Verifique se a câmera tem internet</strong>
-            Conecte um notebook na mesma rede e tente abrir <code>http://191.252.201.142:3000/heartbeat</code> — se também não abrir, o problema é da rede do cliente (firewall ou link).
+            Conecte um notebook na mesma rede e tente abrir <code>https://lombada.appps.com.br/placa</code> (esperado: resposta HTTP 405 "Método não permitido" — quer dizer que o endpoint responde). Se nem isso funcionar, o problema é da rede do cliente (DNS, firewall ou link).
         </li>
         <li>
             <strong>3. Acesse o QLPR Config</strong>
@@ -375,11 +401,11 @@
         </li>
         <li>
             <strong>4. Confirme as configurações da seção "Comunicação"</strong>
-            Servidor <code>191.252.201.142</code>, porta <code>3000</code>, endpoints <code>/placa</code> e <code>/heartbeat</code> habilitados, autenticação Anônimo. Veja tabela acima.
+            Servidor Pri. <code>lombada.appps.com.br</code>, Porta <code>443</code>, <strong>Link SSL habilitado</strong>, ambas pastas (Nr.da Placa e Heartbeat) apontando para <code>/placa</code>, autenticação Anônimo. Veja tabelas acima. Se a câmera ainda estiver em <code>191.252.201.142:3000</code>, este é o motivo do offline — reaponte agora.
         </li>
         <li>
             <strong>5. Confirme DNS = 8.8.8.8</strong>
-            Em "Rede Local". DNS errado é a causa #1 de "não conecta nem aparece nada".
+            Em "Rede Local". DNS errado é a causa #1 de "não conecta nem aparece nada", agora que dependemos de resolução do domínio <code>lombada.appps.com.br</code>.
         </li>
         <li>
             <strong>6. Confirme o número de série cadastrado no Protector</strong>
@@ -387,7 +413,7 @@
         </li>
         <li>
             <strong>7. Solicite liberação de firewall ao cliente</strong>
-            Saída TCP de qualquer IP interno para <code>191.252.201.142:3000</code> e <code>:443</code>. Em alguns condomínios o roteador bloqueia portas não-padrão.
+            Saída TCP HTTPS (porta 443) para <code>lombada.appps.com.br</code>. Como agora usamos a porta padrão de HTTPS, costuma estar liberada — se não, o cliente precisa autorizar explicitamente.
         </li>
         <li>
             <strong>8. Último recurso: reset físico</strong>

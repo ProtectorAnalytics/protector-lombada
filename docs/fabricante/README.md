@@ -27,30 +27,49 @@ A câmera ALPHADIGI tem **dois canais de comunicação independentes**, configur
 
 | Canal | Tela QLPR Config | Destino | Finalidade |
 |---|---|---|---|
-| **Comunicação** | `Conf. Comm → Comunicação` | **Protector** (`191.252.201.142:3000`) | Envia capturas (`/placa`) e heartbeats (`/heartbeat`) para o nosso sistema |
+| **Comunicação** | `Conf. Comm → Comunicação` | **Protector** (`lombada.appps.com.br:443` via HTTPS) | Envia capturas e heartbeats, ambos no endpoint `/placa` — o backend distingue pelo conteúdo do payload (`AlarmInfoPlate` vs `heartbeat`) |
 | **Geren. remota** | `Conf. Comm → Geren. remota` | **IN IOT da ALPHADIGI** (`portal.alphadigi.com.br:5080`) | Plataforma proprietária do fabricante (assinatura paga opcional) — não conversa com servidor próprio |
 
 **Implicação para diagnóstico:** o indicador "Online/Offline" no rodapé do QLPR Config reflete o canal **Geren. remota**, não o canal **Comunicação**. Uma câmera pode aparecer "Online" no painel ALPHADIGI mas estar **offline para o Protector** (ou vice-versa). Sempre confirmar a chegada de heartbeat/capturas no painel do Protector como fonte da verdade.
 
 Os dois canais podem ficar ativos simultaneamente sem conflito. Se o cliente não assina a IN IOT, desabilite "Geren. remota" para evitar tráfego desnecessário.
 
+> **Endpoint `/api/heartbeat` continua existindo** no backend para compatibilidade com câmeras configuradas no padrão antigo (pasta de heartbeat separada). A configuração atual recomendada (e usada pela CEC-LOMB01 em produção) consolida tudo em `/placa`.
+
 ## Configuração de comunicação (referência)
 
-Estes valores precisam estar na câmera (interface QLPR Config → `Configuração → Conf. Comm → Comunicação`) para que ela envie capturas e heartbeats ao Protector:
+Estes valores precisam estar na câmera (interface QLPR Config → `Configuração → Conf. Comm → Comunicação`) para que ela envie capturas e heartbeats ao Protector. Os valores foram validados contra a configuração em produção da CEC-LOMB01 em 24/05/2026.
+
+**Conf. HTTP Push:**
 
 | Campo | Valor |
 |---|---|
 | Habilitar | ✓ |
-| Servidor principal | `191.252.201.142` |
-| Porta | `3000` |
-| Porta SSL | `443` |
-| Nr da Placa (endpoint) | `/placa` |
-| Heartbeat (endpoint) | `/heartbeat` |
+| Servidor Pri. | `lombada.appps.com.br` |
+| Servidor Seg. | (vazio) |
+| Porta | `443` |
+| Timeout | `10` |
+| Nr.da Placa | ✓ — pasta `/placa` |
 | Img.Veículo | ✓ |
 | Img.Placa | ✓ |
-| Autenticação | Anônimo |
-| QoS | 1 |
-| Resultados e fotos | Carregar junto |
+| GPIO | ✗ |
+| Dados Serial | ✗ |
+| Char Code | `UTF-8` |
+
+**Heartbeat / SSL / Autenticação (coluna do meio):**
+
+| Campo | Valor |
+|---|---|
+| Heartbeat | ✓ — pasta `/placa` (mesmo endpoint, distinção pelo payload) |
+| Intervalo | `10` s |
+| Protocolo | `Desativar` |
+| Conexão curta | ✗ |
+| **Link SSL** | ✓ (obrigatório — Vercel só serve HTTPS) |
+| **Porta SSL** | `443` |
+| Autenticação | `Anônimo` |
+| QoS (0–5) | `2` (irrelevante para HTTP REST, mas inofensivo) |
+| Resultados e fotos | `Carregar junto` |
+| Empresa / CNPJ | (vazios — campos meramente informativos para a câmera) |
 
 **Retransmissão (modo autônomo):**
 
@@ -65,15 +84,18 @@ Estes valores precisam estar na câmera (interface QLPR Config → `Configuraç�
 
 Em caso de queda da rede, a câmera tenta reenviar a cada 2s por até 100s (~50 tentativas) — durante esse período capturas com timestamp antigo podem chegar em rajada.
 
+> **Migração do endpoint legado:** câmeras configuradas anteriormente para `http://191.252.201.142:3000` (servidor próprio aposentado) precisam ser reapontadas para `https://lombada.appps.com.br:443` com **Link SSL habilitado**. Câmeras que continuam no endpoint antigo aparecem permanentemente offline no painel, pois o servidor legado não responde mais.
+
 ## Rede local
 
 | Campo | Valor recomendado |
 |---|---|
 | DNS primário | `8.8.8.8` |
+| DNS secundário | `1.1.1.1` |
 | IP/Máscara/Gateway | Definido pelo integrador |
-| Liberações de firewall | Saída TCP `191.252.201.142:3000` e `:443` |
+| Liberações de firewall | Saída TCP `lombada.appps.com.br:443` (HTTPS) |
 
-> Causa mais comum de "câmera offline": **DNS errado** ou **firewall do cliente bloqueando saída**. Validar com `ping` e `telnet` a partir da mesma sub-rede da câmera.
+> Causa mais comum de "câmera offline": **DNS errado** (sem resolver `lombada.appps.com.br`), **firewall do cliente bloqueando saída HTTPS** ou **câmera ainda configurada para o IP antigo `191.252.201.142:3000`** (servidor aposentado). Validar com `nslookup lombada.appps.com.br` e `curl -I https://lombada.appps.com.br/placa` a partir da mesma sub-rede da câmera.
 
 ## Identificação da câmera
 
