@@ -105,9 +105,12 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, skipped: 'SerialData' });
     }
 
-    // Skip heartbeat if it somehow arrives here
+    // Heartbeat da câmera ALPHADIGI (intervalo 10s; updateCameraLastSeen throttle 1×/min)
     if (dados.heartbeat) {
-      return res.status(200).json({ ok: true, skipped: 'heartbeat' });
+      const hbIp = dados.heartbeat.ipaddr || dados.heartbeat.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+      const hbMac = dados.heartbeat.macaddr || dados.heartbeat.mac || '';
+      await updateCameraLastSeen(camera.id, null, { ip_address: hbIp, mac_address: hbMac });
+      return res.status(200).json({ ok: true, type: 'heartbeat' });
     }
 
     // Extrair MAC e IP da câmera (vem no AlarmInfoPlate ou headers)
