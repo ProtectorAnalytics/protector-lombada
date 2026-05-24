@@ -2318,6 +2318,81 @@
       loadVeiculos();
       loadAll();
       pollingInterval = setInterval(loadAll, 30000);
+      subscribeRealtime();
+    }
+
+    // ============================================
+    // REALTIME (Supabase) — atualiza dashboard sem refresh
+    // ============================================
+    // Mantém polling como fallback. Realtime apenas APRESENTA mais
+    // rápido o que já chega; se cair, o setInterval(30s) recupera.
+    let realtimeChannel = null;
+    let realtimeIndicator = null;
+
+    function subscribeRealtime() {
+      if (!sb || !currentCliente?.id) return;
+      if (realtimeChannel) {
+        try { sb.removeChannel(realtimeChannel); } catch {}
+        realtimeChannel = null;
+      }
+
+      const cli = currentCliente.id;
+      realtimeChannel = sb.channel('dashboard-' + cli)
+        // Nova captura → atualiza stats e tabela imediatamente
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'capturas', filter: 'cliente_id=eq.' + cli },
+          (payload) => onCapturaInsert(payload.new))
+        // Câmera mudou (last_seen, ip, ativa) → atualiza pill de status
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'cameras', filter: 'cliente_id=eq.' + cli },
+          (payload) => onCameraUpdate(payload.new))
+        .subscribe((status) => {
+          setRealtimeIndicator(status);
+          if (status === 'SUBSCRIBED') console.log('[realtime] conectado para cliente', cli);
+        });
+    }
+
+    function setRealtimeIndicator(status) {
+      if (!realtimeIndicator) {
+        realtimeIndicator = document.createElement('span');
+        realtimeIndicator.id = 'realtime-indicator';
+        realtimeIndicator.style.cssText = 'display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:11px;color:var(--text-muted,#94a3b8)';
+        const camStatusEl = document.getElementById('cameras-status');
+        if (camStatusEl && camStatusEl.parentElement) {
+          camStatusEl.parentElement.insertBefore(realtimeIndicator, camStatusEl);
+        }
+      }
+      const ok = status === 'SUBSCRIBED';
+      realtimeIndicator.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${ok?'#16a34a':'#94a3b8'};box-shadow:${ok?'0 0 4px #16a34a':'none'}"></span>${ok?'ao vivo':'reconectando…'}`;
+    }
+
+    function onCameraUpdate(camera) {
+      // Re-renderiza a faixa de status com o estado mais recente, sem ir ao banco.
+      // Em vez de mexer no DOM individual, simplesmente re-busca a lista
+      // (consulta leve: 1 query, filtro por cliente, poucos registros).
+      loadCamerasStatus();
+    }
+
+    function onCapturaInsert(nova) {
+      // Atualiza stats agregadas e tabela. Operações baratas.
+      loadStats();
+      loadRecentCards();
+      loadCapturas();
+      loadHourlyChart();
+      loadIndicators();
+      // Feedback visual leve
+      flashNewCapture(nova);
+    }
+
+    function flashNewCapture(c) {
+      try {
+        const el = document.createElement('div');
+        el.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#16a34a;color:white;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;opacity:0;transition:opacity 0.3s;font-weight:500';
+        el.textContent = `Nova captura: ${c.placa || '—'} · ${c.velocidade || 0} km/h`;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => { el.style.opacity = '1'; });
+        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+      } catch {}
     }
 
     async function loadAll() {
