@@ -101,10 +101,14 @@ module.exports = async function handler(req, res) {
       if (!isOffline && wasAlerted) {
         const msg = `✅ *VOLTOU ONLINE*\nCâmera: ${cam.nome_exibicao}\nCliente: ${cam.cliente?.nome || '—'}\nlast_seen: agora`;
         const sendResult = await sendWaSender(msg);
-        await supabase
-          .from('cameras')
-          .update({ last_offline_alert_at: null })
-          .eq('id', cam.id);
+        // Só limpa o tracking se a mensagem realmente foi enviada — caso
+        // contrário, mantém estado pra tentar de novo no próximo run.
+        if (sendResult.sent) {
+          await supabase
+            .from('cameras')
+            .update({ last_offline_alert_at: null })
+            .eq('id', cam.id);
+        }
         recoveries.push({ camera: cam.nome_exibicao, send: sendResult });
         continue;
       }
@@ -114,10 +118,13 @@ module.exports = async function handler(req, res) {
         const deltaTxt = formatDelta(lastSeenAgo / 60000);
         const msg = `🔴 *CÂMERA OFFLINE*\nCâmera: ${cam.nome_exibicao}\nCliente: ${cam.cliente?.nome || '—'}\nÚltimo sinal: ${deltaTxt} atrás (${cam.last_seen || 'nunca'})\n\nVerificar conectividade no site.`;
         const sendResult = await sendWaSender(msg);
-        await supabase
-          .from('cameras')
-          .update({ last_offline_alert_at: new Date().toISOString() })
-          .eq('id', cam.id);
+        // Só marca como alertada se o envio funcionou — senão tenta de novo.
+        if (sendResult.sent) {
+          await supabase
+            .from('cameras')
+            .update({ last_offline_alert_at: new Date().toISOString() })
+            .eq('id', cam.id);
+        }
         alerts.push({ camera: cam.nome_exibicao, offline_for: deltaTxt, send: sendResult });
       }
     }
