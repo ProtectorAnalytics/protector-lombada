@@ -28,7 +28,7 @@ A câmera ALPHADIGI tem **dois canais de comunicação independentes**, configur
 | Canal | Tela QLPR Config | Destino | Finalidade |
 |---|---|---|---|
 | **Comunicação** | `Conf. Comm → Comunicação` | **Protector** (`lombada.appps.com.br:443` via HTTPS) | Envia capturas e heartbeats, ambos no endpoint `/placa` — o backend distingue pelo conteúdo do payload (`AlarmInfoPlate` vs `heartbeat`) |
-| **Geren. remota** | `Conf. Comm → Geren. remota` | **IN IOT da ALPHADIGI** (`portal.alphadigi.com.br:5080`) | Plataforma proprietária do fabricante (assinatura paga opcional) — não conversa com servidor próprio |
+| **Geren. remota** | `Conf. Comm → Geren. remota` | **IN IOT da ALPHADIGI** (`portal.alphadigi.com.br:5800`) | Plataforma proprietária do fabricante (assinatura paga opcional) — não conversa com servidor próprio |
 
 **Implicação para diagnóstico:** o indicador "Online/Offline" no rodapé do QLPR Config reflete o canal **Geren. remota**, não o canal **Comunicação**. Uma câmera pode aparecer "Online" no painel ALPHADIGI mas estar **offline para o Protector** (ou vice-versa). Sempre confirmar a chegada de heartbeat/capturas no painel do Protector como fonte da verdade.
 
