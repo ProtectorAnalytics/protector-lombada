@@ -27,30 +27,60 @@ A câmera ALPHADIGI tem **dois canais de comunicação independentes**, configur
 
 | Canal | Tela QLPR Config | Destino | Finalidade |
 |---|---|---|---|
-| **Comunicação** | `Conf. Comm → Comunicação` | **Protector** (`191.252.201.142:3000`) | Envia capturas (`/placa`) e heartbeats (`/heartbeat`) para o nosso sistema |
-| **Geren. remota** | `Conf. Comm → Geren. remota` | **IN IOT da ALPHADIGI** (`portal.alphadigi.com.br:5080`) | Plataforma proprietária do fabricante (assinatura paga opcional) — não conversa com servidor próprio |
+| **Comunicação** | `Conf. Comm → Comunicação` | **Protector** (`lombada.appps.com.br:443` via HTTPS) | Envia capturas e heartbeats, ambos no endpoint `/placa` — o backend distingue pelo conteúdo do payload (`AlarmInfoPlate` vs `heartbeat`) |
+| **Geren. remota** | `Conf. Comm → Geren. remota` | **IN IOT da ALPHADIGI** (`portal.alphadigi.com.br:5080`) | Plataforma proprietária do fabricante (assinatura paga) — não conversa com servidor próprio |
 
 **Implicação para diagnóstico:** o indicador "Online/Offline" no rodapé do QLPR Config reflete o canal **Geren. remota**, não o canal **Comunicação**. Uma câmera pode aparecer "Online" no painel ALPHADIGI mas estar **offline para o Protector** (ou vice-versa). Sempre confirmar a chegada de heartbeat/capturas no painel do Protector como fonte da verdade.
 
-Os dois canais podem ficar ativos simultaneamente sem conflito. Se o cliente não assina a IN IOT, desabilite "Geren. remota" para evitar tráfego desnecessário.
+> ⚠️ **Contrato IN IOT cancelado em 24/05/2026.** O Protector não tem mais acesso ao `portal.alphadigi.com.br` — não dá para acessar QLPR remotamente, ver vídeo ao vivo, atualizar firmware ou rebootar câmeras pela plataforma do fabricante. **Sempre que possível, desabilite o canal Geren. remota em cada câmera** (mantém o canal Comunicação ativo, que é o que o Protector usa). Câmeras com Geren. remota habilitada continuam tentando reconectar em loop ao servidor que não aceita mais — gasto de tráfego e LED "Offline" enganoso no rodapé do QLPR.
+
+Os dois canais podem ficar ativos simultaneamente sem conflito, mas após o cancelamento do IN IOT a recomendação é **manter apenas o canal Comunicação**.
+
+### Consequência operacional do fim do IN IOT
+
+Sem o IN IOT, a única visibilidade das câmeras é o que elas mesmas enviam para `lombada.appps.com.br` (canal Comunicação). Implicações práticas:
+
+- **Sem acesso remoto ao QLPR Config.** Qualquer mudança em Servidor Pri., DNS, IP, foco, zoom, área de detecção exige acesso à rede interna do cliente (presencial ou VPN).
+- **Sem reboot remoto, sem atualização de firmware remota, sem vídeo ao vivo.**
+- **O cron `cron-monitor-cameras` vira o sistema nervoso central.** Ele roda a cada 15 min e dispara alerta WaSender quando uma câmera fica offline > 30 min. **A env var `WASENDER_GROUP_NOC` precisa estar configurada na Vercel** para o alerta sair — sem isso, a câmera cai silenciosamente e ninguém é avisado.
+- **O painel de diagnóstico** (`/admin/diagnostico.html?camera_id=<uuid>`) é a única fonte de verdade pra cada câmera. Use-o como primeiro passo de qualquer investigação.
+
+> **Endpoint `/api/heartbeat` continua existindo** no backend para compatibilidade com câmeras configuradas no padrão antigo (pasta de heartbeat separada). A configuração atual recomendada (e usada pela CEC-LOMB01 em produção) consolida tudo em `/placa`.
 
 ## Configuração de comunicação (referência)
 
-Estes valores precisam estar na câmera (interface QLPR Config → `Configuração → Conf. Comm → Comunicação`) para que ela envie capturas e heartbeats ao Protector:
+Estes valores precisam estar na câmera (interface QLPR Config → `Configuração → Conf. Comm → Comunicação`) para que ela envie capturas e heartbeats ao Protector. Os valores foram validados contra a configuração em produção da CEC-LOMB01 em 24/05/2026.
+
+**Conf. HTTP Push:**
 
 | Campo | Valor |
 |---|---|
 | Habilitar | ✓ |
-| Servidor principal | `191.252.201.142` |
-| Porta | `3000` |
-| Porta SSL | `443` |
-| Nr da Placa (endpoint) | `/placa` |
-| Heartbeat (endpoint) | `/heartbeat` |
+| Servidor Pri. | `lombada.appps.com.br` |
+| Servidor Seg. | (vazio) |
+| Porta | `443` |
+| Timeout | `10` |
+| Nr.da Placa | ✓ — pasta `/placa` |
 | Img.Veículo | ✓ |
 | Img.Placa | ✓ |
-| Autenticação | Anônimo |
-| QoS | 1 |
-| Resultados e fotos | Carregar junto |
+| GPIO | ✗ |
+| Dados Serial | ✗ |
+| Char Code | `UTF-8` |
+
+**Heartbeat / SSL / Autenticação (coluna do meio):**
+
+| Campo | Valor |
+|---|---|
+| Heartbeat | ✓ — pasta `/placa` (mesmo endpoint, distinção pelo payload) |
+| Intervalo | `10` s |
+| Protocolo | `Desativar` |
+| Conexão curta | ✗ |
+| **Link SSL** | ✓ (obrigatório — Vercel só serve HTTPS) |
+| **Porta SSL** | `443` |
+| Autenticação | `Anônimo` |
+| QoS (0–5) | `2` (irrelevante para HTTP REST, mas inofensivo) |
+| Resultados e fotos | `Carregar junto` |
+| Empresa / CNPJ | (vazios — campos meramente informativos para a câmera) |
 
 **Retransmissão (modo autônomo):**
 
@@ -65,15 +95,26 @@ Estes valores precisam estar na câmera (interface QLPR Config → `Configuraç�
 
 Em caso de queda da rede, a câmera tenta reenviar a cada 2s por até 100s (~50 tentativas) — durante esse período capturas com timestamp antigo podem chegar em rajada.
 
+> ⚠️ **`http://191.252.201.142:3000` é o servidor da plataforma IN IOT da ALPHADIGI**, não nosso. O manual oficial (Rev01, 20/09/2023) instrui a câmera a enviar capturas pra esse endereço. Enquanto havia contrato com a IN IOT, ela re-encaminhava as capturas pro Protector. **Com o cancelamento do contrato em 24/05/2026, esse caminho deixou de funcionar.** Câmeras que continuam apontando pra `191.252.201.142:3000` mandam capturas pra um destino que não as repassa mais — e somem do painel.
+>
+> A correção é apontar o **Servidor Pri.** de cada câmera direto pro Protector:
+> - Servidor Pri.: `lombada.appps.com.br`
+> - Porta: `443`
+> - Link SSL: ✓
+> - Pastas Nr.da Placa **e** Heartbeat: `/placa`
+>
+> Isso requer acesso à rede interna do cliente (presencial ou VPN), porque sem IN IOT não há mais via remota de configuração.
+
 ## Rede local
 
 | Campo | Valor recomendado |
 |---|---|
 | DNS primário | `8.8.8.8` |
+| DNS secundário | `1.1.1.1` |
 | IP/Máscara/Gateway | Definido pelo integrador |
-| Liberações de firewall | Saída TCP `191.252.201.142:3000` e `:443` |
+| Liberações de firewall | Saída TCP `lombada.appps.com.br:443` (HTTPS) |
 
-> Causa mais comum de "câmera offline": **DNS errado** ou **firewall do cliente bloqueando saída**. Validar com `ping` e `telnet` a partir da mesma sub-rede da câmera.
+> Causa mais comum de "câmera offline" pós-cancelamento da IN IOT: **câmera ainda apontando pra `191.252.201.142:3000`** (manual oficial da fábrica) — o destino existe e aceita TCP, mas não repassa mais pro Protector. Sintoma típico: "Internet: Normal" no QLPR (canal Geren. remota funciona) mas zero capturas chegam no painel. Solução: reapontar Servidor Pri. da câmera pra `lombada.appps.com.br:443`. Casos secundários: **DNS errado** (sem resolver `lombada.appps.com.br`) ou **firewall do cliente bloqueando saída HTTPS**. Validar com `nslookup lombada.appps.com.br` e `curl -I https://lombada.appps.com.br/placa` a partir da mesma sub-rede da câmera.
 
 ## Identificação da câmera
 
