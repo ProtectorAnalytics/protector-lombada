@@ -154,14 +154,16 @@
     <div class="loading">Carregando…</div>
   </main>
 
-  <script type="module">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+  (async () => {
     const params = new URLSearchParams(location.search);
     const cameraId = params.get('id');
     const main = document.getElementById('main');
 
     if (!cameraId) {
       main.innerHTML = '<div class="error">Falta parâmetro <code>?id=&lt;uuid&gt;</code></div>';
-      throw new Error('camera id missing');
+      return;
     }
 
     function fmtAtraso(seg) {
@@ -188,19 +190,25 @@
       }[s] || s;
     }
 
-    async function getToken() {
-      // Reusa o mesmo padrão dos outros admins do projeto
-      return localStorage.getItem('supabase_access_token') || sessionStorage.getItem('supabase_access_token');
-    }
-
     async function loadHealth() {
-      const token = await getToken();
-      if (!token) {
+      // Mesmo padrão de auth do admin/index.html: Supabase JS + getSession
+      let sb;
+      try {
+        const cfg = await (await fetch('/api/config')).json();
+        sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      } catch {
+        main.innerHTML = '<div class="error">Não consegui carregar config do Supabase.</div>';
+        return;
+      }
+
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.access_token) {
         main.innerHTML = '<div class="error">Sem sessão. <a href="/admin">Faça login</a>.</div>';
         return;
       }
+
       const r = await fetch('/api/admin/camera-health?id=' + encodeURIComponent(cameraId), {
-        headers: { Authorization: 'Bearer ' + token }
+        headers: { Authorization: 'Bearer ' + session.access_token }
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
@@ -303,6 +311,7 @@
     }
 
     loadHealth();
+  })();
   </script>
 </body>
 </html>
