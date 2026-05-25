@@ -54,13 +54,32 @@ module.exports = async function handler(req, res) {
       countCap(30 * 24 * 3600 * 1000),
     ]);
 
-    // Últimas 20 capturas
-    const { data: ultimasCapturas } = await supabase
+    // Últimas 20 capturas + signed URL das fotos (TTL 10min)
+    const { data: ultimasCapturasRaw } = await supabase
       .from('capturas')
       .select('id, timestamp, placa, velocidade, foto_path')
       .eq('camera_id', cameraId)
       .order('timestamp', { ascending: false })
       .limit(20);
+
+    const pathsValidos = (ultimasCapturasRaw || [])
+      .map(c => c.foto_path)
+      .filter(Boolean);
+    let urlByPath = {};
+    if (pathsValidos.length > 0) {
+      const { data: signed } = await supabase
+        .storage.from('capturas-fotos')
+        .createSignedUrls(pathsValidos, 600);
+      if (Array.isArray(signed)) {
+        for (const s of signed) {
+          if (s.path && s.signedUrl) urlByPath[s.path] = s.signedUrl;
+        }
+      }
+    }
+    const ultimasCapturas = (ultimasCapturasRaw || []).map(c => ({
+      ...c,
+      foto_url: c.foto_path ? urlByPath[c.foto_path] || null : null,
+    }));
 
     // Sparkline: capturas por dia nos últimos 30 dias (agregado em JS)
     const { data: capsRaw } = await supabase
@@ -108,7 +127,10 @@ module.exports = async function handler(req, res) {
         endpoint_alerta: endpointAlerta,
         endpoint_recomendado: ENDPOINT_RECOMENDADO,
       },
-      volumes: { cap24h, cap7d, cap30d },
+      volumes: {
+        cap24h, cap7d, cap30d,
+        taxa_media_7d_por_hora: cap7d > 0 ? +(cap7d / (7 * 24)).toFixed(1) : 0,
+      },
       ultimas_capturas: ultimasCapturas || [],
       sparkline_30d: sparkline,
     });
