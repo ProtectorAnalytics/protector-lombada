@@ -20,7 +20,6 @@
     { "src": "/api/admin/veiculos", "dest": "/api/admin/veiculos.js" },
     { "src": "/api/admin/dashboard", "dest": "/api/admin/dashboard.js" },
     { "src": "/api/admin/direitos", "dest": "/api/admin/direitos.js" },
-    { "src": "/api/admin/diagnostico", "dest": "/api/admin/diagnostico.js" },
     { "src": "/api/cron-prazos-lgpd", "dest": "/api/cron-prazos-lgpd.js" },
     { "src": "/api/cron-monitor-cameras", "dest": "/api/cron-monitor-cameras.js" },
     { "src": "/admin", "dest": "/admin/index.html" },
