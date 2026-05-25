@@ -107,9 +107,19 @@ module.exports = async function handler(req, res) {
 
     // Heartbeat da câmera ALPHADIGI (intervalo 10s; updateCameraLastSeen throttle 1×/min)
     if (dados.heartbeat) {
-      const hbIp = dados.heartbeat.ipaddr || dados.heartbeat.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
-      const hbMac = dados.heartbeat.macaddr || dados.heartbeat.mac || '';
-      await updateCameraLastSeen(camera.id, null, { ip_address: hbIp, mac_address: hbMac });
+      const hb = dados.heartbeat;
+      const hbIp = hb.ipaddr || hb.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+      const hbMac = hb.macaddr || hb.mac || '';
+      await updateCameraLastSeen(camera.id, null, {
+        ip_address: hbIp,
+        mac_address: hbMac,
+        // Telemetria passiva (apenas heartbeat — não pega em todo POST de captura)
+        endpoint_configurado: (req.headers.host || '').toLowerCase() || undefined,
+        host_camera_reportado: hb.host || undefined,
+        uptime_start_ts: hb.startTs || undefined,
+        ultimo_outage_reportado: hb.outageTs || undefined,
+        heartbeat_countid: Number.isFinite(+hb.countid) ? +hb.countid : undefined,
+      });
       return res.status(200).json({ ok: true, type: 'heartbeat' });
     }
 
