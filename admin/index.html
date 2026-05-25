@@ -566,10 +566,6 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           Manual do Usuário
         </a>
-        <a class="nav-item" href="/admin/suporte-cameras.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:left" aria-label="Suporte e Diagnóstico de Câmeras ALPHADIGI (abre em nova aba)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Suporte / Câmeras
-        </a>
       </nav>
 
       <main class="admin-content" id="admin-main" role="main">
@@ -1688,7 +1684,6 @@ function renderCameras() {
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
     <td>${fmtDate(c.criado_em)}</td>
     <td class="actions-cell">
-      <a class="btn btn-ghost btn-sm" href="/admin/diagnostico.html?camera_id=${c.id}" target="_blank" title="Painel de diagnóstico de conexão">Diagnóstico</a>
       <button class="btn btn-ghost btn-sm" onclick="openCameraModal(camerasData.find(x=>x.id==='${c.id}'))">Editar</button>
       ${c.ativa ? `<button class="btn btn-danger btn-sm" onclick="toggleCamera('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCamera('${c.id}',true)">Ativar</button>`}
       <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteCamera('${c.id}','${esc(c.nome)}')">Excluir</button>
