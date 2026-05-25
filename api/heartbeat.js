@@ -25,7 +25,10 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: 'Cliente inativo' });
     }
 
-    await updateCameraLastSeen(camera.id);
+    // Captura passiva do hostname usado (útil pra detectar config errada apontando p/ endpoint legado)
+    await updateCameraLastSeen(camera.id, null, {
+      endpoint_configurado: (req.headers.host || '').toLowerCase() || undefined,
+    });
 
     return res.status(200).json({
       ok: true,
