@@ -8,7 +8,6 @@ const {
   getPassagensByPlaca,
   updateCameraLastSeen,
   markNotificado,
-  logConexao,
   supabase,
 } = require('../lib/supabase');
 const { gerarPDF } = require('../lib/pdf-generator');
@@ -37,34 +36,15 @@ module.exports = async function handler(req, res) {
   const method = req.method;
   const url = req.url;
   const contentType = req.headers['content-type'] || '';
-  const startedAt = Date.now();
-  const ipOrigem = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || null;
-  const userAgent = req.headers['user-agent'] || null;
 
   // Apenas POST
   if (method !== 'POST') {
-    logConexao({
-      tipo: 'placa', resultado: 'erro', motivo: 'metodo_nao_permitido',
-      http_status: 405, ip_origem: ipOrigem, user_agent: userAgent,
-      content_type: contentType, latencia_ms: Date.now() - startedAt,
-    });
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
   try {
     // Parsear body FIRST (we need it to find camera by serial if no token)
-    let dados;
-    try {
-      dados = await parseBody(req);
-    } catch (parseErr) {
-      logConexao({
-        tipo: 'placa', resultado: 'erro', motivo: 'payload_invalido',
-        http_status: 400, ip_origem: ipOrigem, user_agent: userAgent,
-        content_type: contentType, latencia_ms: Date.now() - startedAt,
-        detalhes: { err: parseErr.message?.slice(0, 200) },
-      });
-      return res.status(400).json({ error: 'Payload inválido' });
-    }
+    const dados = await parseBody(req);
 
     // Log the parsed data type
     const dataType = dados.AlarmInfoPlate ? 'AlarmInfoPlate'
@@ -72,34 +52,25 @@ module.exports = async function handler(req, res) {
       : dados.heartbeat ? 'Heartbeat'
       : 'Unknown';
 
-    const payloadKeys = Object.keys(dados || {}).join(',');
-
     // Try to find camera: first by token, then by serial from payload
     const token = req.query.token;
     let camera = null;
 
     if (token) {
       if (!isValidToken(token)) {
-        logConexao({
-          tipo: 'placa', resultado: 'erro', motivo: 'token_invalido',
-          http_status: 400, ip_origem: ipOrigem, user_agent: userAgent,
-          content_type: contentType, payload_keys: payloadKeys,
-          latencia_ms: Date.now() - startedAt,
-        });
         return res.status(400).json({ error: 'Formato de token inválido' });
       }
       camera = await findCameraByToken(token);
     }
 
-    // Extract serial early for logging
-    const serialno = dados.AlarmInfoPlate?.serialno
-      || dados.AlarmInfoPlate?.result?.PlateResult?.serialno
-      || dados.SerialData?.serialno
-      || dados.heartbeat?.serialno
-      || null;
-
     // Fallback: identify camera by serial number from AlarmInfoPlate or SerialData
     if (!camera) {
+      const serialno = dados.AlarmInfoPlate?.serialno
+        || dados.AlarmInfoPlate?.result?.PlateResult?.serialno
+        || dados.SerialData?.serialno
+        || dados.heartbeat?.serialno
+        || null;
+
       if (serialno) {
         camera = await findCameraBySerial(serialno);
       }
@@ -113,15 +84,6 @@ module.exports = async function handler(req, res) {
           ip: logIp || 'none',
           mac: logMac || 'none',
         });
-        logConexao({
-          tipo: 'placa', resultado: 'erro',
-          motivo: token ? 'token_invalido' : (serialno ? 'serial_nao_cadastrado' : 'sem_identificacao'),
-          http_status: 401, ip_origem: ipOrigem, user_agent: userAgent,
-          content_type: contentType, payload_keys: payloadKeys,
-          serial_recebido: serialno, ip_payload: logIp || null, mac_payload: logMac || null,
-          latencia_ms: Date.now() - startedAt,
-          detalhes: { dataType },
-        });
         return res.status(401).json({ error: 'Câmera não identificada' });
       }
     }
@@ -130,37 +92,16 @@ module.exports = async function handler(req, res) {
     const rateCheck = checkRateLimit(camera.id);
     if (!rateCheck.allowed) {
       res.setHeader('Retry-After', Math.ceil(rateCheck.resetIn / 1000));
-      logConexao({
-        tipo: 'placa', resultado: 'erro', motivo: 'rate_limit',
-        http_status: 429, ip_origem: ipOrigem, user_agent: userAgent,
-        content_type: contentType, payload_keys: payloadKeys,
-        camera_id: camera.id, cliente_id: camera.clientes?.id || null,
-        serial_recebido: serialno, latencia_ms: Date.now() - startedAt,
-      });
       return res.status(429).json({ error: 'Muitas requisições. Tente novamente em breve.' });
     }
 
     const cliente = camera.clientes;
     if (!cliente || !cliente.ativo) {
-      logConexao({
-        tipo: 'placa', resultado: 'erro', motivo: 'cliente_inativo',
-        http_status: 403, ip_origem: ipOrigem, user_agent: userAgent,
-        content_type: contentType, payload_keys: payloadKeys,
-        camera_id: camera.id, cliente_id: cliente?.id || null,
-        serial_recebido: serialno, latencia_ms: Date.now() - startedAt,
-      });
       return res.status(403).json({ error: 'Cliente inativo' });
     }
 
     // Skip SerialData - it's raw sensor data, not plate recognition
     if (dados.SerialData) {
-      logConexao({
-        tipo: 'placa', resultado: 'sucesso', http_status: 200,
-        ip_origem: ipOrigem, user_agent: userAgent, content_type: contentType,
-        payload_keys: payloadKeys, camera_id: camera.id, cliente_id: cliente.id,
-        serial_recebido: serialno, latencia_ms: Date.now() - startedAt,
-        detalhes: { skipped: 'SerialData' },
-      });
       return res.status(200).json({ ok: true, skipped: 'SerialData' });
     }
 
@@ -169,13 +110,6 @@ module.exports = async function handler(req, res) {
       const hbIp = dados.heartbeat.ipaddr || dados.heartbeat.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
       const hbMac = dados.heartbeat.macaddr || dados.heartbeat.mac || '';
       await updateCameraLastSeen(camera.id, null, { ip_address: hbIp, mac_address: hbMac });
-      logConexao({
-        tipo: 'heartbeat', resultado: 'sucesso', http_status: 200,
-        ip_origem: ipOrigem, user_agent: userAgent, content_type: contentType,
-        payload_keys: payloadKeys, camera_id: camera.id, cliente_id: cliente.id,
-        serial_recebido: serialno, ip_payload: hbIp || null, mac_payload: hbMac || null,
-        latencia_ms: Date.now() - startedAt,
-      });
       return res.status(200).json({ ok: true, type: 'heartbeat' });
     }
 
@@ -255,14 +189,6 @@ module.exports = async function handler(req, res) {
 
     if (!placa) {
       await logError('Placa vazia após normalização', { placa });
-      logConexao({
-        tipo: 'placa', resultado: 'erro', motivo: 'placa_vazia',
-        http_status: 400, ip_origem: ipOrigem, user_agent: userAgent,
-        content_type: contentType, payload_keys: payloadKeys,
-        camera_id: camera.id, cliente_id: cliente.id,
-        serial_recebido: serialno, ip_payload: camIp || null, mac_payload: camMac || null,
-        latencia_ms: Date.now() - startedAt,
-      });
       return res.status(400).json({ error: 'Placa não fornecida' });
     }
 
@@ -387,26 +313,10 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    logConexao({
-      tipo: 'placa', resultado: 'sucesso', http_status: 200,
-      ip_origem: ipOrigem, user_agent: userAgent, content_type: contentType,
-      payload_keys: payloadKeys, camera_id: camera.id, cliente_id: cliente.id,
-      serial_recebido: serialno, ip_payload: camIp || null, mac_payload: camMac || null,
-      placa, velocidade,
-      latencia_ms: Date.now() - startedAt,
-      detalhes: blurInfo ? { blur: blurInfo } : null,
-    });
-
     return res.status(200).json({ ok: true, id: captura.id });
   } catch (err) {
     await logError(`Erro geral: ${err.message}`, { stack: err.stack?.slice(0, 500) });
     console.error('Erro no endpoint /api/captura:', err.message);
-    logConexao({
-      tipo: 'placa', resultado: 'erro', motivo: 'erro_interno',
-      http_status: 500, ip_origem: ipOrigem, user_agent: userAgent,
-      content_type: contentType, latencia_ms: Date.now() - startedAt,
-      detalhes: { err: err.message?.slice(0, 200) },
-    });
     return res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
