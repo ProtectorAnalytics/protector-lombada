@@ -282,11 +282,27 @@ module.exports = async function handler(req, res) {
       notificado: false,
     });
 
-    // Atualizar last_seen da camera (com IP/MAC se disponíveis)
+    // Atualizar last_seen + telemetria expandida do AlarmInfoPlate.
+    // Manuais ALPHADIGI mostram que captura traz info da câmera além de placa
+    // — aproveitamos pra preencher modelo/firmware/host quando vier.
+    // Tentamos múltiplos nomes de campo (família Dahua-like usa nomenclaturas variantes).
+    const camFirmware = alarm.softwareVersion || alarm.sw_version || alarm.firmware || alarm.fwVersion || undefined;
+    const camModelo = alarm.deviceType || alarm.model || alarm.modelName || alarm.product || undefined;
+    const camHost = alarm.host || alarm.deviceName || alarm.cameraName || undefined;
     await updateCameraLastSeen(camera.id, captura.id, {
-      ip_address: camIp || null,
-      mac_address: camMac || null,
+      ip_address: camIp || undefined,
+      mac_address: camMac || undefined,
+      // Aproveitando o AlarmInfoPlate (mais rico que heartbeat) pra preencher:
+      endpoint_configurado: (req.headers.host || '').toLowerCase() || undefined,
+      host_camera_reportado: camHost,
+      firmware_versao: camFirmware,
     });
+    // Atualização específica do modelo (não está na assinatura padrão de updateCameraLastSeen)
+    if (camModelo) {
+      try {
+        await supabase.from('cameras').update({ modelo: camModelo }).eq('id', camera.id).is('modelo', null);
+      } catch { /* não-crítico */ }
+    }
 
     // Verificar se precisa notificar
     if (velocidade > cliente.limite_velocidade) {
