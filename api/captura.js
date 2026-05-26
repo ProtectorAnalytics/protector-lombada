@@ -108,8 +108,12 @@ module.exports = async function handler(req, res) {
     // Heartbeat da câmera ALPHADIGI (intervalo 10s; updateCameraLastSeen throttle 1×/min)
     if (dados.heartbeat) {
       const hb = dados.heartbeat;
-      const hbIp = hb.ipaddr || hb.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
-      const hbMac = hb.macaddr || hb.mac || '';
+      // Só atualiza ip_address/mac se o payload trouxer — heartbeat normalmente NÃO traz
+      // (vimos no PCAP: {countid, timeStamp, outageTs, startTs, serialno} só).
+      // Fallback p/ x-forwarded-for produzia IP NAT do roteador (ex: 170.81.101.161)
+      // sobrescrevendo o IP LAN real da câmera. Bug corrigido aqui.
+      const hbIp = hb.ipaddr || hb.ip || undefined;
+      const hbMac = hb.macaddr || hb.mac || undefined;
       await updateCameraLastSeen(camera.id, null, {
         ip_address: hbIp,
         mac_address: hbMac,
