@@ -144,7 +144,7 @@ module.exports = async function handler(req, res) {
         const n = typeof v === 'number' ? v : parseFloat(v);
         return Number.isFinite(n) && n >= 0 ? n : 0;
       };
-      const finalSpeed =
+      let finalSpeed =
         tryNum(plate.radarSpeed?.Speed?.PerHour) ||
         tryNum(plate.radarSpeed?.speed?.perHour) ||
         tryNum(plate.radarSpeed?.PerHour) ||
@@ -158,6 +158,29 @@ module.exports = async function handler(req, res) {
         tryNum(alarm.Speed) ||
         tryNum(dados.speed) ||
         0;
+
+      // Sanity-cap: o radar ALPHADIGI ocasionalmente reporta velocidades
+      // fisicamente impossíveis em via interna de condomínio (observado:
+      // 180 e 351 km/h em rajada na mesma placa, provável reflexo / veículo
+      // grande manobrando). Acima do teto plausível do cliente a leitura é
+      // inválida → zeramos (vira "SEM RADAR") para não disparar multa falsa.
+      // Fallback 80 garante proteção mesmo antes da migration da coluna.
+      const tetoPlausivel = Number(cliente.velocidade_maxima_plausivel) || 80;
+      let velocidadeInvalida = false;
+      if (finalSpeed > tetoPlausivel) {
+        velocidadeInvalida = true;
+        await logError(
+          `vel-absurda ${finalSpeed}km/h > teto ${tetoPlausivel} | placa ${plate.license} | camera ${camera.nome}`,
+          {
+            velocidade_bruta: finalSpeed,
+            teto: tetoPlausivel,
+            triggerType: plate.triggerType,
+            direction: plate.direction,
+            radarSpeed_raw: plate.radarSpeed,
+          }
+        );
+        finalSpeed = 0;
+      }
 
       normalized = {
         placa: plate.license || '',
@@ -173,7 +196,7 @@ module.exports = async function handler(req, res) {
       // cleanup de 24h via pg_cron, sem poluir o banco.
       // Stripa campos base64 (imageFile/imageFragmentFile) para enxergar
       // speed/radarSpeed/triggerType reais sem o JSON ser truncado.
-      if (finalSpeed === 0 && plate.license) {
+      if (finalSpeed === 0 && plate.license && !velocidadeInvalida) {
         const plateKeys = Object.keys(plate).join(',');
         const { imageFile: _img, imageFragmentFile: _frag, ...plateLite } = plate;
         await logError(
