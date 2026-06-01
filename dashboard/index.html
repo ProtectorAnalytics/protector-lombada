@@ -1889,6 +1889,10 @@
               <input type="checkbox" id="filter-alertas-only">
               <label for="filter-alertas-only" style="text-transform:none;font-size:12px;cursor:pointer">Só alertas</label>
             </div>
+            <div class="filter-check">
+              <input type="checkbox" id="filter-sem-vel" onchange="toggleSemVel(this.checked)">
+              <label for="filter-sem-vel" style="text-transform:none;font-size:12px;cursor:pointer" title="Por padrão, capturas sem velocidade (sem radar) ficam ocultas na tela. Os registros nunca são removidos — continuam nos filtros e relatórios.">Mostrar sem velocidade</label>
+            </div>
             <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
             <button class="btn-clear" onclick="clearFilters()">Limpar</button>
             <div style="position:relative;margin-left:0">
@@ -2101,6 +2105,22 @@
     let currentProfile = null;
     let pollingInterval = null;
     let camerasList = [];
+
+    // Exibição de capturas sem velocidade (sem radar) na tela do operador.
+    // Preferência por dispositivo (localStorage). Default: ocultar. Nada é
+    // removido — os registros continuam nos filtros e nos relatórios/export.
+    const SEM_VEL_KEY = 'lombada_mostrar_sem_vel';
+    function mostrarSemVel() { return localStorage.getItem(SEM_VEL_KEY) === '1'; }
+    function capturasVisiveis() {
+      if (mostrarSemVel()) return lastCapturas;
+      return (lastCapturas || []).filter(c => c.velocidade > 0);
+    }
+    function toggleSemVel(checked) {
+      localStorage.setItem(SEM_VEL_KEY, checked ? '1' : '0');
+      currentPage = 1;
+      renderPage();
+      loadRecentCards();
+    }
     let camerasMap = {}; // camera_id -> nome_exibicao (curto, p/ dashboard)
     let camerasMapFull = {}; // camera_id -> nome (completo, p/ relatórios)
     let camerasMeta = {}; // camera_id -> { serial, modelo, firmware } (auditoria PDF)
@@ -2312,6 +2332,7 @@
       const today = todayLocalISO();
       document.getElementById('filter-date-start').value = today;
       document.getElementById('filter-date-end').value = today;
+      document.getElementById('filter-sem-vel').checked = mostrarSemVel();
 
       loadVeiculosCache();
       loadCamerasList();
@@ -2410,10 +2431,20 @@
         return;
       }
 
+      // Filtro de exibição: por padrão oculta capturas sem velocidade (sem radar).
+      // Os registros não são removidos — seguem nos filtros e relatórios.
+      const verSemVel = mostrarSemVel();
+      const fonte = verSemVel ? rawData : rawData.filter(c => c.velocidade > 0);
+
+      if (fonte.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Nenhuma captura com velocidade recente</div>';
+        return;
+      }
+
       // Dedup por placa: mantém apenas a mais recente de cada placa
       const vistas = new Set();
       const data = [];
-      for (const c of rawData) {
+      for (const c of fonte) {
         const key = (c.placa || '').toUpperCase().trim();
         if (!key || vistas.has(key)) continue;
         vistas.add(key);
@@ -2424,7 +2455,7 @@
       // Se tiver menos de 6 placas distintas no último lote, completa com
       // as próximas capturas mesmo repetindo (fallback)
       if (data.length < 6) {
-        for (const c of rawData) {
+        for (const c of fonte) {
           if (data.length === 6) break;
           if (!data.includes(c)) data.push(c);
         }
@@ -2573,15 +2604,15 @@
         return;
       }
 
-      lastCapturas = data;
+      lastCapturas = data;  // sempre o conjunto completo (export usa isto)
       allThumbUrls = {};
       currentPage = 1;
 
-      // Get thumbnail URLs (batch for first 50)
-      const thumbResults = await Promise.all(
-        data.slice(0, 50).map(c => getPhotoUrl(c.foto_path))
-      );
-      data.slice(0, 50).forEach((c, i) => { allThumbUrls[i] = thumbResults[i]; });
+      // Get thumbnail URLs (batch for first 50 visíveis), cache por foto_path
+      const vis = capturasVisiveis();
+      const firstVis = vis.slice(0, 50).filter(c => c.foto_path);
+      const thumbResults = await Promise.all(firstVis.map(c => getPhotoUrl(c.foto_path)));
+      firstVis.forEach((c, i) => { allThumbUrls[c.foto_path] = thumbResults[i]; });
 
       renderPage();
     }
@@ -2591,26 +2622,31 @@
     let allThumbUrls = {};
 
     async function renderPage() {
-      const data = lastCapturas;
-      if (!data || data.length === 0) return;
-
+      const data = capturasVisiveis();
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
+        pgEl.style.display = 'none';
+        return;
+      }
+
       const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
+      if (currentPage > totalPages) currentPage = totalPages;
       const start = (currentPage - 1) * ROWS_PER_PAGE;
       const end = Math.min(start + ROWS_PER_PAGE, data.length);
       const pageData = data.slice(start, end);
       const limite = currentCliente.limite_velocidade;
 
-      // Load thumbs for current page if not cached
-      const needThumb = pageData.map((c, i) => start + i).filter(idx => idx < 50 && !(idx in allThumbUrls));
+      // Load thumbs for current page if not cached (keyed por foto_path)
+      const needThumb = pageData.filter(c => c.foto_path && !(c.foto_path in allThumbUrls));
       if (needThumb.length > 0) {
-        const results = await Promise.all(needThumb.map(idx => getPhotoUrl(data[idx].foto_path)));
-        needThumb.forEach((idx, i) => { allThumbUrls[idx] = results[i]; });
+        const results = await Promise.all(needThumb.map(c => getPhotoUrl(c.foto_path)));
+        needThumb.forEach((c, i) => { allThumbUrls[c.foto_path] = results[i]; });
       }
 
       tbody.innerHTML = pageData.map((c, pi) => {
-        const globalIdx = start + pi;
         const velMedida = c.velocidade > 0;
         const velClass = !velMedida ? 'unknown'
           : c.velocidade <= limite ? 'green'
@@ -2622,8 +2658,8 @@
         const statusTexto = isAlert ? 'ALERTA' : (!velMedida ? 'SEM RADAR' : 'OK');
         const statusCor = isAlert ? 'var(--red)' : (!velMedida ? 'var(--text-muted)' : 'var(--green)');
 
-        const thumbHtml = globalIdx < 50 && allThumbUrls[globalIdx]
-          ? `<img class="row-thumb" src="${allThumbUrls[globalIdx]}" alt="" loading="lazy">`
+        const thumbHtml = c.foto_path && allThumbUrls[c.foto_path]
+          ? `<img class="row-thumb" src="${allThumbUrls[c.foto_path]}" alt="" loading="lazy">`
           : `<div class="row-no-thumb">&#128663;</div>`;
 
         const radarNome = camerasMap[c.camera_id] || '---';
@@ -2670,7 +2706,7 @@
     }
 
     function goToPage(page) {
-      const totalPages = Math.ceil(lastCapturas.length / ROWS_PER_PAGE);
+      const totalPages = Math.ceil(capturasVisiveis().length / ROWS_PER_PAGE);
       if (page < 1 || page > totalPages) return;
       currentPage = page;
       renderPage();
