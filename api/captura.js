@@ -32,6 +32,17 @@ async function logError(message, data) {
   } catch (logErr) { console.error('Falha ao gravar log:', logErr.message); }
 }
 
+// PROBE TEMPORÁRIO: throttle em memória (instância serverless) para amostrar logs
+// sem inundar o debug_log. Retorna true no máximo 1× por janela (ms) por chave.
+const _probeLast = new Map();
+function probeThrottle(key, windowMs) {
+  const now = Date.now();
+  const last = _probeLast.get(key) || 0;
+  if (now - last < windowMs) return false;
+  _probeLast.set(key, now);
+  return true;
+}
+
 module.exports = async function handler(req, res) {
   const method = req.method;
   const url = req.url;
@@ -102,6 +113,21 @@ module.exports = async function handler(req, res) {
 
     // Skip SerialData - it's raw sensor data, not plate recognition
     if (dados.SerialData) {
+      // PROBE TEMPORÁRIO: investigar se o radar manda velocidade aqui (sem placa),
+      // para correlacionar com eventos AlarmInfoPlate de vel=0. Throttle 1×/30s por
+      // câmera para não inundar o debug_log. REMOVER após análise.
+      if (probeThrottle(`serial-${camera.id}`, 30000)) {
+        const sd = dados.SerialData;
+        let sdLite = sd;
+        if (sd && typeof sd === 'object') {
+          const { data: _d, Data: _D, imageFile: _i, ...rest } = sd;
+          sdLite = rest;
+        }
+        await logError(`serialdata-probe | camera ${camera.nome}`, {
+          serial_keys: sd && typeof sd === 'object' ? Object.keys(sd).join(',') : 'scalar',
+          serialdata: JSON.stringify(sdLite).slice(0, 2000),
+        });
+      }
       return res.status(200).json({ ok: true, skipped: 'SerialData' });
     }
 
@@ -185,6 +211,9 @@ module.exports = async function handler(req, res) {
             radarSpeed_raw: plate.radarSpeed,
             triggerType: plate.triggerType,
             direction: plate.direction,
+            // PROBE: campos para correlacionar com serialdata-probe por tempo/veículo
+            vehicleId: plate.vehicleId,
+            timeval_sec: plate.timeStamp?.Timeval?.sec,
           }
         );
       }
