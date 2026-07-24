@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required'",
-    "test:captura": "node test/mock-captura.js"
+    "test:captura": "bash scripts/test-captura.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
