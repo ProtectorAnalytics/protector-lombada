@@ -782,6 +782,14 @@
                 <div id="rel-vars" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
               </div>
 
+              <div class="form-group">
+                <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:14px">
+                  <input type="checkbox" id="f-rel-pdf" style="width:auto;margin:0">
+                  <span>Anexar PDF consolidado da semana</span>
+                </label>
+                <span class="hint">Relatório com movimento diário, ranking e detalhamento por ponto de medição.</span>
+              </div>
+
               <div style="display:flex;gap:10px;margin-top:12px;margin-bottom:8px;flex-wrap:wrap">
                 <button class="btn btn-primary" onclick="saveRelatorioConfig()">Salvar Configuração</button>
                 <button class="btn btn-ghost" onclick="enviarRelatorioTeste()">Enviar teste agora</button>
@@ -1995,6 +2003,7 @@ function loadRelatorioConfig() {
   document.getElementById('f-rel-dia').value = String(c.relatorio_dia_semana ?? 1);
   selHora.value = String(c.relatorio_hora ?? 8);
   document.getElementById('f-rel-corpo').value = c.relatorio_corpo_texto || RELATORIO_TEMPLATE_PADRAO;
+  document.getElementById('f-rel-pdf').checked = c.relatorio_anexar_pdf !== false;
 
   // Chips de variáveis — inserem no cursor
   const box = document.getElementById('rel-vars');
@@ -2028,6 +2037,7 @@ async function saveRelatorioConfig() {
       relatorio_dia_semana: parseInt(document.getElementById('f-rel-dia').value, 10),
       relatorio_hora: parseInt(document.getElementById('f-rel-hora').value, 10),
       relatorio_corpo_texto: corpo || null,
+      relatorio_anexar_pdf: document.getElementById('f-rel-pdf').checked,
     };
     await api('/clientes', 'PUT', payload);
     Object.assign(currentDetailCliente, payload);

@@ -113,6 +113,7 @@ module.exports = async function handler(req, res) {
         'pdf_titulo', 'pdf_subtitulo', 'pdf_rodape', 'pdf_logo_url', 'pdf_corpo_texto',
         'notif_auto_ativa', 'ativo', 'blur_automatico',
         'relatorio_ativo', 'relatorio_dia_semana', 'relatorio_hora', 'relatorio_corpo_texto',
+        'relatorio_anexar_pdf',
       ];
       const camposFiltrados = {};
       for (const key of CAMPOS_PERMITIDOS) {

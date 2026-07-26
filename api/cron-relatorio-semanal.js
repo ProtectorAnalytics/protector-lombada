@@ -27,6 +27,7 @@ const { createClient } = require('@supabase/supabase-js');
 const {
   TZ, TEMPLATE_PADRAO, agoraLocal, calcularMetricas, montarEmailHtml, formatarBR,
 } = require('../lib/relatorio-semanal');
+const { gerarRelatorioSemanalPDF } = require('../lib/pdf-relatorio-semanal');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
@@ -92,6 +93,18 @@ async function processarCliente(cliente, isoRef, transporter) {
   const fromAddress = process.env.SMTP_USER || process.env.GMAIL_USER || 'noreply@appps.com.br';
   const resultados = [];
 
+  // PDF consolidado: gerado uma vez por cliente (não varia por destinatário).
+  // Falha aqui nunca bloqueia o envio — o e-mail sozinho já entrega o resumo.
+  let pdfBuffer = null;
+  if (cliente.relatorio_anexar_pdf !== false) {
+    try {
+      pdfBuffer = await gerarRelatorioSemanalPDF({ cliente, metricas });
+    } catch (err) {
+      console.error(`[cron-relatorio] PDF de ${cliente.nome}:`, err.message);
+    }
+  }
+  const nomePdf = `Relatorio_Semanal_${metricas.periodo_inicio}_a_${metricas.periodo_fim}.pdf`;
+
   for (const dest of destinatarios) {
     const token = crypto.randomBytes(24).toString('base64url');
 
@@ -135,6 +148,9 @@ async function processarCliente(cliente, isoRef, transporter) {
         to: dest.email,
         subject: `Resumo semanal de circulação — ${cliente.nome} — ${formatarBR(metricas.periodo_inicio)} a ${formatarBR(metricas.periodo_fim)}`,
         html,
+        attachments: pdfBuffer
+          ? [{ filename: nomePdf, content: pdfBuffer, contentType: 'application/pdf' }]
+          : [],
       });
 
       await supabase
@@ -184,7 +200,7 @@ module.exports = async function handler(req, res) {
 
     let query = supabase
       .from('clientes')
-      .select('id, nome, local_via, limite_velocidade, relatorio_corpo_texto, relatorio_dia_semana, relatorio_hora')
+      .select('id, nome, local_via, cidade_uf, pdf_rodape, limite_velocidade, relatorio_corpo_texto, relatorio_dia_semana, relatorio_hora, relatorio_anexar_pdf')
       .eq('ativo', true);
 
     if (forcarId) {
