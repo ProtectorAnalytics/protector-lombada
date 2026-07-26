@@ -110,12 +110,31 @@ module.exports = async function handler(req, res) {
       const CAMPOS_PERMITIDOS = [
         'nome', 'local_via', 'cidade_uf', 'cep', 'endereco',
         'limite_velocidade', 'cnpj', 'telefone', 'contato_nome',
-        'pdf_titulo', 'pdf_subtitulo', 'pdf_rodape', 'pdf_logo_url',
+        'pdf_titulo', 'pdf_subtitulo', 'pdf_rodape', 'pdf_logo_url', 'pdf_corpo_texto',
         'notif_auto_ativa', 'ativo', 'blur_automatico',
+        'relatorio_ativo', 'relatorio_dia_semana', 'relatorio_hora', 'relatorio_corpo_texto',
+        'relatorio_anexar_pdf',
       ];
       const camposFiltrados = {};
       for (const key of CAMPOS_PERMITIDOS) {
         if (campos[key] !== undefined) camposFiltrados[key] = campos[key];
+      }
+
+      // Agendamento do relatório: valores fora da faixa quebrariam o CHECK do
+      // banco com erro opaco — validamos aqui para devolver mensagem útil.
+      if (camposFiltrados.relatorio_dia_semana !== undefined) {
+        const dia = parseInt(camposFiltrados.relatorio_dia_semana, 10);
+        if (!Number.isInteger(dia) || dia < 0 || dia > 6) {
+          return res.status(400).json({ error: 'Dia da semana inválido (0=domingo a 6=sábado)' });
+        }
+        camposFiltrados.relatorio_dia_semana = dia;
+      }
+      if (camposFiltrados.relatorio_hora !== undefined) {
+        const hora = parseInt(camposFiltrados.relatorio_hora, 10);
+        if (!Number.isInteger(hora) || hora < 0 || hora > 23) {
+          return res.status(400).json({ error: 'Hora inválida (0 a 23)' });
+        }
+        camposFiltrados.relatorio_hora = hora;
       }
 
       // blur_automatico só pode ser alterado por super_admin (feature paga/LGPD)

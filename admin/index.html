@@ -321,6 +321,14 @@
     }
 
     .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+    .rel-var-chip {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px;
+      background: var(--accent-light); color: var(--accent); border: 1px solid transparent;
+      padding: 4px 9px; border-radius: 5px; font-weight: 500; cursor: pointer;
+      transition: var(--transition);
+    }
+    .rel-var-chip:hover { border-color: var(--accent); }
+    .rel-var-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .tab-btn {
       padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent;
       color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
@@ -668,6 +676,7 @@
             <button class="tab-btn active" onclick="showTab('cameras')">Câmeras</button>
             <button class="tab-btn" onclick="showTab('notificacao')">PDF</button>
             <button class="tab-btn" onclick="showTab('emails')">E-mails</button>
+            <button class="tab-btn" onclick="showTab('relatorio')">Relatório</button>
             <button class="tab-btn" onclick="showTab('veiculos')">Veículos</button>
             <button class="tab-btn" onclick="showTab('usuarios-cli')">Usuários</button>
           </div>
@@ -707,10 +716,85 @@
                 <label>URL da Logo no PDF (opcional)</label>
                 <input id="f-pdf-logo" placeholder="https://exemplo.com/logo.png">
               </div>
+              <div class="form-group">
+                <label>Corpo de Texto / Termo (opcional)</label>
+                <textarea id="f-pdf-corpo" rows="7" placeholder="Texto formal exibido no PDF. Deixe vazio para usar o layout padrão."></textarea>
+                <span class="hint">
+                  Preenchido, o PDF passa para o layout compacto com este termo ao final.
+                  Variáveis disponíveis:
+                  <code>{{DATA_OCORRENCIA}}</code> <code>{{HORA_OCORRENCIA}}</code>
+                  <code>{{ID_RADAR}}</code> <code>{{PLACA_VEICULO}}</code>
+                  <code>{{VELOCIDADE_REGISTRADA}}</code>
+                </span>
+              </div>
 
               <div style="margin-top:12px;margin-bottom:8px">
                 <button class="btn btn-primary" onclick="savePdfConfig()">Salvar Configuração PDF</button>
               </div>
+            </div>
+          </div>
+
+          <!-- Tab: Relatório Semanal -->
+          <div class="tab-panel" id="tab-relatorio">
+            <div style="max-width:680px">
+              <div style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:16px;border-left:3px solid var(--accent)">
+                <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Relatório semanal por e-mail</div>
+                <div style="font-size:12px;color:var(--text-secondary)">
+                  Resumo de circulação enviado aos destinatários do tipo <strong>Relatório</strong>
+                  cadastrados na aba E-mails. O texto abaixo aceita variáveis e é personalizado
+                  para cada destinatário.
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:14px">
+                  <input type="checkbox" id="f-rel-ativo" style="width:auto;margin:0">
+                  <span>Envio automático ativo</span>
+                </label>
+                <span class="hint">Desmarcado, nenhum e-mail é enviado para este cliente.</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Dia do envio</label>
+                  <select id="f-rel-dia">
+                    <option value="0">Domingo</option>
+                    <option value="1">Segunda-feira</option>
+                    <option value="2">Terça-feira</option>
+                    <option value="3">Quarta-feira</option>
+                    <option value="4">Quinta-feira</option>
+                    <option value="5">Sexta-feira</option>
+                    <option value="6">Sábado</option>
+                  </select>
+                  <span class="hint">O relatório cobre os 7 dias anteriores ao envio</span>
+                </div>
+                <div class="form-group">
+                  <label>Hora do envio</label>
+                  <select id="f-rel-hora"></select>
+                  <span class="hint">Horário de Brasília (America/Bahia)</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Corpo do E-mail</label>
+                <textarea id="f-rel-corpo" rows="14" style="line-height:1.65"></textarea>
+                <span class="hint">Clique em uma variável para inserir na posição do cursor:</span>
+                <div id="rel-vars" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+              </div>
+
+              <div class="form-group">
+                <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:14px">
+                  <input type="checkbox" id="f-rel-pdf" style="width:auto;margin:0">
+                  <span>Anexar PDF consolidado da semana</span>
+                </label>
+                <span class="hint">Relatório com movimento diário, ranking e detalhamento por ponto de medição.</span>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:12px;margin-bottom:8px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="saveRelatorioConfig()">Salvar Configuração</button>
+                <button class="btn btn-ghost" onclick="enviarRelatorioTeste()">Enviar teste agora</button>
+              </div>
+              <div id="rel-envios-recentes" style="margin-top:22px"></div>
             </div>
           </div>
 
@@ -1645,6 +1729,7 @@ async function openClienteDetail(id) {
   loadVeiculos(id);
   loadUsuariosCli(id);
   loadPdfConfig();
+  loadRelatorioConfig();
 }
 
 // ============================================
@@ -1872,6 +1957,140 @@ function loadPdfConfig() {
   document.getElementById('f-pdf-subtitulo').value = c.pdf_subtitulo || 'Transitar em velocidade superior à máxima permitida';
   document.getElementById('f-pdf-rodape').value = c.pdf_rodape || '';
   document.getElementById('f-pdf-logo').value = c.pdf_logo_url || '';
+  document.getElementById('f-pdf-corpo').value = c.pdf_corpo_texto || '';
+}
+
+// ============================================
+// RELATORIO SEMANAL
+// ============================================
+
+// Espelha lib/relatorio-semanal.js — manter os dois em sincronia ao adicionar
+// variáveis novas ao template.
+const RELATORIO_TEMPLATE_PADRAO = `Prezado(a) {{NOME_DESTINATARIO}},
+
+Segue o resumo semanal de circulação do {{CONDOMINIO}}, referente ao período de {{PERIODO_INICIO}} a {{PERIODO_FIM}}.
+
+Nesta semana foram registradas {{TOTAL_PASSAGENS}} passagens de {{PLACAS_DISTINTAS}} veículos distintos. Destas, {{ACIMA_LIMITE}} ocorreram acima do limite de {{LIMITE}} km/h estabelecido para a via.
+
+{{CONFORMIDADE}}% dos condutores trafegaram dentro do limite — {{VARIACAO_SEMANA}} em relação à semana anterior.
+
+O ponto de maior atenção foi {{PONTO_CRITICO}}, com concentração por volta das {{HORA_PICO}}. {{REINCIDENTES}} veículos apresentaram passagens acima do limite em mais de uma ocasião.
+
+Os dados completos, com fotos e histórico por veículo, estão disponíveis no painel. Permanecemos à disposição para apoiar as ações de conscientização que a administração julgar convenientes.
+
+Atenciosamente,
+Protector Traffic Control`;
+
+const RELATORIO_VARIAVEIS = [
+  'NOME_DESTINATARIO', 'CONDOMINIO', 'PERIODO_INICIO', 'PERIODO_FIM',
+  'TOTAL_PASSAGENS', 'PLACAS_DISTINTAS', 'ACIMA_LIMITE', 'LIMITE',
+  'CONFORMIDADE', 'VARIACAO_SEMANA', 'PONTO_CRITICO', 'HORA_PICO',
+  'REINCIDENTES', 'VEL_MEDIA', 'LOCAL_VIA',
+];
+
+function loadRelatorioConfig() {
+  const c = currentDetailCliente;
+  if (!c) return;
+
+  // Preenche o select de horas uma vez
+  const selHora = document.getElementById('f-rel-hora');
+  if (selHora && !selHora.options.length) {
+    selHora.innerHTML = Array.from({ length: 24 }, (_, h) =>
+      `<option value="${h}">${String(h).padStart(2, '0')}:00</option>`).join('');
+  }
+
+  document.getElementById('f-rel-ativo').checked = c.relatorio_ativo === true;
+  document.getElementById('f-rel-dia').value = String(c.relatorio_dia_semana ?? 1);
+  selHora.value = String(c.relatorio_hora ?? 8);
+  document.getElementById('f-rel-corpo').value = c.relatorio_corpo_texto || RELATORIO_TEMPLATE_PADRAO;
+  document.getElementById('f-rel-pdf').checked = c.relatorio_anexar_pdf !== false;
+
+  // Chips de variáveis — inserem no cursor
+  const box = document.getElementById('rel-vars');
+  if (box && !box.children.length) {
+    box.innerHTML = RELATORIO_VARIAVEIS.map(v =>
+      `<button type="button" class="rel-var-chip" data-var="${v}">{{${v}}}</button>`).join('');
+    box.querySelectorAll('.rel-var-chip').forEach(btn => {
+      btn.addEventListener('click', () => inserirVariavel(btn.dataset.var));
+    });
+  }
+
+  loadRelatorioEnvios();
+}
+
+function inserirVariavel(nome) {
+  const ta = document.getElementById('f-rel-corpo');
+  const texto = `{{${nome}}}`;
+  const ini = ta.selectionStart ?? ta.value.length;
+  const fim = ta.selectionEnd ?? ta.value.length;
+  ta.value = ta.value.slice(0, ini) + texto + ta.value.slice(fim);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = ini + texto.length;
+}
+
+async function saveRelatorioConfig() {
+  try {
+    const corpo = document.getElementById('f-rel-corpo').value.trim();
+    const payload = {
+      id: currentDetailCliente.id,
+      relatorio_ativo: document.getElementById('f-rel-ativo').checked,
+      relatorio_dia_semana: parseInt(document.getElementById('f-rel-dia').value, 10),
+      relatorio_hora: parseInt(document.getElementById('f-rel-hora').value, 10),
+      relatorio_corpo_texto: corpo || null,
+      relatorio_anexar_pdf: document.getElementById('f-rel-pdf').checked,
+    };
+    await api('/clientes', 'PUT', payload);
+    Object.assign(currentDetailCliente, payload);
+    toast('Configuração do relatório salva!');
+  } catch (err) { toast(err.message, true); }
+}
+
+async function enviarRelatorioTeste() {
+  if (!confirm('Enviar o relatório da última semana agora, para todos os destinatários do tipo Relatório deste cliente?')) return;
+  try {
+    toast('Enviando...');
+    const r = await api(`/relatorio?cliente_id=${currentDetailCliente.id}`, 'POST');
+    const res = r?.relatorios?.[0];
+    if (res?.pulado) {
+      toast(`Nada enviado: ${res.pulado}`, true);
+    } else {
+      const ok = (res?.destinatarios || []).filter(d => d.enviado).length;
+      const falhas = (res?.destinatarios || []).filter(d => !d.enviado);
+      toast(falhas.length
+        ? `${ok} enviado(s); ${falhas.length} falha(s): ${falhas[0].motivo}`
+        : `Relatório enviado para ${ok} destinatário(s).`, falhas.length > 0);
+    }
+    loadRelatorioEnvios();
+  } catch (err) { toast(err.message, true); }
+}
+
+async function loadRelatorioEnvios() {
+  const box = document.getElementById('rel-envios-recentes');
+  if (!box) return;
+  try {
+    const envios = await api(`/relatorio?cliente_id=${currentDetailCliente.id}`);
+    if (!envios || !envios.length) {
+      box.innerHTML = '<div style="font-size:13px;color:var(--text-muted)">Nenhum relatório enviado ainda.</div>';
+      return;
+    }
+    box.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Últimos envios</div>
+      <table class="data-table">
+        <thead><tr><th>Período</th><th>Destinatário</th><th>Enviado</th><th>Visto</th></tr></thead>
+        <tbody>${envios.map(e => `<tr>
+          <td>${fmtDate(e.periodo_inicio)} – ${fmtDate(e.periodo_fim)}</td>
+          <td>${esc(e.destinatario_nome || e.destinatario_email)}</td>
+          <td>${e.enviado_em
+            ? fmtDateTime(e.enviado_em)
+            : `<span style="color:var(--red)">falhou</span>`}</td>
+          <td>${e.visto_em
+            ? `${fmtDateTime(e.visto_em)}${e.visto_count > 1 ? ` (${e.visto_count}×)` : ''}`
+            : '<span style="color:var(--text-muted)">—</span>'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  } catch {
+    box.innerHTML = '';
+  }
 }
 
 async function savePdfConfig() {
@@ -1882,12 +2101,14 @@ async function savePdfConfig() {
       pdf_subtitulo: document.getElementById('f-pdf-subtitulo').value.trim() || 'Transitar em velocidade superior à máxima permitida',
       pdf_rodape: document.getElementById('f-pdf-rodape').value.trim(),
       pdf_logo_url: document.getElementById('f-pdf-logo').value.trim(),
+      pdf_corpo_texto: document.getElementById('f-pdf-corpo').value.trim() || null,
     });
     // Update local cache
     currentDetailCliente.pdf_titulo = document.getElementById('f-pdf-titulo').value.trim();
     currentDetailCliente.pdf_subtitulo = document.getElementById('f-pdf-subtitulo').value.trim();
     currentDetailCliente.pdf_rodape = document.getElementById('f-pdf-rodape').value.trim();
     currentDetailCliente.pdf_logo_url = document.getElementById('f-pdf-logo').value.trim();
+    currentDetailCliente.pdf_corpo_texto = document.getElementById('f-pdf-corpo').value.trim() || null;
     toast('Configuração do PDF salva!');
   } catch (err) { toast(err.message, true); }
 }

@@ -4167,15 +4167,31 @@
 
       const limite = currentCliente.limite_velocidade;
 
-      // Velocidade média
-      const avg = Math.round(data.reduce((s, c) => s + c.velocidade, 0) / data.length);
+      // Velocidade média — considera apenas medições efetivas.
+      //
+      // O doppler da lombada (ASV5300) é parametrizado de fábrica para coletar
+      // somente de 10 a 250 km/h (manual ALPHADIGI, seção 11). Abaixo de 10 o
+      // sensor não reporta e a captura chega com velocidade 0: não é falha, é
+      // veículo em velocidade de segurança. Somar esses zeros à média puxava o
+      // indicador para baixo e mostrava o condomínio mais lento do que é.
+      // Acima de 250 é ruído do equipamento.
+      //
+      // Os registros continuam visíveis na listagem — a captura também serve de
+      // rastreabilidade. O que muda aqui é só o que entra no cálculo. Os dois
+      // geradores de PDF já aplicam essa mesma regra.
+      const medidas = data.filter(c => c.velocidade >= 10 && c.velocidade <= 250);
       const avgEl = document.getElementById('ind-vel-media');
-      avgEl.textContent = avg;
+      const avg = medidas.length
+        ? Math.round(medidas.reduce((s, c) => s + c.velocidade, 0) / medidas.length)
+        : 0;
+      avgEl.textContent = medidas.length ? avg : '--';
       avgEl.style.color = avg > limite ? 'var(--red)' : 'var(--accent)';
 
-      // Conformidade
-      const dentro = data.filter(c => c.velocidade <= limite).length;
-      const pct = Math.round((dentro / data.length) * 100);
+      // Conformidade — passagens abaixo de 10 km/h contam como conformes
+      // (o veículo estava devagar); leituras acima de 250 são descartadas.
+      const validas = data.filter(c => c.velocidade <= 250);
+      const dentro = validas.filter(c => c.velocidade <= limite).length;
+      const pct = validas.length ? Math.round((dentro / validas.length) * 100) : 100;
       const confEl = document.getElementById('ind-conformidade');
       confEl.textContent = pct + '%';
       confEl.style.color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';

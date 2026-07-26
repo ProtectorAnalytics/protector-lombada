@@ -16,6 +16,7 @@
 const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 const { checkAdminRateLimit } = require('../lib/rate-limiter');
+const { escapeHtml } = require('../lib/validators');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -108,28 +109,28 @@ async function enviarEmailDPO(solicitacao) {
           <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
 
           <h3 style="margin:0 0 12px;color:#046BD2;font-size:15px;">Solicitante</h3>
-          <p style="margin:4px 0;"><strong>Nome:</strong> ${solicitacao.nome}</p>
-          <p style="margin:4px 0;"><strong>E-mail:</strong> ${solicitacao.email}</p>
-          ${solicitacao.telefone ? `<p style="margin:4px 0;"><strong>Telefone:</strong> ${solicitacao.telefone}</p>` : ''}
-          ${solicitacao.cpf ? `<p style="margin:4px 0;"><strong>CPF:</strong> ${solicitacao.cpf}</p>` : ''}
+          <p style="margin:4px 0;"><strong>Nome:</strong> ${escapeHtml(solicitacao.nome)}</p>
+          <p style="margin:4px 0;"><strong>E-mail:</strong> ${escapeHtml(solicitacao.email)}</p>
+          ${solicitacao.telefone ? `<p style="margin:4px 0;"><strong>Telefone:</strong> ${escapeHtml(solicitacao.telefone)}</p>` : ''}
+          ${solicitacao.cpf ? `<p style="margin:4px 0;"><strong>CPF:</strong> ${escapeHtml(solicitacao.cpf)}</p>` : ''}
 
           ${solicitacao.empreendimento || solicitacao.placa_veiculo || solicitacao.unidade ? `
           <h3 style="margin:20px 0 12px;color:#046BD2;font-size:15px;">Vínculo informado</h3>
-          ${solicitacao.empreendimento ? `<p style="margin:4px 0;"><strong>Empreendimento:</strong> ${solicitacao.empreendimento}</p>` : ''}
-          ${solicitacao.placa_veiculo ? `<p style="margin:4px 0;"><strong>Placa:</strong> ${solicitacao.placa_veiculo}</p>` : ''}
-          ${solicitacao.unidade ? `<p style="margin:4px 0;"><strong>Unidade:</strong> ${solicitacao.unidade}</p>` : ''}
+          ${solicitacao.empreendimento ? `<p style="margin:4px 0;"><strong>Empreendimento:</strong> ${escapeHtml(solicitacao.empreendimento)}</p>` : ''}
+          ${solicitacao.placa_veiculo ? `<p style="margin:4px 0;"><strong>Placa:</strong> ${escapeHtml(solicitacao.placa_veiculo)}</p>` : ''}
+          ${solicitacao.unidade ? `<p style="margin:4px 0;"><strong>Unidade:</strong> ${escapeHtml(solicitacao.unidade)}</p>` : ''}
           ` : ''}
 
           <h3 style="margin:20px 0 12px;color:#046BD2;font-size:15px;">Solicitação</h3>
-          <p style="margin:4px 0;"><strong>Tipo:</strong> ${tipoLabel}</p>
+          <p style="margin:4px 0;"><strong>Tipo:</strong> ${escapeHtml(tipoLabel)}</p>
           <div style="background:#f9f9f9;border-left:3px solid #046BD2;padding:12px 16px;margin-top:12px;border-radius:4px;">
-            <p style="margin:0;white-space:pre-wrap;font-size:14px;color:#333;">${solicitacao.descricao}</p>
+            <p style="margin:0;white-space:pre-wrap;font-size:14px;color:#333;">${escapeHtml(solicitacao.descricao)}</p>
           </div>
 
           <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
 
-          <p style="font-size:12px;color:#666;margin:4px 0;"><strong>IP de origem:</strong> ${solicitacao.ip_origem || 'N/A'}</p>
-          <p style="font-size:12px;color:#666;margin:4px 0;"><strong>User-Agent:</strong> ${solicitacao.user_agent || 'N/A'}</p>
+          <p style="font-size:12px;color:#666;margin:4px 0;"><strong>IP de origem:</strong> ${escapeHtml(solicitacao.ip_origem || 'N/A')}</p>
+          <p style="font-size:12px;color:#666;margin:4px 0;"><strong>User-Agent:</strong> ${escapeHtml(solicitacao.user_agent || 'N/A')}</p>
           <p style="font-size:12px;color:#666;margin:4px 0;"><strong>Recebida em:</strong> ${new Date().toLocaleString('pt-BR')}</p>
         </div>
         <p style="text-align:center;font-size:11px;color:#999;margin-top:20px;">
@@ -167,12 +168,12 @@ async function enviarConfirmacaoSolicitante(solicitacao) {
           <p style="margin:8px 0 0;font-size:13px;opacity:0.9;">Protector — Sistemas de Segurança</p>
         </div>
         <div style="background:#fff;padding:24px;border-radius:0 0 8px 8px;border:1px solid #ddd;">
-          <p>Olá, <strong>${solicitacao.nome}</strong>.</p>
+          <p>Olá, <strong>${escapeHtml(solicitacao.nome)}</strong>.</p>
           <p>Recebemos sua solicitação referente ao exercício de direitos previstos na Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018).</p>
 
           <div style="background:#f9f9f9;border-radius:6px;padding:16px;margin:20px 0;">
-            <p style="margin:4px 0;"><strong>Protocolo:</strong> ${solicitacao.protocolo}</p>
-            <p style="margin:4px 0;"><strong>Tipo:</strong> ${tipoLabel}</p>
+            <p style="margin:4px 0;"><strong>Protocolo:</strong> ${escapeHtml(solicitacao.protocolo)}</p>
+            <p style="margin:4px 0;"><strong>Tipo:</strong> ${escapeHtml(tipoLabel)}</p>
             <p style="margin:4px 0;"><strong>Prazo legal de resposta:</strong> até ${prazo} (15 dias corridos)</p>
           </div>
 
