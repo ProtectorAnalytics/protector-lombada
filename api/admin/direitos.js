@@ -14,6 +14,7 @@
 
 const nodemailer = require('nodemailer');
 const { autenticar, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
+const { escapeHtml } = require('../../lib/validators');
 
 const STATUS_VALIDOS = [
   'recebida',
@@ -81,24 +82,24 @@ async function enviarRespostaTitular(solicitacao, respostaDpo, nomeDpo) {
           <p style="margin:8px 0 0;font-size:13px;opacity:0.9;">Protector — Sistemas de Segurança</p>
         </div>
         <div style="background:#fff;padding:24px;border-radius:0 0 8px 8px;border:1px solid #ddd;">
-          <p>Olá, <strong>${solicitacao.nome}</strong>.</p>
+          <p>Olá, <strong>${escapeHtml(solicitacao.nome)}</strong>.</p>
           <p>Em atendimento à sua solicitação registrada na Protector Sistemas, segue a resposta do Encarregado pelo Tratamento de Dados Pessoais (DPO):</p>
 
           <div style="background:#f9f9f9;border-radius:6px;padding:16px;margin:20px 0;">
-            <p style="margin:4px 0;"><strong>Protocolo:</strong> ${solicitacao.protocolo}</p>
-            <p style="margin:4px 0;"><strong>Tipo:</strong> ${tipoLabel}</p>
+            <p style="margin:4px 0;"><strong>Protocolo:</strong> ${escapeHtml(solicitacao.protocolo)}</p>
+            <p style="margin:4px 0;"><strong>Tipo:</strong> ${escapeHtml(tipoLabel)}</p>
             <p style="margin:4px 0;"><strong>Data da solicitação:</strong> ${new Date(solicitacao.criada_em).toLocaleDateString('pt-BR')}</p>
           </div>
 
           <h3 style="margin:20px 0 12px;color:#046BD2;font-size:15px;">Resposta do DPO</h3>
-          <div style="background:#fff8e1;border-left:3px solid #F97316;padding:14px 18px;border-radius:4px;white-space:pre-wrap;font-size:14px;color:#333;">${respostaDpo}</div>
+          <div style="background:#fff8e1;border-left:3px solid #F97316;padding:14px 18px;border-radius:4px;white-space:pre-wrap;font-size:14px;color:#333;">${escapeHtml(respostaDpo)}</div>
 
           <p style="margin-top:24px;">Se tiver dúvidas adicionais sobre esta resposta, responda diretamente a este e-mail mencionando o protocolo acima.</p>
 
           <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
 
           <p style="font-size:12px;color:#666;margin:4px 0;">
-            <strong>Encarregado (DPO):</strong> ${nomeDpo || 'Glauber Varjão do Nascimento'}<br>
+            <strong>Encarregado (DPO):</strong> ${escapeHtml(nomeDpo || 'Glauber Varjão do Nascimento')}<br>
             <strong>E-mail DPO:</strong> dpo@appps.com.br
           </p>
         </div>
