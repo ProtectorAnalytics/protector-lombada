@@ -200,7 +200,7 @@ module.exports = async function handler(req, res) {
 
     let query = supabase
       .from('clientes')
-      .select('id, nome, local_via, cidade_uf, pdf_rodape, limite_velocidade, relatorio_corpo_texto, relatorio_dia_semana, relatorio_hora, relatorio_anexar_pdf')
+      .select('id, nome, local_via, cidade_uf, pdf_rodape, limite_velocidade, velocidade_maxima_plausivel, relatorio_corpo_texto, relatorio_dia_semana, relatorio_hora, relatorio_anexar_pdf')
       .eq('ativo', true);
 
     if (forcarId) {
