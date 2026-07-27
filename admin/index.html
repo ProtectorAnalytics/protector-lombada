@@ -1548,6 +1548,14 @@ function openClienteModal(cliente = null) {
         <span class="hint">Velocidade máxima permitida na via interna</span>
       </div>
       <div class="form-group">
+        <label>Teto de radar plausível (km/h)</label>
+        <input type="number" id="f-cli-teto" value="${cliente?.velocidade_maxima_plausivel || 80}" min="30" max="200">
+        <div class="field-error" data-for="f-cli-teto"></div>
+        <span class="hint">Leituras de radar acima deste valor são descartadas como erro e não geram multa. Recomendado 80 para vias internas.</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
         <label>Telefone</label>
         <input id="f-cli-telefone" value="${esc(cliente?.telefone || '')}" placeholder="(71) 99999-9999" inputmode="tel">
         <div class="field-error" data-for="f-cli-telefone"></div>
@@ -1590,6 +1598,7 @@ async function saveCliente(id) {
     cep: document.getElementById('f-cli-cep').value.trim(),
     endereco: document.getElementById('f-cli-endereco').value.trim(),
     limite_velocidade: parseInt(document.getElementById('f-cli-limite').value) || 30,
+    velocidade_maxima_plausivel: parseInt(document.getElementById('f-cli-teto').value) || 80,
     cnpj: document.getElementById('f-cli-cnpj').value.trim(),
     telefone: document.getElementById('f-cli-telefone').value.trim(),
     contato_nome: document.getElementById('f-cli-contato').value.trim(),
@@ -1615,6 +1624,12 @@ async function saveCliente(id) {
 
   if (body.limite_velocidade < 1 || body.limite_velocidade > 200) {
     erros.push(['f-cli-limite', 'Limite deve estar entre 1 e 200 km/h']);
+  }
+
+  if (body.velocidade_maxima_plausivel < 30 || body.velocidade_maxima_plausivel > 200) {
+    erros.push(['f-cli-teto', 'Teto deve estar entre 30 e 200 km/h']);
+  } else if (body.velocidade_maxima_plausivel <= body.limite_velocidade) {
+    erros.push(['f-cli-teto', 'Teto deve ser maior que o limite de velocidade']);
   }
 
   if (erros.length > 0) {
@@ -1718,6 +1733,7 @@ async function openClienteDetail(id) {
     <div class="detail-field"><div class="label">Local/Via</div><div class="value">${esc(cliente.local_via)}</div></div>
     <div class="detail-field"><div class="label">CNPJ</div><div class="value">${esc(cliente.cnpj || '---')}</div></div>
     <div class="detail-field"><div class="label">Limite</div><div class="value">${cliente.limite_velocidade} km/h</div></div>
+    <div class="detail-field"><div class="label">Teto radar</div><div class="value">${cliente.velocidade_maxima_plausivel || 80} km/h</div></div>
     <div class="detail-field"><div class="label">Telefone</div><div class="value">${esc(cliente.telefone || '---')}</div></div>
     <div class="detail-field"><div class="label">Contato</div><div class="value">${esc(cliente.contato_nome || '---')}</div></div>
   `;

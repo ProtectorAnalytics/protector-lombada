@@ -154,9 +154,11 @@ function paginaRelatorio(envio, cliente, m) {
       fora do cálculo da média, que considera apenas medições efetivas.
     </p>
     ${m.fora_faixa > 0 ? `<div class="nota">
-      ${N(m.fora_faixa)} leitura(s) acima de 250 km/h foram descartadas deste
-      relatório. Esse é o teto de medição do sensor, e valores acima dele
-      indicam ruído do equipamento, não velocidade real.
+      ${N(m.fora_faixa)} leitura(s) foram descartadas deste relatório por
+      ultrapassar o teto de sanidade do radar. Acima desse valor a medição
+      indica ruído do equipamento — reflexo ou veículo grande manobrando — e
+      não velocidade real. As passagens seguem registradas; apenas não entram
+      nos indicadores.
     </div>` : ''}
   </div>
 

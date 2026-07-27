@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
 
       const { nome, local_via, cidade_uf, cep, endereco, limite_velocidade, cnpj, telefone, contato_nome,
               pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, notif_auto_ativa, notif_emails,
-              blur_automatico } = body;
+              blur_automatico, velocidade_maxima_plausivel } = body;
 
       if (!nome || !local_via || !cidade_uf) {
         return res.status(400).json({ error: 'Campos obrigatórios: nome, local_via, cidade_uf' });
@@ -42,6 +42,11 @@ module.exports = async function handler(req, res) {
 
       if (limite_velocidade && !isValidVelocidade(limite_velocidade)) {
         return res.status(400).json({ error: 'Limite de velocidade inválido (deve ser entre 1 e 200 km/h)' });
+      }
+
+      if (velocidade_maxima_plausivel !== undefined &&
+          (!Number.isInteger(velocidade_maxima_plausivel) || velocidade_maxima_plausivel < 30 || velocidade_maxima_plausivel > 200)) {
+        return res.status(400).json({ error: 'Teto de radar plausível inválido (deve ser entre 30 e 200 km/h)' });
       }
 
       if (cnpj && !isValidCNPJ(cnpj)) {
@@ -65,6 +70,7 @@ module.exports = async function handler(req, res) {
           cep: cep || null,
           endereco: endereco || null,
           limite_velocidade: limite_velocidade || 30,
+          velocidade_maxima_plausivel: velocidade_maxima_plausivel || 80,
           cnpj: cnpj || null,
           telefone: telefone || null,
           contato_nome: contato_nome || null,
@@ -109,7 +115,7 @@ module.exports = async function handler(req, res) {
       // Whitelist: aceitar apenas campos permitidos
       const CAMPOS_PERMITIDOS = [
         'nome', 'local_via', 'cidade_uf', 'cep', 'endereco',
-        'limite_velocidade', 'cnpj', 'telefone', 'contato_nome',
+        'limite_velocidade', 'velocidade_maxima_plausivel', 'cnpj', 'telefone', 'contato_nome',
         'pdf_titulo', 'pdf_subtitulo', 'pdf_rodape', 'pdf_logo_url', 'pdf_corpo_texto',
         'notif_auto_ativa', 'ativo', 'blur_automatico',
         'relatorio_ativo', 'relatorio_dia_semana', 'relatorio_hora', 'relatorio_corpo_texto',
@@ -135,6 +141,12 @@ module.exports = async function handler(req, res) {
           return res.status(400).json({ error: 'Hora inválida (0 a 23)' });
         }
         camposFiltrados.relatorio_hora = hora;
+      }
+
+      if (camposFiltrados.velocidade_maxima_plausivel !== undefined &&
+          (!Number.isInteger(camposFiltrados.velocidade_maxima_plausivel) ||
+           camposFiltrados.velocidade_maxima_plausivel < 30 || camposFiltrados.velocidade_maxima_plausivel > 200)) {
+        return res.status(400).json({ error: 'Teto de radar plausível inválido (deve ser entre 30 e 200 km/h)' });
       }
 
       // blur_automatico só pode ser alterado por super_admin (feature paga/LGPD)
