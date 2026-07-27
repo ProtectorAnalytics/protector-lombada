@@ -134,6 +134,10 @@ module.exports = async function handler(req, res) {
 
     // Normalizar formato AlarmInfoPlate (cameras LPR)
     let normalized = dados;
+    // Declarada aqui (e não dentro do bloco) porque precisa chegar até o
+    // saveCaptura — é ela que distingue "zero porque o radar errou" de
+    // "zero porque o veículo estava abaixo de 10 km/h".
+    let velocidadeInvalida = false;
     if (dados.AlarmInfoPlate) {
       const plate = alarm.result?.PlateResult || {};
       // Speed: a câmera ALPHADIGI pode retornar velocidade em vários campos
@@ -165,8 +169,12 @@ module.exports = async function handler(req, res) {
       // grande manobrando). Acima do teto plausível do cliente a leitura é
       // inválida → zeramos (vira "SEM RADAR") para não disparar multa falsa.
       // Fallback 80 garante proteção mesmo antes da migration da coluna.
+      //
+      // O zero é preservado para o dashboard seguir exibindo "SEM RADAR" sem
+      // mudança de UI, mas a captura vai marcada com velocidade_invalida —
+      // senão o relatório semanal leria este zero como "veículo abaixo de
+      // 10 km/h" e contaria uma leitura espúria de 351 km/h como conformidade.
       const tetoPlausivel = Number(cliente.velocidade_maxima_plausivel) || 80;
-      let velocidadeInvalida = false;
       if (finalSpeed > tetoPlausivel) {
         velocidadeInvalida = true;
         await logError(
@@ -303,6 +311,7 @@ module.exports = async function handler(req, res) {
       foto_path: fotoPath,
       timestamp,
       notificado: false,
+      velocidade_invalida: velocidadeInvalida,
     });
 
     // Atualizar last_seen + telemetria expandida do AlarmInfoPlate.

@@ -4146,7 +4146,7 @@
       document.getElementById('title-indicators').textContent = `Indicadores · ${f.label}`;
 
       let q = sb.from('capturas')
-        .select('placa, velocidade, timestamp')
+        .select('placa, velocidade, timestamp, velocidade_invalida')
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', f.tsStart)
         .lte('timestamp', f.tsEnd);
@@ -4179,7 +4179,11 @@
       // Os registros continuam visíveis na listagem — a captura também serve de
       // rastreabilidade. O que muda aqui é só o que entra no cálculo. Os dois
       // geradores de PDF já aplicam essa mesma regra.
-      const medidas = data.filter(c => c.velocidade >= 10 && c.velocidade <= 250);
+      // Leituras rejeitadas pelo sanity-cap do radar saem de todos os
+      // indicadores: foram zeradas na captura e, sem este filtro, contariam
+      // como "veículo abaixo de 10 km/h" — ou seja, como conformidade.
+      const utilizaveis = data.filter(c => c.velocidade_invalida !== true);
+      const medidas = utilizaveis.filter(c => c.velocidade >= 10 && c.velocidade <= 250);
       const avgEl = document.getElementById('ind-vel-media');
       const avg = medidas.length
         ? Math.round(medidas.reduce((s, c) => s + c.velocidade, 0) / medidas.length)
@@ -4189,7 +4193,7 @@
 
       // Conformidade — passagens abaixo de 10 km/h contam como conformes
       // (o veículo estava devagar); leituras acima de 250 são descartadas.
-      const validas = data.filter(c => c.velocidade <= 250);
+      const validas = utilizaveis.filter(c => c.velocidade <= 250);
       const dentro = validas.filter(c => c.velocidade <= limite).length;
       const pct = validas.length ? Math.round((dentro / validas.length) * 100) : 100;
       const confEl = document.getElementById('ind-conformidade');
