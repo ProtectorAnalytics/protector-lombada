@@ -14,7 +14,6 @@ const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
 const { checkRateLimit } = require('../lib/rate-limiter');
 const { isValidToken, parseTimestamp } = require('../lib/validators');
-const { blurPessoas } = require('../lib/face-blur');
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -239,35 +238,12 @@ module.exports = async function handler(req, res) {
 
     // Foto: preservar a imagem original que chega da câmera (sem resize,
     // sem recompressão JPEG). Tamanho típico ALPHADIGI: 200KB-2MB.
-    // Quando blur LGPD está ativo no cliente, o módulo de blur recompacta
-    // internamente — inevitável, mas mantemos quality alta dentro dele.
     let fotoBuffer = null;
-    let blurInfo = null;
     if (imageBase64) {
       const base64Clean = imageBase64.replace(/^data:image\/\w+;base64,/, '');
       const rawBuffer = Buffer.from(base64Clean, 'base64');
       if (rawBuffer.length > 100) {
         fotoBuffer = rawBuffer;
-
-        // ── LGPD Fase 4: blur automático de pessoas (se ativado no cliente) ──
-        if (cliente.blur_automatico === true) {
-          try {
-            const resultadoBlur = await blurPessoas(fotoBuffer);
-            if (resultadoBlur?.buffer) {
-              fotoBuffer = resultadoBlur.buffer;
-              blurInfo = {
-                pessoas_borradas: resultadoBlur.pessoas,
-                detectadas: resultadoBlur.detectadas,
-                erro: resultadoBlur.erro || null,
-              };
-            }
-          } catch (blurErr) {
-            // Nunca bloquear a captura por falha no blur
-            await logError(`Blur falhou, usando original | camera: ${camera.nome}`, {
-              err: blurErr.message, camera_id: camera.id, placa,
-            });
-          }
-        }
       } else {
         await logError(`Imagem muito pequena (${rawBuffer.length} bytes) | camera: ${camera.nome}`, {
           camera_id: camera.id, placa, base64Len: imageBase64.length,

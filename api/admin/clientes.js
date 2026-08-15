@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
 
       const { nome, local_via, cidade_uf, cep, endereco, limite_velocidade, cnpj, telefone, contato_nome,
               pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, notif_auto_ativa, notif_emails,
-              blur_automatico, velocidade_maxima_plausivel } = body;
+              velocidade_maxima_plausivel } = body;
 
       if (!nome || !local_via || !cidade_uf) {
         return res.status(400).json({ error: 'Campos obrigatórios: nome, local_via, cidade_uf' });
@@ -80,7 +80,6 @@ module.exports = async function handler(req, res) {
           pdf_logo_url: pdf_logo_url || null,
           notif_auto_ativa: notif_auto_ativa || false,
           notif_emails: notif_emails || [],
-          blur_automatico: blur_automatico === true,
           ativo: true,
         })
         .select()
@@ -117,7 +116,7 @@ module.exports = async function handler(req, res) {
         'nome', 'local_via', 'cidade_uf', 'cep', 'endereco',
         'limite_velocidade', 'velocidade_maxima_plausivel', 'cnpj', 'telefone', 'contato_nome',
         'pdf_titulo', 'pdf_subtitulo', 'pdf_rodape', 'pdf_logo_url', 'pdf_corpo_texto',
-        'notif_auto_ativa', 'ativo', 'blur_automatico',
+        'notif_auto_ativa', 'ativo',
         'relatorio_ativo', 'relatorio_dia_semana', 'relatorio_hora', 'relatorio_corpo_texto',
         'relatorio_anexar_pdf',
       ];
@@ -147,11 +146,6 @@ module.exports = async function handler(req, res) {
           (!Number.isInteger(camposFiltrados.velocidade_maxima_plausivel) ||
            camposFiltrados.velocidade_maxima_plausivel < 30 || camposFiltrados.velocidade_maxima_plausivel > 200)) {
         return res.status(400).json({ error: 'Teto de radar plausível inválido (deve ser entre 30 e 200 km/h)' });
-      }
-
-      // blur_automatico só pode ser alterado por super_admin (feature paga/LGPD)
-      if ('blur_automatico' in camposFiltrados && profile.role !== 'super_admin') {
-        delete camposFiltrados.blur_automatico;
       }
 
       if (Object.keys(camposFiltrados).length === 0) {
