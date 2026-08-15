@@ -1,0 +1,50 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-08-15T16:40:38.786Z",
+        "reason": "Painel administrativo interno (modo Operate): Inter e desenhada para UI e legibilidade em tamanho pequeno. Distincao de marca nao e objetivo desta superficie."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "admin/index.html"
+        ],
+        "createdAt": "2026-08-15T16:40:44.706Z",
+        "reason": "Blocos LGPD: a barra lateral distingue texto do titular (Descricao da solicitacao) da resposta da Operadora (Resposta do DPO). Carrega significado, nao e decoracao."
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "admin/index.html"
+        ],
+        "createdAt": "2026-08-15T16:40:51.362Z",
+        "reason": "Hover do botao de login: box-shadow com deslocamento vertical de 4px sobre fundo claro, elevacao convencional. Nao e o halo de offset zero que a regra mira."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "admin/manual-tecnico.html"
+        ],
+        "createdAt": "2026-08-15T16:41:41.683Z",
+        "reason": "border-left em blockquote: convencao tipografica classica de citacao, padrao de todo renderizador de Markdown."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "admin/manual-usuario.html"
+        ],
+        "createdAt": "2026-08-15T16:41:41.739Z",
+        "reason": "border-left em blockquote: convencao tipografica classica de citacao, padrao de todo renderizador de Markdown."
+      }
+    ]
+  }
+}
