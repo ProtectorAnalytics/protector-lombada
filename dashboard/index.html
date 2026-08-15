@@ -2098,7 +2098,9 @@
   <!-- ===== LIGHTBOX (imagem em tamanho real) ===== -->
   <div class="lightbox-overlay" id="lightbox" onclick="if(event.target===this)closeLightbox()" role="dialog" aria-modal="true" aria-label="Foto da captura em tamanho real">
     <button class="lightbox-close" onclick="closeLightbox()" aria-label="Fechar">&times;</button>
-    <img class="lightbox-img" id="lightbox-img" src="" alt="Foto do veículo em tamanho real" onclick="toggleLightboxZoom(event)">
+    <!-- sem src inicial: `src=""` faz o navegador tentar carregar a própria
+         página como imagem. O caminho é preenchido por JS ao abrir o lightbox. -->
+    <img class="lightbox-img" id="lightbox-img" alt="Foto do veículo em tamanho real" onclick="toggleLightboxZoom(event)">
     <div class="lightbox-hint" id="lightbox-hint">Clique na imagem para ampliar · ESC fecha</div>
   </div>
 
@@ -3531,7 +3533,9 @@
       const img = document.getElementById('lightbox-img');
       lb.classList.remove('active');
       img.classList.remove('zoomed');
-      img.src = '';
+      // removeAttribute, e não src = '': atribuir string vazia faz o navegador
+      // resolver o src para a URL da própria página e disparar um request inútil.
+      img.removeAttribute('src');
       document.body.style.overflow = '';
     }
 
