@@ -1346,7 +1346,11 @@ function renderSystemHealth(stats, statusPorCliente, clientes) {
         <span style="font-weight:600">${pctOnline}%</span>
       </div>
       <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${pctOnline}%;background:${healthColor};border-radius:3px;transition:width 0.5s"></div>
+        <!-- scaleX em vez de width: animar largura recalcula layout a cada frame
+             (layout thrash). transform roda no compositor. O arredondamento vem
+             do overflow:hidden do container, então a barra não leva border-radius
+             próprio — escalado, ele deformaria. -->
+        <div style="height:100%;width:100%;transform:scaleX(${pctOnline / 100});transform-origin:left;background:${healthColor};transition:transform 0.5s"></div>
       </div>
     </div>
   `;
