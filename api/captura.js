@@ -1,7 +1,9 @@
 const Busboy = require('busboy');
+const { waitUntil } = require('@vercel/functions');
 const {
   findCameraByToken,
   findCameraBySerial,
+  findCapturaRecentePorVehicleId,
   saveCaptura,
   uploadPhoto,
   findVeiculo,
@@ -196,6 +198,9 @@ module.exports = async function handler(req, res) {
         pixels: plate.confidence || 0,
         tipo_veiculo: plate.type || '',
         cor_veiculo: String(plate.carColor || ''),
+        // Identificador do evento na câmera: igual em todas as retransmissões
+        // do mesmo evento. Base do dedupe abaixo.
+        vehicle_id: Number.isFinite(+plate.vehicleId) ? +plate.vehicleId : null,
       };
 
       // Debug: se velocidade terminou em 0 mesmo com placa lida, logar
@@ -236,6 +241,21 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Placa não fornecida' });
     }
 
+    // ── Dedupe de retransmissão ──────────────────────────────────────────────
+    // A câmera reenvia o mesmo evento quando não recebe resposta dentro do seu
+    // timeout de 10s. O vehicleId é igual em todos os reenvios, então basta
+    // consultar se já gravamos este evento há pouco. Ver
+    // sql/migration-vehicle-id-dedupe.sql para por que a janela é curta.
+    const vehicleId = Number.isFinite(+normalized.vehicle_id) ? +normalized.vehicle_id : null;
+    if (vehicleId !== null) {
+      const jaGravada = await findCapturaRecentePorVehicleId(camera.id, vehicleId);
+      if (jaGravada) {
+        // 200 explícito: a câmera precisa entender como recebido, senão
+        // continua retransmitindo até estourar o tempo total.
+        return res.status(200).json({ ok: true, id: jaGravada.id, duplicado: true });
+      }
+    }
+
     // Foto: preservar a imagem original que chega da câmera (sem resize,
     // sem recompressão JPEG). Tamanho típico ALPHADIGI: 200KB-2MB.
     let fotoBuffer = null;
@@ -258,24 +278,18 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Upload da foto ao Storage
+    // O caminho do arquivo é determinístico, então dá pra gravá-lo na captura
+    // antes do upload acontecer — o upload em si vai para depois da resposta.
     let fotoPath = null;
     if (fotoBuffer && fotoBuffer.length > 100) {
       const ts = new Date(timestamp);
       const dateStr = ts.toISOString().replace(/[:.]/g, '-').slice(0, 19);
       fotoPath = `${cliente.id}/${camera.id}/${dateStr}_${placa}.jpg`;
-      try {
-        await uploadPhoto(fotoPath, fotoBuffer);
-      } catch (uploadErr) {
-        await logError(`Erro upload foto: ${uploadErr.message} | camera: ${camera.nome}`, {
-          fotoPath, size: fotoBuffer.length, camera_id: camera.id, placa,
-        });
-        // Continue without photo
-        fotoPath = null;
-      }
     }
 
-    // Salvar captura no banco
+    // Salvar captura no banco. Continua ANTES da resposta: é o insert que dá o
+    // id devolvido à câmera e é ele que faz o dedupe acima enxergar o evento
+    // quando a próxima retransmissão chegar.
     const captura = await saveCaptura({
       camera_id: camera.id,
       cliente_id: cliente.id,
@@ -288,76 +302,130 @@ module.exports = async function handler(req, res) {
       timestamp,
       notificado: false,
       velocidade_invalida: velocidadeInvalida,
+      vehicle_id: vehicleId,
     });
 
-    // Atualizar last_seen + telemetria expandida do AlarmInfoPlate.
-    // Manuais ALPHADIGI mostram que captura traz info da câmera além de placa
-    // — aproveitamos pra preencher modelo/firmware/host quando vier.
-    // Tentamos múltiplos nomes de campo (família Dahua-like usa nomenclaturas variantes).
-    const camFirmware = alarm.softwareVersion || alarm.sw_version || alarm.firmware || alarm.fwVersion || undefined;
-    const camModelo = alarm.deviceType || alarm.model || alarm.modelName || alarm.product || undefined;
-    const camHost = alarm.host || alarm.deviceName || alarm.cameraName || undefined;
+    // ── ACK ──────────────────────────────────────────────────────────────────
+    // Responder AQUI, e não no fim. A câmera desiste em 10s (Comunicação,
+    // campo 5) e retransmite o evento inteiro, foto e tudo. Upload ao Storage,
+    // telemetria, PDF e e-mail levam segundos e não interessam à câmera: ela só
+    // precisa saber que recebemos. Todo o resto vai para depois da resposta.
+    res.status(200).json({ ok: true, id: captura.id });
+
+    // ── Pós-resposta ─────────────────────────────────────────────────────────
+    // waitUntil mantém a função viva depois do ACK (Fluid compute). O trabalho
+    // aqui nunca pode lançar: a resposta já foi enviada e uma exceção solta
+    // viraria unhandled rejection.
+    waitUntil(
+      processarAposResposta({
+        req, camera, cliente, captura, alarm, camIp, camMac,
+        placa, velocidade, timestamp, fotoBuffer, fotoPath,
+      }).catch(async (err) => {
+        await logError(`Pós-resposta falhou: ${err.message} | camera: ${camera.nome}`, {
+          captura_id: captura.id, placa, stack: err.stack?.slice(0, 500),
+        });
+      })
+    );
+
+    return;
+  } catch (err) {
+    await logError(`Erro geral: ${err.message}`, { stack: err.stack?.slice(0, 500) });
+    console.error('Erro no endpoint /api/captura:', err.message);
+    // Depois do ACK a resposta já saiu; responder de novo lançaria
+    // ERR_HTTP_HEADERS_SENT e mascararia o erro real.
+    if (res.headersSent) return;
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+/**
+ * Trabalho que roda DEPOIS da resposta à câmera, via waitUntil.
+ *
+ * Nada aqui interessa à câmera — ela só precisa do ACK. Manter estas etapas no
+ * caminho síncrono era o que estourava o timeout de 10s dela e disparava a
+ * retransmissão do evento inteiro.
+ *
+ * Cada etapa é isolada: falha de uma não impede as seguintes, e a captura já
+ * está gravada de qualquer forma.
+ */
+async function processarAposResposta({
+  req, camera, cliente, captura, alarm, camIp, camMac,
+  placa, velocidade, timestamp, fotoBuffer, fotoPath,
+}) {
+  // 1. Upload da foto. O caminho já foi gravado na captura, então em caso de
+  //    falha é preciso limpá-lo — senão a captura aponta para um arquivo que
+  //    não existe e o dashboard mostra imagem quebrada.
+  if (fotoBuffer && fotoPath) {
+    try {
+      await uploadPhoto(fotoPath, fotoBuffer);
+    } catch (uploadErr) {
+      await logError(`Erro upload foto: ${uploadErr.message} | camera: ${camera.nome}`, {
+        fotoPath, size: fotoBuffer.length, camera_id: camera.id, placa,
+      });
+      try {
+        await supabase.from('capturas').update({ foto_path: null }).eq('id', captura.id);
+      } catch { /* não-crítico: melhor path órfão que perder a captura */ }
+    }
+  }
+
+  // 2. Telemetria da câmera. O AlarmInfoPlate é mais rico que o heartbeat —
+  //    aproveitamos para preencher modelo/firmware/host quando vierem.
+  //    Nomes variam na família Dahua-like, então tentamos os conhecidos.
+  const camFirmware = alarm.softwareVersion || alarm.sw_version || alarm.firmware || alarm.fwVersion || undefined;
+  const camModelo = alarm.deviceType || alarm.model || alarm.modelName || alarm.product || undefined;
+  const camHost = alarm.host || alarm.deviceName || alarm.cameraName || undefined;
+  try {
     await updateCameraLastSeen(camera.id, captura.id, {
       ip_address: camIp || undefined,
       mac_address: camMac || undefined,
-      // Aproveitando o AlarmInfoPlate (mais rico que heartbeat) pra preencher:
       endpoint_configurado: (req.headers.host || '').toLowerCase() || undefined,
       host_camera_reportado: camHost,
       firmware_versao: camFirmware,
     });
-    // Atualização específica do modelo (não está na assinatura padrão de updateCameraLastSeen)
     if (camModelo) {
-      try {
-        await supabase.from('cameras').update({ modelo: camModelo }).eq('id', camera.id).is('modelo', null);
-      } catch { /* não-crítico */ }
+      await supabase.from('cameras').update({ modelo: camModelo }).eq('id', camera.id).is('modelo', null);
     }
+  } catch { /* não-crítico */ }
 
-    // Verificar se precisa notificar
-    if (velocidade > cliente.limite_velocidade) {
-      try {
-        const veiculo = await findVeiculo(cliente.id, placa);
-        const historico = await getPassagensByPlaca(cliente.id, placa, 30);
+  // 3. Notificação de excesso de velocidade (PDF + e-mail).
+  if (velocidade > cliente.limite_velocidade) {
+    try {
+      const veiculo = await findVeiculo(cliente.id, placa);
+      const historico = await getPassagensByPlaca(cliente.id, placa, 30);
 
-        const pdfBuffer = await gerarPDF({
-          cliente,
-          captura,
-          veiculo,
-          fotoBuffer,
-          historico,
+      const pdfBuffer = await gerarPDF({
+        cliente,
+        captura,
+        veiculo,
+        fotoBuffer,
+        historico,
+        cameraNome: camera.nome || '',
+        camera,
+      });
+
+      const destinatarios = await getDestinatarios(cliente.id, 'alerta');
+
+      if (destinatarios.length > 0) {
+        await enviarAlerta({
+          destinatarios,
+          placa,
+          velocidade,
+          timestamp,
+          nomeCondominio: cliente.nome,
+          localVia: cliente.local_via,
+          limite: cliente.limite_velocidade,
+          pdfBuffer,
           cameraNome: camera.nome || '',
-          camera,
         });
-
-        const destinatarios = await getDestinatarios(cliente.id, 'alerta');
-
-        if (destinatarios.length > 0) {
-          await enviarAlerta({
-            destinatarios,
-            placa,
-            velocidade,
-            timestamp,
-            nomeCondominio: cliente.nome,
-            localVia: cliente.local_via,
-            limite: cliente.limite_velocidade,
-            pdfBuffer,
-            cameraNome: camera.nome || '',
-          });
-        }
-
-        await markNotificado(captura.id);
-      } catch (notifErr) {
-        await logError(`Erro notificação: ${notifErr.message}`, { placa, velocidade });
-        console.error('Erro na notificação:', notifErr.message);
       }
-    }
 
-    return res.status(200).json({ ok: true, id: captura.id });
-  } catch (err) {
-    await logError(`Erro geral: ${err.message}`, { stack: err.stack?.slice(0, 500) });
-    console.error('Erro no endpoint /api/captura:', err.message);
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+      await markNotificado(captura.id);
+    } catch (notifErr) {
+      await logError(`Erro notificação: ${notifErr.message}`, { placa, velocidade });
+      console.error('Erro na notificação:', notifErr.message);
+    }
   }
-};
+}
 
 /**
  * Parseia o body da request (JSON ou multipart/form-data)

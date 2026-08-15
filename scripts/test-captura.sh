@@ -105,6 +105,53 @@ else
 fi
 
 echo ""
+
+# Teste 5: Retransmissão da câmera (mesmo vehicleId) deve ser deduplicada
+#
+# A câmera ALPHADIGI reenvia o evento inteiro quando não recebe resposta dentro
+# do seu timeout de 10s, e todo reenvio carrega o mesmo vehicleId. O segundo
+# POST tem de responder 200 (senão a câmera segue retransmitindo) e marcar
+# duplicado:true, sem gravar uma segunda captura.
+echo "📋 Teste 5: Retransmissão do mesmo evento (dedupe por vehicleId)..."
+VEHICLE_ID=$(( RANDOM * 32768 + RANDOM ))
+PAYLOAD='{
+  "AlarmInfoPlate": {
+    "channel": 0,
+    "serialno": "TESTE",
+    "result": {
+      "PlateResult": {
+        "license": "DEDUP01",
+        "confidence": 99,
+        "vehicleId": '"${VEHICLE_ID}"',
+        "type": 1,
+        "carColor": 6,
+        "radarSpeed": { "Speed": { "PerHour": 20, "Direction": 1 } }
+      }
+    }
+  }
+}'
+
+RESP1=$(curl -s -X POST "${URL_BASE}/api/captura?token=${TOKEN}" \
+  -H "Content-Type: application/json" -d "${PAYLOAD}")
+echo "   1º envio:  $RESP1"
+
+RESP2=$(curl -s -X POST "${URL_BASE}/api/captura?token=${TOKEN}" \
+  -H "Content-Type: application/json" -d "${PAYLOAD}")
+echo "   2º envio:  $RESP2"
+
+if echo "$RESP2" | grep -q '"duplicado":true'; then
+  ID1=$(echo "$RESP1" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+  ID2=$(echo "$RESP2" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+  if [ -n "$ID1" ] && [ "$ID1" = "$ID2" ]; then
+    echo "   ✅ PASSOU (reenvio devolveu a captura original, sem duplicar)"
+  else
+    echo "   ⚠️  PARCIAL (marcou duplicado, mas o id não bateu)"
+  fi
+else
+  echo "   ❌ FALHOU (2º envio deveria trazer duplicado:true)"
+fi
+
+echo ""
 echo "========================================="
 echo "✅ Testes concluídos!"
 echo ""
