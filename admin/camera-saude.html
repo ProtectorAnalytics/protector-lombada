@@ -448,8 +448,19 @@
       document.title = `${cam.nome_exibicao || cam.nome} — Saúde`;
 
       // Endpoint alerta block
+      //
+      // O texto anterior afirmava que "câmeras em .vercel.app raw têm falha de
+      // TLS/SNI". Isso não se sustenta: em 15/08/2026 as duas câmeras do
+      // PARAISO DO MAR usavam esse mesmo endpoint, com 100% de respostas 200 e
+      // zero retransmissão, enquanto a CEC-LOMB01 — no mesmo endpoint —
+      // retransmitia por outro motivo (endpoint lento por causa do blur).
+      // A afirmação mandava quem fosse investigar para o caminho errado.
+      //
+      // A recomendação continua válida, mas por risco de continuidade: o
+      // hostname .vercel.app é gerado pela plataforma e muda se o projeto for
+      // renomeado ou transferido, o que interromperia o envio das câmeras.
       const endpointBlock = st.endpoint_alerta
-        ? `<div class="alert warn"><span class="alert-icon">!</span><div><b>Endpoint legado configurado.</b> Câmera enviando para <code>${esc(cam.endpoint_configurado)}</code> — recomendado <code>${esc(st.endpoint_recomendado)}</code>. Câmeras em <code>.vercel.app</code> raw têm falha de TLS/SNI. Reconfigurar Servidor Pri. no QLPR Config.</div></div>`
+        ? `<div class="alert warn"><span class="alert-icon">!</span><div><b>Endpoint sem domínio próprio.</b> Câmera enviando para <code>${esc(cam.endpoint_configurado)}</code> — recomendado <code>${esc(st.endpoint_recomendado)}</code>. Não há falha em curso: o envio funciona normalmente. O <code>.vercel.app</code> é gerado pela plataforma e mudaria se o projeto fosse renomeado ou transferido, interrompendo o envio; o domínio próprio é estável. Reconfigurar Servidor Pri. no QLPR Config na próxima visita.</div></div>`
         : cam.endpoint_configurado
         ? `<div class="alert ok"><span class="alert-icon">✓</span><div>Endpoint configurado correto: <code>${esc(cam.endpoint_configurado)}</code></div></div>`
         : `<div class="alert info"><span class="alert-icon">i</span><div>Endpoint configurado ainda não detectado — aguarde próximo heartbeat (10s).</div></div>`;
