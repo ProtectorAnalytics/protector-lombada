@@ -15,7 +15,7 @@ const {
 const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
 const { checkRateLimit } = require('../lib/rate-limiter');
-const { isValidToken, parseTimestamp } = require('../lib/validators');
+const { isValidToken, parseTimestamp, parseVehicleId } = require('../lib/validators');
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -200,7 +200,7 @@ module.exports = async function handler(req, res) {
         cor_veiculo: String(plate.carColor || ''),
         // Identificador do evento na câmera: igual em todas as retransmissões
         // do mesmo evento. Base do dedupe abaixo.
-        vehicle_id: Number.isFinite(+plate.vehicleId) ? +plate.vehicleId : null,
+        vehicle_id: parseVehicleId(plate.vehicleId),
       };
 
       // Debug: se velocidade terminou em 0 mesmo com placa lida, logar
@@ -246,7 +246,7 @@ module.exports = async function handler(req, res) {
     // timeout de 10s. O vehicleId é igual em todos os reenvios, então basta
     // consultar se já gravamos este evento há pouco. Ver
     // sql/migration-vehicle-id-dedupe.sql para por que a janela é curta.
-    const vehicleId = Number.isFinite(+normalized.vehicle_id) ? +normalized.vehicle_id : null;
+    const vehicleId = parseVehicleId(normalized.vehicle_id);
     if (vehicleId !== null) {
       const jaGravada = await findCapturaRecentePorVehicleId(camera.id, vehicleId);
       if (jaGravada) {
