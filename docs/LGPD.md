@@ -79,25 +79,28 @@ O texto padrão dos documentos gerados pelo sistema (PDF de notificação) traz 
 
 **Dados NÃO coletados pelo sistema:** CPF, RG, endereço residencial detalhado, dados financeiros, dados sensíveis (art. 5º, II LGPD), dados biométricos, reconhecimento facial.
 
-### 4.1 Proteção de imagem por blur automático (opcional)
+### 4.1 Proteção de imagem por blur automático — DESCONTINUADO em 15/08/2026
 
-A Operadora disponibiliza, como feature opcional contratada por cliente, um sistema de **blur automático de pessoas** nas fotos de captura. Quando ativado pelo `super_admin` no painel administrativo da Operadora (campo `blur_automatico` da tabela `clientes`):
+O sistema de **blur automático de pessoas** (detecção COCO-SSD via TensorFlow.js) foi **removido do
+produto**. Nenhum cliente tem mais o recurso ativo e o código saiu do repositório.
 
-- Toda foto que entra pelo endpoint `/api/captura` passa por detecção de objetos (modelo COCO-SSD, TensorFlow.js)
-- Pessoas, motocicletas e bicicletas detectadas com confiança ≥ 15% têm a região coberta por blur forte (sigma 30)
-- A placa do veículo-alvo, o corpo do veículo e a faixa superior de informações são **preservados**
-- O processamento falha de forma graceful: se der erro, a foto é salva sem alteração (nunca bloqueia a captura)
+**Motivo da remoção.** A latência real do processamento era de ~7,2 s de CPU por captura — de 5 a 14
+vezes acima dos "~500-1500ms" que esta seção estimava. As câmeras ALPHADIGI TCAM3130N operam com
+timeout de 10 s e retransmissão automática (intervalo 2 s, tempo total 100 s). O blur empurrava a
+resposta do endpoint para além desse timeout, e a câmera passava a reenviar o mesmo evento cerca de
+8 vezes. Verificado em produção: o único cliente com o recurso ativo respondia por 105.404 das
+122.039 capturas do mês, com 91,2% delas sendo retransmissões da mesma foto (arquivos byte a byte
+idênticos). O recurso destinado a proteger imagem estava, na prática, multiplicando por oito o
+número de cópias da mesma imagem armazenadas.
 
-**Quando recomendar a ativação:**
-- Câmeras instaladas em locais onde o enquadramento captura calçadas, praças ou áreas de circulação de pedestres
-- Clientes que tratam dados em áreas com alto fluxo de terceiros
-- Requisitos contratuais específicos de proteção de imagem
+**Medida de proteção que permanece.** O enquadramento adequado da câmera — que esta seção já
+apontava como a proteção primária, sendo o blur apenas "uma camada adicional". Câmeras cujo
+enquadramento alcance calçadas, praças ou áreas de circulação de pedestres devem ser reposicionadas
+ou ter a área de detecção reduzida na interface QLPR Config.
 
-**Limitações conhecidas:**
-- Pessoas muito pequenas/distantes (< 20px) podem não ser detectadas
-- Pessoas dentro de veículos (vidro fechado, distância, reflexo) não são detectadas
-- Latência adicional: ~500-1500ms por captura
-- Não substitui enquadramento adequado da câmera — é uma camada adicional de proteção
+> **Pendente de revisão jurídica:** `CONTRATO_DPA.md` e `RIPD_TEMPLATE.md` podem referenciar este
+> recurso como medida técnica oferecida. Ambos precisam ser revistos antes da próxima renovação
+> contratual ou emissão de RIPD.
 
 ---
 
