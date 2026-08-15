@@ -18,7 +18,7 @@ A Lombada Educativa e um sistema que usa cameras ALPHADIGI para detectar veiculo
 
 ## Como a camera se conecta ao sistema?
 
-A camera envia os dados para o endereco `protector-lombada.vercel.app` na pasta `/placa`.
+A camera envia os dados para o endereco `lombada.appps.com.br` na pasta `/placa`.
 
 **A camera se identifica automaticamente pelo numero de serie.** Nao precisa de token na URL. O numero de serie ja vem dentro dos dados que a camera envia (campo `serialno`). O sistema recebe, procura no banco de dados qual camera tem aquele serial, e pronto.
 
@@ -30,7 +30,7 @@ A camera envia os dados para o endereco `protector-lombada.vercel.app` na pasta 
 
 ### O que voce precisa antes de comecar
 
-- Acesso ao painel admin: `https://protector-lombada.vercel.app/admin`
+- Acesso ao painel admin: `https://lombada.appps.com.br/admin`
 - Login de super_admin (email e senha)
 
 ### Passo a passo
@@ -93,7 +93,7 @@ Voce vai ver uma tela com varias secoes. Configure EXATAMENTE assim:
 | # | Campo | O que colocar | Explicacao |
 |---|-------|---------------|------------|
 | 1 | **Habilitar** | ✅ Marcado | Liga o envio de dados |
-| 2 | **Servidor Pri.** | `protector-lombada.vercel.app` | Endereco do nosso servidor. **CUIDADO:** confira que esta escrito PROTECTOR e nao "rotector" (o campo e pequeno e pode cortar o texto) |
+| 2 | **Servidor Pri.** | `lombada.appps.com.br` | Endereco do nosso servidor. Use SEMPRE o dominio proprio, nunca `protector-lombada.vercel.app`: o endereco `.vercel.app` e gerado pela plataforma e mudaria se o projeto fosse renomeado ou transferido, o que pararia o envio da camera. O painel de saude da camera avisa quando encontra uma configurada com o endereco antigo |
 | 3 | **Servidor Seg.** | (vazio) | Nao tem servidor secundario |
 | 4 | **Porta** | `443` | Porta do HTTPS |
 | 5 | **Timeout** | `10` | Tempo maximo de espera em segundos |
@@ -160,7 +160,7 @@ Voce vai ver uma tela com varias secoes. Configure EXATAMENTE assim:
 
 ### No dashboard
 
-1. Acesse `https://protector-lombada.vercel.app/admin`
+1. Acesse `https://lombada.appps.com.br/admin`
 2. Na lista de cameras, a camera deve mostrar:
    - **Status**: Online (verde) — significa que esta enviando dados
    - **Ultimo sinal**: horario recente (menos de 5 minutos atras)
@@ -170,7 +170,7 @@ Voce vai ver uma tela com varias secoes. Configure EXATAMENTE assim:
 Verifique na ordem:
 
 1. **A camera tem internet?** Ela precisa acessar a internet pela porta 443 (HTTPS)
-2. **O endereco esta certo?** Confira que o Servidor Pri. esta `protector-lombada.vercel.app` (com P no inicio!)
+2. **O endereco esta certo?** Confira que o Servidor Pri. esta `lombada.appps.com.br`
 3. **O serial esta cadastrado?** Compare o serial da camera (Manutencao → Informacao do Dispositivo) com o que esta no painel admin
 4. **Link SSL esta habilitado?** Precisa estar marcado
 5. **Porta SSL e 443?** Confira
@@ -222,7 +222,7 @@ Quando um veiculo passa pela camera:
 
 1. A camera le a placa e mede a velocidade com radar
 2. Tira uma foto do veiculo
-3. Envia tudo para `protector-lombada.vercel.app/placa`
+3. Envia tudo para `lombada.appps.com.br/placa`
 4. O servidor identifica a camera pelo numero de serie
 5. Salva a placa, velocidade e foto no banco de dados
 6. Verifica: **velocidade > limite do condominio?**
@@ -316,7 +316,7 @@ Use esta lista para nao esquecer nada:
 ## Dados Tecnicos (para quem precisa)
 
 ### Endereco do servidor
-- **URL**: `https://protector-lombada.vercel.app`
+- **URL**: `https://lombada.appps.com.br` (o `protector-lombada.vercel.app` ainda responde, mas nao deve ser usado em configuracao de camera)
 - **Endpoint de capturas**: `/placa` (roteado para `/api/captura.js`)
 - **Endpoint de heartbeat**: `/api/heartbeat`
 - **Painel admin**: `/admin`
