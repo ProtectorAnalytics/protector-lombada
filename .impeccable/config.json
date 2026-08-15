@@ -44,6 +44,33 @@
         ],
         "createdAt": "2026-08-15T16:41:41.739Z",
         "reason": "border-left em blockquote: convencao tipografica classica de citacao, padrao de todo renderizador de Markdown."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "dashboard/index.html"
+        ],
+        "createdAt": "2026-08-15T17:04:55.165Z",
+        "reason": "Mesmo sistema visual do painel admin, ja revisado com o dono em 15/08/2026: side-tab carrega significado e a sombra tem deslocamento vertical sobre fundo claro."
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "dashboard/index.html"
+        ],
+        "createdAt": "2026-08-15T17:04:55.233Z",
+        "reason": "Mesmo sistema visual do painel admin, ja revisado com o dono em 15/08/2026: side-tab carrega significado e a sombra tem deslocamento vertical sobre fundo claro."
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "dashboard/index.html"
+        ],
+        "createdAt": "2026-08-15T17:06:49.461Z",
+        "reason": "Lightbox: o <img> nasce sem src de proposito e recebe o caminho por JS ao abrir. Ter src inicial exigiria um placeholder que nunca seria exibido."
       }
     ]
   }
