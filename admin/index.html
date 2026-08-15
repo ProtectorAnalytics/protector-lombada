@@ -115,7 +115,11 @@
     .nav-section { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; padding: 20px 24px 8px; font-weight: 700; }
 
     /* Main content */
-    .admin-content { padding: 24px; overflow-y: auto; max-height: calc(100vh - 64px); background: var(--bg-primary); }
+    /* min-width:0 e essencial: como coluna de grid (1fr), o padrao min-width:auto
+       impede que ela encolha abaixo do conteudo mais largo — tabelas e grids de
+       cards empurravam a area para fora da tela, cortando o botao Editar e o
+       ultimo card do cabecalho do cliente. */
+    .admin-content { padding: 24px; overflow-y: auto; max-height: calc(100vh - 64px); background: var(--bg-primary); min-width: 0; }
     .page { display: none; }
     .page.active { display: block; }
 
@@ -238,12 +242,45 @@
       border-color: var(--red) !important;
       box-shadow: 0 0 0 3px rgba(220,38,38,0.15) !important;
     }
-    .form-group input, .form-group select {
+    /* textarea entra aqui junto de input/select: sem isso ela cai na largura
+       padrao do browser (~20 caracteres) e quebra o texto no meio das palavras. */
+    .form-group input, .form-group select, .form-group textarea {
       width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
       color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s;
     }
-    .form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,107,210,0.1); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,107,210,0.1); }
+    .form-group textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+    /* Checkbox nao deve esticar para 100% da largura */
+    .form-group input[type="checkbox"] { width: auto; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Abas de configuracao (PDF, Relatorio): coluna estreita de ajustes ao lado
+       de uma coluna larga para o texto. Antes tudo ficava empilhado dentro de
+       680px, sobrando metade da tela vazia e apertando a area de edicao. */
+    .config-grid {
+      display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+      gap: 32px; align-items: start; max-width: 1180px;
+    }
+    .config-grid > * { min-width: 0; }
+    .config-block { max-width: 1180px; }
+    @media (max-width: 980px) {
+      .config-grid { grid-template-columns: 1fr; gap: 4px; }
+    }
+    /* Linha de checkbox: rotulo ao lado da caixa, sem caixa alta.
+       Precisa da especificidade de .form-group label para vencer o
+       text-transform: uppercase daquela regra. */
+    .form-group label.check-line {
+      display: flex; align-items: center; gap: 10px;
+      text-transform: none; letter-spacing: 0; font-size: 14px;
+      font-weight: 600; color: var(--text-primary); margin-bottom: 0;
+    }
+    .form-group label.check-line input { flex: none; width: auto; }
+
+    /* Botoes da coluna estreita: empilhados e cheios, em vez de quebrarem
+       pela metade quando nao cabem lado a lado. */
+    .config-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+    .config-actions .btn { width: 100%; justify-content: center; }
+    @media (min-width: 981px) { .config-actions { max-width: 320px; } }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
     .form-error { color: var(--red); font-size: 13px; margin-top: 8px; }
 
@@ -340,7 +377,10 @@
     .tab-panel.active { display: block; }
 
     .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .detail-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    /* minmax menor deixa os 7 campos caberem sem estourar a largura em telas
+       medias; auto-fill (nao auto-fit) evita que 2 ou 3 campos se esparramem
+       ocupando a linha inteira quando sobra espaco. */
+    .detail-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .detail-field {
       background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow-sm);
     }
@@ -694,31 +734,39 @@
 
           <!-- Tab: Notificação PDF -->
           <div class="tab-panel" id="tab-notificacao">
-            <div style="max-width:680px">
-              <div style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:16px;border-left:3px solid var(--accent)">
-                <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Configuração do PDF</div>
-                <div style="font-size:12px;color:var(--text-secondary)">Personalize o conteúdo da notificação orientativa gerada para este cliente.</div>
+            <div class="config-block" style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:20px;border-left:3px solid var(--accent)">
+              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Configuração do PDF</div>
+              <div style="font-size:12px;color:var(--text-secondary)">Personalize o conteúdo da notificação orientativa gerada para este cliente.</div>
+            </div>
+
+            <div class="config-grid">
+              <!-- Coluna: cabeçalho e identidade -->
+              <div>
+                <div class="form-group">
+                  <label>Título do PDF</label>
+                  <input id="f-pdf-titulo" placeholder="NOTIFICAÇÃO ORIENTATIVA">
+                </div>
+                <div class="form-group">
+                  <label>Subtítulo / Descrição da Infração</label>
+                  <input id="f-pdf-subtitulo" placeholder="Transitar em velocidade superior à máxima permitida">
+                </div>
+                <div class="form-group">
+                  <label>Texto do Rodapé (opcional)</label>
+                  <input id="f-pdf-rodape" placeholder="Ex: Administração do Condomínio - Gestão 2026">
+                </div>
+                <div class="form-group">
+                  <label>URL da Logo no PDF (opcional)</label>
+                  <input id="f-pdf-logo" placeholder="https://exemplo.com/logo.png">
+                </div>
+                <div class="config-actions">
+                  <button class="btn btn-primary" onclick="savePdfConfig()">Salvar Configuração PDF</button>
+                </div>
               </div>
 
-              <div class="form-group">
-                <label>Título do PDF</label>
-                <input id="f-pdf-titulo" placeholder="NOTIFICAÇÃO ORIENTATIVA">
-              </div>
-              <div class="form-group">
-                <label>Subtítulo / Descrição da Infração</label>
-                <input id="f-pdf-subtitulo" placeholder="Transitar em velocidade superior à máxima permitida">
-              </div>
-              <div class="form-group">
-                <label>Texto do Rodapé (opcional)</label>
-                <input id="f-pdf-rodape" placeholder="Ex: Administração do Condomínio - Gestão 2026">
-              </div>
-              <div class="form-group">
-                <label>URL da Logo no PDF (opcional)</label>
-                <input id="f-pdf-logo" placeholder="https://exemplo.com/logo.png">
-              </div>
+              <!-- Coluna: termo -->
               <div class="form-group">
                 <label>Corpo de Texto / Termo (opcional)</label>
-                <textarea id="f-pdf-corpo" rows="7" placeholder="Texto formal exibido no PDF. Deixe vazio para usar o layout padrão."></textarea>
+                <textarea id="f-pdf-corpo" rows="14" placeholder="Texto formal exibido no PDF. Deixe vazio para usar o layout padrão."></textarea>
                 <span class="hint">
                   Preenchido, o PDF passa para o layout compacto com este termo ao final.
                   Variáveis disponíveis:
@@ -727,34 +775,31 @@
                   <code>{{VELOCIDADE_REGISTRADA}}</code>
                 </span>
               </div>
-
-              <div style="margin-top:12px;margin-bottom:8px">
-                <button class="btn btn-primary" onclick="savePdfConfig()">Salvar Configuração PDF</button>
-              </div>
             </div>
           </div>
 
           <!-- Tab: Relatório Semanal -->
           <div class="tab-panel" id="tab-relatorio">
-            <div style="max-width:680px">
-              <div style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:16px;border-left:3px solid var(--accent)">
-                <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Relatório semanal por e-mail</div>
-                <div style="font-size:12px;color:var(--text-secondary)">
-                  Resumo de circulação enviado aos destinatários do tipo <strong>Relatório</strong>
-                  cadastrados na aba E-mails. O texto abaixo aceita variáveis e é personalizado
-                  para cada destinatário.
+            <div class="config-block" style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:20px;border-left:3px solid var(--accent)">
+              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Relatório semanal por e-mail</div>
+              <div style="font-size:12px;color:var(--text-secondary)">
+                Resumo de circulação enviado aos destinatários do tipo <strong>Relatório</strong>
+                cadastrados na aba E-mails. O texto aceita variáveis e é personalizado
+                para cada destinatário.
+              </div>
+            </div>
+
+            <div class="config-grid">
+              <!-- Coluna: agendamento -->
+              <div>
+                <div class="form-group">
+                  <label class="check-line">
+                    <input type="checkbox" id="f-rel-ativo">
+                    <span>Envio automático ativo</span>
+                  </label>
+                  <span class="hint">Desmarcado, nenhum e-mail é enviado para este cliente.</span>
                 </div>
-              </div>
 
-              <div class="form-group">
-                <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:14px">
-                  <input type="checkbox" id="f-rel-ativo" style="width:auto;margin:0">
-                  <span>Envio automático ativo</span>
-                </label>
-                <span class="hint">Desmarcado, nenhum e-mail é enviado para este cliente.</span>
-              </div>
-
-              <div class="form-row">
                 <div class="form-group">
                   <label>Dia do envio</label>
                   <select id="f-rel-dia">
@@ -766,36 +811,39 @@
                     <option value="5">Sexta-feira</option>
                     <option value="6">Sábado</option>
                   </select>
-                  <span class="hint">O relatório cobre os 7 dias anteriores ao envio</span>
+                  <span class="hint">Cobre os 7 dias anteriores ao envio</span>
                 </div>
+
                 <div class="form-group">
                   <label>Hora do envio</label>
                   <select id="f-rel-hora"></select>
                   <span class="hint">Horário de Brasília (America/Bahia)</span>
                 </div>
+
+                <div class="form-group">
+                  <label class="check-line">
+                    <input type="checkbox" id="f-rel-pdf">
+                    <span>Anexar PDF consolidado</span>
+                  </label>
+                  <span class="hint">Movimento diário, ranking e detalhamento por ponto de medição.</span>
+                </div>
+
+                <div class="config-actions">
+                  <button class="btn btn-primary" onclick="saveRelatorioConfig()">Salvar Configuração</button>
+                  <button class="btn btn-ghost" onclick="enviarRelatorioTeste()">Enviar teste agora</button>
+                </div>
               </div>
 
+              <!-- Coluna: corpo do e-mail -->
               <div class="form-group">
                 <label>Corpo do E-mail</label>
-                <textarea id="f-rel-corpo" rows="14" style="line-height:1.65"></textarea>
+                <textarea id="f-rel-corpo" rows="18"></textarea>
                 <span class="hint">Clique em uma variável para inserir na posição do cursor:</span>
                 <div id="rel-vars" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
               </div>
-
-              <div class="form-group">
-                <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:14px">
-                  <input type="checkbox" id="f-rel-pdf" style="width:auto;margin:0">
-                  <span>Anexar PDF consolidado da semana</span>
-                </label>
-                <span class="hint">Relatório com movimento diário, ranking e detalhamento por ponto de medição.</span>
-              </div>
-
-              <div style="display:flex;gap:10px;margin-top:12px;margin-bottom:8px;flex-wrap:wrap">
-                <button class="btn btn-primary" onclick="saveRelatorioConfig()">Salvar Configuração</button>
-                <button class="btn btn-ghost" onclick="enviarRelatorioTeste()">Enviar teste agora</button>
-              </div>
-              <div id="rel-envios-recentes" style="margin-top:22px"></div>
             </div>
+
+            <div id="rel-envios-recentes" class="config-block" style="margin-top:28px"></div>
           </div>
 
           <!-- Tab: E-mails -->
