@@ -184,12 +184,18 @@ Todas as cameras de todos os clientes apontam para essa mesma URL. O sistema ide
 Veja o **MANUAL_TECNICO.md** (PARTE 3) para o passo a passo completo com todos os campos.
 
 Resumo rapido:
-- **Servidor**: `seu-dominio.vercel.app`
+- **Servidor**: o dominio proprio do projeto (em producao: `lombada.appps.com.br`)
 - **Porta**: `443`
 - **Pasta**: `/placa`
 - **Link SSL**: habilitado
 - **Heartbeat**: habilitado, pasta `/placa`, intervalo `10`
 - **Retransmissao**: habilitada, intervalo `2s`, tempo total `100s`
+
+> **Nunca configure a camera com o endereco `.vercel.app`.** Ele e gerado pela
+> plataforma e muda se o projeto for renomeado ou transferido, o que pararia o
+> envio da camera sem aviso. Use sempre um dominio proprio apontado para o
+> projeto. O painel de saude da camera sinaliza quando encontra uma configurada
+> com o endereco da plataforma.
 
 Apos configurar, reinicie a camera e aguarde 1-2 minutos.
 
