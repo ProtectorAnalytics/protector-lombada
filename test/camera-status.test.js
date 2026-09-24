@@ -8,7 +8,7 @@
  */
 
 const assert = require('node:assert');
-const { cameraStatus } = require('../site/js/camera-status');
+const { cameraStatus, countByStatus, STATUS_COLORS } = require('../site/js/camera-status');
 
 const haMinutos = (m) => new Date(Date.now() - m * 60000).toISOString();
 
@@ -40,6 +40,24 @@ caso('faixas online e offline seguem iguais', () => {
   assert.strictEqual(cameraStatus(haMinutos(10)).label, 'Há 10 min');
   assert.strictEqual(cameraStatus(haMinutos(60 * 8)).status, 'offline');
   assert.strictEqual(cameraStatus(null).status, 'aguardando');
+});
+
+caso('câmera que nunca transmitiu aparece como "aguardando" também na contagem', () => {
+  // Antes, o item mostrava "Aguardando" (azul) mas o total só dizia "offline":
+  // o operador não tinha como saber quantas eram câmeras novas e quantas caídas.
+  const r = countByStatus([
+    { last_seen: null },
+    { last_seen: haMinutos(5) },
+    { last_seen: haMinutos(60 * 8) },
+  ]);
+  assert.deepStrictEqual(r, { online: 1, alerta: 0, offline: 2, aguardando: 1 });
+});
+
+caso('cores vêm de uma tabela única exportada', () => {
+  assert.strictEqual(cameraStatus(null).color, STATUS_COLORS.aguardando);
+  assert.strictEqual(cameraStatus(haMinutos(5)).color, STATUS_COLORS.online);
+  assert.strictEqual(cameraStatus(haMinutos(45)).color, STATUS_COLORS.alerta);
+  assert.strictEqual(cameraStatus(haMinutos(60 * 8)).color, STATUS_COLORS.offline);
 });
 
 console.log(`\n${passou} testes passaram`);
