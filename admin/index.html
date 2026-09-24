@@ -1379,7 +1379,7 @@ function erroNoBloco(elId, retry) {
 // ============================================
 const TOAST_MS = 3000;
 const TOAST_ERRO_MS = 7000;
-const TOAST_DESLOCAMENTO = 16; // px: entra subindo e sai descendo pelo mesmo caminho
+const TOAST_DESLOCAMENTO = 10; // px: entra subindo e sai descendo pelo mesmo caminho
 
 const molaToast = Spring.create({
   value: 0,
@@ -1489,7 +1489,7 @@ function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?',
 // Em tela estreita/toque o modal vira bottom sheet: arrasta 1:1, resiste para
 // cima e, ao soltar, o impulso decide entre fechar e voltar.
 const TELA_DE_TOQUE = matchMedia('(max-width: 640px), (pointer: coarse)');
-const ESCALA_FECHADO = 0.96;
+const ESCALA_FECHADO = 0.985; // entrada discreta: .96 ficava "empurrando"
 
 function criarApresentacao(overlay, superficie, { podeArrastar = false, aoArrastarParaFechar } = {}) {
   let aberto = false;
