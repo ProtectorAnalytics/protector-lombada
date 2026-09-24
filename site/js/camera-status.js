@@ -37,7 +37,8 @@
       return { status: 'online', label: `Há ${Math.floor(mins)} min`, color: '#4ade80' };
     }
     if (mins < ALERTA_MAX_HOURS * 60) {
-      return { status: 'alerta', label: `Há ${Math.floor(mins / 60)}h`, color: '#facc15' };
+      const label = mins < 60 ? `Há ${Math.floor(mins)} min` : `Há ${Math.floor(mins / 60)}h`;
+      return { status: 'alerta', label, color: '#facc15' };
     }
     if (mins < 1440) {
       return { status: 'offline', label: `Há ${Math.floor(mins / 60)}h`, color: '#ef4444' };
