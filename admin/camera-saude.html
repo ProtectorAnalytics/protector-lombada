@@ -70,8 +70,11 @@
       background: var(--bg-soft); border: 1px solid var(--border);
       padding: 5px 10px; border-radius: 999px;
       cursor: pointer; user-select: none;
+      font: inherit; font-size: 12px;
     }
     .refresh-pill:hover { background: var(--accent-soft); color: var(--accent); }
+    .refresh-pill:active { transform: scale(.97); transition: transform 80ms ease-out; }
+    .refresh-pill.is-error { color: var(--err); }
     .refresh-pill .pulse {
       width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
       animation: pulse 2s infinite ease-in-out;
@@ -336,10 +339,10 @@
     <div class="breadcrumb" id="breadcrumb">
       <a href="/admin" class="first">Admin</a>
     </div>
-    <div class="refresh-pill" id="refresh-btn" title="Atualizar agora">
+    <button type="button" class="refresh-pill" id="refresh-btn" title="Atualizar agora">
       <span class="pulse"></span>
       <span id="refresh-label">Auto 30s</span>
-    </div>
+    </button>
   </header>
   <main id="main">
     <div class="card"><div class="skeleton" style="height:80px"></div></div>
@@ -592,16 +595,32 @@
     // ─── auto-refresh ───
     let countdown = 30;
     let timer;
+    // Uma requisição por vez: sem a trava, cada tick com countdown <= 0 disparava
+    // outra — e se o fetch lançasse, o .then nunca zerava o contador (1 req/s).
+    let isLoading = false;
+    function refresh() {
+      if (isLoading) return;
+      isLoading = true;
+      refreshBtn.classList.remove('is-error');
+      refreshLabel.textContent = 'Atualizando…';
+      loadHealth()
+        .then(() => { refreshLabel.textContent = 'Auto 30s'; })
+        .catch(() => {
+          refreshBtn.classList.add('is-error');
+          refreshLabel.textContent = 'Falha ao atualizar · tentar';
+        })
+        .finally(() => { isLoading = false; countdown = 30; });
+    }
     function tick() {
+      if (isLoading) return;
       countdown--;
       if (countdown <= 0) {
-        refreshLabel.textContent = 'Atualizando…';
-        loadHealth().then(() => { countdown = 30; });
-      } else {
+        refresh();
+      } else if (!refreshBtn.classList.contains('is-error')) {
         refreshLabel.textContent = `Auto ${countdown}s`;
       }
     }
-    refreshBtn.onclick = () => { countdown = 30; refreshLabel.textContent = 'Atualizando…'; loadHealth(); };
+    refreshBtn.onclick = refresh;
 
     await loadHealth();
     timer = setInterval(tick, 1000);

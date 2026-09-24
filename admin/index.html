@@ -528,6 +528,17 @@
 
 
     /* Respeitar preferência de movimento reduzido */
+    /* Resposta no pressionar (toque não tem :hover) */
+    .btn:active,
+    .nav-item:active,
+    .tab-btn:active,
+    .confirm-btn:active,
+    .breadcrumb-link:active,
+    .login-box button:active {
+      transform: scale(0.97);
+      transition-duration: 80ms;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -759,7 +770,7 @@
                   <input id="f-pdf-logo" placeholder="https://exemplo.com/logo.png">
                 </div>
                 <div class="config-actions">
-                  <button class="btn btn-primary" onclick="savePdfConfig()">Salvar Configuração PDF</button>
+                  <button class="btn btn-primary" onclick="comLoading(this, savePdfConfig)">Salvar Configuração PDF</button>
                 </div>
               </div>
 
@@ -829,8 +840,8 @@
                 </div>
 
                 <div class="config-actions">
-                  <button class="btn btn-primary" onclick="saveRelatorioConfig()">Salvar Configuração</button>
-                  <button class="btn btn-ghost" onclick="enviarRelatorioTeste()">Enviar teste agora</button>
+                  <button class="btn btn-primary" onclick="comLoading(this, saveRelatorioConfig)">Salvar Configuração</button>
+                  <button class="btn btn-ghost" onclick="comLoading(this, enviarRelatorioTeste)">Enviar teste agora</button>
                 </div>
               </div>
 
@@ -1091,6 +1102,11 @@ async function doResetPassword() {
 }
 
 async function doLogin() {
+  const btn = document.querySelector('.login-box button[onclick="doLogin()"]');
+  return comLoading(btn, entrar);
+}
+
+async function entrar() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   const errorEl = document.getElementById('login-error');
@@ -1189,13 +1205,39 @@ function showTab(tab) {
 }
 
 // ============================================
+// TRAVA DE BOTÃO DURANTE A REQUISIÇÃO
+// ============================================
+/**
+ * Desabilita o botão (classe .loading) enquanto `fn` roda e restaura no fim.
+ * Evita o duplo clique que criava cliente/usuário duplicado ou disparava o
+ * relatório duas vezes. Um segundo clique com o botão travado é ignorado.
+ */
+async function comLoading(btn, fn) {
+  if (!btn) return fn();
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.setAttribute('aria-busy', 'true');
+  try {
+    return await fn();
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.removeAttribute('aria-busy');
+  }
+}
+
+// ============================================
 // TOAST
 // ============================================
 function toast(msg, isError = false) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = isError ? 'toast error visible' : 'toast visible';
-  setTimeout(() => el.classList.remove('visible'), 3000);
+  // Cancela o sumiço agendado pelo toast anterior; sem isso, o "Enviando..."
+  // apagava o toast de resultado que chegasse antes dos 3s.
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => el.classList.remove('visible'), 3000);
 }
 
 // ============================================
@@ -1256,7 +1298,12 @@ function closeModal() {
   document.getElementById('modal').classList.remove('active');
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  // Com a confirmação aberta, o Esc é dela (onEsc em confirmarAcao) — não fecha o modal de baixo.
+  if (document.getElementById('confirm-overlay').classList.contains('active')) return;
+  closeModal();
+});
 
 // ============================================
 // DASHBOARD
@@ -1624,7 +1671,7 @@ function openClienteModal(cliente = null) {
     <div class="form-error" id="f-cli-error"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveCliente(${isEdit ? `'${cliente.id}'` : 'null'})">${isEdit ? 'Salvar' : 'Criar'}</button>
+      <button class="btn btn-primary" onclick="comLoading(this, () => saveCliente(${isEdit ? `'${cliente.id}'` : 'null'}))">${isEdit ? 'Salvar' : 'Criar'}</button>
     </div>
   `);
 }
@@ -1850,7 +1897,7 @@ function openCameraModal(camera = null) {
     <div class="form-error" id="f-cam-error"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveCamera(${isEdit ? `'${camera.id}'` : 'null'})">${isEdit ? 'Salvar' : 'Criar'}</button>
+      <button class="btn btn-primary" onclick="comLoading(this, () => saveCamera(${isEdit ? `'${camera.id}'` : 'null'}))">${isEdit ? 'Salvar' : 'Criar'}</button>
     </div>
   `);
 }
@@ -1959,7 +2006,7 @@ function openEmailModal(email = null) {
     <div class="form-error" id="f-em-error"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveEmail(${isEdit ? `'${email.id}'` : 'null'})">${isEdit ? 'Salvar' : 'Adicionar'}</button>
+      <button class="btn btn-primary" onclick="comLoading(this, () => saveEmail(${isEdit ? `'${email.id}'` : 'null'}))">${isEdit ? 'Salvar' : 'Adicionar'}</button>
     </div>
   `);
 }
@@ -2217,7 +2264,7 @@ function openVeiculoModal(veiculo = null) {
     <div class="form-error" id="f-vei-error"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveVeiculo(${isEdit ? `'${veiculo.id}'` : 'null'})">${isEdit ? 'Salvar' : 'Cadastrar'}</button>
+      <button class="btn btn-primary" onclick="comLoading(this, () => saveVeiculo(${isEdit ? `'${veiculo.id}'` : 'null'}))">${isEdit ? 'Salvar' : 'Cadastrar'}</button>
     </div>
   `);
 }
@@ -2358,7 +2405,7 @@ function openUsuarioModal(usuario = null) {
     <div class="form-error" id="f-usr-error"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveUsuario(${isEdit ? `'${usuario.id}'` : 'null'})">${isEdit ? 'Salvar' : 'Criar'}</button>
+      <button class="btn btn-primary" onclick="comLoading(this, () => saveUsuario(${isEdit ? `'${usuario.id}'` : 'null'}))">${isEdit ? 'Salvar' : 'Criar'}</button>
     </div>
   `);
 
@@ -2519,7 +2566,7 @@ async function loadDireitos(filtroStatus = '', filtroUrgencia = '') {
     tbody.innerHTML = data.map(s => {
       const st = STATUS_LABELS[s.status] || { label: s.status, color: '#94A3B8' };
       return `<tr style="cursor:pointer" onclick="abrirDireitoDetalhe('${s.id}')">
-        <td style="font-family:monospace;font-size:12px;color:var(--accent-light)">${esc(s.protocolo)}</td>
+        <td style="font-family:monospace;font-size:12px;color:var(--accent)">${esc(s.protocolo)}</td>
         <td><strong>${esc(s.nome)}</strong><br><span style="color:var(--text-muted);font-size:11px">${esc(s.email)}</span></td>
         <td style="font-size:13px">${esc(TIPO_LABELS_FRONT[s.tipo] || s.tipo)}</td>
         <td><span style="color:${st.color};font-weight:600;font-size:12px">● ${st.label}</span></td>
@@ -2556,7 +2603,7 @@ async function abrirDireitoDetalhe(id) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div>
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Protocolo</div>
-          <div style="font-family:monospace;font-size:13px;color:var(--accent-light)">${esc(s.protocolo)}</div>
+          <div style="font-family:monospace;font-size:13px;color:var(--accent)">${esc(s.protocolo)}</div>
         </div>
         <div>
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Status</div>
@@ -2596,7 +2643,7 @@ async function abrirDireitoDetalhe(id) {
 
       <div style="margin-bottom:16px">
         <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Descrição da solicitação</div>
-        <div style="background:rgba(0,0,0,0.15);border-left:3px solid var(--accent-light);padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.descricao)}</div>
+        <div style="background:rgba(0,0,0,0.15);border-left:3px solid var(--accent);padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.descricao)}</div>
       </div>
 
       ${s.resposta_dpo ? `
@@ -2611,7 +2658,7 @@ async function abrirDireitoDetalhe(id) {
 
       ${!jaRespondida ? `
       <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-      <div style="font-size:13px;font-weight:700;color:var(--accent-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Responder</div>
+      <div style="font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Responder</div>
 
       <form id="form-direito-resposta" onsubmit="return responderDireito(event, '${s.id}')">
         <div class="form-field" style="margin-bottom:12px">
@@ -2675,19 +2722,21 @@ async function responderDireito(ev, id) {
     if (!ok) return false;
   }
 
-  try {
-    const body = { id, status };
-    if (resposta_dpo) body.resposta_dpo = resposta_dpo;
-    body.enviar_email = enviar_email;
+  await comLoading(form.querySelector('[type="submit"]'), async () => {
+    try {
+      const body = { id, status };
+      if (resposta_dpo) body.resposta_dpo = resposta_dpo;
+      body.enviar_email = enviar_email;
 
-    const result = await api('/admin/direitos', 'PUT', body);
-    toast(result.email_enviado ? 'Resposta salva e e-mail enviado' : 'Resposta salva');
-    closeModal();
-    loadDireitos();
-  } catch (err) {
-    console.error(err);
-    toast('Erro ao salvar resposta', true);
-  }
+      const result = await api('/admin/direitos', 'PUT', body);
+      toast(result.email_enviado ? 'Resposta salva e e-mail enviado' : 'Resposta salva');
+      closeModal();
+      loadDireitos();
+    } catch (err) {
+      console.error(err);
+      toast('Erro ao salvar resposta', true);
+    }
+  });
   return false;
 }
 

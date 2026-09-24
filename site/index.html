@@ -196,12 +196,12 @@
       background: linear-gradient(135deg, #F97316, #FB923C);
       color: #fff; box-shadow: 0 4px 24px rgba(249,115,22,0.3);
     }
-    .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(249,115,22,0.5); }
+    @media (hover: hover) { .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(249,115,22,0.5); } }
     .btn-primary {
       background: linear-gradient(135deg, var(--accent), var(--accent-light));
       color: #fff; box-shadow: 0 4px 24px rgba(4,107,210,0.3);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(4,107,210,0.5); }
+    @media (hover: hover) { .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(4,107,210,0.5); } }
     .btn-glass {
       background: var(--glass); color: #fff; border: 1px solid var(--border-light);
       backdrop-filter: blur(8px);
@@ -694,9 +694,9 @@
       text-decoration: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid var(--border);
     }
     .contact-btn-whatsapp { background: rgba(37,211,102,0.08); border-color: rgba(37,211,102,0.3); color: #25D366; }
-    .contact-btn-whatsapp:hover { background: rgba(37,211,102,0.15); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,211,102,0.2); }
+    @media (hover: hover) { .contact-btn-whatsapp:hover { background: rgba(37,211,102,0.15); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,211,102,0.2); } }
     .contact-btn-email { background: var(--glass); color: var(--text-secondary); }
-    .contact-btn-email:hover { background: var(--accent-glow); border-color: var(--accent); color: var(--text-primary); transform: translateY(-2px); }
+    @media (hover: hover) { .contact-btn-email:hover { background: var(--accent-glow); border-color: var(--accent); color: var(--text-primary); transform: translateY(-2px); } }
     .contact-form {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: var(--radius-lg); padding: 40px 36px;
@@ -714,6 +714,12 @@
     .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
     .form-submit-btn { width: 100%; margin-top: 8px; }
     .form-privacy { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 12px; }
+    .hp-field { position: absolute; left: -9999px; top: -9999px; visibility: hidden; }
+    .form-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+    .form-result:empty { display: none; }
+    .form-result.ok { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.35); color: var(--green); }
+    .form-result.erro { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.35); color: var(--red); }
+    .form-result a { color: inherit; font-weight: 600; }
 
     /* ===== FOOTER EXPANDED ===== */
     .footer { background: var(--bg-dark); border-top: 1px solid var(--border); padding: 64px 0 32px; }
@@ -755,7 +761,11 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .back-to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-    .back-to-top:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(4,107,210,0.5); }
+    @media (hover: hover) { .back-to-top:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(4,107,210,0.5); } }
+    /* Feedback no toque/clique: responde ao pressionar, não só no hover (que não existe no toque) */
+    .btn:active, .contact-btn:active, .back-to-top:active, .nav-mobile-toggle:active {
+      transform: scale(0.97); transition: transform 100ms ease-out;
+    }
     .back-to-top:focus-visible { outline: 3px solid var(--accent-light); outline-offset: 3px; }
     @media (max-width: 768px) {
       .back-to-top { bottom: 16px; right: 16px; width: 44px; height: 44px; }
@@ -1196,11 +1206,16 @@
             <label for="mensagem">Mensagem (opcional)</label>
             <textarea id="mensagem" name="mensagem" rows="3" placeholder="Conte um pouco sobre o seu condomínio..."></textarea>
           </div>
+          <div class="hp-field" aria-hidden="true">
+            <label for="website">Website (não preencha)</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+          </div>
           <button type="submit" class="btn btn-cta btn-lg form-submit-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             Solicitar proposta
           </button>
           <p class="form-privacy">Seus dados são confidenciais e não serão compartilhados.</p>
+          <div class="form-result" id="lead-result" role="status" aria-live="polite"></div>
         </form>
       </div>
     </div>
@@ -1335,23 +1350,52 @@
       });
     });
 
-    // Lead Form
+    // Lead Form — POST /api/lead; "sucesso" só quando o e-mail saiu de fato
     const leadForm = document.getElementById('lead-form');
     if (leadForm) {
-      leadForm.addEventListener('submit', function(e) {
+      const WHATSAPP_URL = document.querySelector('.contact-btn-whatsapp').href;
+      const leadResult = document.getElementById('lead-result');
+      const mostrarResultado = (tipo, texto, comWhatsapp) => {
+        leadResult.className = 'form-result ' + tipo;
+        leadResult.textContent = texto;
+        if (comWhatsapp) {
+          const link = document.createElement('a');
+          link.href = WHATSAPP_URL;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = 'Chamar no WhatsApp';
+          leadResult.append(' ', link, '.');
+        }
+      };
+
+      leadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        if (!this.checkValidity()) {
+          this.reportValidity();
+          return;
+        }
         const btn = this.querySelector('.form-submit-btn');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="20 6 9 17 4 12"></polyline></svg> Enviado com sucesso!';
-        btn.style.background = 'linear-gradient(135deg, #34D399, #10B981)';
         btn.disabled = true;
-        // TODO: Integrar com backend, Formspree, EmailJS ou webhook
-        setTimeout(() => {
-          btn.innerHTML = originalText;
-          btn.style.background = '';
-          btn.disabled = false;
+        btn.textContent = 'Enviando…';
+        leadResult.textContent = '';
+
+        const dados = Object.fromEntries(new FormData(this));
+        try {
+          const res = await fetch('/api/lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados),
+          });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
           this.reset();
-        }, 4000);
+          mostrarResultado('ok', `Recebemos seu pedido, ${dados.nome.split(' ')[0]}. Vamos responder no e-mail ${dados.email}.`);
+        } catch (err) {
+          mostrarResultado('erro', 'Não conseguimos enviar seu pedido agora. Tente de novo em instantes ou fale com a gente direto:', true);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
       });
     }
   </script>
