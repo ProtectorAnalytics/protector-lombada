@@ -2,7 +2,7 @@
 
 > Visão técnica do fluxo de dados, componentes e decisões arquiteturais do sistema.
 
-**Versão 2.0** · Abril 2026
+**Versão 2.1** · Setembro 2026
 
 ---
 
@@ -94,6 +94,28 @@ O Protector Traffic Control é uma aplicação **serverless multi-tenant** que i
 - Deleta registros de `capturas` com `timestamp < NOW() - 15 days`
 - Remove fotos órfãs do bucket `capturas-fotos`
 - Limpa `debug_log` (> 6h)
+
+---
+
+## Fluxo: Pedido de proposta (site)
+
+1. O visitante preenche o formulário "Solicitar proposta" em `/`. O navegador valida os campos antes de enviar.
+2. `POST /api/lead` (`api/lead.js`) aceita só JSON até 20 KB, aplica rate limit de 5 envios/hora por IP e descarta em silêncio (200) se o honeypot `website` vier preenchido.
+3. `lib/lead.js` (`validateLead`, função pura) sanitiza e valida nome, e-mail, condomínio, cidade e mensagem.
+4. O e-mail sai pelo mesmo SMTP do formulário LGPD para `contato@appps.com.br`, com `replyTo` do visitante e campos escapados.
+5. Só responde **201 se o e-mail saiu**; falha de envio responde **502** e a tela mostra erro com o link do WhatsApp. Nada é gravado no banco.
+
+---
+
+## Frontend: movimento e interface
+
+As três superfícies (`site/`, `dashboard/`, `admin/`) são HTML/CSS/JS puros, sem build, e seguem os princípios de interface da Apple (WWDC *Designing Fluid Interfaces*):
+
+- **`site/js/spring.js`** (UMD, servido em `/js/spring.js`): mola com `damping`/`response`, interrompível (redireciona a partir do valor e da velocidade atuais), com herança da velocidade do dedo, projeção de impulso (`project`), resistência na borda (`rubberband`), medidor de velocidade (`velocityTracker`) e bottom sheet arrastável (`sheet`). Com `prefers-reduced-motion` ou aba oculta, vai direto ao estado final.
+- **Uso**: modais, confirmação, lightbox, menus, avisos e gavetas animam por mola e saem pelo mesmo caminho por onde entraram. No celular/toque, modais viram bottom sheet que fecha arrastando; a foto ampliada é arrastável com inércia.
+- **Materiais**: barras translúcidas (`backdrop-filter`) com o conteúdo rolando por baixo; sólidas em `prefers-reduced-transparency` e `prefers-contrast`.
+- **Tipografia**: fonte do sistema (`system-ui`, SF Pro nos aparelhos Apple), sem webfonts; `font-size` em `rem`, respeitando o tamanho de texto do usuário. A Inter em `fonts/` é usada só nos PDFs gerados pelo PDFKit.
+- **Status da câmera**: `site/js/camera-status.js` é a fonte única da regra online/alerta/offline/aguardando, usada pelo front e por `api/admin/dashboard.js`.
 
 ---
 
@@ -214,4 +236,4 @@ A câmera ALPHADIGI envia o serial embutido no payload automaticamente. O backen
 
 ---
 
-**Protector Traffic Control** — Arquitetura · v2.0 · Abril 2026
+**Protector Traffic Control** — Arquitetura · v2.1 · Setembro 2026

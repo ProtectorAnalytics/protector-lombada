@@ -367,6 +367,7 @@
     <a href="#parte9">9. Personalização do PDF</a>
     <a href="#parte10">10. Resolução de Problemas</a>
     <a href="#checklist">Checklist: Novo Condomínio</a>
+    <a href="#painel-admin">Usando o Painel Admin</a>
     <a href="#dados-tecnicos">Dados Técnicos</a>
 </aside>
 <div class="sidebar-scrim" id="sidebar-scrim" aria-hidden="true"></div>
@@ -797,6 +798,41 @@
 
     <hr>
 
+    <!-- USANDO O PAINEL ADMIN -->
+    <h2 id="painel-admin">Usando o Painel Admin</h2>
+
+    <h3>Navegação</h3>
+    <ul>
+        <li>O endereço guarda a tela aberta (ex.: <code>/admin#clientes</code>, <code>/admin#cliente/&lt;id&gt;</code>). O botão <strong>Voltar</strong> do navegador volta para a tela anterior e o <strong>F5</strong> recarrega na mesma tela.</li>
+        <li>No detalhe de um cliente, o item <strong>Clientes</strong> do menu lateral fica marcado.</li>
+        <li>Em telas estreitas (até 800 px), o menu vira uma faixa no topo e a página rola por baixo da barra translúcida.</li>
+    </ul>
+
+    <h3>Salvar, enviar e erros</h3>
+    <ul>
+        <li>Enquanto salva ou envia, o botão fica <strong>travado</strong>. Um segundo clique é ignorado, então não há cadastro nem envio em dobro.</li>
+        <li>Nos formulários de cliente, câmera, e-mail, veículo e usuário, o erro aparece <strong>no próprio campo</strong> (ex.: placa fora do formato antigo ou Mercosul, e-mail inválido, senha com menos de 6 caracteres) e some ao corrigir.</li>
+        <li>Se uma lista não carregar, aparece <strong>"Não foi possível carregar"</strong> com o botão <strong>"Tentar de novo"</strong> — nunca fica em "Carregando..." para sempre.</li>
+        <li>Avisos de erro ficam 7 segundos na tela e podem ser fechados no ✕; avisos de sucesso somem sozinhos.</li>
+    </ul>
+
+    <h3>Relatório semanal</h3>
+    <p>O botão <strong>"Enviar relatório agora"</strong> envia o relatório <strong>de verdade</strong> para todos os destinatários do cliente, por isso pede confirmação antes.</p>
+
+    <h3>Senha</h3>
+    <p>A recuperação de senha acontece na própria tela de login: o link do e-mail abre um formulário com <strong>dois campos de senha</strong> (nova e confirmação), com aviso na hora se estiver curta ou diferente.</p>
+
+    <h3>Celular e teclado</h3>
+    <ul>
+        <li>No celular (ou tela de toque), as janelas de cadastro abrem como um <strong>painel que sobe da parte de baixo</strong>; arraste pela alça no topo para fechar. A confirmação de exclusão não fecha por arraste, só pelos botões ou pelo Esc.</li>
+        <li><strong>Esc</strong> fecha a janela aberta; com a confirmação aberta, fecha só a confirmação.</li>
+    </ul>
+
+    <h3>Saúde das câmeras (<code>/admin/camera-saude.html</code>)</h3>
+    <p>Atualiza sozinha a cada 30 segundos, uma requisição por vez. Se a atualização falhar, os dados que já estavam na tela continuam e o botão do topo mostra <strong>"Falha ao atualizar · tentar"</strong>; clicar nele tenta de novo.</p>
+
+    <hr>
+
     <!-- DADOS TÉCNICOS -->
     <h2 id="dados-tecnicos">Dados Técnicos (para quem precisa)</h2>
 
@@ -806,11 +842,12 @@
             <tr><th>O quê</th><th>Endereço</th></tr>
         </thead>
         <tbody>
-            <tr><td>URL principal</td><td><code>https://protector-lombada.vercel.app</code></td></tr>
+            <tr><td>URL principal</td><td><code>https://lombada.appps.com.br</code> (o <code>protector-lombada.vercel.app</code> ainda responde, mas não deve ser usado em configuração de câmera)</td></tr>
             <tr><td>Endpoint de capturas</td><td><code>/placa</code> (roteado para <code>/api/captura.js</code>)</td></tr>
             <tr><td>Endpoint de heartbeat</td><td><code>/api/heartbeat</code></td></tr>
             <tr><td>Painel admin</td><td><code>/admin</code></td></tr>
-            <tr><td>Dashboard</td><td><code>/</code> (raiz)</td></tr>
+            <tr><td>Dashboard do cliente</td><td><code>/dashboard</code></td></tr>
+            <tr><td>Site e pedido de proposta</td><td><code>/</code> (raiz) — o formulário envia para <code>POST /api/lead</code></td></tr>
         </tbody>
     </table>
 
@@ -839,7 +876,8 @@
         <li><strong>Fotos</strong> das capturas são apagadas automaticamente após <strong>15 dias</strong> (os dados permanecem)</li>
         <li><strong>Registros de capturas</strong> (dados sem foto) são apagados após <strong>6 meses</strong></li>
         <li>Logs de debug são limpos automaticamente após <strong>24 horas</strong></li>
-        <li>Câmera é considerada Offline se não enviar dados em 5 minutos</li>
+        <li>Status da câmera pelo último dado recebido: <strong>Online</strong> até 30 minutos, <strong>Alerta</strong> de 30 minutos a 6 horas, <strong>Offline</strong> acima de 6 horas, <strong>Aguardando</strong> se nunca transmitiu (regra única em <code>site/js/camera-status.js</code>)</li>
+        <li>Pedido de proposta do site: no máximo 5 envios por hora por endereço IP</li>
     </ul>
 
     <h3>Controle de Acesso (RLS)</h3>
@@ -870,7 +908,7 @@
             <tr><td><code>SMTP_HOST</code></td><td>Servidor de email</td></tr>
             <tr><td><code>SMTP_PORT</code></td><td>Porta do email (465)</td></tr>
             <tr><td><code>SMTP_SECURE</code></td><td>Usar SSL (true)</td></tr>
-            <tr><td><code>SMTP_USER</code></td><td>Email que envia os alertas</td></tr>
+            <tr><td><code>SMTP_USER</code></td><td>Email que envia os alertas, o relatório semanal, o formulário LGPD e os pedidos de proposta do site</td></tr>
             <tr><td><code>SMTP_PASS</code></td><td>Senha do email</td></tr>
         </tbody>
     </table>

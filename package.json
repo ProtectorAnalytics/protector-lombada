@@ -1,11 +1,12 @@
 {
   "name": "protector-lombada",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Plataforma web para gerenciamento de Lombadas Educativas ALPHADIGI",
   "private": true,
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required'",
+    "test": "node test/spring.test.js && node test/lead.test.js && node test/camera-status.test.js && node test/parse-vehicle-id.test.js",
     "test:captura": "bash scripts/test-captura.sh"
   },
   "dependencies": {
