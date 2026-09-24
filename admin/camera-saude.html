@@ -316,6 +316,11 @@
       100% { background-position: -200% 0; }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .refresh-pill .pulse, .skeleton { animation: none; }
+      .refresh-pill:active { transform: none; }
+    }
+
     .err-box {
       padding: 24px; background: var(--err-soft); color: #7f1d1d;
       border: 1px solid #fecaca; border-radius: 8px; text-align: center;
@@ -421,17 +426,25 @@
     function esc(s) { return String(s ?? '').replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c])); }
 
     // ─── load + render ───
+    // Resposta anterior: se nada mudou, não re-renderiza — refazer o innerHTML
+    // a cada 30s fazia as fotos piscarem e apagava a seleção de texto (serial).
+    let ultimoJson = null;
     async function loadHealth() {
       const r = await fetch('/api/admin/camera-health?id=' + encodeURIComponent(cameraId), {
         headers: { Authorization: 'Bearer ' + token }
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
-        main.innerHTML = `<div class="err-box">${r.status}: ${e.error || 'Erro ao carregar'}</div>`;
+        const msg = `${r.status}: ${e.error || 'Erro ao carregar'}`;
+        // Já há dados na tela: mantém e deixa o refresh avisar no pill.
+        if (ultimoJson) throw new Error(msg);
+        main.innerHTML = `<div class="err-box">${esc(msg)}</div>`;
         return;
       }
-      const d = await r.json();
-      render(d);
+      const json = await r.text();
+      if (json === ultimoJson) return;
+      ultimoJson = json;
+      render(JSON.parse(json));
     }
 
     function render(d) {
@@ -622,7 +635,11 @@
     }
     refreshBtn.onclick = refresh;
 
-    await loadHealth();
+    try {
+      await loadHealth();
+    } catch {
+      main.innerHTML = '<div class="err-box">Não foi possível carregar a saúde da câmera. A página tenta de novo a cada 30 s.</div>';
+    }
     timer = setInterval(tick, 1000);
   })();
   </script>

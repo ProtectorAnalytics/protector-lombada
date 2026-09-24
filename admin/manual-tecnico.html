@@ -278,11 +278,26 @@
             .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
             .main { margin-left: 0; padding: 32px 20px 60px; }
             .menu-toggle { display: block; }
+            /* Scrim: foca a gaveta e fecha ao toque fora */
+            .sidebar-scrim {
+                display: block; position: fixed; inset: 60px 0 0 0; z-index: 40;
+                background: rgba(15,23,42,.4); opacity: 0; pointer-events: none;
+                transition: opacity .3s;
+            }
+            .sidebar.open ~ .sidebar-scrim { opacity: 1; pointer-events: auto; }
+        }
+        .sidebar-scrim { display: none; }
+
+        /* Âncora do sumário não some atrás da navbar fixa (60px) */
+        h2[id] { scroll-margin-top: 76px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sidebar, .sidebar-scrim { transition: none !important; }
         }
 
         /* ── Print ── */
         @media print {
-            .navbar, .sidebar, .menu-toggle, .btn { display: none !important; }
+            .navbar, .sidebar, .sidebar-scrim, .menu-toggle, .btn { display: none !important; }
             .main {
                 margin: 0;
                 padding: 0;
@@ -307,8 +322,8 @@
 
 <!-- Navbar -->
 <nav class="navbar">
-    <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Abrir sumário" aria-expanded="false" aria-controls="sidebar">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
     <a href="/admin" class="brand">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -346,6 +361,7 @@
     <a href="#checklist">Checklist: Novo Condomínio</a>
     <a href="#dados-tecnicos">Dados Técnicos</a>
 </aside>
+<div class="sidebar-scrim" id="sidebar-scrim" aria-hidden="true"></div>
 
 <!-- Main Content -->
 <main class="main">
@@ -876,10 +892,21 @@
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
 
-    // Close sidebar on mobile when clicking a link
-    links.forEach(a => a.addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.remove('open');
-    }));
+    // Gaveta do sumário (mobile): abre/fecha pelo botão, fecha no link,
+    // no toque fora (scrim) e no Esc; aria-expanded acompanha o estado.
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('menu-toggle');
+    function setSumario(aberto) {
+        sidebar.classList.toggle('open', aberto);
+        toggle.setAttribute('aria-expanded', String(aberto));
+        toggle.setAttribute('aria-label', aberto ? 'Fechar sumário' : 'Abrir sumário');
+    }
+    toggle.addEventListener('click', () => setSumario(!sidebar.classList.contains('open')));
+    document.getElementById('sidebar-scrim').addEventListener('click', () => setSumario(false));
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) { setSumario(false); toggle.focus(); }
+    });
+    links.forEach(a => a.addEventListener('click', () => setSumario(false)));
 })();
 </script>
 

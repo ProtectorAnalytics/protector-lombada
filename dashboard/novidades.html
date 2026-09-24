@@ -76,7 +76,7 @@
       color: var(--text-secondary);
       font-size: 13px;
       font-weight: 500;
-      transition: all 0.2s;
+      transition: border-color 0.2s, color 0.2s, background-color 0.2s;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -147,12 +147,11 @@
       margin-bottom: 28px;
       position: relative;
       overflow: hidden;
-      transition: all 0.3s;
+      transition: border-color 0.2s;
     }
-    .release:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    /* Card de leitura, não clicável: sem "levantar", só a borda acompanha o cursor */
+    @media (hover: hover) and (pointer: fine) {
+      .release:hover { border-color: var(--accent); }
     }
     .release::before {
       content: '';

@@ -60,7 +60,9 @@
       --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
       --shadow-hover: 0 0 0 1px var(--accent), 0 8px 24px rgba(59,130,246,0.2);
       --radius: 10px;
-      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Só propriedades baratas: `all` animava sombra e padding (repaint/layout) */
+      --transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s;
+      --font-mono: 'Fira Code', ui-monospace, 'SF Mono', Consolas, monospace;
     }
 
     body {
@@ -103,7 +105,7 @@
       font-size: 20px;
       font-weight: 700;
       margin-bottom: 4px;
-      letter-spacing: 1px;
+      letter-spacing: 0.06em;
     }
 
     .login-box .subtitle {
@@ -139,7 +141,7 @@
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: var(--transition);
       margin-top: 8px;
     }
 
@@ -196,7 +198,7 @@
       color: var(--accent);
       font-size: 18px;
       font-weight: 700;
-      letter-spacing: 1px;
+      letter-spacing: 0.06em;
     }
 
     .topbar .brand-center span {
@@ -350,13 +352,12 @@
       left: 8px;
       font-size: 15px;
       font-weight: 700;
-      letter-spacing: 2px;
-      font-family: 'Fira Code', 'Courier New', monospace;
+      letter-spacing: 0.12em;
+      font-family: var(--font-mono);
       color: #FFFFFF;
-      background: rgba(0,0,0,0.72);
+      background: rgba(0,0,0,0.8);
       padding: 4px 9px;
       border-radius: 4px;
-      backdrop-filter: blur(8px);
       margin-bottom: 0;
       z-index: 2;
       line-height: 1.3;
@@ -369,7 +370,7 @@
       right: 8px;
       font-size: 17px;
       font-weight: 700;
-      font-family: 'Fira Code', 'Courier New', monospace;
+      font-family: var(--font-mono);
       background: rgba(13,22,38,0.92); /* opaco: legível sobre qualquer foto */
       padding: 4px 10px;
       border-radius: 4px;
@@ -406,7 +407,7 @@
     }
     .recent-card .rc-info .rc-time {
       font-size: 11px;
-      font-family: 'Fira Code', monospace;
+      font-family: var(--font-mono);
       color: var(--text-muted);
       white-space: nowrap;
       flex-shrink: 0;
@@ -463,24 +464,18 @@
       transition: var(--transition);
     }
 
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-      border-color: var(--accent);
-    }
-
     .stat-card .label {
       color: var(--text-secondary);
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.06em;
       font-weight: 600;
     }
 
     .stat-card .value {
       font-size: 26px;
       font-weight: 700;
-      font-family: 'Fira Code', monospace;
+      font-family: var(--font-mono);
       margin: 1px 0;
     }
 
@@ -511,10 +506,6 @@
       flex-wrap: wrap;
       box-shadow: var(--shadow-sm);
       transition: var(--transition);
-    }
-
-    .filters-row:hover {
-      box-shadow: var(--shadow-md);
     }
 
     .filters-row label {
@@ -562,7 +553,7 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: var(--transition);
     }
 
     .btn-filter {
@@ -616,10 +607,6 @@
       transition: var(--transition);
     }
 
-    .table-container:hover {
-      box-shadow: var(--shadow-md);
-    }
-
     .table-header {
       display: grid;
       grid-template-columns: 48px 82px 78px minmax(120px, 1.2fr) 150px minmax(140px, 1.5fr) 64px;
@@ -630,13 +617,13 @@
       border-bottom: none;
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
       font-weight: 700;
     }
 
     .table-body {
       flex: 1;
-      overflow: hidden;
+      overflow-y: auto;
     }
 
     .table-pagination {
@@ -666,7 +653,7 @@
       font-size: 12px;
       cursor: pointer;
       color: var(--text-secondary);
-      transition: all 0.2s;
+      transition: var(--transition);
     }
     .table-pagination .pg-btn:hover:not(:disabled) {
       border-color: var(--accent);
@@ -701,7 +688,6 @@
 
     .table-row:hover {
       background: var(--accent-light);
-      padding-left: 18px;
     }
 
     .table-row .row-thumb {
@@ -726,14 +712,14 @@
 
     .table-row .placa {
       font-weight: 600;
-      letter-spacing: 1px;
-      font-family: 'Fira Code', monospace;
+      letter-spacing: 0.06em;
+      font-family: var(--font-mono);
     }
 
     .table-row .vel {
       font-weight: 700;
       font-size: 15px;
-      font-family: 'Fira Code', monospace;
+      font-family: var(--font-mono);
     }
 
     .table-row .vel.green { color: var(--green); }
@@ -793,16 +779,11 @@
       padding-right: 4px;
     }
 
-    .sidebar-card:hover {
-      box-shadow: var(--shadow-hover);
-      border-color: var(--accent);
-    }
-
     .sidebar-card h3 {
       color: var(--accent);
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.06em;
       margin-bottom: 8px;
     }
 
@@ -832,7 +813,7 @@
       font-size: 11px;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
       font-weight: 700;
       margin-bottom: 3px;
     }
@@ -884,8 +865,8 @@
     .ranking-item .placa {
       font-weight: 600;
       flex: 1;
-      letter-spacing: 1px;
-      font-family: 'Fira Code', monospace;
+      letter-spacing: 0.06em;
+      font-family: var(--font-mono);
     }
 
     .ranking-item .count {
@@ -978,11 +959,13 @@
       inset: 0;
       z-index: 2000;
       background: rgba(0,0,0,0.92);
-      align-items: center;
-      justify-content: center;
+      /* safe: com zoom a imagem passa da tela; `center` puro cortava topo e
+         esquerda sem permitir rolar até eles */
+      align-items: safe center;
+      justify-content: safe center;
       overflow: auto;
     }
-    .lightbox-overlay.active { display: flex; }
+    .lightbox-overlay.active { display: flex; animation: overlay-fade 0.18s ease-out; }
 
     .lightbox-img {
       max-width: 100%;
@@ -995,6 +978,7 @@
     .lightbox-img.zoomed {
       max-width: none;
       max-height: none;
+      margin: auto; /* fallback p/ navegador sem `safe` */
       cursor: zoom-out;
     }
 
@@ -1032,7 +1016,7 @@
       padding: 6px 14px;
       border-radius: 999px;
       font-size: 12px;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.02em;
       z-index: 2001;
       pointer-events: none;
     }
@@ -1086,7 +1070,7 @@
       color: var(--text-muted);
       text-transform: uppercase;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
     }
 
     .modal-field .value {
@@ -1112,7 +1096,7 @@
       color: var(--accent);
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.06em;
       margin-bottom: 6px;
     }
 
@@ -1129,7 +1113,7 @@
       text-transform: uppercase;
       display: block;
       font-weight: 600;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.02em;
     }
 
     .modal-morador .morador-grid strong {
@@ -1145,7 +1129,7 @@
       color: var(--accent);
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.06em;
       margin-bottom: 8px;
     }
 
@@ -1218,8 +1202,17 @@
       background: var(--green);
       border-radius: 50%;
       margin-left: 8px;
-      animation: pulse 1.5s ease-in-out infinite;
+      opacity: 0.35;
     }
+    /* Pulsa só enquanto loadAll roda: piscar sempre dizia "ao vivo" até com a rede fora */
+    .loading-dot.ativo { animation: pulse 1.5s ease-in-out infinite; }
+    .ultima-atualizacao {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .ultima-atualizacao.falha { color: var(--orange); }
 
     @keyframes pulse {
       0%, 100% { opacity: 0.3; }
@@ -1298,7 +1291,7 @@
       border: none;
       border-bottom: 2px solid transparent;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: var(--transition);
     }
     .vm-tab.active {
       color: var(--accent);
@@ -1322,7 +1315,7 @@
       color: var(--text-secondary);
       margin-bottom: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
     }
     .vm-field input {
       width: 100%;
@@ -1363,7 +1356,7 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: var(--transition);
     }
     .vm-actions .vm-btn-primary:hover {
       background: var(--accent-hover);
@@ -1379,7 +1372,7 @@
       font-size: 14px;
       cursor: pointer;
       color: var(--text-secondary);
-      transition: all 0.2s;
+      transition: var(--transition);
     }
     .vm-actions .vm-btn-cancel:hover {
       border-color: var(--text-secondary);
@@ -1447,7 +1440,7 @@
       font-size: 18px;
       font-weight: 700;
       color: var(--accent);
-      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+      font-family: var(--font-mono);
     }
     .vm-result-card .info {
       font-size: 12px;
@@ -1492,7 +1485,7 @@
       font-size: 15px;
       font-weight: 700;
       color: var(--accent);
-      font-family: 'SF Mono', 'Cascadia Code', Consolas, monospace;
+      font-family: var(--font-mono);
       min-width: 90px;
     }
     .vm-lista-item .vm-li-info {
@@ -1512,7 +1505,7 @@
       padding: 3px 8px;
       font-size: 11px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: var(--transition);
       margin-left: 8px;
       flex-shrink: 0;
     }
@@ -1577,7 +1570,7 @@
     @media (max-width: 1440px), (max-height: 820px) {
       .topbar { min-height: 48px; padding: 6px 20px; }
       .topbar .brand img { height: 32px; }
-      .topbar .brand-center h2 { font-size: 16px; letter-spacing: 0.6px; }
+      .topbar .brand-center h2 { font-size: 16px; letter-spacing: 0.05em; }
       .topbar .brand-center span { font-size: 11px; }
       .topbar .btn-veiculos, .topbar .btn-logout {
         padding: 5px 10px; font-size: 11px;
@@ -1592,7 +1585,7 @@
       .stats-row { gap: 6px; }
       .stat-card { padding: 8px 10px; }
       .stat-card .value { font-size: 20px; margin: 0; }
-      .stat-card .label { font-size: 10px; letter-spacing: 0.5px; }
+      .stat-card .label { font-size: 10px; letter-spacing: 0.04em; }
       .stat-card .unit { font-size: 10px; }
       .filters-row { padding: 6px 12px; gap: 8px; }
       .filters-row label { font-size: 10px; }
@@ -1606,7 +1599,7 @@
       .recent-card .rc-thumb,
       .recent-card .rc-no-photo { height: 108px; }
       .sidebar-card { padding: 8px 10px; }
-      .sidebar-card h3 { font-size: 10px; margin-bottom: 6px; letter-spacing: 0.6px; }
+      .sidebar-card h3 { font-size: 10px; margin-bottom: 6px; letter-spacing: 0.05em; }
       .chart-container { height: 100px; }
       .sidebar-kpis { gap: 4px; }
       .sidebar-kpi { padding: 6px 8px; }
@@ -1754,13 +1747,16 @@
       padding-left: 11px;
     }
     .table-row:hover {
-      padding-left: 11px;
       border-left-color: var(--accent);
+    }
+    .table-row:focus-visible, .recent-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
     /* Toque não tem hover: sem isto o "levantar" fica preso depois do tap */
-    @media (hover: none) {
-      .recent-card:hover, .stat-card:hover, .btn-filter:hover, .btn-export:hover,
+    @media (hover: none), (pointer: coarse) {
+      .recent-card:hover, .btn-filter:hover, .btn-export:hover,
       .modal-photo:hover, .btn-zoom:hover, .btn-pdf:hover,
       .topbar .btn-veiculos:hover, .login-box button:hover,
       .vm-actions .vm-btn-primary:hover {
@@ -1818,12 +1814,113 @@
       transform: translate(-50%, 0);
     }
 
+    /* Saída espelha a entrada: modal sobe e esmaece pelo mesmo caminho */
+    @keyframes modalSlideOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-20px) scale(0.97); }
+    }
+    @keyframes overlay-fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    .modal-overlay.closing, .vm-overlay.closing, .lightbox-overlay.closing {
+      animation: overlay-fade-out 0.2s ease-in forwards;
+    }
+    .modal-overlay.closing .modal-content, .vm-overlay.closing .vm-box {
+      animation: modalSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    /* Menu Exportar: nasce do botão (canto superior direito) */
+    .export-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+      z-index: 100;
+      min-width: 160px;
+      overflow: hidden;
+      transform-origin: top right;
+      opacity: 0;
+      transform: scale(0.96);
+      visibility: hidden;
+      transition: opacity 0.12s ease-out, transform 0.12s ease-out, visibility 0s linear 0.12s;
+    }
+    .export-menu.aberto {
+      opacity: 1;
+      transform: scale(1);
+      visibility: visible;
+      transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+    }
+    .export-menu button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      transition: background-color 0.15s;
+    }
+    .export-menu button:hover, .export-menu button:focus-visible { background: var(--bg-input); }
+
+    .vel-dash { font-size: 22px; letter-spacing: -0.1em; }
+
+    /* Aviso de limite de registros e falhas de importação */
+    .pg-limite { color: var(--orange); }
+    .import-resultado {
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      color: var(--green);
+    }
+    .import-resultado.com-falhas {
+      background: rgba(249,115,22,0.1);
+      border-color: rgba(249,115,22,0.35);
+      color: var(--text-primary);
+    }
+    .import-falhas { margin: 8px 0 0 18px; color: var(--text-secondary); }
+    .import-falhas strong { font-family: var(--font-mono); color: var(--text-primary); }
+
     /* Respeitar preferência de movimento reduzido */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+      }
+      /* Sem deslocamento: modal entra e sai só por opacidade, nada "levanta" */
+      .modal-content, .vm-box { animation-name: overlay-fade; }
+      .modal-overlay.closing .modal-content, .vm-overlay.closing .vm-box { animation-name: overlay-fade-out; }
+      .recent-card:hover, .btn-filter:hover, .btn-export:hover, .modal-photo:hover,
+      .btn-zoom:hover, .topbar .btn-veiculos:hover, .login-box button:hover,
+      .vm-actions .vm-btn-primary:hover { transform: none; }
+    }
+
+    /* Transparência reduzida: fundo sólido em vez de desfoque */
+    @media (prefers-reduced-transparency: reduce) {
+      .modal-overlay, .vm-overlay {
+        backdrop-filter: none;
+        background: rgba(0,0,0,0.9);
+      }
+    }
+
+    /* Alto contraste: bordas e texto secundário mais fortes */
+    @media (prefers-contrast: more) {
+      :root {
+        --border: rgba(255,255,255,0.35);
+        --text-secondary: #CBD5E1;
+        --text-muted: #94A3B8;
       }
     }
   </style>
@@ -1855,7 +1952,20 @@
         <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
         <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
       </div>
-      <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text-muted);letter-spacing:0.5px">
+
+      <!-- Nova senha (link de recuperação): campo mascarado + confirmação, erro inline -->
+      <div id="nova-senha-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+        <div id="nova-senha-campos">
+          <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Defina sua nova senha (mínimo 6 caracteres):</div>
+          <label for="nova-senha" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Nova senha</label>
+          <input type="password" id="nova-senha" placeholder="Nova senha" autocomplete="new-password" minlength="6" oninput="validarNovaSenha()">
+          <label for="nova-senha-confirma" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Confirme a nova senha</label>
+          <input type="password" id="nova-senha-confirma" placeholder="Repita a nova senha" autocomplete="new-password" oninput="validarNovaSenha()" onkeydown="if(event.key==='Enter')salvarNovaSenha()">
+          <button type="button" id="btn-nova-senha" onclick="salvarNovaSenha()">SALVAR NOVA SENHA</button>
+        </div>
+        <div id="nova-senha-message" style="font-size:13px;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
+      </div>
+      <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text-muted);letter-spacing:0.04em">
         v1.0.1 &middot; Build 2ea9b40 &middot; 2026-03-12
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:11px;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
@@ -1877,7 +1987,8 @@
       <div class="user-info">
         <span id="topbar-email"></span>
         <button class="btn-veiculos" id="btn-topbar-veiculos" onclick="abrirModalVeiculo()" style="display:none">Veículos</button>
-        <span class="loading-dot" id="polling-dot" title="Atualizando em tempo real" aria-label="Atualizando" aria-hidden="true"></span>
+        <span class="loading-dot" id="polling-dot" title="Atualiza a cada 30 s" aria-hidden="true"></span>
+        <span class="ultima-atualizacao" id="ultima-atualizacao"></span>
         <button type="button" class="btn-logout" onclick="doLogout()" aria-label="Encerrar sessão">Sair</button>
       </div>
     </div>
@@ -1917,7 +2028,7 @@
         </div>
 
         <!-- Filters -->
-          <div class="filters-row">
+          <form class="filters-row" onsubmit="event.preventDefault();applyFilters()">
             <div>
               <label>Data Inicial</label><br>
               <input type="date" id="filter-date-start">
@@ -1953,27 +2064,27 @@
               </select>
             </div>
             <div class="filter-check">
-              <input type="checkbox" id="filter-alertas-only">
+              <input type="checkbox" id="filter-alertas-only" onchange="applyFilters()">
               <label for="filter-alertas-only" style="text-transform:none;font-size:12px;cursor:pointer">Só alertas</label>
             </div>
             <div class="filter-check">
               <input type="checkbox" id="filter-sem-vel" onchange="toggleSemVel(this.checked)">
               <label for="filter-sem-vel" style="text-transform:none;font-size:12px;cursor:pointer" title="Por padrão, capturas sem velocidade (sem radar) ficam ocultas na tela. Os registros nunca são removidos — continuam nos filtros e relatórios.">Mostrar sem velocidade</label>
             </div>
-            <button class="btn-filter" onclick="applyFilters()">Filtrar</button>
-            <button class="btn-clear" onclick="clearFilters()">Limpar</button>
+            <button type="submit" class="btn-filter">Filtrar</button>
+            <button type="button" class="btn-clear" onclick="clearFilters()">Limpar</button>
             <div style="position:relative;margin-left:0">
-              <button class="btn-export" onclick="toggleExportMenu()" id="btn-exportar" style="margin-left:0">Exportar</button>
-              <div id="export-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);z-index:100;min-width:160px;overflow:hidden">
-                <button onclick="exportExcel();closeExportMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 16px;border:none;background:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);transition:background 0.15s" onmouseover="this.style.background='var(--bg-input)'" onmouseout="this.style.background='none'">
+              <button type="button" class="btn-export" onclick="toggleExportMenu()" id="btn-exportar" style="margin-left:0" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">Exportar</button>
+              <div id="export-menu" class="export-menu">
+                <button type="button" onclick="exportExcel();closeExportMenu()">
                   <span style="color:#16a34a;font-size:16px">&#9638;</span> Excel (.xlsx)
                 </button>
-                <button onclick="exportPDF();closeExportMenu()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 16px;border:none;background:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--text-primary);transition:background 0.15s" onmouseover="this.style.background='var(--bg-input)'" onmouseout="this.style.background='none'">
+                <button type="button" onclick="exportPDF();closeExportMenu()">
                   <span style="color:var(--red);font-size:16px">&#9638;</span> PDF (.pdf)
                 </button>
               </div>
             </div>
-          </div>
+          </form>
 
           <!-- Table -->
           <div class="table-container">
@@ -2047,16 +2158,16 @@
       </div>
     </div><!-- fim main-layout -->
 
-    <div style="text-align:center;padding:16px 0 24px;font-size:11px;color:var(--text-muted);letter-spacing:0.3px">
+    <div style="text-align:center;padding:16px 0 24px;font-size:11px;color:var(--text-muted);letter-spacing:0.02em">
       Protector Traffic Control &middot; v1.0.1 &middot; Build 2ea9b40
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
-        <a href="/dashboard/manual.html" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
+        <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           Manual do Usuário
         </a>
         <span style="color:var(--text-muted);opacity:0.4">·</span>
-        <a href="/dashboard/novidades.html" target="_blank" style="color:var(--orange);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
+        <a href="/dashboard/novidades.html" style="color:var(--orange);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6m0 0l-3-3m3 3l3-3"/><path d="M19 10l1 4a7 7 0 1 1-4-4l4 1"/></svg>
           Novidades
         </a>
@@ -2067,10 +2178,10 @@
 
   <!-- ===== MODAL VEICULOS ===== -->
   <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
-    <div class="vm-box">
+    <div class="vm-box" role="dialog" aria-modal="true" aria-labelledby="vm-title">
       <div class="vm-header">
         <h3 id="vm-title">Veículos Cadastrados <span id="vm-count" style="font-size:13px;color:var(--text-secondary);font-weight:400"></span></h3>
-        <button class="modal-close" onclick="fecharModalVeiculo()">&times;</button>
+        <button type="button" class="modal-close" onclick="fecharModalVeiculo()" aria-label="Fechar">&times;</button>
       </div>
       <div class="vm-tabs">
         <button class="vm-tab active" id="vm-tab-lista" onclick="vmSwitchTab('lista')">Lista</button>
@@ -2125,18 +2236,18 @@
         <div style="margin-bottom:20px">
           <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Exportar Veículos</h4>
           <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Baixe a lista completa de veículos cadastrados em formato Excel.</p>
-          <button class="vm-btn-primary" onclick="exportarVeiculosExcel()" style="width:auto;padding:10px 20px">Exportar Excel</button>
+          <button class="vm-btn-primary" onclick="exportarVeiculosExcel(this)" style="width:auto;padding:10px 20px">Exportar Excel</button>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:20px">
           <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Importar Veículos</h4>
           <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">Envie um arquivo Excel (.xlsx) com as colunas:</p>
-          <p style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px;font-family:'SF Mono',Consolas,monospace">PLACA | MORADOR | UNIDADE | MARCA | COR</p>
+          <p style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px;font-family:var(--font-mono)">PLACA | MORADOR | UNIDADE | MARCA | COR</p>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
             <button class="vm-btn-primary" onclick="document.getElementById('vm-import-file').click()" style="width:auto;padding:10px 20px;background:var(--green)">Selecionar Arquivo</button>
             <span id="vm-import-filename" style="font-size:12px;color:var(--text-secondary)">Nenhum arquivo selecionado</span>
             <input type="file" id="vm-import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="previewImport(this)">
           </div>
-          <button class="vm-btn-primary" onclick="downloadModeloExcel()" style="width:auto;padding:8px 16px;background:transparent;color:var(--accent);border:1px solid var(--accent);font-size:12px">Baixar Modelo</button>
+          <button class="vm-btn-primary" onclick="downloadModeloExcel(this)" style="width:auto;padding:8px 16px;background:transparent;color:var(--accent);border:1px solid var(--accent);font-size:12px">Baixar Modelo</button>
           <div id="vm-import-preview" style="margin-top:12px"></div>
           <div class="vm-error" id="vm-import-error"></div>
         </div>
@@ -2146,10 +2257,10 @@
 
   <!-- ===== MODAL ===== -->
   <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-header">
-        <h3>Detalhes da Captura</h3>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <h3 id="modal-title">Detalhes da Captura</h3>
+        <button type="button" class="modal-close" onclick="closeModal()" aria-label="Fechar">&times;</button>
       </div>
       <div id="modal-body"></div>
     </div>
@@ -2206,33 +2317,26 @@
       return `${y}-${m}-${day}`;
     }
 
+    // Link de recuperação: o prompt() antigo bloqueava a página e escondia a
+    // corrida com o login automático. Agora o formulário é inline, então o
+    // dashboard não pode abrir por cima dele.
+    const NOVA_SENHA_MIN = 6;
+    let emRecuperacaoSenha = /type=recovery/.test(window.location.hash);
+
     async function initApp() {
       try {
         const resp = await fetch('/api/config');
         const cfg = await resp.json();
         sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
-        // Detectar se o usuario veio pelo link de recuperação de senha
-        sb.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'PASSWORD_RECOVERY') {
-            const newPassword = prompt('Digite sua nova senha (mínimo 6 caracteres):');
-            if (newPassword && newPassword.length >= 6) {
-              const { error } = await sb.auth.updateUser({ password: newPassword });
-              if (error) {
-                alert('Erro ao alterar senha: ' + error.message);
-              } else {
-                alert('Senha alterada com sucesso! Faça login com a nova senha.');
-                await sb.auth.signOut();
-                window.location.reload();
-              }
-            } else if (newPassword) {
-              alert('A senha deve ter pelo menos 6 caracteres.');
-            }
-          }
+        sb.auth.onAuthStateChange((event) => {
+          if (event === 'PASSWORD_RECOVERY') mostrarNovaSenha();
         });
 
         const { data: { session } } = await sb.auth.getSession();
-        if (session?.user) {
+        if (emRecuperacaoSenha) {
+          mostrarNovaSenha();
+        } else if (session?.user) {
           currentUser = session.user;
           await loadProfile();
         }
@@ -2295,6 +2399,78 @@
       document.querySelector('.login-box button[onclick="doLogin()"]').style.display = '';
       document.querySelector('a[onclick="showResetPassword(event)"]').style.display = '';
       document.getElementById('reset-message').textContent = '';
+    }
+
+    function mostrarCamposLogin(visivel) {
+      const v = visivel ? '' : 'none';
+      document.getElementById('login-email').style.display = v;
+      document.getElementById('login-password').style.display = v;
+      document.querySelector('.login-box button[onclick="doLogin()"]').style.display = v;
+      document.querySelector('a[onclick="showResetPassword(event)"]').style.display = v;
+    }
+
+    function mostrarNovaSenha() {
+      emRecuperacaoSenha = true;
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+      document.getElementById('dashboard-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('reset-password-form').style.display = 'none';
+      mostrarCamposLogin(false);
+      document.getElementById('login-error').textContent = '';
+      document.getElementById('nova-senha-form').style.display = 'block';
+      document.getElementById('nova-senha-campos').style.display = '';
+      document.getElementById('nova-senha').focus();
+    }
+
+    function erroNovaSenha() {
+      const senha = document.getElementById('nova-senha').value;
+      const confirma = document.getElementById('nova-senha-confirma').value;
+      if (senha.length < NOVA_SENHA_MIN) return `A senha deve ter pelo menos ${NOVA_SENHA_MIN} caracteres.`;
+      if (confirma && confirma !== senha) return 'As senhas não conferem.';
+      return '';
+    }
+
+    // Validação enquanto digita: só reclama do que já dá para julgar
+    function validarNovaSenha() {
+      const senha = document.getElementById('nova-senha').value;
+      const msgEl = document.getElementById('nova-senha-message');
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = senha ? erroNovaSenha() : '';
+    }
+
+    async function salvarNovaSenha() {
+      const msgEl = document.getElementById('nova-senha-message');
+      const btn = document.getElementById('btn-nova-senha');
+      const senha = document.getElementById('nova-senha').value;
+      const confirma = document.getElementById('nova-senha-confirma').value;
+      const erro = erroNovaSenha() || (confirma ? '' : 'Repita a nova senha para confirmar.');
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = erro;
+      if (erro) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Salvando…';
+      try {
+        const { error } = await sb.auth.updateUser({ password: senha });
+        if (error) {
+          msgEl.textContent = 'Não foi possível alterar a senha: ' + error.message;
+          return;
+        }
+        await sb.auth.signOut();
+        emRecuperacaoSenha = false;
+        document.getElementById('nova-senha-campos').style.display = 'none';
+        mostrarCamposLogin(true);
+        msgEl.style.color = 'var(--green)';
+        msgEl.textContent = 'Senha alterada. Entre com a nova senha.';
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-email').focus();
+      } catch {
+        msgEl.textContent = 'Erro de conexão. Tente novamente.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'SALVAR NOVA SENHA';
+      }
     }
 
     async function doResetPassword() {
@@ -2380,6 +2556,7 @@
 
     async function doLogout() {
       clearInterval(pollingInterval);
+      pollingInterval = null;
       await sb.auth.signOut();
       currentUser = null;
       currentCliente = null;
@@ -2407,21 +2584,42 @@
       loadCamerasList();
       loadVeiculos();
       loadAll();
-      // Polling mantém a página da tabela em que o usuário está
-      pollingInterval = setInterval(() => loadAll({ resetPage: false }), 30000);
+      // Polling mantém a página da tabela em que o usuário está e não
+      // consulta o banco com a aba escondida (volta a atualizar ao reabrir)
+      pollingInterval = setInterval(() => {
+        if (!document.hidden) loadAll({ resetPage: false });
+      }, POLLING_MS);
     }
 
+    const POLLING_MS = 30000;
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && pollingInterval) loadAll({ resetPage: false });
+    });
+
     async function loadAll({ resetPage = true } = {}) {
-      await Promise.all([
-        loadStats(),
-        loadRecentCards(),
-        loadCapturas({ resetPage }),
-        loadHourlyChart(),
-        loadRanking(),
-        loadCamerasStatus(),
-        loadIndicators(),
-        loadAlerts7d(),
-      ]);
+      const dot = document.getElementById('polling-dot');
+      const rotulo = document.getElementById('ultima-atualizacao');
+      dot.classList.add('ativo');
+      try {
+        await Promise.all([
+          loadStats(),
+          loadRecentCards(),
+          loadCapturas({ resetPage }),
+          loadHourlyChart(),
+          loadRanking(),
+          loadCamerasStatus(),
+          loadIndicators(),
+          loadAlerts7d(),
+        ]);
+        rotulo.classList.remove('falha');
+        rotulo.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+      } catch (err) {
+        console.error('Erro ao atualizar painel:', err);
+        rotulo.classList.add('falha');
+        rotulo.textContent = 'Falha ao atualizar às ' + new Date().toLocaleTimeString('pt-BR');
+      } finally {
+        dot.classList.remove('ativo');
+      }
     }
 
     // ============================================
@@ -2565,10 +2763,10 @@
         // Em alerta, prefixa ▲ para reforçar o excesso sem depender da cor.
         const velHtml = velMedida
           ? `${isAlert ? '▲ ' : ''}${c.velocidade} <span style="font-size:13px">km/h</span>`
-          : `<span style="font-size:22px;letter-spacing:-2px">—</span> <span style="font-size:13px">km/h</span>`;
+          : `<span class="vel-dash">—</span> <span style="font-size:13px">km/h</span>`;
 
         const radarNome = camerasMap[c.camera_id] || '';
-        return `<div class="recent-card ${isAlert ? 'alerta' : ''}" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
+        return `<div class="recent-card ${isAlert ? 'alerta' : ''}" tabindex="0" role="button" aria-label="Abrir captura ${c.placa}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
           <div class="rc-badge ${badgeClass}">${badgeText}</div>
           ${photoHtml}
           <div class="rc-placa">${c.placa}</div>
@@ -2682,7 +2880,7 @@
         .select('*')
         .eq('cliente_id', currentCliente.id)
         .order('timestamp', { ascending: false })
-        .limit(300);
+        .limit(LIMITE_CAPTURAS);
 
       const timeStart = document.getElementById('filter-time-start').value || '00:00';
       const timeEnd = document.getElementById('filter-time-end').value || '23:59';
@@ -2713,6 +2911,7 @@
       }
 
       lastCapturas = data;  // sempre o conjunto completo (export usa isto)
+      limiteAtingido = data.length === LIMITE_CAPTURAS;
       allThumbUrls = {};
       // renderPage() faz o clamp caso o total de páginas tenha diminuído
       if (resetPage) currentPage = 1;
@@ -2727,6 +2926,9 @@
     }
 
     const ROWS_PER_PAGE = 14;
+    // Consulta traz no máximo isto; ao bater o teto a tela avisa que não é o total
+    const LIMITE_CAPTURAS = 300;
+    let limiteAtingido = false;
     let currentPage = 1;
     let allThumbUrls = {};
 
@@ -2777,7 +2979,7 @@
         const moradorInfo = veiculo
           ? `<div style="font-size:11px;font-weight:600;color:var(--text-primary);line-height:1.3">${veiculo.nome_morador || '---'}</div><div style="font-size:10px;color:var(--text-muted)">${[veiculo.unidade, veiculo.marca, veiculo.cor].filter(Boolean).join(' · ')}</div>`
           : `<div style="font-size:10px;font-weight:600;color:var(--orange)">VEÍCULO NÃO CADASTRADO</div>`;
-        return `<div class="table-row" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
+        return `<div class="table-row" tabindex="0" role="button" aria-label="Abrir captura ${c.placa}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick='openModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
           <div>${thumbHtml}</div>
           <div class="placa">${c.placa}</div>
           <div class="vel ${velClass}">${velTexto}</div>
@@ -2791,7 +2993,8 @@
       // Pagination controls
       if (totalPages > 1) {
         pgEl.style.display = 'flex';
-        document.getElementById('pg-info').textContent = `${start + 1}-${end} de ${data.length} registros`;
+        document.getElementById('pg-info').innerHTML = `${start + 1}-${end} de ${data.length} registros` +
+          (limiteAtingido ? ` <span class="pg-limite">· exibindo as ${LIMITE_CAPTURAS} mais recentes; refine o período</span>` : '');
 
         let btns = '';
         btns += `<button class="pg-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>&laquo;</button>`;
@@ -2841,7 +3044,7 @@
       document.getElementById('filter-vel-max').value = '';
       document.getElementById('filter-camera').value = '';
       document.getElementById('filter-alertas-only').checked = false;
-      loadCapturas();
+      applyFilters();
     }
 
     // ============================================
@@ -2883,11 +3086,12 @@
 
     function toggleVeiculoForm() {
       const overlay = document.getElementById('vm-overlay');
-      overlay.classList.contains('active') ? fecharModalVeiculo() : abrirModalVeiculo();
+      overlayAberto(overlay) ? fecharModalVeiculo() : abrirModalVeiculo();
     }
 
     function abrirModalVeiculo() {
-      document.getElementById('vm-overlay').classList.add('active');
+      const overlay = document.getElementById('vm-overlay');
+      abrirOverlay(overlay);
       document.body.style.overflow = 'hidden';
       vmSwitchTab('lista');
       limparFormVeiculo();
@@ -2897,8 +3101,9 @@
     }
 
     function fecharModalVeiculo() {
-      document.getElementById('vm-overlay').classList.remove('active');
-      document.body.style.overflow = '';
+      fecharOverlay(document.getElementById('vm-overlay'), () => {
+        document.body.style.overflow = '';
+      });
     }
 
     function limparFormVeiculo() {
@@ -2986,7 +3191,11 @@
     // ============================================
     // IMPORT / EXPORT VEICULOS
     // ============================================
-    async function exportarVeiculosExcel() {
+    function exportarVeiculosExcel(btn) {
+      return comIndicadorCarregando(btn, 'Gerando…', gerarVeiculosExcel);
+    }
+
+    async function gerarVeiculosExcel() {
       if (veiculosList.length === 0) {
         alert('Nenhum veículo para exportar.');
         return;
@@ -3006,7 +3215,11 @@
       XLSX.writeFile(wb, `veiculos_${currentCliente.nome.replace(/\s/g, '_')}.xlsx`);
     }
 
-    async function downloadModeloExcel() {
+    function downloadModeloExcel(btn) {
+      return comIndicadorCarregando(btn, 'Gerando…', gerarModeloExcel);
+    }
+
+    async function gerarModeloExcel() {
       await lazyLoadExportLibs();
       const rows = [
         { PLACA: 'ABC1D23', MORADOR: 'Joao Silva', UNIDADE: 'Bloco A - 101', MARCA: 'Honda Civic', COR: 'Prata' },
@@ -3104,7 +3317,8 @@
       const token = (await sb.auth.getSession()).data.session?.access_token;
       if (!token) { errorEl.textContent = 'Sessão expirada.'; return; }
 
-      let ok = 0, fail = 0;
+      let ok = 0;
+      const falhas = [];
       previewEl.innerHTML = `<div style="background:var(--bg-input);border-radius:8px;padding:12px;font-size:13px">
         <div id="import-progress">Importando 0 / ${importQueue.length}...</div>
       </div>`;
@@ -3124,8 +3338,15 @@
               cor: v.cor || null,
             }),
           });
-          if (resp.ok) ok++; else fail++;
-        } catch { fail++; }
+          if (resp.ok) {
+            ok++;
+          } else {
+            const corpo = await resp.json().catch(() => ({}));
+            falhas.push({ placa: v.placa, motivo: corpo.error || `Erro ${resp.status}` });
+          }
+        } catch {
+          falhas.push({ placa: v.placa, motivo: 'Erro de conexão' });
+        }
         document.getElementById('import-progress').textContent = `Importando ${i + 1} / ${importQueue.length}...`;
       }
 
@@ -3133,9 +3354,12 @@
       document.getElementById('vm-import-file').value = '';
       document.getElementById('vm-import-filename').textContent = 'Nenhum arquivo selecionado';
 
+      const listaFalhas = falhas.map(f =>
+        `<li><strong>${escHtml(f.placa)}</strong>: ${escHtml(f.motivo)}</li>`).join('');
       previewEl.innerHTML = `
-        <div style="background:#dcfce7;border-radius:8px;padding:12px;font-size:13px;color:#15803d">
-          Importação concluída! <strong>${ok}</strong> veículos cadastrados${fail > 0 ? `, <strong style="color:var(--red)">${fail}</strong> falharam` : ''}.
+        <div class="import-resultado ${falhas.length ? 'com-falhas' : ''}" role="status">
+          Importação concluída: <strong>${ok}</strong> veículos cadastrados${falhas.length ? `, <strong style="color:var(--red)">${falhas.length}</strong> não entraram:` : '.'}
+          ${falhas.length ? `<ul class="import-falhas">${listaFalhas}</ul>` : ''}
         </div>
       `;
 
@@ -3143,6 +3367,10 @@
       await loadVeiculosCache();
       loadCapturas();
       loadRecentCards();
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     }
 
     function isValidPlacaLocal(placa) {
@@ -3236,7 +3464,7 @@
     }
 
     async function removerVeiculo(id, placa) {
-      if (!confirm(`Deseja remover o veículo ${placa}?`)) return;
+      if (!confirm(`Remover o veículo ${placa}?\n\nAs capturas dessa placa passam a aparecer como "Veículo não cadastrado".`)) return;
 
       const token = (await sb.auth.getSession()).data.session?.access_token;
       if (!token) return;
@@ -3264,18 +3492,22 @@
     // ============================================
     // EXPORT MENU
     // ============================================
+    function exportMenuAberto() {
+      return document.getElementById('export-menu').classList.contains('aberto');
+    }
     function toggleExportMenu() {
-      const menu = document.getElementById('export-menu');
-      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+      const aberto = document.getElementById('export-menu').classList.toggle('aberto');
+      document.getElementById('btn-exportar').setAttribute('aria-expanded', String(aberto));
     }
     function closeExportMenu() {
-      document.getElementById('export-menu').style.display = 'none';
+      document.getElementById('export-menu').classList.remove('aberto');
+      document.getElementById('btn-exportar').setAttribute('aria-expanded', 'false');
     }
     document.addEventListener('click', function(e) {
       const btn = document.getElementById('btn-exportar');
       const menu = document.getElementById('export-menu');
       if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.style.display = 'none';
+        closeExportMenu();
       }
     });
 
@@ -3525,7 +3757,7 @@
 
       // Show loading
       body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando detalhes...</div>';
-      modal.classList.add('active');
+      abrirOverlay(modal);
 
       // Load photo, veiculo, historico in parallel
       const [photoUrl, historico] = await Promise.all([
@@ -3553,7 +3785,7 @@
       html += `<div class="modal-details">
         <div class="modal-field">
           <div class="label">Placa</div>
-          <div class="value" style="font-size:20px;letter-spacing:2px">${captura.placa}</div>
+          <div class="value" style="font-size:20px;letter-spacing:0.12em">${captura.placa}</div>
         </div>
         <div class="modal-field">
           <div class="label">Velocidade</div>
@@ -3638,7 +3870,48 @@
     }
 
     function closeModal() {
-      document.getElementById('modal').classList.remove('active');
+      fecharOverlay(document.getElementById('modal'));
+    }
+
+    // ============================================
+    // OVERLAYS (modal, veículos, lightbox): entrada/saída e foco
+    // ============================================
+    const OVERLAY_SAIDA_MS = 350; // teto caso animationend não chegue
+    const focoAntesDoOverlay = new Map();
+
+    function overlayAberto(overlay) {
+      return overlay.classList.contains('active') && !overlay.classList.contains('closing');
+    }
+
+    // Abrir de novo durante a saída interrompe a saída (não espera terminar)
+    function abrirOverlay(overlay) {
+      const jaAberto = overlayAberto(overlay);
+      overlay.classList.remove('closing');
+      overlay.classList.add('active');
+      if (jaAberto) return;
+      if (!focoAntesDoOverlay.has(overlay.id)) focoAntesDoOverlay.set(overlay.id, document.activeElement);
+      const fechar = overlay.querySelector('.modal-close, .lightbox-close');
+      if (fechar) fechar.focus();
+    }
+
+    function fecharOverlay(overlay, aoFechar) {
+      if (!overlayAberto(overlay)) return;
+      overlay.classList.add('closing');
+      let concluido = false;
+      const concluir = () => {
+        if (concluido) return;
+        concluido = true;
+        overlay.removeEventListener('animationend', aoTerminar);
+        if (!overlay.classList.contains('closing')) return; // reaberto no meio
+        overlay.classList.remove('active', 'closing');
+        if (aoFechar) aoFechar();
+        const anterior = focoAntesDoOverlay.get(overlay.id);
+        focoAntesDoOverlay.delete(overlay.id);
+        if (anterior && document.contains(anterior)) anterior.focus();
+      };
+      const aoTerminar = (e) => { if (e.target === overlay) concluir(); };
+      overlay.addEventListener('animationend', aoTerminar);
+      setTimeout(concluir, OVERLAY_SAIDA_MS);
     }
 
     // ============================================
@@ -3652,37 +3925,52 @@
       img.classList.remove('zoomed');
       img.src = url;
       if (hint) hint.style.display = '';
-      lb.classList.add('active');
+      abrirOverlay(lb);
       document.body.style.overflow = 'hidden';
     }
 
     function closeLightbox() {
-      const lb = document.getElementById('lightbox');
       const img = document.getElementById('lightbox-img');
-      lb.classList.remove('active');
-      img.classList.remove('zoomed');
-      // removeAttribute, e não src = '': atribuir string vazia faz o navegador
-      // resolver o src para a URL da própria página e disparar um request inútil.
-      img.removeAttribute('src');
-      document.body.style.overflow = '';
+      fecharOverlay(document.getElementById('lightbox'), () => {
+        img.classList.remove('zoomed');
+        // removeAttribute, e não src = '': atribuir string vazia faz o navegador
+        // resolver o src para a URL da própria página e disparar um request inútil.
+        img.removeAttribute('src');
+        document.body.style.overflow = '';
+      });
     }
 
+    // Zoom a partir do ponto clicado: o pixel sob o cursor continua sob o cursor
     function toggleLightboxZoom(e) {
       e.stopPropagation();
+      const lb = document.getElementById('lightbox');
       const img = document.getElementById('lightbox-img');
       const hint = document.getElementById('lightbox-hint');
-      img.classList.toggle('zoomed');
+      const antes = img.getBoundingClientRect();
+      const fx = (e.clientX - antes.left) / antes.width;
+      const fy = (e.clientY - antes.top) / antes.height;
+      const ampliou = img.classList.toggle('zoomed');
       if (hint) hint.style.display = 'none';
+      if (!ampliou) return;
+      const depois = img.getBoundingClientRect();
+      lb.scrollLeft += (depois.left + fx * depois.width) - e.clientX;
+      lb.scrollTop += (depois.top + fy * depois.height) - e.clientY;
     }
 
+    // Esc fecha a camada de cima primeiro
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
       const lb = document.getElementById('lightbox');
-      if (lb && lb.classList.contains('active')) {
-        closeLightbox();
+      const vm = document.getElementById('vm-overlay');
+      const modal = document.getElementById('modal');
+      if (overlayAberto(lb)) return closeLightbox();
+      if (exportMenuAberto()) {
+        closeExportMenu();
+        document.getElementById('btn-exportar').focus();
         return;
       }
-      closeModal();
+      if (overlayAberto(vm)) return fecharModalVeiculo();
+      if (overlayAberto(modal)) closeModal();
     });
 
     // ============================================

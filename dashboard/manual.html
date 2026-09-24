@@ -261,11 +261,30 @@
             cursor: pointer;
         }
 
+        /* Navbar fixa de 60px: sem isto o título da seção some atrás dela */
+        h2[id] { scroll-margin-top: 76px; }
+
+        .sidebar-scrim {
+            position: fixed;
+            inset: 60px 0 0 0;
+            background: rgba(0,0,0,.4);
+            z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .3s, visibility 0s linear .3s;
+        }
+
         @media (max-width: 860px) {
             .sidebar { transform: translateX(-100%); transition: transform .3s; }
             .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+            .sidebar.open + .sidebar-scrim { opacity: 1; visibility: visible; transition: opacity .3s; }
             .main { margin-left: 0; padding: 32px 20px 60px; }
             .menu-toggle { display: block; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sidebar, .sidebar-scrim { transition: none !important; }
+            .navbar .btn:active { transform: none; }
         }
 
         /* ── Print ── */
@@ -295,7 +314,7 @@
 
 <!-- Navbar -->
 <nav class="navbar">
-    <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">
+    <button type="button" class="menu-toggle" onclick="toggleSumario()" aria-label="Abrir sumário" aria-expanded="false" aria-controls="sidebar">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
     <a href="/dashboard/" class="brand">
@@ -333,6 +352,7 @@
     <a href="#faq">12. Perguntas Frequentes (FAQ)</a>
     <a href="#suporte">Suporte</a>
 </aside>
+<div class="sidebar-scrim" onclick="toggleSumario(false)" aria-hidden="true"></div>
 
 <!-- Main Content -->
 <main class="main">
@@ -707,10 +727,24 @@
     onScroll();
 
     // Close sidebar on mobile when clicking a link
-    links.forEach(a => a.addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.remove('open');
-    }));
+    links.forEach(a => a.addEventListener('click', () => toggleSumario(false)));
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && document.getElementById('sidebar').classList.contains('open')) {
+            toggleSumario(false);
+            document.querySelector('.menu-toggle').focus();
+        }
+    });
 })();
+
+// Gaveta do sumário (mobile): estado refletido no botão para leitor de tela
+function toggleSumario(abrir) {
+    const sidebar = document.getElementById('sidebar');
+    const aberto = sidebar.classList.toggle('open', abrir);
+    const btn = document.querySelector('.menu-toggle');
+    btn.setAttribute('aria-expanded', String(aberto));
+    btn.setAttribute('aria-label', aberto ? 'Fechar sumário' : 'Abrir sumário');
+}
 </script>
 
 </body>

@@ -31,7 +31,7 @@
       --shadow-md: 0 4px 12px rgba(4,107,210,0.08), 0 2px 4px rgba(0,0,0,0.04);
       --shadow-hover: 0 8px 20px rgba(4,107,210,0.15), 0 4px 8px rgba(0,0,0,0.06);
       --radius: 12px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
     }
 
     body {
@@ -63,9 +63,9 @@
     }
 
     .login-box .login-logo { width: 220px; margin-bottom: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-    .login-box h1 { color: var(--accent); font-size: 20px; font-weight: 700; margin-bottom: 4px; letter-spacing: 1px; }
+    .login-box h1 { color: var(--accent); font-size: 20px; font-weight: 700; margin-bottom: 4px; letter-spacing: .05em; }
     .login-box .subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 8px; }
-    .login-box .badge { background: var(--accent); color: #fff; padding: 4px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 24px; letter-spacing: 1px; }
+    .login-box .badge { background: var(--accent); color: #fff; padding: 4px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 24px; letter-spacing: .08em; }
 
     .login-box input {
       width: 100%; padding: 12px 16px; margin-bottom: 12px;
@@ -76,9 +76,10 @@
 
     .login-box button {
       width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px;
-      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: all 0.2s;
+      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background-color .15s, transform .15s;
     }
-    .login-box button:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(4,107,210,0.3); }
+    .login-box button:hover { background: var(--accent-hover); }
+    @media (hover: hover) { .login-box button:hover { transform: translateY(-1px); } }
     .login-error { color: var(--red); font-size: 14px; margin-top: 10px; min-height: 20px; }
 
     /* ===== LAYOUT ===== */
@@ -91,7 +92,7 @@
     }
     .topbar .brand { display: flex; align-items: center; gap: 10px; }
     .topbar .brand img { height: 44px; width: auto; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
-    .topbar .brand .admin-badge { background: var(--accent); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+    .topbar .brand .admin-badge { background: var(--accent); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
     .topbar .user-info { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-size: 13px; }
     .btn-logout {
       background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
@@ -112,7 +113,7 @@
     }
     .nav-item:hover { color: var(--text-primary); background: var(--accent-light); }
     .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-light); font-weight: 600; }
-    .nav-section { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; padding: 20px 24px 8px; font-weight: 700; }
+    .nav-section { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; padding: 20px 24px 8px; font-weight: 700; }
 
     /* Main content */
     /* min-width:0 e essencial: como coluna de grid (1fr), o padrao min-width:auto
@@ -123,7 +124,7 @@
     .page { display: none; }
     .page.active { display: block; }
 
-    .page-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: var(--text-primary); }
+    .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: var(--text-primary); }
     .page-title .count { background: var(--accent-light); border: 1px solid var(--border); padding: 2px 10px; border-radius: 12px; font-size: 13px; color: var(--accent); font-weight: 600; }
 
     /* Stats cards */
@@ -132,9 +133,8 @@
       background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center;
       box-shadow: var(--shadow-sm); transition: var(--transition);
     }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--accent); }
-    .stat-card .label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-    .stat-card .value { font-size: 28px; font-weight: 700; margin: 4px 0; }
+    .stat-card .label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+    .stat-card .value { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0; }
     .stat-card .value.orange { color: var(--accent); }
     .stat-card .value.red { color: var(--red); }
     .stat-card .value.green { color: var(--green); }
@@ -153,18 +153,25 @@
       font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
     }
     .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(4,107,210,0.25); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    @media (hover: hover) { .btn-primary:hover { transform: translateY(-1px); } }
     .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; min-height: 30px; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
     .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--red); }
     .btn-danger:hover { background: #fef2f2; border-color: var(--red); }
+    /* Exclusão permanente: vermelho sólido, distinto do "Desativar" (reversível) */
+    .btn-danger-solid { background: #991b1b; color: #fff; border: 1px solid #991b1b; }
+    .btn-danger-solid:hover { background: #7f1d1d; border-color: #7f1d1d; }
+    /* Link para o painel de saúde da câmera: sky-700 passa AA com texto branco */
+    .btn-info { background: #0369a1; color: #fff; text-decoration: none; }
+    .btn-info:hover { background: #075985; }
 
     /* Tables */
     .data-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
     .data-table th {
       background: var(--accent); padding: 12px 14px; text-align: left; font-size: 12px;
-      text-transform: uppercase; letter-spacing: 0.5px; color: #FFFFFF; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .04em; color: #FFFFFF; font-weight: 700;
     }
     .data-table td {
       padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle;
@@ -218,13 +225,13 @@
     .modal-overlay.active { display: flex; }
     .modal-content {
       background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-      width: 520px; max-height: 90vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      width: 520px; max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-header h3 { color: var(--accent); font-size: 18px; font-weight: 700; }
     .modal-close {
       background: transparent; border: none; color: var(--text-secondary);
-      font-size: 24px; cursor: pointer; transition: all 0.2s;
+      font-size: 24px; cursor: pointer; transition: background-color .15s, color .15s;
       width: 36px; height: 36px; border-radius: 8px;
       display: inline-flex; align-items: center; justify-content: center;
       line-height: 1;
@@ -232,7 +239,7 @@
     .modal-close:hover { color: var(--text-primary); background: var(--bg-input); }
 
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-weight: 700; }
+    .form-group label { display: block; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; font-weight: 700; }
     .form-group .hint { display: block; font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; font-weight: 400; text-transform: none; letter-spacing: 0; }
     .form-group .field-error { display: none; font-size: 12px; color: var(--red); margin-top: 6px; font-weight: 600; line-height: 1.4; text-transform: none; letter-spacing: 0; }
     .form-group.has-error .field-error { display: block; }
@@ -308,14 +315,14 @@
       margin-bottom: 16px;
     }
     .confirm-icon svg { width: 24px; height: 24px; color: var(--red); }
-    .confirm-title { font-size: 19px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.3px; }
+    .confirm-title { font-size: 19px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.01em; }
     .confirm-message { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 22px; }
     .confirm-message strong { color: var(--text-primary); }
     .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
     .confirm-btn {
       padding: 10px 20px; border-radius: 8px; font-family: 'Inter', sans-serif;
       font-size: 14px; font-weight: 600; cursor: pointer;
-      transition: all 0.2s; border: 1px solid transparent;
+      transition: background-color .15s, transform .15s; border: 1px solid transparent;
     }
     .confirm-btn-cancel {
       background: transparent; color: var(--text-secondary); border-color: var(--border);
@@ -324,20 +331,26 @@
     .confirm-btn-danger {
       background: var(--red); color: #fff;
     }
-    .confirm-btn-danger:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
+    .confirm-btn-danger:hover { background: #b91c1c; }
+    .confirm-btn-primary { background: var(--accent); color: #fff; }
+    .confirm-btn-primary:hover { background: var(--accent-hover); }
 
     /* Toast */
     .toast {
       position: fixed; bottom: 24px; right: 24px; background: #FFFFFF; border: 1px solid var(--green);
       color: var(--green); padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
-      z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: var(--shadow-md);
+      z-index: 2000; opacity: 0; transform: translateY(16px); pointer-events: none; box-shadow: var(--shadow-md);
+      transition: opacity .22s ease-out, transform .22s ease-out;
+      display: flex; align-items: center; gap: 12px; max-width: min(520px, calc(100vw - 48px));
     }
     .toast.error { border-color: var(--red); color: var(--red); }
-    .toast.visible { opacity: 1; }
-
-    /* Detail page */
-    .back-link { color: var(--accent); cursor: pointer; font-size: 13px; margin-bottom: 16px; display: inline-block; font-weight: 500; }
-    .back-link:hover { text-decoration: underline; }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .toast.error.visible { pointer-events: auto; }
+    .toast-close {
+      background: none; border: none; color: inherit; font-size: 20px; line-height: 1;
+      cursor: pointer; width: 28px; height: 28px; border-radius: 6px; flex: none;
+    }
+    .toast-close:hover { background: #fef2f2; }
 
     /* Breadcrumb */
     .breadcrumb {
@@ -348,7 +361,7 @@
     .breadcrumb-link {
       color: var(--text-secondary); text-decoration: none;
       font-weight: 500; padding: 4px 8px; border-radius: 6px;
-      transition: all 0.15s;
+      transition: background-color .15s, color .15s;
     }
     .breadcrumb-link:hover { color: var(--accent); background: var(--accent-light); }
     .breadcrumb svg { color: var(--text-muted); flex-shrink: 0; }
@@ -384,7 +397,7 @@
     .detail-field {
       background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow-sm);
     }
-    .detail-field .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .detail-field .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
     .detail-field .value { font-size: 15px; font-weight: 600; margin-top: 2px; color: var(--text-primary); }
 
     /* Scrollbar */
@@ -443,20 +456,6 @@
       pointer-events: none;
     }
 
-    /* Skeleton shimmer */
-    @keyframes skeleton-shimmer {
-      0% { background-position: -600px 0; }
-      100% { background-position: 600px 0; }
-    }
-    .skeleton {
-      background: linear-gradient(90deg, var(--bg-primary) 25%, #dce8f4 50%, var(--bg-primary) 75%);
-      background-size: 1200px 100%;
-      animation: skeleton-shimmer 1.6s ease-in-out infinite;
-      border-radius: 6px;
-      color: transparent !important;
-      user-select: none;
-      pointer-events: none;
-    }
 
     /* Tabela: indicador de linha ativa sem layout shift */
     .data-table tbody td:first-child {
@@ -472,18 +471,25 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
+    @keyframes overlay-fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes modal-slide-out {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-12px) scale(0.97); }
+    }
     .modal-overlay.active {
       animation: overlay-fade 0.18s ease-out;
     }
+    .modal-overlay.active .modal-content { animation: modal-slide-in 0.22s ease-out; }
+    /* Saída espelha a entrada: some pelo mesmo caminho por onde veio */
+    .modal-overlay.closing, .confirm-overlay.closing { animation: overlay-fade-out 0.16s ease-in forwards; }
+    .modal-overlay.closing .modal-content,
+    .confirm-overlay.closing .confirm-box { animation: modal-slide-out 0.16s ease-in forwards; }
+    body.modal-aberto { overflow: hidden; }
+    .admin-content.modal-aberto { overflow: hidden; }
 
-    /* Toast: slide-up */
-    @keyframes toast-slide-up {
-      from { transform: translateY(16px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .toast.visible {
-      animation: toast-slide-up 0.22s ease-out forwards;
-    }
 
     /* Sidebar nav: indicador ativo mais visível */
     .nav-item { position: relative; }
@@ -517,15 +523,6 @@
       background: var(--accent-light);
     }
 
-    /* Back link com seta animada */
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: gap 0.2s;
-    }
-    .back-link:hover { gap: 8px; }
-
 
     /* Respeitar preferência de movimento reduzido */
     /* Resposta no pressionar (toque não tem :hover) */
@@ -545,6 +542,17 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
+      .btn:active, .nav-item:active, .tab-btn:active, .confirm-btn:active,
+      .breadcrumb-link:active, .login-box button:active { transform: none; }
+    }
+    /* Transparência reduzida: scrims sólidos, sem blur */
+    @media (prefers-reduced-transparency: reduce) {
+      .modal-overlay, .confirm-overlay { backdrop-filter: none; background: rgba(15,23,42,0.88); }
+    }
+    /* Contraste alto: texto secundário mais escuro e bordas definidas */
+    @media (prefers-contrast: more) {
+      :root { --text-secondary: #334155; --text-muted: #475569; --border: #94a3b8; }
+      .btn-ghost, .btn-danger { border-color: currentColor; }
     }
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
@@ -575,6 +583,16 @@
         <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
         <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
       </div>
+
+      <form id="nova-senha-form" style="display:none;text-align:left" onsubmit="salvarNovaSenha(event)" novalidate>
+        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;text-align:center">Defina sua nova senha (mínimo 6 caracteres).</div>
+        <label for="nova-senha" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Nova senha</label>
+        <input type="password" id="nova-senha" placeholder="Nova senha" autocomplete="new-password" minlength="6" aria-describedby="nova-senha-erro">
+        <label for="nova-senha-conf" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Confirmar nova senha</label>
+        <input type="password" id="nova-senha-conf" placeholder="Repita a nova senha" autocomplete="new-password" aria-describedby="nova-senha-erro">
+        <button type="submit" id="nova-senha-btn">SALVAR NOVA SENHA</button>
+        <div class="login-error" id="nova-senha-erro" role="alert" aria-live="polite"></div>
+      </form>
     </div>
   </div>
 
@@ -594,24 +612,24 @@
     <div class="admin-layout">
       <nav class="sidebar-nav">
         <div class="nav-section">Principal</div>
-        <button type="button" class="nav-item active" onclick="showPage('dashboard')" aria-current="page">
+        <button type="button" class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')" aria-current="page">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           Dashboard
         </button>
-        <button type="button" class="nav-item" onclick="showPage('clientes')">
+        <button type="button" class="nav-item" data-page="clientes" onclick="showPage('clientes')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Clientes
         </button>
         <div class="nav-section">Gerenciamento</div>
-        <button type="button" class="nav-item" onclick="showPage('usuarios')">
+        <button type="button" class="nav-item" data-page="usuarios" onclick="showPage('usuarios')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Usuários
         </button>
-        <button type="button" class="nav-item" onclick="showPage('audit')">
+        <button type="button" class="nav-item" data-page="audit" onclick="showPage('audit')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
           Auditoria
         </button>
-        <button type="button" class="nav-item" onclick="showPage('direitos')" id="nav-direitos">
+        <button type="button" class="nav-item" data-page="direitos" onclick="showPage('direitos')" id="nav-direitos">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Direitos LGPD
           <span id="direitos-badge" style="display:none;background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">0</span>
@@ -631,12 +649,12 @@
 
         <!-- PAGE: Dashboard -->
         <div class="page active" id="page-dashboard">
-          <div class="page-title">Dashboard Geral</div>
+          <div class="page-title" tabindex="-1">Dashboard Geral</div>
           <div class="stats-row">
             <div class="stat-card"><div class="label">Clientes Ativos</div><div class="value blue" id="s-clientes">0</div></div>
             <div class="stat-card"><div class="label">Câmeras Ativas</div><div class="value green" id="s-cameras">0</div></div>
-            <div class="stat-card"><div class="label">Câmeras Online</div><div class="value" id="s-cameras-online" style="color:#4ade80">0</div></div>
-            <div class="stat-card"><div class="label">Câmeras Offline</div><div class="value" id="s-cameras-offline" style="color:#ef4444">0</div></div>
+            <div class="stat-card"><div class="label">Câmeras Online</div><div class="value green" id="s-cameras-online">0</div></div>
+            <div class="stat-card"><div class="label">Câmeras Offline</div><div class="value red" id="s-cameras-offline">0</div></div>
             <div class="stat-card"><div class="label">Capturas Hoje</div><div class="value orange" id="s-capturas">0</div></div>
             <div class="stat-card"><div class="label">Alertas Hoje</div><div class="value red" id="s-alertas">0</div></div>
           </div>
@@ -663,7 +681,7 @@
             <div style="display:flex;flex-direction:column;gap:14px">
               <!-- Alertas 7 dias -->
               <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
-                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">
+                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
                   <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>
                   Alertas - Últimos 7 Dias
                 </div>
@@ -674,7 +692,7 @@
 
               <!-- Top 10 placas infratoras -->
               <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
-                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">
+                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
                   <span style="width:8px;height:8px;border-radius:50%;background:var(--orange);display:inline-block"></span>
                   Top 10 Infratores (15 dias)
                 </div>
@@ -685,7 +703,7 @@
 
               <!-- Saúde do sistema -->
               <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
-                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">
+                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
                   <span style="width:8px;height:8px;border-radius:50%;display:inline-block" id="health-dot"></span>
                   Saúde do Sistema
                 </div>
@@ -699,7 +717,7 @@
 
         <!-- PAGE: Clientes -->
         <div class="page" id="page-clientes">
-          <div class="page-title">Clientes</div>
+          <div class="page-title" tabindex="-1">Clientes</div>
           <div class="toolbar">
             <input class="toolbar-search" id="search-clientes" placeholder="Buscar por nome..." oninput="renderClientes()">
             <button class="btn btn-primary" onclick="openClienteModal()">+ Novo Cliente</button>
@@ -718,7 +736,7 @@
             <span class="breadcrumb-current" id="detail-breadcrumb-nome"></span>
           </nav>
           <div class="detail-header">
-            <div class="page-title" id="detail-nome" style="margin-bottom:0"></div>
+            <div class="page-title" id="detail-nome" tabindex="-1" style="margin-bottom:0"></div>
             <button class="btn btn-ghost btn-sm" onclick="openClienteModal(currentDetailCliente)">Editar</button>
           </div>
           <div class="detail-info" id="detail-info"></div>
@@ -746,7 +764,7 @@
           <!-- Tab: Notificação PDF -->
           <div class="tab-panel" id="tab-notificacao">
             <div class="config-block" style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:20px;border-left:3px solid var(--accent)">
-              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Configuração do PDF</div>
+              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Configuração do PDF</div>
               <div style="font-size:12px;color:var(--text-secondary)">Personalize o conteúdo da notificação orientativa gerada para este cliente.</div>
             </div>
 
@@ -792,7 +810,7 @@
           <!-- Tab: Relatório Semanal -->
           <div class="tab-panel" id="tab-relatorio">
             <div class="config-block" style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:20px;border-left:3px solid var(--accent)">
-              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Relatório semanal por e-mail</div>
+              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Relatório semanal por e-mail</div>
               <div style="font-size:12px;color:var(--text-secondary)">
                 Resumo de circulação enviado aos destinatários do tipo <strong>Relatório</strong>
                 cadastrados na aba E-mails. O texto aceita variáveis e é personalizado
@@ -841,7 +859,7 @@
 
                 <div class="config-actions">
                   <button class="btn btn-primary" onclick="comLoading(this, saveRelatorioConfig)">Salvar Configuração</button>
-                  <button class="btn btn-ghost" onclick="comLoading(this, enviarRelatorioTeste)">Enviar teste agora</button>
+                  <button class="btn btn-ghost" onclick="comLoading(this, enviarRelatorioTeste)">Enviar relatório agora</button>
                 </div>
               </div>
 
@@ -893,7 +911,7 @@
 
         <!-- PAGE: Usuários (global) -->
         <div class="page" id="page-usuarios">
-          <div class="page-title">Usuários do Sistema</div>
+          <div class="page-title" tabindex="-1">Usuários do Sistema</div>
           <div class="toolbar">
             <input class="toolbar-search" id="search-usuarios" placeholder="Buscar..." oninput="renderUsuariosGlobal()">
             <button class="btn btn-primary" onclick="openUsuarioModal()">+ Novo Usuário</button>
@@ -905,7 +923,7 @@
 
         <!-- PAGE: Auditoria -->
         <div class="page" id="page-audit">
-          <div class="page-title">Log de Auditoria</div>
+          <div class="page-title" tabindex="-1">Log de Auditoria</div>
           <table class="data-table"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Tabela</th><th>Detalhes</th></tr></thead>
             <tbody id="audit-body"><tr><td colspan="5" class="table-empty">Carregando...</td></tr></tbody>
           </table>
@@ -913,7 +931,7 @@
 
         <!-- PAGE: Direitos LGPD -->
         <div class="page" id="page-direitos">
-          <div class="page-title">
+          <div class="page-title" tabindex="-1">
             Solicitações LGPD
             <span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:12px">Art. 18 · Lei 13.709/2018</span>
           </div>
@@ -931,8 +949,8 @@
             <button class="tab-btn" onclick="filtrarDireitos('recebida')">Recebidas</button>
             <button class="tab-btn" onclick="filtrarDireitos('em_analise')">Em análise</button>
             <button class="tab-btn" onclick="filtrarDireitos('atendida')">Atendidas</button>
-            <button class="tab-btn" onclick="filtrarDireitos('','vencidas')" style="color:#F87171">Vencidas</button>
-            <button class="tab-btn" onclick="filtrarDireitos('','proximas')" style="color:#F97316">Próximas (3d)</button>
+            <button class="tab-btn" onclick="filtrarDireitos('','vencidas')" style="color:#b91c1c">Vencidas</button>
+            <button class="tab-btn" onclick="filtrarDireitos('','proximas')" style="color:#c2410c">Próximas (3d)</button>
           </div>
 
           <table class="data-table">
@@ -956,11 +974,11 @@
   </div>
 
   <!-- MODAL -->
-  <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
-    <div class="modal-content">
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-header">
         <h3 id="modal-title">Formulário</h3>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <button type="button" class="modal-close" onclick="closeModal()" aria-label="Fechar">&times;</button>
       </div>
       <div id="modal-body"></div>
     </div>
@@ -1007,6 +1025,10 @@ let usuariosCliData = [];
 
 const API = '/api/admin';
 
+// Capturado antes do supabase-js limpar o hash: o link do e-mail de
+// recuperação chega com #...type=recovery
+const VEIO_DE_RECUPERACAO = /type=recovery/.test(location.hash);
+
 // ============================================
 // INIT
 // ============================================
@@ -1017,23 +1039,11 @@ async function initApp() {
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
     // Detectar recuperação de senha
-    sb.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        const newPassword = prompt('Digite sua nova senha (mínimo 6 caracteres):');
-        if (newPassword && newPassword.length >= 6) {
-          const { error } = await sb.auth.updateUser({ password: newPassword });
-          if (error) {
-            alert('Erro ao alterar senha: ' + error.message);
-          } else {
-            alert('Senha alterada com sucesso! Faça login com a nova senha.');
-            await sb.auth.signOut();
-            window.location.reload();
-          }
-        } else if (newPassword) {
-          alert('A senha deve ter pelo menos 6 caracteres.');
-        }
-      }
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') mostrarNovaSenha();
     });
+
+    if (VEIO_DE_RECUPERACAO) { mostrarNovaSenha(); return; }
 
     const { data: { session } } = await sb.auth.getSession();
     if (session?.user) {
@@ -1101,6 +1111,56 @@ async function doResetPassword() {
   }
 }
 
+// Tela de nova senha (link de recuperação): esconde o login e mostra 2 campos
+function mostrarNovaSenha() {
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  ['login-email', 'login-password'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+  document.querySelector('.login-box button[onclick="doLogin()"]').style.display = 'none';
+  document.querySelector('a[onclick="showResetPassword(event)"]').style.display = 'none';
+  document.getElementById('reset-password-form').style.display = 'none';
+  document.getElementById('nova-senha-form').style.display = 'block';
+  document.getElementById('nova-senha').focus();
+}
+
+async function salvarNovaSenha(ev) {
+  ev.preventDefault();
+  const senha = document.getElementById('nova-senha');
+  const conf = document.getElementById('nova-senha-conf');
+  const erro = document.getElementById('nova-senha-erro');
+  erro.style.color = '';
+  erro.textContent = '';
+  [senha, conf].forEach(i => i.removeAttribute('aria-invalid'));
+
+  if (senha.value.length < 6) {
+    erro.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+    senha.setAttribute('aria-invalid', 'true');
+    senha.focus();
+    return;
+  }
+  if (senha.value !== conf.value) {
+    erro.textContent = 'As duas senhas não são iguais.';
+    conf.setAttribute('aria-invalid', 'true');
+    conf.focus();
+    return;
+  }
+
+  await comLoading(document.getElementById('nova-senha-btn'), async () => {
+    const { error } = await sb.auth.updateUser({ password: senha.value });
+    if (error) { erro.textContent = 'Não foi possível alterar a senha: ' + error.message; return; }
+    await sb.auth.signOut();
+    history.replaceState(null, '', location.pathname);
+    document.getElementById('nova-senha-form').style.display = 'none';
+    ['login-email', 'login-password'].forEach(id => { document.getElementById(id).style.display = ''; });
+    document.querySelector('.login-box button[onclick="doLogin()"]').style.display = '';
+    document.querySelector('a[onclick="showResetPassword(event)"]').style.display = '';
+    const msg = document.getElementById('login-error');
+    msg.style.color = 'var(--green)';
+    msg.textContent = 'Senha alterada. Entre com a nova senha.';
+    document.getElementById('login-email').focus();
+  });
+}
+
 async function doLogin() {
   const btn = document.querySelector('.login-box button[onclick="doLogin()"]');
   return comLoading(btn, entrar);
@@ -1111,6 +1171,7 @@ async function entrar() {
   const password = document.getElementById('login-password').value;
   const errorEl = document.getElementById('login-error');
   errorEl.textContent = '';
+  errorEl.style.color = '';
 
   if (!email || !password) { errorEl.textContent = 'Preencha e-mail e senha.'; return; }
 
@@ -1138,7 +1199,7 @@ async function loadProfile() {
     document.getElementById('admin-screen').style.display = 'block';
 
     loadDashboard();
-    loadClientes();
+    loadClientes().then(aplicarRotaDaUrl);
     loadUsuariosGlobal();
     loadAudit();
     atualizarBadgeDireitos();
@@ -1178,18 +1239,34 @@ async function api(endpoint, method = 'GET', body = null) {
 // ============================================
 // NAVIGATION
 // ============================================
-function showPage(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
+const PAGINAS = ['dashboard', 'clientes', 'usuarios', 'audit', 'direitos'];
 
-  // Highlight nav
-  const navItems = document.querySelectorAll('.nav-item');
-  const labels = { dashboard: 'Dashboard', clientes: 'Clientes', usuarios: 'Usuários', audit: 'Auditoria', direitos: 'Direitos LGPD' };
-  navItems.forEach(n => {
-    const txt = n.textContent.trim().replace(/\s*\d+\s*$/, '').trim();
-    if (txt === labels[page]) n.classList.add('active');
+/**
+ * Troca de página. Marca o item da sidebar (o detalhe do cliente fica sob
+ * "Clientes"), volta o conteúdo ao topo, grava na URL (Voltar do navegador e
+ * F5 funcionam) e leva o foco ao título, para quem navega por teclado.
+ * `opts.hash` sobrescreve o hash gravado; `opts.fromHistory` não empilha.
+ */
+function showPage(page, opts = {}) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  pageEl.classList.add('active');
+
+  const navPage = page === 'cliente-detail' ? 'clientes' : page;
+  document.querySelectorAll('.nav-item[data-page]').forEach(n => {
+    const ativo = n.dataset.page === navPage;
+    n.classList.toggle('active', ativo);
+    if (ativo) n.setAttribute('aria-current', 'page');
+    else n.removeAttribute('aria-current');
   });
+
+  document.getElementById('admin-main').scrollTop = 0;
+
+  const hash = '#' + (opts.hash || page);
+  if (!opts.fromHistory && location.hash !== hash) history.pushState({ hash }, '', hash);
+
+  const titulo = pageEl.querySelector('.page-title');
+  if (titulo) titulo.focus({ preventScroll: true });
 
   if (page === 'clientes') loadClientes();
   if (page === 'usuarios') loadUsuariosGlobal();
@@ -1197,12 +1274,28 @@ function showPage(page) {
   if (page === 'direitos') loadDireitos();
 }
 
+// Escopo no detalhe do cliente: sem isso, trocar de aba apagava o filtro
+// ativo das solicitações LGPD, que também usa .tab-btn.
 function showTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
+  const detalhe = document.getElementById('page-cliente-detail');
+  detalhe.querySelectorAll('.tabs .tab-btn').forEach(t => t.classList.remove('active'));
+  detalhe.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  detalhe.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
 }
+
+// Lê o hash (#clientes, #cliente/<id>...) e abre a tela correspondente.
+function aplicarRotaDaUrl() {
+  const hash = location.hash.slice(1);
+  const detalhe = hash.match(/^cliente\/([\w-]+)$/);
+  if (detalhe) { openClienteDetail(detalhe[1], { fromHistory: true }); return; }
+  if (PAGINAS.includes(hash)) showPage(hash, { fromHistory: true });
+}
+window.addEventListener('popstate', () => {
+  if (!currentProfile) return;
+  if (!location.hash) { showPage('dashboard', { fromHistory: true }); return; }
+  aplicarRotaDaUrl();
+});
 
 // ============================================
 // TRAVA DE BOTÃO DURANTE A REQUISIÇÃO
@@ -1228,16 +1321,49 @@ async function comLoading(btn, fn) {
 }
 
 // ============================================
+// FALHA DE CARREGAMENTO
+// ============================================
+/** Linha de erro numa tabela, com botão para tentar de novo. */
+function erroNaTabela(tbodyId, colspan, retry) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="${colspan}" class="table-empty" role="alert">Não foi possível carregar.
+    <button type="button" class="btn btn-ghost btn-sm" onclick="${retry}">Tentar de novo</button></td></tr>`;
+}
+function erroNoBloco(elId, retry) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = `<div role="alert" style="color:var(--text-secondary)">Não foi possível carregar.
+    <button type="button" class="btn btn-ghost btn-sm" onclick="${retry}">Tentar de novo</button></div>`;
+}
+
+// ============================================
 // TOAST
 // ============================================
+const TOAST_MS = 3000;
+const TOAST_ERRO_MS = 7000;
+
 function toast(msg, isError = false) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
+  const texto = document.createElement('span');
+  texto.textContent = msg;
+  el.replaceChildren(texto);
+  // Erro: role=alert (anunciado na hora), dura mais e tem botão de fechar
+  el.setAttribute('role', isError ? 'alert' : 'status');
+  if (isError) {
+    const fechar = document.createElement('button');
+    fechar.type = 'button';
+    fechar.className = 'toast-close';
+    fechar.setAttribute('aria-label', 'Fechar aviso');
+    fechar.textContent = '×';
+    fechar.onclick = () => { clearTimeout(toast._timer); el.classList.remove('visible'); };
+    el.append(fechar);
+  }
   el.className = isError ? 'toast error visible' : 'toast visible';
   // Cancela o sumiço agendado pelo toast anterior; sem isso, o "Enviando..."
   // apagava o toast de resultado que chegasse antes dos 3s.
   clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => el.classList.remove('visible'), 3000);
+  toast._timer = setTimeout(() => el.classList.remove('visible'), isError ? TOAST_ERRO_MS : TOAST_MS);
 }
 
 // ============================================
@@ -1248,7 +1374,7 @@ function toast(msg, isError = false) {
  * Uso:
  *   if (await confirmarAcao({ titulo: 'Excluir cliente?', mensagem: 'Esta ação é irreversível.' })) { ... }
  */
-function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?', textoOk = 'Confirmar', textoCancel = 'Cancelar' } = {}) {
+function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?', textoOk = 'Confirmar', textoCancel = 'Cancelar', perigo = true } = {}) {
   return new Promise((resolve) => {
     const overlay = document.getElementById('confirm-overlay');
     const titleEl = document.getElementById('confirm-title');
@@ -1260,26 +1386,43 @@ function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?',
     msgEl.innerHTML = mensagem;
     okBtn.textContent = textoOk;
     cancelBtn.textContent = textoCancel;
+    // Ação não destrutiva (ex.: enviar relatório) não usa botão vermelho
+    okBtn.className = 'confirm-btn ' + (perigo ? 'confirm-btn-danger' : 'confirm-btn-primary');
 
+    const anterior = document.activeElement;
+    cancelarSaida(overlay);
     overlay.classList.add('active');
     // Foco no cancelar por segurança (evita confirmação acidental com Enter)
-    setTimeout(() => cancelBtn.focus(), 50);
+    cancelBtn.focus();
 
+    let downNoFundo = false;
     const close = (result) => {
-      overlay.classList.remove('active');
       okBtn.removeEventListener('click', onOk);
       cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('pointerdown', onDown);
       overlay.removeEventListener('click', onBackdrop);
       document.removeEventListener('keydown', onEsc);
+      fecharComAnimacao(overlay);
+      if (anterior && document.contains(anterior)) anterior.focus({ preventScroll: true });
       resolve(result);
     };
     const onOk = () => close(true);
     const onCancel = () => close(false);
-    const onBackdrop = (e) => { if (e.target === overlay) close(false); };
-    const onEsc = (e) => { if (e.key === 'Escape') close(false); };
+    // Só fecha se o clique começou E terminou no fundo (arrastar uma seleção
+    // de dentro da caixa para fora não conta como clique no fundo)
+    const onDown = (e) => { downNoFundo = e.target === overlay; };
+    const onBackdrop = (e) => { if (e.target === overlay && downNoFundo) close(false); };
+    const onEsc = (e) => {
+      if (e.key === 'Escape') { close(false); return; }
+      if (e.key === 'Tab') { // foco preso entre Cancelar e Confirmar
+        e.preventDefault();
+        (document.activeElement === cancelBtn ? okBtn : cancelBtn).focus();
+      }
+    };
 
     okBtn.addEventListener('click', onOk);
     cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('pointerdown', onDown);
     overlay.addEventListener('click', onBackdrop);
     document.addEventListener('keydown', onEsc);
   });
@@ -1288,21 +1431,86 @@ function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?',
 // ============================================
 // MODAL
 // ============================================
+// Saída pelo mesmo caminho da entrada: aplica .closing, espera a animação e
+// só então esconde. O timeout cobre o caso de a animação não disparar.
+const SAIDA_MS = 200;
+function fecharComAnimacao(overlay) {
+  if (!overlay.classList.contains('active')) return;
+  const token = {};
+  overlay._saida = token;
+  overlay.classList.add('closing');
+  const concluir = () => {
+    if (overlay._saida !== token) return; // reaberto no meio da saída
+    overlay._saida = null;
+    overlay.classList.remove('active', 'closing');
+  };
+  overlay.addEventListener('animationend', (e) => { if (e.target === overlay) concluir(); }, { once: true });
+  setTimeout(concluir, SAIDA_MS + 50);
+}
+function cancelarSaida(overlay) {
+  overlay._saida = null;
+  overlay.classList.remove('closing');
+}
+
+const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+let focoAntesDoModal = null;
+
 function openModal(title, html) {
+  const modal = document.getElementById('modal');
+  if (!modal.classList.contains('active') || modal.classList.contains('closing')) {
+    focoAntesDoModal = document.activeElement;
+  }
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal').classList.add('active');
+  cancelarSaida(modal);
+  modal.classList.add('active');
+  document.body.classList.add('modal-aberto');
+  document.getElementById('admin-main').classList.add('modal-aberto');
+  // Foco no primeiro campo do formulário; sem campo, no botão de fechar
+  const primeiro = modal.querySelector('#modal-body input:not([disabled]), #modal-body select, #modal-body textarea')
+    || modal.querySelector('.modal-close');
+  primeiro.focus({ preventScroll: true });
 }
 
 function closeModal() {
-  document.getElementById('modal').classList.remove('active');
+  const modal = document.getElementById('modal');
+  if (!modal.classList.contains('active')) return;
+  fecharComAnimacao(modal);
+  document.body.classList.remove('modal-aberto');
+  document.getElementById('admin-main').classList.remove('modal-aberto');
+  if (focoAntesDoModal && document.contains(focoAntesDoModal)) focoAntesDoModal.focus({ preventScroll: true });
+  focoAntesDoModal = null;
 }
 
+// Backdrop: fecha só se o clique começou E terminou no fundo. Selecionar texto
+// num campo e soltar o mouse fora fechava o modal e perdia o que foi digitado.
+(() => {
+  const modal = document.getElementById('modal');
+  let downNoFundo = false;
+  modal.addEventListener('pointerdown', e => { downNoFundo = e.target === modal; });
+  modal.addEventListener('click', e => { if (e.target === modal && downNoFundo) closeModal(); });
+  // Erro inline some assim que o campo é corrigido
+  modal.addEventListener('input', e => {
+    const group = e.target.closest('.form-group.has-error');
+    if (!group) return;
+    group.classList.remove('has-error');
+    e.target.removeAttribute('aria-invalid');
+  });
+})();
+
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape') return;
-  // Com a confirmação aberta, o Esc é dela (onEsc em confirmarAcao) — não fecha o modal de baixo.
+  const modal = document.getElementById('modal');
+  // Com a confirmação aberta, o Esc/Tab são dela — não mexem no modal de baixo.
   if (document.getElementById('confirm-overlay').classList.contains('active')) return;
-  closeModal();
+  if (!modal.classList.contains('active') || modal.classList.contains('closing')) return;
+  if (e.key === 'Escape') { closeModal(); return; }
+  if (e.key !== 'Tab') return;
+  // Tab preso dentro do modal
+  const focaveis = [...modal.querySelectorAll(FOCAVEIS)].filter(el => el.offsetParent !== null);
+  if (!focaveis.length) return;
+  const primeiro = focaveis[0], ultimo = focaveis[focaveis.length - 1];
+  if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+  else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
 });
 
 // ============================================
@@ -1327,9 +1535,9 @@ async function loadDashboard() {
     } else {
       tbody.innerHTML = data.clientes.map(c => {
         const st = statusPorCliente[c.id] || { online: 0, total: 0 };
-        const statusColor = st.total === 0 ? 'var(--text-muted)' : (st.online === st.total ? '#4ade80' : (st.online > 0 ? '#facc15' : '#ef4444'));
+        const statusColor = st.total === 0 ? 'var(--text-muted)' : (st.online === st.total ? 'var(--green)' : (st.online > 0 ? '#b45309' : 'var(--red)'));
         return `<tr style="cursor:pointer" onclick="openClienteDetail('${c.id}')">
-        <td><strong>${esc(c.nome)}</strong></td>
+        <td><a href="#cliente/${c.id}" onclick="event.stopPropagation();openClienteDetail('${c.id}');return false" style="color:var(--text-primary);text-decoration:none;font-weight:700">${esc(c.nome)}</a></td>
         <td>${esc(c.cidade_uf || '')}</td>
         <td>${c.cameras?.[0]?.count || 0}</td>
         <td><span style="color:${statusColor};font-weight:600">${st.online}/${st.total}</span></td>
@@ -1348,7 +1556,7 @@ async function loadDashboard() {
       ultimasTbody.innerHTML = capturas.map(c => {
         const velColor = c.notificado ? 'var(--red)' : 'var(--text-primary)';
         return `<tr>
-        <td><strong style="letter-spacing:1px">${esc(c.placa)}</strong></td>
+        <td><strong style="letter-spacing:.08em">${esc(c.placa)}</strong></td>
         <td><span style="color:${velColor};font-weight:700">${c.velocidade} km/h</span></td>
         <td style="font-size:13px;color:var(--text-secondary)">${esc(c.clientes?.nome || '---')}</td>
         <td style="font-size:13px;color:var(--text-secondary)">${fmtDateTime(c.timestamp)}</td>
@@ -1370,7 +1578,7 @@ async function loadDashboard() {
         return `<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;background:${bg};margin-bottom:4px">
           <span style="font-weight:700;font-size:14px;color:${numColor};width:20px;text-align:center">${medal}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:600;letter-spacing:1px">${esc(p.placa)}</div>
+            <div style="font-weight:600;letter-spacing:.08em">${esc(p.placa)}</div>
             <div style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.cliente)}</div>
           </div>
           <div style="text-align:right">
@@ -1383,8 +1591,9 @@ async function loadDashboard() {
 
     // === GRÁFICO ALERTAS 7 DIAS ===
     const alertas7d = data.alertas_7d || [];
+    ultimosAlertas7d = alertas7d;
     if (alertas7d.length > 0) {
-      setTimeout(() => drawAdminChart7d(alertas7d), 100);
+      requestAnimationFrame(() => drawAdminChart7d(alertas7d));
     }
 
     // === SAÚDE DO SISTEMA ===
@@ -1392,9 +1601,26 @@ async function loadDashboard() {
 
   } catch (err) {
     console.error('Dashboard error:', err);
+    erroNaTabela('dash-clientes-body', 6, 'loadDashboard()');
+    erroNaTabela('dash-ultimas-body', 5, 'loadDashboard()');
+    erroNoBloco('dash-top-placas', 'loadDashboard()');
+    erroNoBloco('dash-health', 'loadDashboard()');
   }
 }
 
+// Gráfico redesenhado ao redimensionar (o canvas é medido em px no desenho)
+let ultimosAlertas7d = [];
+let redesenhoPendente = false;
+window.addEventListener('resize', () => {
+  if (redesenhoPendente || !ultimosAlertas7d.length) return;
+  redesenhoPendente = true;
+  requestAnimationFrame(() => {
+    redesenhoPendente = false;
+    if (document.getElementById('page-dashboard').classList.contains('active')) drawAdminChart7d(ultimosAlertas7d);
+  });
+});
+
+let ultimaPctSaude = 0;
 function renderSystemHealth(stats, statusPorCliente, clientes) {
   const healthDiv = document.getElementById('dash-health');
   const healthDot = document.getElementById('health-dot');
@@ -1402,22 +1628,23 @@ function renderSystemHealth(stats, statusPorCliente, clientes) {
   const totalCams = stats.cameras_ativas;
   const onlineCams = stats.cameras_online;
   const offlineCams = stats.cameras_offline;
-  const pctOnline = totalCams > 0 ? Math.round((onlineCams / totalCams) * 100) : 0;
+  // floor: com 199/200 online, round mostraria "100%" ao lado de "Parcialmente Online"
+  const pctOnline = totalCams > 0 ? Math.floor((onlineCams / totalCams) * 100) : 0;
 
   // Health status
   let healthStatus, healthColor;
   if (offlineCams === 0 && totalCams > 0) {
     healthStatus = 'Tudo Operacional';
-    healthColor = '#4ade80';
+    healthColor = 'var(--green)';
   } else if (onlineCams > 0) {
     healthStatus = 'Parcialmente Online';
-    healthColor = '#facc15';
+    healthColor = '#b45309';
   } else if (totalCams === 0) {
     healthStatus = 'Sem Câmeras';
     healthColor = 'var(--text-muted)';
   } else {
     healthStatus = 'Sistema Offline';
-    healthColor = '#ef4444';
+    healthColor = 'var(--red)';
   }
   healthDot.style.background = healthColor;
 
@@ -1445,19 +1672,26 @@ function renderSystemHealth(stats, statusPorCliente, clientes) {
              (layout thrash). transform roda no compositor. O arredondamento vem
              do overflow:hidden do container, então a barra não leva border-radius
              próprio — escalado, ele deformaria. -->
-        <div style="height:100%;width:100%;transform:scaleX(${pctOnline / 100});transform-origin:left;background:${healthColor};transition:transform 0.5s"></div>
+        <div id="health-bar" style="height:100%;width:100%;transform:scaleX(${ultimaPctSaude / 100});transform-origin:left;background:${healthColor};transition:transform 0.5s"></div>
       </div>
     </div>
   `;
 
   if (offlineClients.length > 0) {
     html += `<div style="margin-top:8px">
-      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Clientes com câmeras offline:</div>
-      ${offlineClients.map(n => `<div style="color:#ef4444;font-size:12px;padding:2px 0">&#9679; ${esc(n)}</div>`).join('')}
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Clientes com câmeras offline:</div>
+      ${offlineClients.map(n => `<div style="color:var(--red);font-size:12px;padding:2px 0">&#9679; ${esc(n)}</div>`).join('')}
     </div>`;
   }
 
   healthDiv.innerHTML = html;
+  // A barra nasce no valor anterior e anima até o novo: recriada já no valor
+  // final, a transition não tinha "de onde" partir e nunca rodava.
+  const bar = document.getElementById('health-bar');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transform = `scaleX(${pctOnline / 100})`;
+  }));
+  ultimaPctSaude = pctOnline;
 }
 
 function drawAdminChart7d(alertas7d) {
@@ -1572,7 +1806,7 @@ async function loadClientes() {
     clientesData = await api('/clientes');
     if (!Array.isArray(clientesData)) clientesData = [clientesData];
     renderClientes();
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error(err); erroNaTabela('clientes-body', 7, 'loadClientes()'); }
 }
 
 function renderClientes() {
@@ -1592,7 +1826,7 @@ function renderClientes() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openClienteModal(clientesData.find(x=>x.id==='${c.id}'))">Editar</button>
       ${c.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleCliente('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCliente('${c.id}',true)">Ativar</button>`}
-      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteCliente('${c.id}','${esc(c.nome)}')">Excluir</button>
+      <button class="btn btn-danger-solid btn-sm" onclick="deleteCliente('${c.id}','${esc(c.nome)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -1719,11 +1953,7 @@ async function saveCliente(id) {
     erros.push(['f-cli-teto', 'Teto deve ser maior que o limite de velocidade']);
   }
 
-  if (erros.length > 0) {
-    erros.forEach(([fieldId, msg]) => mostrarErroCampo(fieldId, msg));
-    focarPrimeiroErro();
-    return;
-  }
+  if (aplicarErrosCampo(erros)) return;
 
   try {
     if (id) {
@@ -1752,8 +1982,17 @@ function mostrarErroCampo(fieldId, mensagem) {
   const group = input.closest('.form-group');
   if (!group) return;
   group.classList.add('has-error');
-  const errorDiv = group.querySelector('.field-error');
-  if (errorDiv) errorDiv.textContent = mensagem;
+  // Formulários mais simples não trazem o .field-error no HTML: cria na hora
+  let errorDiv = group.querySelector('.field-error');
+  if (!errorDiv) {
+    errorDiv = document.createElement('div');
+    errorDiv.className = 'field-error';
+    input.insertAdjacentElement('afterend', errorDiv);
+  }
+  errorDiv.id = errorDiv.id || fieldId + '-erro';
+  errorDiv.textContent = mensagem;
+  input.setAttribute('aria-invalid', 'true');
+  input.setAttribute('aria-describedby', errorDiv.id);
 }
 
 function limparErrosCampo() {
@@ -1762,9 +2001,22 @@ function limparErrosCampo() {
     const e = g.querySelector('.field-error');
     if (e) e.textContent = '';
   });
-  const generalError = document.getElementById('f-cli-error');
-  if (generalError) generalError.textContent = '';
+  document.querySelectorAll('#modal-body [aria-invalid]').forEach(i => i.removeAttribute('aria-invalid'));
+  document.querySelectorAll('#modal-body .form-error').forEach(e => { e.textContent = ''; });
 }
+
+/** Mostra os erros por campo e foca o primeiro. Retorna true se houve erro. */
+function aplicarErrosCampo(erros) {
+  if (!erros.length) return false;
+  erros.forEach(([fieldId, msg]) => mostrarErroCampo(fieldId, msg));
+  focarPrimeiroErro();
+  return true;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Placa antiga (ABC1234) ou Mercosul (ABC1D23)
+const PLACA_RE = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
+const SENHA_MIN = 6;
 
 function focarPrimeiroErro() {
   const first = document.querySelector('.form-group.has-error input, .form-group.has-error select, .form-group.has-error textarea');
@@ -1807,7 +2059,7 @@ async function deleteCliente(id, nome) {
 // ============================================
 // CLIENTE DETAIL
 // ============================================
-async function openClienteDetail(id) {
+async function openClienteDetail(id, opts = {}) {
   const cliente = clientesData.find(c => c.id === id);
   if (!cliente) return;
 
@@ -1825,7 +2077,7 @@ async function openClienteDetail(id) {
     <div class="detail-field"><div class="label">Contato</div><div class="value">${esc(cliente.contato_nome || '---')}</div></div>
   `;
 
-  showPage('cliente-detail');
+  showPage('cliente-detail', { hash: 'cliente/' + id, fromHistory: opts.fromHistory });
   showTab('cameras');
   loadCameras(id);
   loadEmails(id);
@@ -1842,7 +2094,7 @@ async function loadCameras(clienteId) {
   try {
     camerasData = await api('/cameras?cliente_id=' + (clienteId || currentDetailCliente.id));
     renderCameras();
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error(err); erroNaTabela('cameras-body', 6, 'loadCameras()'); }
 }
 
 // cameraStatus vem de /js/camera-status.js (lib única, mesma usada
@@ -1863,7 +2115,7 @@ function renderCameras() {
       ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${c.ip_address ? 'IP: ' + esc(c.ip_address) : ''}${c.ip_address && c.mac_address ? ' | ' : ''}${c.mac_address ? 'MAC: ' + esc(c.mac_address) : ''}</div>`
       : '';
     const exibInfo = c.nome_exibicao
-      ? `<div style="font-size:10px;color:#3b82f6;margin-top:1px">Exibição: ${esc(c.nome_exibicao)}</div>`
+      ? `<div style="font-size:10px;color:var(--accent);margin-top:1px">Exibição: ${esc(c.nome_exibicao)}</div>`
       : '';
     return `<tr>
     <td><strong>${esc(c.nome)}</strong>${exibInfo}${netInfo}</td>
@@ -1872,10 +2124,10 @@ function renderCameras() {
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
     <td>${fmtDate(c.criado_em)}</td>
     <td class="actions-cell">
-      <a class="btn btn-sm" style="background:#0ea5e9;color:#fff;text-decoration:none" href="/admin/camera-saude.html?id=${c.id}" target="_blank" title="Painel de saúde, telemetria e diagnóstico">Saúde</a>
+      <a class="btn btn-info btn-sm" href="/admin/camera-saude.html?id=${c.id}" target="_blank" title="Painel de saúde, telemetria e diagnóstico">Saúde</a>
       <button class="btn btn-ghost btn-sm" onclick="openCameraModal(camerasData.find(x=>x.id==='${c.id}'))">Editar</button>
       ${c.ativa ? `<button class="btn btn-danger btn-sm" onclick="toggleCamera('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCamera('${c.id}',true)">Ativar</button>`}
-      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteCamera('${c.id}','${esc(c.nome)}')">Excluir</button>
+      <button class="btn btn-danger-solid btn-sm" onclick="deleteCamera('${c.id}','${esc(c.nome)}')">Excluir</button>
     </td>
   </tr>`;
   }).join('');
@@ -1885,14 +2137,14 @@ function openCameraModal(camera = null) {
   const isEdit = !!camera;
   openModal(isEdit ? 'Editar Câmera' : 'Nova Câmera', `
     <div class="form-group"><label>Serial da Câmera *</label><input id="f-cam-serial" value="${esc(camera?.serial_number || '')}" placeholder="Ex: QFHVK21424180082"></div>
-    <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Informe o serial da câmera ALPHADIGI. A câmera será identificada automaticamente.</div>
+    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Informe o serial da câmera ALPHADIGI. A câmera será identificada automaticamente.</div>
     <div class="form-group"><label>Nome de Exibição</label><input id="f-cam-exibicao" value="${esc(camera?.nome_exibicao || '')}" placeholder="Ex: Clube Mata (nome curto p/ dashboard)"></div>
-    <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Nome curto exibido no dashboard. Se vazio, usa o serial.</div>
+    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Nome curto exibido no dashboard. Se vazio, usa o serial.</div>
     <div class="form-group"><label>Nome Técnico</label><input id="f-cam-nome" value="${esc(camera?.nome || '')}" placeholder="Ex: CPC-LOMB01-CLUBEMATA (opcional)"></div>
     <div class="form-group"><label>Modelo do equipamento</label><input id="f-cam-modelo" value="${esc(camera?.modelo || '')}" placeholder="Ex: ALPHADIGI ITS-9C"></div>
-    <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Aparece no rodapé auditável do PDF de notificação.</div>
+    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Aparece no rodapé auditável do PDF de notificação.</div>
     <div class="form-group"><label>Firmware</label><input id="f-cam-firmware" value="${esc(camera?.firmware || '')}" placeholder="Ex: V4.32.05"></div>
-    <div style="font-size:11px;color:#94a3b8;margin:-8px 0 12px;padding:0 4px">Versão do firmware da câmera. ALPHADIGI não expõe automaticamente — preencha manualmente.</div>
+    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Versão do firmware da câmera. ALPHADIGI não expõe automaticamente — preencha manualmente.</div>
     ${isEdit ? `<div class="form-group"><label>Token (não editável)</label><input value="${camera.token}" disabled></div>` : ''}
     <div class="form-error" id="f-cam-error"></div>
     <div class="form-actions">
@@ -1908,7 +2160,8 @@ async function saveCamera(id) {
   const nome = document.getElementById('f-cam-nome').value.trim();
   const modelo = document.getElementById('f-cam-modelo').value.trim();
   const firmware = document.getElementById('f-cam-firmware').value.trim();
-  if (!serial_number) { document.getElementById('f-cam-error').textContent = 'Serial da câmera obrigatório.'; return; }
+  limparErrosCampo();
+  if (aplicarErrosCampo(serial_number ? [] : [['f-cam-serial', 'Informe o serial da câmera']])) return;
 
   try {
     const payload = {
@@ -1961,7 +2214,7 @@ async function loadEmails(clienteId) {
   try {
     emailsData = await api('/emails?cliente_id=' + (clienteId || currentDetailCliente.id));
     renderEmails();
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error(err); erroNaTabela('emails-body', 5, 'loadEmails()'); }
 }
 
 function renderEmails() {
@@ -2018,7 +2271,12 @@ async function saveEmail(id) {
     tipo: document.getElementById('f-em-tipo').value,
     ativo: document.getElementById('f-em-ativo').value === 'true',
   };
-  if (!body.nome || !body.email) { document.getElementById('f-em-error').textContent = 'Preencha nome e e-mail.'; return; }
+  limparErrosCampo();
+  const erros = [];
+  if (!body.nome) erros.push(['f-em-nome', 'Informe o nome']);
+  if (!body.email) erros.push(['f-em-email', 'Informe o e-mail']);
+  else if (!EMAIL_RE.test(body.email)) erros.push(['f-em-email', 'E-mail inválido']);
+  if (aplicarErrosCampo(erros)) return;
 
   try {
     if (id) {
@@ -2149,7 +2407,13 @@ async function saveRelatorioConfig() {
 }
 
 async function enviarRelatorioTeste() {
-  if (!confirm('Enviar o relatório da última semana agora, para todos os destinatários do tipo Relatório deste cliente?')) return;
+  const confirmado = await confirmarAcao({
+    titulo: 'Enviar o relatório agora?',
+    mensagem: 'O relatório da última semana vai para <strong>todos os destinatários do tipo Relatório</strong> deste cliente. Não é um teste: eles recebem o e-mail de verdade.',
+    textoOk: 'Enviar agora',
+    perigo: false,
+  });
+  if (!confirmado) return;
   try {
     toast('Enviando...');
     const r = await api(`/relatorio?cliente_id=${currentDetailCliente.id}`, 'POST');
@@ -2177,7 +2441,7 @@ async function loadRelatorioEnvios() {
       return;
     }
     box.innerHTML = `
-      <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Últimos envios</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Últimos envios</div>
       <table class="data-table">
         <thead><tr><th>Período</th><th>Destinatário</th><th>Enviado</th><th>Visto</th></tr></thead>
         <tbody>${envios.map(e => `<tr>
@@ -2192,7 +2456,7 @@ async function loadRelatorioEnvios() {
         </tr>`).join('')}</tbody>
       </table>`;
   } catch {
-    box.innerHTML = '';
+    erroNoBloco('rel-envios-recentes', 'loadRelatorioEnvios()');
   }
 }
 
@@ -2224,7 +2488,7 @@ async function loadVeiculos(clienteId) {
   try {
     veiculosData = await api('/veiculos?cliente_id=' + (clienteId || currentDetailCliente.id));
     renderVeiculos();
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error(err); erroNaTabela('veiculos-body', 7, 'loadVeiculos()'); }
 }
 
 function renderVeiculos() {
@@ -2235,7 +2499,7 @@ function renderVeiculos() {
   if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Nenhum veículo</td></tr>'; return; }
 
   tbody.innerHTML = filtered.map(v => `<tr>
-    <td><strong style="letter-spacing:1px">${esc(v.placa)}</strong></td>
+    <td><strong style="letter-spacing:.08em">${esc(v.placa)}</strong></td>
     <td>${esc(v.nome_morador || '---')}</td>
     <td>${esc(v.unidade || '---')}</td>
     <td>${esc(v.marca || '---')}</td>
@@ -2244,7 +2508,7 @@ function renderVeiculos() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openVeiculoModal(veiculosData.find(x=>x.id==='${v.id}'))">Editar</button>
       ${v.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleVeiculo('${v.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleVeiculo('${v.id}',true)">Ativar</button>`}
-      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteVeiculo('${v.id}','${esc(v.placa)}')">Excluir</button>
+      <button class="btn btn-danger-solid btn-sm" onclick="deleteVeiculo('${v.id}','${esc(v.placa)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -2271,13 +2535,18 @@ function openVeiculoModal(veiculo = null) {
 
 async function saveVeiculo(id) {
   const body = {
-    placa: document.getElementById('f-vei-placa').value.trim(),
+    placa: document.getElementById('f-vei-placa').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''),
     nome_morador: document.getElementById('f-vei-morador').value.trim(),
     unidade: document.getElementById('f-vei-unidade').value.trim(),
     marca: document.getElementById('f-vei-marca').value.trim(),
     cor: document.getElementById('f-vei-cor').value.trim(),
   };
-  if (!body.placa) { document.getElementById('f-vei-error').textContent = 'Placa obrigatória.'; return; }
+  limparErrosCampo();
+  if (aplicarErrosCampo(
+    !body.placa ? [['f-vei-placa', 'Informe a placa']]
+    : !PLACA_RE.test(body.placa) ? [['f-vei-placa', 'Placa inválida — use ABC1234 ou ABC1D23']]
+    : []
+  )) return;
 
   try {
     if (id) {
@@ -2324,7 +2593,7 @@ async function loadUsuariosCli(clienteId) {
   try {
     usuariosCliData = await api('/usuarios?cliente_id=' + (clienteId || currentDetailCliente.id));
     renderUsuariosCli();
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error(err); erroNaTabela('usuarios-cli-body', 5, 'loadUsuariosCli()'); }
 }
 
 function renderUsuariosCli() {
@@ -2340,7 +2609,7 @@ function renderUsuariosCli() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
       ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
-      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
+      <button class="btn btn-danger-solid btn-sm" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -2352,7 +2621,7 @@ async function loadUsuariosGlobal() {
   try {
     usuariosData = await api('/usuarios');
     renderUsuariosGlobal();
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error(err); erroNaTabela('usuarios-global-body', 6, 'loadUsuariosGlobal()'); }
 }
 
 function renderUsuariosGlobal() {
@@ -2372,7 +2641,7 @@ function renderUsuariosGlobal() {
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
       ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
-      <button class="btn btn-sm" style="background:#7f1d1d;color:#fff" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
+      <button class="btn btn-danger-solid btn-sm" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
     </td>
   </tr>`).join('');
 }
@@ -2422,7 +2691,14 @@ async function saveUsuario(id) {
   const role = document.getElementById('f-usr-role').value;
   const cliente_id = document.getElementById('f-usr-cliente').value || null;
 
-  if (!nome) { document.getElementById('f-usr-error').textContent = 'Nome obrigatório.'; return; }
+  limparErrosCampo();
+  const erros = [];
+  if (!nome) erros.push(['f-usr-nome', 'Informe o nome']);
+  if (!id && !email) erros.push(['f-usr-email', 'Informe o e-mail']);
+  else if (!id && !EMAIL_RE.test(email)) erros.push(['f-usr-email', 'E-mail inválido']);
+  if (!id && !senha) erros.push(['f-usr-senha', 'Defina uma senha']);
+  else if (senha && senha.length < SENHA_MIN) erros.push(['f-usr-senha', `A senha precisa ter pelo menos ${SENHA_MIN} caracteres`]);
+  if (aplicarErrosCampo(erros)) return;
 
   try {
     if (id) {
@@ -2431,7 +2707,6 @@ async function saveUsuario(id) {
       await api('/usuarios', 'PUT', body);
       toast('Usuário atualizado!');
     } else {
-      if (!email || !senha) { document.getElementById('f-usr-error').textContent = 'E-mail e senha obrigatórios.'; return; }
       await api('/usuarios', 'POST', { email, senha, nome, role, cliente_id });
       toast('Usuário criado!');
     }
@@ -2471,10 +2746,11 @@ async function deleteUsuario(id, email) {
 // ============================================
 async function loadAudit() {
   try {
-    const { data } = await sb.from('audit_log')
+    const { data, error } = await sb.from('audit_log')
       .select('*, usuarios(nome, email)')
       .order('criado_em', { ascending: false })
       .limit(100);
+    if (error) throw error;
 
     const tbody = document.getElementById('audit-body');
     if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhum registro</td></tr>'; return; }
@@ -2486,7 +2762,7 @@ async function loadAudit() {
       <td>${esc(a.tabela || '---')}</td>
       <td style="font-size:12px;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(a.detalhes || {}))}</td>
     </tr>`).join('');
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error(err); erroNaTabela('audit-body', 5, 'loadAudit()'); }
 }
 
 // ============================================
@@ -2506,12 +2782,13 @@ const TIPO_LABELS_FRONT = {
 };
 
 const STATUS_LABELS = {
-  recebida: { label: 'Recebida', color: '#F97316' },
-  em_analise: { label: 'Em análise', color: '#3B9AFF' },
-  aguardando_titular: { label: 'Aguardando titular', color: '#94A3B8' },
-  encaminhada_controlador: { label: 'Encaminhada', color: '#94A3B8' },
-  atendida: { label: 'Atendida', color: '#34D399' },
-  rejeitada: { label: 'Rejeitada', color: '#F87171' },
+  // Tons -700: legíveis (AA) sobre o fundo branco do admin
+  recebida: { label: 'Recebida', color: '#c2410c' },
+  em_analise: { label: 'Em análise', color: '#046bd2' },
+  aguardando_titular: { label: 'Aguardando titular', color: '#475569' },
+  encaminhada_controlador: { label: 'Encaminhada', color: '#475569' },
+  atendida: { label: 'Atendida', color: '#15803d' },
+  rejeitada: { label: 'Rejeitada', color: '#b91c1c' },
   cancelada: { label: 'Cancelada', color: '#64748B' },
 };
 
@@ -2526,9 +2803,9 @@ function renderPrazo(prazo, status) {
     return `<span style="color:var(--text-muted);font-size:12px">${fmtDate(prazo)}</span>`;
   }
   const dias = diasRestantes(prazo);
-  if (dias < 0) return `<span style="color:#F87171;font-weight:700">VENCIDA (${Math.abs(dias)}d)</span>`;
-  if (dias === 0) return `<span style="color:#F97316;font-weight:700">HOJE</span>`;
-  if (dias <= 3) return `<span style="color:#F97316">${dias}d</span>`;
+  if (dias < 0) return `<span style="color:#b91c1c;font-weight:700">VENCIDA (${Math.abs(dias)}d)</span>`;
+  if (dias === 0) return `<span style="color:#c2410c;font-weight:700">HOJE</span>`;
+  if (dias <= 3) return `<span style="color:#c2410c">${dias}d</span>`;
   return `<span style="color:var(--text-secondary)">${dias}d</span>`;
 }
 
@@ -2564,7 +2841,7 @@ async function loadDireitos(filtroStatus = '', filtroUrgencia = '') {
     }
 
     tbody.innerHTML = data.map(s => {
-      const st = STATUS_LABELS[s.status] || { label: s.status, color: '#94A3B8' };
+      const st = STATUS_LABELS[s.status] || { label: s.status, color: '#475569' };
       return `<tr style="cursor:pointer" onclick="abrirDireitoDetalhe('${s.id}')">
         <td style="font-family:monospace;font-size:12px;color:var(--accent)">${esc(s.protocolo)}</td>
         <td><strong>${esc(s.nome)}</strong><br><span style="color:var(--text-muted);font-size:11px">${esc(s.email)}</span></td>
@@ -2572,12 +2849,12 @@ async function loadDireitos(filtroStatus = '', filtroUrgencia = '') {
         <td><span style="color:${st.color};font-weight:600;font-size:12px">● ${st.label}</span></td>
         <td style="font-size:12px;color:var(--text-secondary)">${fmtDateTime(s.criada_em)}</td>
         <td>${renderPrazo(s.prazo_limite, s.status)}</td>
-        <td><button class="btn-sm" onclick="event.stopPropagation();abrirDireitoDetalhe('${s.id}')">Abrir</button></td>
+        <td><button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirDireitoDetalhe('${s.id}')">Abrir</button></td>
       </tr>`;
     }).join('');
   } catch (err) {
     console.error(err);
-    toast('Erro ao carregar solicitações LGPD', true);
+    erroNaTabela('direitos-body', 7, 'loadDireitos()');
   }
 }
 
@@ -2591,7 +2868,7 @@ async function abrirDireitoDetalhe(id) {
   try {
     const s = await api(`/admin/direitos?id=${id}`);
     const tipoLabel = TIPO_LABELS_FRONT[s.tipo] || s.tipo;
-    const st = STATUS_LABELS[s.status] || { label: s.status, color: '#94A3B8' };
+    const st = STATUS_LABELS[s.status] || { label: s.status, color: '#475569' };
     const dias = diasRestantes(s.prazo_limite);
     const prazoInfo = ['atendida','rejeitada','cancelada'].includes(s.status)
       ? `Encerrada em ${s.respondida_em ? fmtDateTime(s.respondida_em) : '---'}`
@@ -2602,34 +2879,34 @@ async function abrirDireitoDetalhe(id) {
     const html = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Protocolo</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Protocolo</div>
           <div style="font-family:monospace;font-size:13px;color:var(--accent)">${esc(s.protocolo)}</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Status</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Status</div>
           <div style="color:${st.color};font-weight:700">● ${st.label}</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Recebida em</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Recebida em</div>
           <div>${fmtDateTime(s.criada_em)}</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Prazo legal</div>
-          <div style="color:${dias < 0 && !jaRespondida ? '#F87171' : dias <= 3 && !jaRespondida ? '#F97316' : 'var(--text-primary)'};font-weight:600">${prazoInfo}</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Prazo legal</div>
+          <div style="color:${dias < 0 && !jaRespondida ? '#b91c1c' : dias <= 3 && !jaRespondida ? '#c2410c' : 'var(--text-primary)'};font-weight:600">${prazoInfo}</div>
         </div>
       </div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
 
       <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Solicitante</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Solicitante</div>
         <div><strong>${esc(s.nome)}</strong></div>
         <div style="color:var(--text-secondary);font-size:13px">${esc(s.email)}${s.telefone ? ' · ' + esc(s.telefone) : ''}${s.cpf ? ' · CPF: ' + esc(s.cpf) : ''}</div>
       </div>
 
       ${s.empreendimento || s.placa_veiculo || s.unidade ? `
       <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Vínculo informado</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Vínculo informado</div>
         ${s.empreendimento ? `<div>Empreendimento: <strong>${esc(s.empreendimento)}</strong></div>` : ''}
         ${s.placa_veiculo ? `<div>Placa: <strong>${esc(s.placa_veiculo)}</strong></div>` : ''}
         ${s.unidade ? `<div>Unidade: <strong>${esc(s.unidade)}</strong></div>` : ''}
@@ -2637,18 +2914,18 @@ async function abrirDireitoDetalhe(id) {
       ` : ''}
 
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Tipo</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Tipo</div>
         <div>${esc(tipoLabel)}</div>
       </div>
 
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Descrição da solicitação</div>
-        <div style="background:rgba(0,0,0,0.15);border-left:3px solid var(--accent);padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.descricao)}</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Descrição da solicitação</div>
+        <div style="background:var(--bg-input);border-left:3px solid var(--accent);padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.descricao)}</div>
       </div>
 
       ${s.resposta_dpo ? `
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Resposta do DPO</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Resposta do DPO</div>
         <div style="background:rgba(4,107,210,0.1);border-left:3px solid #046BD2;padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.resposta_dpo)}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">
           ${s.respondida_por_usuario ? 'Por ' + esc(s.respondida_por_usuario.nome) + ' em ' : 'Em '}${fmtDateTime(s.respondida_em)}
@@ -2658,12 +2935,12 @@ async function abrirDireitoDetalhe(id) {
 
       ${!jaRespondida ? `
       <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-      <div style="font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Responder</div>
+      <div style="font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Responder</div>
 
       <form id="form-direito-resposta" onsubmit="return responderDireito(event, '${s.id}')">
-        <div class="form-field" style="margin-bottom:12px">
-          <label>Novo status</label>
-          <select name="status">
+        <div class="form-group">
+          <label for="f-dir-status">Novo status</label>
+          <select name="status" id="f-dir-status">
             <option value="em_analise">Em análise</option>
             <option value="aguardando_titular">Aguardando titular</option>
             <option value="encaminhada_controlador">Encaminhada ao Controlador</option>
@@ -2673,26 +2950,26 @@ async function abrirDireitoDetalhe(id) {
           </select>
         </div>
 
-        <div class="form-field" style="margin-bottom:12px">
-          <label>Resposta ao titular</label>
-          <textarea name="resposta_dpo" rows="7" placeholder="Escreva a resposta que será enviada por e-mail ao titular. Inclua detalhes sobre o atendimento e, se aplicável, os dados fornecidos."></textarea>
+        <div class="form-group">
+          <label for="f-dir-resposta">Resposta ao titular</label>
+          <textarea name="resposta_dpo" id="f-dir-resposta" rows="7" placeholder="Escreva a resposta que será enviada por e-mail ao titular. Inclua detalhes sobre o atendimento e, se aplicável, os dados fornecidos."></textarea>
         </div>
 
-        <div class="form-field" style="margin-bottom:16px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <div class="form-group">
+          <label class="check-line">
             <input type="checkbox" name="enviar_email" checked>
-            Enviar resposta por e-mail automaticamente ao titular (${esc(s.email)})
+            <span>Enviar resposta por e-mail automaticamente ao titular (${esc(s.email)})</span>
           </label>
         </div>
 
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
-          <button type="submit" class="btn-primary">Salvar e responder</button>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar e responder</button>
         </div>
       </form>
       ` : `
-      <div style="display:flex;justify-content:flex-end;margin-top:16px">
-        <button type="button" class="btn-secondary" onclick="closeModal()">Fechar</button>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Fechar</button>
       </div>
       `}
     `;

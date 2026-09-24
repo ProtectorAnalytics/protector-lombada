@@ -64,7 +64,11 @@
       position: sticky; top: 0; z-index: 100;
       background: rgba(5, 10, 24, 0.85);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+    }
+    /* Edge effect: degradê suave onde o conteúdo passa por baixo, em vez de borda dura */
+    .nav::after {
+      content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 12px;
+      background: linear-gradient(rgba(5, 10, 24, 0.6), transparent); pointer-events: none;
     }
     .nav-inner {
       max-width: 1200px; margin: 0 auto; padding: 14px 24px;
@@ -75,11 +79,11 @@
     }
     .nav-brand img { width: 36px; height: 36px; flex-shrink: 0; }
     .nav-brand-text { font-weight: 700; font-size: 17px; line-height: 1.2; }
-    .nav-brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; }
+    .nav-brand-sub { font-size: 12px; color: var(--text-secondary); letter-spacing: 0.08em; }
     .nav-back {
       padding: 10px 16px; border: 1px solid var(--border-light); border-radius: 8px;
       color: var(--text-secondary); font-size: 14px; font-weight: 500;
-      transition: all 0.2s; white-space: nowrap; min-height: 40px; display: inline-flex; align-items: center;
+      transition: background-color 0.2s, color 0.2s; white-space: nowrap; min-height: 40px; display: inline-flex; align-items: center;
     }
     .nav-back:hover { background: var(--glass); color: var(--text-primary); text-decoration: none; }
 
@@ -92,12 +96,12 @@
     }
     .header-label {
       display: inline-flex; align-items: center; gap: 10px;
-      font-size: clamp(11px, 1.6vw, 12px); font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--accent-light); margin-bottom: 20px;
     }
     .header-title {
       font-size: clamp(28px, 5vw, 52px); font-weight: 800; line-height: 1.15;
-      margin-bottom: 20px; letter-spacing: -0.5px;
+      margin-bottom: 20px; letter-spacing: -0.02em;
       background: linear-gradient(135deg, #fff 0%, var(--accent-light) 50%, var(--cta) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
       word-wrap: break-word; overflow-wrap: break-word;
@@ -114,7 +118,7 @@
     }
     .content h2 {
       font-size: clamp(22px, 3.4vw, 26px); font-weight: 700; color: var(--text-primary);
-      margin-top: 48px; margin-bottom: 16px; letter-spacing: -0.3px;
+      margin-top: 48px; margin-bottom: 16px; letter-spacing: -0.01em;
       scroll-margin-top: 90px;
     }
     .content h2:first-child { margin-top: 0; }
@@ -143,7 +147,7 @@
     }
     .callout-title {
       font-weight: 700; color: var(--accent-light); font-size: 13px;
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
     }
     .callout p { margin-bottom: 0; }
 
@@ -161,7 +165,7 @@
     th {
       background: var(--bg-card);
       color: var(--text-primary); font-weight: 700;
-      font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
     }
     td { color: var(--text-secondary); }
     tr:last-child td { border-bottom: none; }
@@ -198,7 +202,7 @@
     }
     .toc-title {
       font-size: 13px; font-weight: 700; color: var(--accent-light);
-      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
     }
     .toc ol {
       margin-left: 20px; color: var(--text-secondary);
@@ -235,7 +239,7 @@
       .content { padding: 40px 16px 72px; line-height: 1.65; }
       .company-card { padding: 22px 18px; }
       .company-field { flex-direction: column; gap: 4px; padding: 12px 0; }
-      .company-field-label { min-width: auto; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .company-field-label { min-width: auto; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
       th, td { padding: 11px 12px; font-size: 13px; }
       .footer { padding: 36px 16px; }
     }
@@ -244,12 +248,25 @@
       .nav-brand img { width: 32px; height: 32px; }
       .nav-brand-text { font-size: 15px; }
       .header { padding: 36px 14px 28px; }
-      .header-title { letter-spacing: 0; }
       .content { padding: 32px 14px 64px; font-size: 15px; }
       .toc { padding: 18px 18px; }
       .toc ol { margin-left: 16px; }
       .callout { padding: 16px 18px; }
       .company-card { padding: 18px 14px; border-radius: 16px; }
+    }
+
+    /* ===== PREFERÊNCIAS DO SISTEMA ===== */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .nav { background: var(--bg-dark); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+    @media (prefers-contrast: more) {
+      :root { --border: rgba(255,255,255,0.35); --border-light: rgba(255,255,255,0.45); --text-muted: #CBD5E1; }
+      .nav { background: var(--bg-dark); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
+      .nav::after { display: none; }
     }
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
