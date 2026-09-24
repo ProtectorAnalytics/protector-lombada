@@ -20,9 +20,10 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const DEFAULTS = { damping: 1, response: 0.4 };
-  const SNAPPY = { damping: 1, response: 0.3 };      // menus, popovers
-  const MOMENTUM = { damping: 0.8, response: 0.3 };  // sheet/drawer após flick
+  // Calibrado para discreto: 0.4 s e rebote 0.8 ficaram "pesados" no uso real.
+  const DEFAULTS = { damping: 1, response: 0.32 };
+  const SNAPPY = { damping: 1, response: 0.24 };      // menus, popovers
+  const MOMENTUM = { damping: 0.92, response: 0.3 };  // sheet/drawer após flick: rebote quase imperceptível
   const REST_DELTA = 0.01;      // px
   const REST_VELOCITY = 0.5;    // px/s
   const MAX_SUBSTEP = 1 / 240;  // s — integração estável mesmo em 30 fps

@@ -20,6 +20,35 @@
             --sidebar-w: 280px;
             --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+            color-scheme: light;
+            --text-muted: #64748B;
+            --brand: #046bd2;          /* azul da marca: barra e cabeçalho de tabela */
+            --brand-dark: #034ea2;
+            --code-bg: #f1f5f9;
+            --code-text: #be185d;
+        }
+
+        /* Tema escuro (segue a escolha feita no painel) */
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --accent: #60A5FA;
+            --accent-light: rgba(96,165,250,0.12);
+            --accent-dark: #93C5FD;
+            --text: #E2E8F0;
+            --text-light: #94A3B8;
+            --text-muted: #94A3B8;
+            --bg: #0B1220;
+            --bg-alt: #111827;
+            --border: rgba(255,255,255,0.10);
+            --code-bg: #1E293B;
+            --code-text: #F9A8D4;
+        }
+        /* Troca de tema sem salto brusco de brilho */
+        html.tema-trocando, html.tema-trocando *, html.tema-trocando *::before, html.tema-trocando *::after {
+            transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html.tema-trocando, html.tema-trocando *, html.tema-trocando *::before, html.tema-trocando *::after { transition: none !important; }
         }
 
         html { font-size: 100%; }
@@ -88,7 +117,7 @@
             transition: background .2s, transform .1s;
         }
         .navbar .btn:active { transform: scale(.97); }
-        .btn-white { background: #fff; color: var(--accent); }
+        .btn-white { background: #fff; color: var(--brand); }
         .btn-white:hover { background: #f0f4ff; }
         .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.5); }
         .btn-outline:hover { background: rgba(255,255,255,.12); }
@@ -154,7 +183,7 @@
         }
         .version {
             font-size: 0.8125rem;
-            color: #888;
+            color: var(--text-muted);
             margin-bottom: 32px;
         }
         h2 {
@@ -204,7 +233,7 @@
             font-size: 0.875rem;
         }
         th {
-            background: var(--accent);
+            background: var(--brand-dark);
             color: #fff;
             font-weight: 600;
             text-align: left;
@@ -223,10 +252,10 @@
         code {
             font-family: var(--font-mono);
             font-size: 0.8125rem;
-            background: #f1f5f9;
+            background: var(--code-bg);
             padding: 2px 6px;
             border-radius: 4px;
-            color: #d6336c;
+            color: var(--code-text);
         }
         pre {
             background: #1e293b;
@@ -309,6 +338,12 @@
 
         /* ── Print ── */
         @media print {
+            /* Impressão sempre em papel claro, qualquer que seja o tema */
+            :root, :root[data-theme="dark"] {
+                --bg: #ffffff; --bg-alt: #f7f9fc; --text: #1a1a2e; --text-light: #555;
+                --border: #e0e6ed; --accent: #046bd2; --accent-light: #e8f1fc; --accent-dark: #034ea2;
+                --code-bg: #f1f5f9; --code-text: #be185d;
+            }
             .navbar, .sidebar, .menu-toggle, .btn { display: none !important; }
             .main {
                 margin: 0;
@@ -329,6 +364,50 @@
         }
     </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+  <script>
+    // Tema resolvido ANTES de pintar (sem flash). 'auto' segue o sistema.
+    // Mesma chave em dashboard/, novidades e manual.
+    (function () {
+      var CHAVE = 'lombada-tema';
+      var mq = window.matchMedia('(prefers-color-scheme: light)');
+      var raiz = document.documentElement;
+      function escolha() {
+        try { var v = localStorage.getItem(CHAVE); return v === 'light' || v === 'dark' ? v : 'auto'; }
+        catch (e) { return 'auto'; }
+      }
+      function aplicar(pref) {
+        var tema = pref === 'auto' ? (mq.matches ? 'light' : 'dark') : pref;
+        raiz.setAttribute('data-theme', tema);
+        raiz.setAttribute('data-theme-pref', pref);
+        return tema;
+      }
+      function avisar(pref, tema) {
+        document.dispatchEvent(new CustomEvent('lombada:tema', { detail: { pref: pref, tema: tema } }));
+      }
+      var timerTroca = null;
+      function trocarSuave(pref) {
+        // Cores cruzam em 200 ms (sem salto de brilho); a classe sai logo depois
+        raiz.classList.add('tema-trocando');
+        var tema = aplicar(pref);
+        clearTimeout(timerTroca);
+        timerTroca = setTimeout(function () { raiz.classList.remove('tema-trocando'); }, 260);
+        avisar(pref, tema);
+      }
+      window.LombadaTema = {
+        escolha: escolha,
+        definir: function (pref) {
+          try { localStorage.setItem(CHAVE, pref); } catch (e) {}
+          trocarSuave(pref);
+        },
+      };
+      aplicar(escolha());
+      var aoMudarSistema = function () { if (escolha() === 'auto') trocarSuave('auto'); };
+      if (mq.addEventListener) mq.addEventListener('change', aoMudarSistema);
+      else if (mq.addListener) mq.addListener(aoMudarSistema);
+      // Outra aba trocou o tema: acompanha
+      window.addEventListener('storage', function (e) { if (e.key === CHAVE) trocarSuave(escolha()); });
+    })();
+  </script>
   <script src="/js/spring.js"></script>
 </head>
 <body>
@@ -416,11 +495,11 @@
 
     <h3>Barra Superior</h3>
     <ul>
-        <li><strong>Logo e nome do sistema</strong> (Protector Traffic Control)</li>
-        <li><strong>Nome do seu condomínio/empresa</strong></li>
-        <li><strong>Seu email</strong> de login</li>
+        <li><strong>Logo e nome do seu condomínio/empresa</strong> em destaque</li>
+        <li><strong>"Atualizado às…"</strong> - horário da última atualização dos dados</li>
+        <li><strong>Tema</strong> - escolha entre Automático (segue o seu aparelho), Claro ou Escuro; a escolha fica salva neste navegador</li>
         <li><strong>Botão "Veículos"</strong> - acesso rápido ao cadastro de veículos</li>
-        <li><strong>Botão "Sair"</strong> - encerrar sessão</li>
+        <li><strong>Botão da conta</strong> (círculo com a sua inicial) - mostra o e-mail de login e o botão "Sair"</li>
     </ul>
 
     <h3>Área de Estatísticas (cards)</h3>
@@ -745,8 +824,8 @@
 
     <hr>
 
-    <p style="text-align:center; color:#888; font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.0.1 | Build 2ea9b40 | Março 2026<br>
+    <p style="text-align:center; color:var(--text-muted); font-size:0.8125rem; margin-top:40px;">
+        <strong>Protector Traffic Control</strong> - v1.2.0 | Setembro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 
