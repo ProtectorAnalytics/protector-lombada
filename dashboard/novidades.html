@@ -6,9 +6,6 @@
   <title>Novidades · Protector Traffic Control</title>
   <meta name="description" content="Últimas atualizações do Protector Traffic Control — conheça as novas funcionalidades e melhorias do sistema.">
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -29,14 +26,19 @@
       --red: #EF4444;
       --purple: #A855F7;
       --radius: 12px;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     }
 
+    html { font-size: 100%; }
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--font-sans);
+      font-optical-sizing: auto;
       background: var(--bg-primary);
       color: var(--text-primary);
       line-height: 1.65;
-      font-size: 15px;
+      font-size: 0.9375rem;
       color-scheme: dark;
       -webkit-font-smoothing: antialiased;
     }
@@ -46,8 +48,8 @@
 
     /* ===== TOPBAR ===== */
     .topbar {
-      background: rgba(13,20,33,0.92);
-      border-bottom: 1px solid var(--border);
+      /* Material translúcido: o conteúdo rola por baixo */
+      background: rgba(13,20,33,0.72);
       padding: 14px 24px;
       display: flex;
       justify-content: space-between;
@@ -55,8 +57,17 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+    }
+    /* Edge effect no lugar da borda dura */
+    .topbar::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 100%;
+      height: 12px;
+      background: linear-gradient(rgba(8,12,20,0.5), rgba(8,12,20,0));
+      pointer-events: none;
     }
     .topbar-brand {
       display: flex;
@@ -67,14 +78,14 @@
     }
     .topbar-brand img { height: 36px; }
     .topbar-brand-text { display: flex; flex-direction: column; line-height: 1.1; }
-    .topbar-brand-name { font-size: 15px; font-weight: 700; }
-    .topbar-brand-sub { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; }
+    .topbar-brand-name { font-size: 0.9375rem; font-weight: 700; }
+    .topbar-brand-sub { font-size: 0.625rem; font-weight: 600; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; }
     .topbar-back {
       padding: 8px 16px;
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text-secondary);
-      font-size: 13px;
+      font-size: 0.8125rem;
       font-weight: 500;
       transition: border-color 0.2s, color 0.2s, background-color 0.2s;
       display: inline-flex;
@@ -98,7 +109,7 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       letter-spacing: 3px;
       text-transform: uppercase;
@@ -124,7 +135,7 @@
       -webkit-text-fill-color: transparent;
     }
     .header-desc {
-      font-size: 16px;
+      font-size: 1rem;
       color: var(--text-secondary);
       max-width: 640px;
       margin: 0 auto;
@@ -167,7 +178,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -199,13 +210,13 @@
     }
 
     .release-date {
-      font-size: 12px;
+      font-size: 0.75rem;
       color: var(--text-muted);
       margin-bottom: 4px;
       font-weight: 500;
     }
     .release-title {
-      font-size: 24px;
+      font-size: 1.5rem;
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.5px;
@@ -213,7 +224,7 @@
       line-height: 1.2;
     }
     .release-desc {
-      font-size: 15px;
+      font-size: 0.9375rem;
       color: var(--text-secondary);
       line-height: 1.75;
       margin-bottom: 20px;
@@ -256,13 +267,13 @@
     .feature-icon.purple svg { color: var(--purple); }
     .feature-text { flex: 1; }
     .feature-title {
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 700;
       color: var(--text-primary);
       margin-bottom: 2px;
     }
     .feature-desc {
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--text-secondary);
       line-height: 1.6;
     }
@@ -276,7 +287,7 @@
       margin-top: 16px;
     }
     .release-callout-title {
-      font-size: 11px;
+      font-size: 0.6875rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -284,7 +295,7 @@
       margin-bottom: 6px;
     }
     .release-callout-text {
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--text-secondary);
       line-height: 1.6;
     }
@@ -311,13 +322,13 @@
     }
     .coming-soon-icon svg { width: 22px; height: 22px; color: var(--accent); }
     .coming-soon-title {
-      font-size: 16px;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--text-primary);
       margin-bottom: 4px;
     }
     .coming-soon-desc {
-      font-size: 13px;
+      font-size: 0.8125rem;
       color: var(--text-muted);
     }
 
@@ -327,22 +338,29 @@
       padding: 32px 24px;
       text-align: center;
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 0.75rem;
     }
     .footer p { margin-bottom: 4px; }
     .footer a { color: var(--text-secondary); margin: 0 8px; }
 
     @media (max-width: 640px) {
       .topbar { padding: 12px 16px; }
-      .topbar-brand-name { font-size: 13px; }
+      .topbar-brand-name { font-size: 0.8125rem; }
       .header { padding: 50px 20px 40px; }
       .content { padding: 40px 16px 60px; }
       .release { padding: 24px 20px; }
-      .release-title { font-size: 20px; }
+      .release-title { font-size: 1.25rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .topbar { background: #0D1421; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+    @media (prefers-contrast: more) {
+      .topbar { background: #0D1421; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid rgba(255,255,255,0.35); }
+      .topbar::after { display: none; }
     }
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>

@@ -7,7 +7,10 @@
   <title>Saúde da câmera — Protector Lombada</title>
   <link rel="icon" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23046BD2'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-family='system-ui' font-size='60' font-weight='700' fill='white'%3EP%3C/text%3E%3C/svg%3E" />
   <style>
+    html { font-size: 100%; }
     :root {
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
       --bg: #f1f5f9;
       --bg-soft: #f8fafc;
       --surface: #ffffff;
@@ -29,8 +32,9 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
-      font-size: 14px;
+      font-family: var(--font-sans);
+      font-optical-sizing: auto;
+      font-size: 0.875rem;
       line-height: 1.5;
       color: var(--text);
       background: var(--bg);
@@ -38,26 +42,30 @@
     }
 
     /* HEADER */
+    /* Material claro translúcido: o conteúdo rola por baixo do cabeçalho */
     header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.72);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      backdrop-filter: blur(20px) saturate(180%);
+      /* edge effect em vez de borda dura */
+      box-shadow: 0 1px 0 rgba(15,23,42,.05), 0 8px 16px -12px rgba(15,23,42,.2);
       position: sticky; top: 0; z-index: 10;
       padding: 12px 20px;
       display: flex; align-items: center; gap: 14px;
     }
     .brand {
       display: inline-flex; align-items: center; gap: 8px;
-      font-weight: 700; color: var(--accent); font-size: 14px;
+      font-weight: 700; color: var(--accent); font-size: 0.875rem;
       text-decoration: none;
     }
     .brand .logo {
       width: 26px; height: 26px; border-radius: 5px;
       background: var(--accent); color: #fff;
       display: inline-flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 14px;
+      font-weight: 800; font-size: 0.875rem;
     }
     .breadcrumb {
-      font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px;
+      font-size: 0.8125rem; color: var(--muted); display: flex; align-items: center; gap: 6px;
       flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .breadcrumb a { color: var(--accent); text-decoration: none; }
@@ -66,11 +74,11 @@
     .breadcrumb strong { color: var(--text); font-weight: 600; }
     .refresh-pill {
       display: inline-flex; align-items: center; gap: 8px;
-      font-size: 12px; color: var(--muted);
+      font-size: 0.75rem; color: var(--muted);
       background: var(--bg-soft); border: 1px solid var(--border);
       padding: 5px 10px; border-radius: 999px;
       cursor: pointer; user-select: none;
-      font: inherit; font-size: 12px;
+      font: inherit; font-size: 0.75rem;
     }
     .refresh-pill:hover { background: var(--accent-soft); color: var(--accent); }
     .refresh-pill:active { transform: scale(.97); transition: transform 80ms ease-out; }
@@ -108,7 +116,7 @@
     .card.tight { padding: 12px 14px; }
     .card-title {
       margin: 0 0 12px;
-      font-size: 11px;
+      font-size: 0.6875rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--muted);
@@ -134,12 +142,12 @@
     .hero .dot.nunca_conectou { background: var(--offline); box-shadow: 0 0 0 6px #cbd5e144; }
     .hero .text { flex: 1; min-width: 0; }
     .hero h1 {
-      margin: 0; font-size: 22px; font-weight: 700; color: var(--text);
+      margin: 0; font-size: 1.375rem; font-weight: 700; color: var(--text);
       display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
     }
-    .hero h1 small { font-size: 13px; color: var(--muted); font-weight: 400; }
+    .hero h1 small { font-size: 0.8125rem; color: var(--muted); font-weight: 400; }
     .hero .meta {
-      margin-top: 4px; font-size: 13px; color: var(--text-2);
+      margin-top: 4px; font-size: 0.8125rem; color: var(--text-2);
       display: flex; flex-wrap: wrap; gap: 6px 16px;
     }
     .hero .meta b { color: var(--text); font-weight: 600; }
@@ -148,14 +156,14 @@
     .alert {
       padding: 10px 14px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 0.8125rem;
       border: 1px solid;
       display: flex; align-items: flex-start; gap: 10px;
     }
     .alert-icon {
       flex: 0 0 18px; width: 18px; height: 18px; border-radius: 50%;
       display: inline-flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 11px; font-weight: 700;
+      color: #fff; font-size: 0.6875rem; font-weight: 700;
     }
     .alert.warn { background: var(--warn-soft); border-color: #fde68a; color: #78350f; }
     .alert.warn .alert-icon { background: var(--warn); }
@@ -163,7 +171,7 @@
     .alert.ok .alert-icon { background: var(--ok); }
     .alert.info { background: var(--accent-soft); border-color: #93c5fd; color: #1e3a8a; }
     .alert.info .alert-icon { background: var(--accent); }
-    .alert code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+    .alert code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px; font-size: 0.75rem; }
 
     /* FOTO ÚLTIMA CAPTURA */
     .foto-wrap {
@@ -180,25 +188,25 @@
       display: block;
     }
     .foto-empty {
-      color: #94a3b8; font-size: 13px; text-align: center; padding: 20px;
+      color: #94a3b8; font-size: 0.8125rem; text-align: center; padding: 20px;
     }
     .foto-overlay {
       position: absolute; left: 10px; bottom: 10px;
       background: rgba(15,23,42,0.85);
       color: #fff; padding: 5px 10px; border-radius: 5px;
-      font-family: ui-monospace, "SF Mono", Menlo, monospace;
-      font-size: 13px; font-weight: 600;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem; font-weight: 600;
       letter-spacing: 0.04em;
     }
     .foto-vel {
       position: absolute; right: 10px; bottom: 10px;
       background: var(--accent); color: #fff;
       padding: 4px 10px; border-radius: 5px;
-      font-size: 12px; font-weight: 700;
+      font-size: 0.75rem; font-weight: 700;
     }
     .foto-vel.alerta { background: var(--err); }
     .foto-quando {
-      font-size: 12px; color: var(--muted);
+      font-size: 0.75rem; color: var(--muted);
       margin-top: 8px; text-align: center;
     }
 
@@ -212,15 +220,15 @@
       border: 1px solid var(--border);
     }
     .vol-num {
-      font-size: 26px; font-weight: 700; color: var(--text);
+      font-size: 1.625rem; font-weight: 700; color: var(--text);
       font-feature-settings: "tnum";
       line-height: 1;
     }
-    .vol-lab { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
+    .vol-lab { color: var(--muted); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
     .vol-taxa {
       margin-top: 12px; padding-top: 12px;
       border-top: 1px dashed var(--border);
-      font-size: 12px; color: var(--muted);
+      font-size: 0.75rem; color: var(--muted);
       display: flex; justify-content: space-between; align-items: center;
     }
     .vol-taxa b { color: var(--text); font-feature-settings: "tnum"; }
@@ -241,9 +249,9 @@
     .spark-bar.zero { background: var(--border); opacity: 1; min-height: 1px; }
     .spark-empty {
       display: flex; align-items: center; justify-content: center;
-      height: 60px; color: var(--muted); font-size: 12px; font-style: italic;
+      height: 60px; color: var(--muted); font-size: 0.75rem; font-style: italic;
     }
-    .spark-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .spark-labels { display: flex; justify-content: space-between; font-size: 0.6875rem; color: var(--muted); margin-top: 6px; }
 
     /* TELEMETRIA */
     .telemetria {
@@ -253,11 +261,11 @@
     @media (min-width: 600px) {
       .telemetria { grid-template-columns: 1fr 1fr; gap: 0 24px; }
     }
-    .kv { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; align-items: baseline; }
+    .kv { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.8125rem; align-items: baseline; }
     .kv:last-child { border-bottom: 0; }
     .kv .k { flex: 0 0 38%; color: var(--muted); padding-right: 8px; }
     .kv .v { flex: 1; font-weight: 500; word-break: break-all; }
-    .kv .v.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; font-weight: 400; }
+    .kv .v.mono { font-family: var(--font-mono); font-size: 0.7812rem; font-weight: 400; }
     .kv .v.muted { color: var(--muted); font-style: italic; font-weight: 400; }
     .kv .v.ok { color: var(--ok); font-weight: 600; }
     .kv .v.warn { color: var(--err); font-weight: 600; }
@@ -265,13 +273,13 @@
     /* CLIENTE */
     .cliente-line {
       display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline;
-      font-size: 14px; color: var(--text);
+      font-size: 0.875rem; color: var(--text);
     }
     .cliente-line b { font-weight: 700; }
     .cliente-line span { color: var(--muted); }
     .badge {
       display: inline-block; padding: 2px 8px; border-radius: 999px;
-      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+      font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
       background: var(--accent-soft); color: var(--accent);
     }
 
@@ -292,14 +300,14 @@
       display: flex; align-items: center; justify-content: center;
     }
     .cap-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .cap-thumb .nofoto { color: #475569; font-size: 10px; }
+    .cap-thumb .nofoto { color: #475569; font-size: 0.625rem; }
     .cap-info { flex: 1; min-width: 0; }
-    .cap-info .placa { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 700; font-size: 14px; }
-    .cap-info .meta { font-size: 12px; color: var(--muted); display: flex; gap: 10px; }
+    .cap-info .placa { font-family: var(--font-mono); font-weight: 700; font-size: 0.875rem; }
+    .cap-info .meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 10px; }
     .cap-info .meta .vel { font-weight: 600; color: var(--text); font-feature-settings: "tnum"; }
     .cap-info .meta .vel.alerta { color: var(--err); }
     .cap-empty {
-      padding: 32px 20px; text-align: center; color: var(--muted); font-size: 13px;
+      padding: 32px 20px; text-align: center; color: var(--muted); font-size: 0.8125rem;
       border: 1px dashed var(--border); border-radius: 8px;
       grid-column: 1 / -1;
     }
@@ -316,6 +324,12 @@
       100% { background-position: -200% 0; }
     }
 
+    @media (prefers-reduced-transparency: reduce) {
+      header { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    }
+    @media (prefers-contrast: more) {
+      header { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--border-strong); }
+    }
     @media (prefers-reduced-motion: reduce) {
       .refresh-pill .pulse, .skeleton { animation: none; }
       .refresh-pill:active { transform: none; }
@@ -332,8 +346,8 @@
       main { padding: 12px 14px 50px; }
       .hero { flex-direction: row; gap: 14px; padding: 14px 16px; }
       .hero .dot { width: 44px; height: 44px; flex: 0 0 44px; }
-      .hero h1 { font-size: 18px; }
-      .breadcrumb { font-size: 12px; }
+      .hero h1 { font-size: 1.125rem; }
+      .breadcrumb { font-size: 0.75rem; }
       .breadcrumb a:not(.first), .breadcrumb .sep:not(.first) { display: none; }
     }
   </style>

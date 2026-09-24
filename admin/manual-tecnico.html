@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manual Técnico - Protector Traffic Control</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        html { font-size: 100%; }
         :root {
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
             --accent: #046bd2;
             --accent-light: #e8f1fc;
             --accent-dark: #034ea2;
@@ -26,11 +26,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: var(--font-sans);
+      font-optical-sizing: auto;
             color: var(--text);
             background: var(--bg);
             line-height: 1.7;
-            font-size: 15px;
+            font-size: 0.9375rem;
         }
 
         /* ── Top Navbar ── */
@@ -41,20 +42,23 @@
             right: 0;
             z-index: 100;
             height: 60px;
-            background: var(--accent);
+            background: rgba(255,255,255,0.72);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(180%);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            /* edge effect: sombra difusa em vez de barra sólida */
+            box-shadow: 0 1px 0 rgba(15,23,42,.06), 0 8px 16px -12px rgba(15,23,42,.25);
         }
         .navbar .brand {
             display: flex;
             align-items: center;
             gap: 12px;
-            color: #fff;
+            color: var(--accent);
             font-weight: 700;
-            font-size: 16px;
+            font-size: 1rem;
             text-decoration: none;
         }
         .navbar .brand svg { flex-shrink: 0; }
@@ -65,7 +69,7 @@
             gap: 6px;
             padding: 8px 16px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
@@ -73,10 +77,10 @@
             transition: background .2s, transform .1s;
         }
         .navbar .btn:active { transform: scale(.97); }
-        .btn-white { background: #fff; color: var(--accent); }
-        .btn-white:hover { background: #f0f4ff; }
-        .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.5); }
-        .btn-outline:hover { background: rgba(255,255,255,.12); }
+        .btn-white { background: var(--accent); color: #fff; }
+        .btn-white:hover { background: var(--accent-dark); }
+        .btn-outline { background: transparent; color: var(--accent); border: 1.5px solid rgba(4,107,210,.35); }
+        .btn-outline:hover { background: var(--accent-light); }
 
         /* ── Sidebar TOC ── */
         .sidebar {
@@ -85,14 +89,14 @@
             left: 0;
             bottom: 0;
             width: var(--sidebar-w);
-            background: var(--bg-alt);
-            border-right: 1px solid var(--border);
+            background: #EDF1F6;
+            box-shadow: inset -1px 0 0 rgba(15,23,42,.06);
             overflow-y: auto;
             padding: 24px 0;
             z-index: 50;
         }
         .sidebar-title {
-            font-size: 11px;
+            font-size: 0.6875rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -103,7 +107,7 @@
         .sidebar a {
             display: block;
             padding: 7px 20px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             color: var(--text-light);
             text-decoration: none;
             border-left: 3px solid transparent;
@@ -126,24 +130,24 @@
 
         /* ── Typography ── */
         h1 {
-            font-size: 32px;
+            font-size: 2rem;
             font-weight: 700;
             color: var(--accent);
             margin-bottom: 4px;
         }
         .subtitle {
-            font-size: 18px;
+            font-size: 1.125rem;
             color: var(--text-light);
             font-weight: 400;
             margin-bottom: 4px;
         }
         .version {
-            font-size: 13px;
+            font-size: 0.8125rem;
             color: #888;
             margin-bottom: 32px;
         }
         h2 {
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--text);
             margin-top: 48px;
@@ -152,14 +156,14 @@
             border-bottom: 2px solid var(--accent-light);
         }
         h3 {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 600;
             color: var(--text);
             margin-top: 28px;
             margin-bottom: 10px;
         }
         h4 {
-            font-size: 15px;
+            font-size: 0.9375rem;
             font-weight: 600;
             margin-top: 20px;
             margin-bottom: 8px;
@@ -186,7 +190,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 16px 0 24px;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
         th {
             background: var(--accent);
@@ -206,8 +210,8 @@
 
         /* ── Code ── */
         code {
-            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 13px;
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
             background: #f1f5f9;
             padding: 2px 6px;
             border-radius: 4px;
@@ -220,7 +224,7 @@
             border-radius: 8px;
             overflow-x: auto;
             margin: 16px 0 24px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             line-height: 1.6;
         }
         pre code {
@@ -236,7 +240,7 @@
             padding: 14px 20px;
             margin: 16px 0 24px;
             border-radius: 0 8px 8px 0;
-            font-size: 14px;
+            font-size: 0.875rem;
             color: var(--text);
         }
         blockquote p { margin-bottom: 0; }
@@ -260,7 +264,7 @@
             background: var(--bg-alt);
             border-radius: 8px;
             border-left: 4px solid var(--accent);
-            font-size: 14px;
+            font-size: 0.875rem;
         }
         .checklist li strong { color: var(--accent-dark); }
 
@@ -269,30 +273,33 @@
             display: none;
             background: none;
             border: none;
-            color: #fff;
+            color: var(--accent);
             cursor: pointer;
         }
 
         @media (max-width: 860px) {
-            .sidebar { transform: translateX(-100%); transition: transform .3s; }
-            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+            .sidebar { transform: translateX(-100%); touch-action: pan-y; will-change: transform; }
+            .sidebar.open { box-shadow: 4px 0 20px rgba(0,0,0,.15); }
             .main { margin-left: 0; padding: 32px 20px 60px; }
             .menu-toggle { display: block; }
             /* Scrim: foca a gaveta e fecha ao toque fora */
             .sidebar-scrim {
                 display: block; position: fixed; inset: 60px 0 0 0; z-index: 40;
                 background: rgba(15,23,42,.4); opacity: 0; pointer-events: none;
-                transition: opacity .3s;
+                touch-action: none;
             }
-            .sidebar.open ~ .sidebar-scrim { opacity: 1; pointer-events: auto; }
+            .sidebar.open ~ .sidebar-scrim { pointer-events: auto; }
         }
         .sidebar-scrim { display: none; }
 
         /* Âncora do sumário não some atrás da navbar fixa (60px) */
         h2[id] { scroll-margin-top: 76px; }
 
-        @media (prefers-reduced-motion: reduce) {
-            .sidebar, .sidebar-scrim { transition: none !important; }
+        @media (prefers-reduced-transparency: reduce) {
+            .navbar { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+        }
+        @media (prefers-contrast: more) {
+            .navbar { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--border); }
         }
 
         /* ── Print ── */
@@ -303,11 +310,11 @@
                 padding: 0;
                 max-width: 100%;
             }
-            body { font-size: 12px; line-height: 1.5; color: #000; }
-            h1 { font-size: 24px; color: #000; }
-            h2 { font-size: 18px; border-bottom-color: #ccc; page-break-after: avoid; }
-            h3 { font-size: 15px; page-break-after: avoid; }
-            table { font-size: 11px; }
+            body { font-size: 0.75rem; line-height: 1.5; color: #000; }
+            h1 { font-size: 1.5rem; color: #000; }
+            h2 { font-size: 1.125rem; border-bottom-color: #ccc; page-break-after: avoid; }
+            h3 { font-size: 0.9375rem; page-break-after: avoid; }
+            table { font-size: 0.6875rem; }
             th { background: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             tr:nth-child(even) td { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             blockquote { border-left-color: #333; background: #f5f5f5; }
@@ -317,6 +324,7 @@
         }
     </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+  <script src="/js/spring.js"></script>
 </head>
 <body>
 
@@ -326,7 +334,7 @@
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
     <a href="/admin" class="brand">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
         Protector Traffic Control
@@ -869,7 +877,7 @@
 
     <hr>
 
-    <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
+    <p style="text-align:center; color:#888; font-size:0.8125rem; margin-top:40px;">
         <strong>Protector Traffic Control</strong> — Lombada Educativa Inteligente — v2.1 | Março 2026
     </p>
 
@@ -894,15 +902,97 @@
 
     // Gaveta do sumário (mobile): abre/fecha pelo botão, fecha no link,
     // no toque fora (scrim) e no Esc; aria-expanded acompanha o estado.
+    // Movimento por mola (/js/spring.js): segue o dedo 1:1 ao arrastar para a
+    // esquerda, resiste além de aberta e, ao soltar, o impulso decide.
     const sidebar = document.getElementById('sidebar');
     const toggle = document.getElementById('menu-toggle');
-    function setSumario(aberto) {
+    const scrim = document.getElementById('sidebar-scrim');
+    const GAVETA_MOBILE = matchMedia('(max-width: 860px)');
+    const LIMIAR_ARRASTE = 10; // px de histerese antes de assumir o gesto
+    const largura = () => sidebar.getBoundingClientRect().width || 280;
+    // x: 0 = aberta, -largura = fechada
+    const mola = Spring.create({
+        value: -280,
+        onUpdate(x) {
+            if (!GAVETA_MOBILE.matches) return;
+            sidebar.style.transform = `translate3d(${x}px, 0, 0)`;
+            scrim.style.opacity = String(Math.max(0, Math.min(1, 1 + x / largura())));
+        },
+    });
+    function setSumario(aberto, velocidade) {
         sidebar.classList.toggle('open', aberto);
         toggle.setAttribute('aria-expanded', String(aberto));
         toggle.setAttribute('aria-label', aberto ? 'Fechar sumário' : 'Abrir sumário');
+        const impulso = velocidade && Math.abs(velocidade) > 300;
+        mola.set(aberto ? 0 : -largura(), Object.assign(
+            { velocity: velocidade || 0 },
+            impulso ? Spring.MOMENTUM : Spring.DEFAULTS,
+        ));
     }
+    mola.jump(-largura());
+    // Voltando ao desktop, a sidebar é fixa: limpa o estilo da gaveta
+    GAVETA_MOBILE.addEventListener('change', (e) => {
+        sidebar.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        if (e.matches) { mola.jump(-largura()); return; }
+        sidebar.style.transform = '';
+        scrim.style.opacity = '';
+    });
+
+    // Arrastar para a esquerda fecha (na gaveta ou no scrim)
+    const rastro = Spring.velocityTracker();
+    let arraste = null;
+    let acabouDeArrastar = false; // o click que segue um arraste não fecha a gaveta
+    function inicioArraste(e) {
+        acabouDeArrastar = false;
+        if (!GAVETA_MOBILE.matches || !sidebar.classList.contains('open')) return;
+        mola.stop(); // agarra no meio do voo
+        arraste = { id: e.pointerId, x0: e.clientX, y0: e.clientY, origem: mola.value, ativo: false, alvo: e.currentTarget };
+        rastro.reset();
+        rastro.add(mola.value, e.timeStamp);
+    }
+    function moverArraste(e) {
+        if (!arraste || e.pointerId !== arraste.id) return;
+        const dx = e.clientX - arraste.x0;
+        if (!arraste.ativo) {
+            const dy = e.clientY - arraste.y0;
+            if (Math.abs(dx) < LIMIAR_ARRASTE && Math.abs(dy) < LIMIAR_ARRASTE) return;
+            if (Math.abs(dy) > Math.abs(dx)) { soltarSemGesto(); return; } // é rolagem
+            arraste.ativo = true;
+            arraste.x0 = e.clientX; // a histerese não vira salto
+            arraste.alvo.setPointerCapture(e.pointerId);
+            return;
+        }
+        const bruto = arraste.origem + (e.clientX - arraste.x0);
+        const x = bruto > 0 ? Spring.rubberband(bruto, largura()) : Math.max(bruto, -largura());
+        rastro.add(x, e.timeStamp);
+        mola.jump(x);
+    }
+    function soltarSemGesto() {
+        arraste = null;
+        setSumario(sidebar.classList.contains('open')); // retoma o destino
+    }
+    function fimArraste(e) {
+        if (!arraste || e.pointerId !== arraste.id) return;
+        if (!arraste.ativo) { soltarSemGesto(); return; }
+        arraste = null;
+        acabouDeArrastar = true;
+        const v = rastro.velocity();
+        const projetado = mola.value + Spring.project(v);
+        setSumario(projetado > -largura() / 2, v);
+    }
+    [sidebar, scrim].forEach((el) => {
+        el.addEventListener('pointerdown', inicioArraste);
+        el.addEventListener('pointermove', moverArraste);
+        el.addEventListener('pointerup', fimArraste);
+        el.addEventListener('pointercancel', fimArraste);
+    });
     toggle.addEventListener('click', () => setSumario(!sidebar.classList.contains('open')));
-    document.getElementById('sidebar-scrim').addEventListener('click', () => setSumario(false));
+    // Toque simples no scrim fecha (arraste é tratado acima)
+    scrim.addEventListener('click', () => {
+        if (acabouDeArrastar) { acabouDeArrastar = false; return; }
+        setSumario(false);
+    });
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && sidebar.classList.contains('open')) { setSumario(false); toggle.focus(); }
     });

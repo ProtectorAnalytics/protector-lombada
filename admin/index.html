@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Protector Traffic Control - Admin</title>
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    html { font-size: 100%; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
       --bg-primary: #F0F5FA;
       --bg-secondary: #FFFFFF;
       --bg-card: #FFFFFF;
@@ -31,15 +32,20 @@
       --shadow-md: 0 4px 12px rgba(4,107,210,0.08), 0 2px 4px rgba(0,0,0,0.04);
       --shadow-hover: 0 8px 20px rgba(4,107,210,0.15), 0 4px 8px rgba(0,0,0,0.06);
       --radius: 12px;
+      /* Materiais (camadas): header claro e translúcido, sidebar mais "pesada" */
+      --material-header: rgba(255,255,255,0.72);
+      --material-sidebar: #E9EEF4;
+      --topbar-h: 64px;
       --transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--font-sans);
+      font-optical-sizing: auto;
       background: var(--bg-primary);
       color: var(--text-primary);
       min-height: 100vh;
-      font-size: 14px;
+      font-size: 0.875rem;
       line-height: 1.5;
     }
 
@@ -63,69 +69,84 @@
     }
 
     .login-box .login-logo { width: 220px; margin-bottom: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-    .login-box h1 { color: var(--accent); font-size: 20px; font-weight: 700; margin-bottom: 4px; letter-spacing: .05em; }
-    .login-box .subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 8px; }
-    .login-box .badge { background: var(--accent); color: #fff; padding: 4px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 24px; letter-spacing: .08em; }
+    .login-box h1 { color: var(--accent); font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; letter-spacing: .05em; }
+    .login-box .subtitle { color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 8px; }
+    .login-box .badge { background: var(--accent); color: #fff; padding: 4px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-bottom: 24px; letter-spacing: .08em; }
 
     .login-box input {
       width: 100%; padding: 12px 16px; margin-bottom: 12px;
       background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s;
+      color: var(--text-primary); font-family: var(--font-sans); font-size: 0.875rem; outline: none; transition: border-color 0.2s;
     }
     .login-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,107,210,0.1); }
 
     .login-box button {
       width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px;
-      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background-color .15s, transform .15s;
+      font-family: var(--font-sans); font-size: 0.9375rem; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background-color .15s, transform .15s;
     }
     .login-box button:hover { background: var(--accent-hover); }
     @media (hover: hover) { .login-box button:hover { transform: translateY(-1px); } }
-    .login-error { color: var(--red); font-size: 14px; margin-top: 10px; min-height: 20px; }
+    .login-error { color: var(--red); font-size: 0.875rem; margin-top: 10px; min-height: 20px; }
 
     /* ===== LAYOUT ===== */
     #admin-screen { display: none; }
 
     .topbar {
-      background: #FFFFFF; border-bottom: 1px solid var(--border);
+      background: var(--material-header);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      backdrop-filter: blur(20px) saturate(180%);
       padding: 10px 24px; display: flex; justify-content: space-between; align-items: center;
-      box-shadow: var(--shadow-md); position: sticky; top: 0; z-index: 100; min-height: 64px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100; min-height: var(--topbar-h);
     }
+    /* Edge effect: sombra difusa só quando há conteúdo passando por baixo,
+       no lugar da borda dura de 1px */
+    .topbar::after {
+      content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 14px;
+      background: linear-gradient(rgba(15,23,42,0.08), rgba(15,23,42,0));
+      opacity: 0; transition: opacity .2s ease; pointer-events: none;
+    }
+    .topbar.is-scrolled::after { opacity: 1; }
     .topbar .brand { display: flex; align-items: center; gap: 10px; }
     .topbar .brand img { height: 44px; width: auto; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)); }
-    .topbar .brand .admin-badge { background: var(--accent); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
-    .topbar .user-info { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-size: 13px; }
+    .topbar .brand .admin-badge { background: var(--accent); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.6875rem; font-weight: 700; letter-spacing: .08em; }
+    .topbar .user-info { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-size: 0.8125rem; }
     .btn-logout {
       background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
-      padding: 7px 16px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: var(--transition);
+      padding: 7px 16px; border-radius: 8px; cursor: pointer; font-family: var(--font-sans); font-size: 0.8125rem; font-weight: 500; transition: var(--transition);
     }
     .btn-logout:hover { border-color: var(--red); color: var(--red); background: #fef2f2; }
 
-    .admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
+    .admin-layout { display: grid; grid-template-columns: 220px 1fr; height: 100vh; }
 
     /* Sidebar Nav */
+    /* Sidebar: material mais pesado e opaco — separa estrutura, não chama atenção */
     .sidebar-nav {
-      background: #FFFFFF; border-right: 1px solid var(--border); padding: 16px 0; box-shadow: var(--shadow-sm);
+      background: var(--material-sidebar); padding: calc(var(--topbar-h) + 16px) 0 16px;
+      box-shadow: inset -1px 0 0 rgba(15,23,42,0.06); overflow-y: auto;
     }
     .nav-item {
       display: flex; align-items: center; gap: 9px; width: 100%; padding: 11px 24px; background: none; border: none; border-left: 3px solid transparent;
-      color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text-secondary); font-family: var(--font-sans); font-size: 0.875rem; font-weight: 500;
       text-align: left; cursor: pointer; transition: var(--transition);
     }
-    .nav-item:hover { color: var(--text-primary); background: var(--accent-light); }
-    .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-light); font-weight: 600; }
-    .nav-section { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; padding: 20px 24px 8px; font-weight: 700; }
+    .nav-item:hover { color: var(--text-primary); background: rgba(255,255,255,0.6); }
+    .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: #FFFFFF; font-weight: 600; }
+    .nav-section { color: var(--text-muted); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .1em; padding: 20px 24px 8px; font-weight: 700; }
 
     /* Main content */
     /* min-width:0 e essencial: como coluna de grid (1fr), o padrao min-width:auto
        impede que ela encolha abaixo do conteudo mais largo — tabelas e grids de
        cards empurravam a area para fora da tela, cortando o botao Editar e o
        ultimo card do cabecalho do cliente. */
-    .admin-content { padding: 24px; overflow-y: auto; max-height: calc(100vh - 64px); background: var(--bg-primary); min-width: 0; }
+    .admin-content {
+      padding: calc(var(--topbar-h) + 24px) 24px 24px; overflow-y: auto; height: 100vh;
+      scroll-padding-top: calc(var(--topbar-h) + 12px); background: var(--bg-primary); min-width: 0;
+    }
     .page { display: none; }
     .page.active { display: block; }
 
-    .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: var(--text-primary); }
-    .page-title .count { background: var(--accent-light); border: 1px solid var(--border); padding: 2px 10px; border-radius: 12px; font-size: 13px; color: var(--accent); font-weight: 600; }
+    .page-title { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: var(--text-primary); }
+    .page-title .count { background: var(--accent-light); border: 1px solid var(--border); padding: 2px 10px; border-radius: 12px; font-size: 0.8125rem; color: var(--accent); font-weight: 600; }
 
     /* Stats cards */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
@@ -133,8 +154,8 @@
       background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center;
       box-shadow: var(--shadow-sm); transition: var(--transition);
     }
-    .stat-card .label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
-    .stat-card .value { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0; }
+    .stat-card .label { color: var(--text-secondary); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+    .stat-card .value { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0; }
     .stat-card .value.orange { color: var(--accent); }
     .stat-card .value.red { color: var(--red); }
     .stat-card .value.green { color: var(--green); }
@@ -144,18 +165,18 @@
     .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
     .toolbar-search {
       background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text-primary); padding: 8px 14px; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; width: 260px; transition: border-color 0.2s;
+      color: var(--text-primary); padding: 8px 14px; font-family: var(--font-sans); font-size: 0.875rem; outline: none; width: 260px; transition: border-color 0.2s;
     }
     .toolbar-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,107,210,0.1); }
 
     .btn {
       padding: 8px 18px; border: none; border-radius: 8px;
-      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+      font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: var(--transition);
     }
     .btn-primary { background: var(--accent); color: white; }
     .btn-primary:hover { background: var(--accent-hover); }
     @media (hover: hover) { .btn-primary:hover { transform: translateY(-1px); } }
-    .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; min-height: 30px; }
+    .btn-sm { padding: 6px 14px; font-size: 0.75rem; border-radius: 6px; min-height: 30px; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
     .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--red); }
@@ -170,68 +191,89 @@
     /* Tables */
     .data-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
     .data-table th {
-      background: var(--accent); padding: 12px 14px; text-align: left; font-size: 12px;
+      background: var(--accent); padding: 12px 14px; text-align: left; font-size: 0.75rem;
       text-transform: uppercase; letter-spacing: .04em; color: #FFFFFF; font-weight: 700;
     }
     .data-table td {
-      padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle;
+      padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.875rem; vertical-align: middle;
     }
     .data-table tr:hover td { background: var(--accent-light); }
 
     .badge-active {
       background: #dcfce7; color: var(--green);
       padding: 4px 10px 4px 8px; border-radius: 12px;
-      font-size: 12px; font-weight: 600;
+      font-size: 0.75rem; font-weight: 600;
       display: inline-flex; align-items: center; gap: 4px;
       border: 1px solid rgba(22,163,74,0.2);
     }
     .badge-active::before {
-      content: '●'; font-size: 10px; color: var(--green);
+      content: '●'; font-size: 0.625rem; color: var(--green);
     }
     .badge-inactive {
       background: #fef2f2; color: var(--red);
       padding: 4px 10px 4px 8px; border-radius: 12px;
-      font-size: 12px; font-weight: 600;
+      font-size: 0.75rem; font-weight: 600;
       display: inline-flex; align-items: center; gap: 4px;
       border: 1px solid rgba(220,38,38,0.2);
     }
     .badge-inactive::before {
-      content: '○'; font-size: 11px; color: var(--red);
+      content: '○'; font-size: 0.6875rem; color: var(--red);
     }
     .badge-role {
       background: var(--accent-light); color: var(--accent);
       padding: 4px 10px; border-radius: 12px;
-      font-size: 12px; font-weight: 600;
+      font-size: 0.75rem; font-weight: 600;
       display: inline-flex; align-items: center;
       border: 1px solid rgba(4,107,210,0.2);
     }
     .badge-tipo {
       background: #fff7ed; color: var(--orange);
       padding: 4px 10px; border-radius: 12px;
-      font-size: 12px; font-weight: 600;
+      font-size: 0.75rem; font-weight: 600;
       display: inline-flex; align-items: center;
       border: 1px solid rgba(234,88,12,0.2);
     }
 
 
     .actions-cell { display: flex; gap: 6px; }
-    .table-empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 14px; }
+    .table-empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
 
     /* Modal */
+    /* Scrim: escurece e desfoca na proporção de --scrim (0 fechado → 1 aberto),
+       que a mola controla. A superfície é sólida: nada de vidro sobre vidro. */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center;
+      background: rgba(15,23,42, calc(0.5 * var(--scrim, 0)));
+      -webkit-backdrop-filter: blur(calc(6px * var(--scrim, 0)));
+      backdrop-filter: blur(calc(6px * var(--scrim, 0)));
+      z-index: 1000; justify-content: center; align-items: center;
     }
     .modal-overlay.active { display: flex; }
     .modal-content {
       background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
       width: 520px; max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      opacity: 0; will-change: transform, opacity;
     }
+    .sheet-grabber { display: none; }
+    /* Tela estreita / toque: o modal vira bottom sheet arrastável */
+    .modal-overlay.is-sheet { align-items: flex-end; }
+    .modal-overlay.is-sheet .modal-content {
+      width: 100%; max-width: 100%; max-height: 88vh; opacity: 1;
+      border-radius: 18px 18px 0 0; border-bottom: none;
+      padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.18);
+    }
+    .modal-overlay.is-sheet .sheet-grabber {
+      display: block; width: 36px; height: 5px; border-radius: 3px;
+      background: var(--border); margin: 0 auto 12px; touch-action: none;
+    }
+    /* Zona de arraste: o grabber e o cabeçalho não rolam (o corpo rola) */
+    .modal-overlay.is-sheet .modal-header { touch-action: none; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-header h3 { color: var(--accent); font-size: 18px; font-weight: 700; }
+    .modal-header h3 { color: var(--accent); font-size: 1.125rem; font-weight: 700; }
     .modal-close {
       background: transparent; border: none; color: var(--text-secondary);
-      font-size: 24px; cursor: pointer; transition: background-color .15s, color .15s;
+      font-size: 1.5rem; cursor: pointer; transition: background-color .15s, color .15s;
       width: 36px; height: 36px; border-radius: 8px;
       display: inline-flex; align-items: center; justify-content: center;
       line-height: 1;
@@ -239,9 +281,9 @@
     .modal-close:hover { color: var(--text-primary); background: var(--bg-input); }
 
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; font-weight: 700; }
-    .form-group .hint { display: block; font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; font-weight: 400; text-transform: none; letter-spacing: 0; }
-    .form-group .field-error { display: none; font-size: 12px; color: var(--red); margin-top: 6px; font-weight: 600; line-height: 1.4; text-transform: none; letter-spacing: 0; }
+    .form-group label { display: block; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; font-weight: 700; }
+    .form-group .hint { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4; font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .form-group .field-error { display: none; font-size: 0.75rem; color: var(--red); margin-top: 6px; font-weight: 600; line-height: 1.4; text-transform: none; letter-spacing: 0; }
     .form-group.has-error .field-error { display: block; }
     .form-group.has-error input,
     .form-group.has-error select,
@@ -253,7 +295,7 @@
        padrao do browser (~20 caracteres) e quebra o texto no meio das palavras. */
     .form-group input, .form-group select, .form-group textarea {
       width: 100%; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s;
+      color: var(--text-primary); font-family: var(--font-sans); font-size: 0.875rem; outline: none; transition: border-color 0.2s;
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,107,210,0.1); }
     .form-group textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
@@ -278,7 +320,7 @@
        text-transform: uppercase daquela regra. */
     .form-group label.check-line {
       display: flex; align-items: center; gap: 10px;
-      text-transform: none; letter-spacing: 0; font-size: 14px;
+      text-transform: none; letter-spacing: 0; font-size: 0.875rem;
       font-weight: 600; color: var(--text-primary); margin-bottom: 0;
     }
     .form-group label.check-line input { flex: none; width: auto; }
@@ -289,24 +331,22 @@
     .config-actions .btn { width: 100%; justify-content: center; }
     @media (min-width: 981px) { .config-actions { max-width: 320px; } }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-    .form-error { color: var(--red); font-size: 13px; margin-top: 8px; }
+    .form-error { color: var(--red); font-size: 0.8125rem; margin-top: 8px; }
 
     /* Confirmação customizada */
     .confirm-overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(15,23,42,0.7); backdrop-filter: blur(6px);
+      background: rgba(15,23,42, calc(0.6 * var(--scrim, 0)));
+      -webkit-backdrop-filter: blur(calc(8px * var(--scrim, 0)));
+      backdrop-filter: blur(calc(8px * var(--scrim, 0)));
       z-index: 2000; justify-content: center; align-items: center;
       padding: 20px;
     }
-    .confirm-overlay.active { display: flex; animation: overlay-fade 0.18s ease-out; }
+    .confirm-overlay.active { display: flex; }
     .confirm-box {
       background: #fff; border-radius: 16px; width: 100%; max-width: 440px;
       padding: 28px 32px; box-shadow: 0 24px 60px rgba(0,0,0,0.3);
-      text-align: left; animation: modal-slide-in 0.22s ease-out;
-    }
-    @keyframes modal-slide-in {
-      from { opacity: 0; transform: translateY(-12px) scale(0.97); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+      text-align: left; opacity: 0; will-change: transform, opacity;
     }
     .confirm-icon {
       width: 52px; height: 52px; border-radius: 14px;
@@ -315,13 +355,13 @@
       margin-bottom: 16px;
     }
     .confirm-icon svg { width: 24px; height: 24px; color: var(--red); }
-    .confirm-title { font-size: 19px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.01em; }
-    .confirm-message { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 22px; }
+    .confirm-title { font-size: 1.1875rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.01em; }
+    .confirm-message { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 22px; }
     .confirm-message strong { color: var(--text-primary); }
     .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
     .confirm-btn {
-      padding: 10px 20px; border-radius: 8px; font-family: 'Inter', sans-serif;
-      font-size: 14px; font-weight: 600; cursor: pointer;
+      padding: 10px 20px; border-radius: 8px; font-family: var(--font-sans);
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
       transition: background-color .15s, transform .15s; border: 1px solid transparent;
     }
     .confirm-btn-cancel {
@@ -338,16 +378,14 @@
     /* Toast */
     .toast {
       position: fixed; bottom: 24px; right: 24px; background: #FFFFFF; border: 1px solid var(--green);
-      color: var(--green); padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
-      z-index: 2000; opacity: 0; transform: translateY(16px); pointer-events: none; box-shadow: var(--shadow-md);
-      transition: opacity .22s ease-out, transform .22s ease-out;
+      color: var(--green); padding: 12px 24px; border-radius: 10px; font-size: 0.875rem; font-weight: 600;
+      z-index: 2000; opacity: 0; transform: translate3d(0, 16px, 0); pointer-events: none; box-shadow: var(--shadow-md);
       display: flex; align-items: center; gap: 12px; max-width: min(520px, calc(100vw - 48px));
     }
     .toast.error { border-color: var(--red); color: var(--red); }
-    .toast.visible { opacity: 1; transform: translateY(0); }
     .toast.error.visible { pointer-events: auto; }
     .toast-close {
-      background: none; border: none; color: inherit; font-size: 20px; line-height: 1;
+      background: none; border: none; color: inherit; font-size: 1.25rem; line-height: 1;
       cursor: pointer; width: 28px; height: 28px; border-radius: 6px; flex: none;
     }
     .toast-close:hover { background: #fef2f2; }
@@ -355,7 +393,7 @@
     /* Breadcrumb */
     .breadcrumb {
       display: flex; align-items: center; gap: 8px;
-      margin-bottom: 16px; font-size: 13px;
+      margin-bottom: 16px; font-size: 0.8125rem;
       color: var(--text-muted);
     }
     .breadcrumb-link {
@@ -372,7 +410,7 @@
 
     .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
     .rel-var-chip {
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px;
+      font-family: var(--font-mono); font-size: 0.6875rem;
       background: var(--accent-light); color: var(--accent); border: 1px solid transparent;
       padding: 4px 9px; border-radius: 5px; font-weight: 500; cursor: pointer;
       transition: var(--transition);
@@ -381,7 +419,7 @@
     .rel-var-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .tab-btn {
       padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent;
-      color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text-secondary); font-family: var(--font-sans); font-size: 0.875rem; font-weight: 500;
       cursor: pointer; transition: var(--transition); margin-bottom: -2px;
     }
     .tab-btn:hover { color: var(--text-primary); background: var(--accent-light); border-radius: 8px 8px 0 0; }
@@ -397,8 +435,8 @@
     .detail-field {
       background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow-sm);
     }
-    .detail-field .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
-    .detail-field .value { font-size: 15px; font-weight: 600; margin-top: 2px; color: var(--text-primary); }
+    .detail-field .label { font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    .detail-field .value { font-size: 0.9375rem; font-weight: 600; margin-top: 2px; color: var(--text-primary); }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
@@ -410,14 +448,21 @@
       #page-dashboard > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
     }
     @media (max-width: 800px) {
-      .admin-layout { grid-template-columns: 1fr; }
-      .sidebar-nav { display: flex; overflow-x: auto; padding: 0; border-right: none; border-bottom: 1px solid var(--border); }
+      .admin-layout { grid-template-columns: 1fr; height: auto; }
+      .sidebar-nav {
+        display: flex; overflow-x: auto; padding: 0; margin-top: var(--topbar-h);
+        position: sticky; top: var(--topbar-h); z-index: 90;
+        background: var(--material-header);
+        -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+        box-shadow: inset 0 -1px 0 rgba(15,23,42,0.06);
+      }
+      .admin-content { height: auto; overflow: visible; padding-top: 24px; }
       .nav-item { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; padding: 10px 16px; }
       .nav-item.active { border-bottom-color: var(--accent); border-left-color: transparent; }
       .nav-section { display: none; }
     }
     @media (max-width: 600px) {
-      body { font-size: 16px; }
+      body { font-size: 1rem; }
       .form-row { grid-template-columns: 1fr; }
       .modal-content { padding: 20px 16px; width: calc(100vw - 32px); }
       .toolbar { flex-direction: column; align-items: stretch; }
@@ -466,27 +511,8 @@
       border-left-color: var(--accent);
     }
 
-    /* Modal: overlay fade-in */
-    @keyframes overlay-fade {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes overlay-fade-out {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
-    @keyframes modal-slide-out {
-      from { opacity: 1; transform: translateY(0) scale(1); }
-      to { opacity: 0; transform: translateY(-12px) scale(0.97); }
-    }
-    .modal-overlay.active {
-      animation: overlay-fade 0.18s ease-out;
-    }
-    .modal-overlay.active .modal-content { animation: modal-slide-in 0.22s ease-out; }
-    /* Saída espelha a entrada: some pelo mesmo caminho por onde veio */
-    .modal-overlay.closing, .confirm-overlay.closing { animation: overlay-fade-out 0.16s ease-in forwards; }
-    .modal-overlay.closing .modal-content,
-    .confirm-overlay.closing .confirm-box { animation: modal-slide-out 0.16s ease-in forwards; }
+    /* Entrada e saída de modal/confirmação/toast: molas em /js/spring.js
+       (interrompíveis, saída pelo mesmo caminho). Sem keyframes aqui. */
     body.modal-aberto { overflow: hidden; }
     .admin-content.modal-aberto { overflow: hidden; }
 
@@ -508,7 +534,7 @@
     /* Badge de status com melhor hierarquia */
     .badge-active, .badge-inactive, .badge-role, .badge-tipo {
       white-space: nowrap;
-      font-size: 11px;
+      font-size: 0.6875rem;
     }
 
     /* Linha da tabela de auditoria */
@@ -547,16 +573,25 @@
     }
     /* Transparência reduzida: scrims sólidos, sem blur */
     @media (prefers-reduced-transparency: reduce) {
-      .modal-overlay, .confirm-overlay { backdrop-filter: none; background: rgba(15,23,42,0.88); }
+      .modal-overlay, .confirm-overlay {
+        -webkit-backdrop-filter: none; backdrop-filter: none;
+        background: rgba(15,23,42, calc(0.88 * var(--scrim, 0)));
+      }
+      .topbar, .sidebar-nav { -webkit-backdrop-filter: none; backdrop-filter: none; }
+      .topbar { background: #FFFFFF; }
+      @media (max-width: 800px) { .sidebar-nav { background: #FFFFFF; } }
     }
     /* Contraste alto: texto secundário mais escuro e bordas definidas */
     @media (prefers-contrast: more) {
       :root { --text-secondary: #334155; --text-muted: #475569; --border: #94a3b8; }
       .btn-ghost, .btn-danger { border-color: currentColor; }
+      .topbar { background: #FFFFFF; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--border); }
+      .sidebar-nav { box-shadow: inset -1px 0 0 var(--border); }
     }
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <script src="/js/camera-status.js"></script>
+  <script src="/js/spring.js"></script>
 </head>
 <body>
 
@@ -573,19 +608,19 @@
       <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password" aria-label="Senha administrativa" onkeydown="if(event.key==='Enter')doLogin()">
       <button type="button" onclick="doLogin()">ENTRAR</button>
       <div class="login-error" id="login-error" role="alert" aria-live="polite"></div>
-      <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:13px;text-decoration:none;">Esqueci minha senha</a>
+      <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:0.8125rem;text-decoration:none;">Esqueci minha senha</a>
 
       <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
-        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperação:</div>
+        <div style="color:var(--text-secondary);font-size:0.8125rem;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperação:</div>
         <label for="reset-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail para recuperação</label>
         <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado" autocomplete="email">
         <button type="button" onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERAÇÃO</button>
-        <div id="reset-message" style="font-size:13px;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
-        <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:12px;text-decoration:none;">Voltar ao login</a>
+        <div id="reset-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
+        <a href="#" onclick="hideResetPassword(event)" style="display:block;margin-top:10px;color:var(--text-secondary);font-size:0.75rem;text-decoration:none;">Voltar ao login</a>
       </div>
 
       <form id="nova-senha-form" style="display:none;text-align:left" onsubmit="salvarNovaSenha(event)" novalidate>
-        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;text-align:center">Defina sua nova senha (mínimo 6 caracteres).</div>
+        <div style="color:var(--text-secondary);font-size:0.8125rem;margin-bottom:12px;text-align:center">Defina sua nova senha (mínimo 6 caracteres).</div>
         <label for="nova-senha" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Nova senha</label>
         <input type="password" id="nova-senha" placeholder="Nova senha" autocomplete="new-password" minlength="6" aria-describedby="nova-senha-erro">
         <label for="nova-senha-conf" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Confirmar nova senha</label>
@@ -632,7 +667,7 @@
         <button type="button" class="nav-item" data-page="direitos" onclick="showPage('direitos')" id="nav-direitos">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Direitos LGPD
-          <span id="direitos-badge" style="display:none;background:#DC2626;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">0</span>
+          <span id="direitos-badge" style="display:none;background:#DC2626;color:#fff;font-size:0.625rem;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">0</span>
         </button>
         <div class="nav-section">Documentação</div>
         <a class="nav-item" href="/admin/manual-tecnico.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:left" aria-label="Manual Técnico (abre em nova aba)">
@@ -663,14 +698,14 @@
           <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
             <!-- Coluna principal -->
             <div>
-              <div class="page-title" style="font-size:18px">Clientes <span class="count" id="dash-clientes-count">0</span></div>
+              <div class="page-title" style="font-size:1.125rem">Clientes <span class="count" id="dash-clientes-count">0</span></div>
               <table class="data-table" id="dash-clientes-table">
                 <thead><tr><th>Nome</th><th>Cidade</th><th>Câmeras</th><th>Online</th><th>Capturas</th><th>Status</th></tr></thead>
                 <tbody id="dash-clientes-body"><tr><td colspan="6" class="table-empty">Carregando...</td></tr></tbody>
               </table>
 
               <!-- Últimas capturas -->
-              <div class="page-title" style="font-size:18px;margin-top:24px">Últimas Capturas</div>
+              <div class="page-title" style="font-size:1.125rem;margin-top:24px">Últimas Capturas</div>
               <table class="data-table">
                 <thead><tr><th>Placa</th><th>Velocidade</th><th>Cliente</th><th>Data/Hora</th><th>Notificado</th></tr></thead>
                 <tbody id="dash-ultimas-body"><tr><td colspan="5" class="table-empty">Carregando...</td></tr></tbody>
@@ -681,7 +716,7 @@
             <div style="display:flex;flex-direction:column;gap:14px">
               <!-- Alertas 7 dias -->
               <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
-                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
+                <div style="font-size:0.75rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
                   <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>
                   Alertas - Últimos 7 Dias
                 </div>
@@ -692,22 +727,22 @@
 
               <!-- Top 10 placas infratoras -->
               <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
-                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
+                <div style="font-size:0.75rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
                   <span style="width:8px;height:8px;border-radius:50%;background:var(--orange);display:inline-block"></span>
                   Top 10 Infratores (15 dias)
                 </div>
-                <div id="dash-top-placas" style="font-size:13px">
+                <div id="dash-top-placas" style="font-size:0.8125rem">
                   <div style="color:var(--text-muted)">Carregando...</div>
                 </div>
               </div>
 
               <!-- Saúde do sistema -->
               <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
-                <div style="font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
+                <div style="font-size:0.75rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">
                   <span style="width:8px;height:8px;border-radius:50%;display:inline-block" id="health-dot"></span>
                   Saúde do Sistema
                 </div>
-                <div id="dash-health" style="font-size:13px">
+                <div id="dash-health" style="font-size:0.8125rem">
                   <div style="color:var(--text-muted)">Carregando...</div>
                 </div>
               </div>
@@ -764,8 +799,8 @@
           <!-- Tab: Notificação PDF -->
           <div class="tab-panel" id="tab-notificacao">
             <div class="config-block" style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:20px;border-left:3px solid var(--accent)">
-              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Configuração do PDF</div>
-              <div style="font-size:12px;color:var(--text-secondary)">Personalize o conteúdo da notificação orientativa gerada para este cliente.</div>
+              <div style="font-size:0.8125rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Configuração do PDF</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary)">Personalize o conteúdo da notificação orientativa gerada para este cliente.</div>
             </div>
 
             <div class="config-grid">
@@ -810,8 +845,8 @@
           <!-- Tab: Relatório Semanal -->
           <div class="tab-panel" id="tab-relatorio">
             <div class="config-block" style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:20px;border-left:3px solid var(--accent)">
-              <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Relatório semanal por e-mail</div>
-              <div style="font-size:12px;color:var(--text-secondary)">
+              <div style="font-size:0.8125rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Relatório semanal por e-mail</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary)">
                 Resumo de circulação enviado aos destinatários do tipo <strong>Relatório</strong>
                 cadastrados na aba E-mails. O texto aceita variáveis e é personalizado
                 para cada destinatário.
@@ -933,7 +968,7 @@
         <div class="page" id="page-direitos">
           <div class="page-title" tabindex="-1">
             Solicitações LGPD
-            <span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:12px">Art. 18 · Lei 13.709/2018</span>
+            <span style="font-size:0.8125rem;font-weight:400;color:var(--text-muted);margin-left:12px">Art. 18 · Lei 13.709/2018</span>
           </div>
 
           <!-- Stats -->
@@ -975,7 +1010,8 @@
 
   <!-- MODAL -->
   <div class="modal-overlay" id="modal">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title" data-sheet-scroll>
+      <div class="sheet-grabber" aria-hidden="true"></div>
       <div class="modal-header">
         <h3 id="modal-title">Formulário</h3>
         <button type="button" class="modal-close" onclick="closeModal()" aria-label="Fechar">&times;</button>
@@ -1261,6 +1297,7 @@ function showPage(page, opts = {}) {
   });
 
   document.getElementById('admin-main').scrollTop = 0;
+  window.scrollTo(0, 0); // no mobile quem rola é a página
 
   const hash = '#' + (opts.hash || page);
   if (!opts.fromHistory && location.hash !== hash) history.pushState({ hash }, '', hash);
@@ -1342,6 +1379,21 @@ function erroNoBloco(elId, retry) {
 // ============================================
 const TOAST_MS = 3000;
 const TOAST_ERRO_MS = 7000;
+const TOAST_DESLOCAMENTO = 16; // px: entra subindo e sai descendo pelo mesmo caminho
+
+const molaToast = Spring.create({
+  value: 0,
+  ...Spring.SNAPPY,
+  onUpdate(p) {
+    const el = document.getElementById('toast');
+    el.style.opacity = String(p);
+    el.style.transform = `translate3d(0, ${(1 - p) * TOAST_DESLOCAMENTO}px, 0)`;
+  },
+});
+function esconderToast() {
+  document.getElementById('toast').classList.remove('visible');
+  molaToast.set(0);
+}
 
 function toast(msg, isError = false) {
   const el = document.getElementById('toast');
@@ -1356,14 +1408,15 @@ function toast(msg, isError = false) {
     fechar.className = 'toast-close';
     fechar.setAttribute('aria-label', 'Fechar aviso');
     fechar.textContent = '×';
-    fechar.onclick = () => { clearTimeout(toast._timer); el.classList.remove('visible'); };
+    fechar.onclick = () => { clearTimeout(toast._timer); esconderToast(); };
     el.append(fechar);
   }
   el.className = isError ? 'toast error visible' : 'toast visible';
+  molaToast.set(1); // do valor atual: um toast novo no meio da saída não pisca
   // Cancela o sumiço agendado pelo toast anterior; sem isso, o "Enviando..."
   // apagava o toast de resultado que chegasse antes dos 3s.
   clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => el.classList.remove('visible'), isError ? TOAST_ERRO_MS : TOAST_MS);
+  toast._timer = setTimeout(esconderToast, isError ? TOAST_ERRO_MS : TOAST_MS);
 }
 
 // ============================================
@@ -1390,8 +1443,7 @@ function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?',
     okBtn.className = 'confirm-btn ' + (perigo ? 'confirm-btn-danger' : 'confirm-btn-primary');
 
     const anterior = document.activeElement;
-    cancelarSaida(overlay);
-    overlay.classList.add('active');
+    apresentacaoConfirmacao.abrir();
     // Foco no cancelar por segurança (evita confirmação acidental com Enter)
     cancelBtn.focus();
 
@@ -1402,7 +1454,7 @@ function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?',
       overlay.removeEventListener('pointerdown', onDown);
       overlay.removeEventListener('click', onBackdrop);
       document.removeEventListener('keydown', onEsc);
-      fecharComAnimacao(overlay);
+      apresentacaoConfirmacao.fechar();
       if (anterior && document.contains(anterior)) anterior.focus({ preventScroll: true });
       resolve(result);
     };
@@ -1431,39 +1483,111 @@ function confirmarAcao({ titulo = 'Confirmar ação', mensagem = 'Tem certeza?',
 // ============================================
 // MODAL
 // ============================================
-// Saída pelo mesmo caminho da entrada: aplica .closing, espera a animação e
-// só então esconde. O timeout cobre o caso de a animação não disparar.
-const SAIDA_MS = 200;
-function fecharComAnimacao(overlay) {
-  if (!overlay.classList.contains('active')) return;
-  const token = {};
-  overlay._saida = token;
-  overlay.classList.add('closing');
-  const concluir = () => {
-    if (overlay._saida !== token) return; // reaberto no meio da saída
-    overlay._saida = null;
-    overlay.classList.remove('active', 'closing');
+// Apresentação por mola (/js/spring.js). Diálogo: o scrim escurece e a
+// superfície "materializa" (opacidade + escala .96→1) — e sai pelo mesmo
+// caminho, a partir de onde estiver (reabrir no meio da saída não salta).
+// Em tela estreita/toque o modal vira bottom sheet: arrasta 1:1, resiste para
+// cima e, ao soltar, o impulso decide entre fechar e voltar.
+const TELA_DE_TOQUE = matchMedia('(max-width: 640px), (pointer: coarse)');
+const ESCALA_FECHADO = 0.96;
+
+function criarApresentacao(overlay, superficie, { podeArrastar = false, aoArrastarParaFechar } = {}) {
+  let aberto = false;
+  let sheet = null;
+  const setScrim = (p) => overlay.style.setProperty('--scrim', String(p));
+  const emSheet = () => podeArrastar && TELA_DE_TOQUE.matches;
+
+  const mola = Spring.create({
+    value: 0,
+    onUpdate(p) {
+      setScrim(p);
+      superficie.style.opacity = String(p);
+      superficie.style.transform = `scale(${ESCALA_FECHADO + (1 - ESCALA_FECHADO) * p})`;
+    },
+  });
+
+  function esconder() {
+    if (aberto) return; // reaberto antes de terminar de sair
+    overlay.classList.remove('active', 'is-sheet');
+    superficie.style.transform = '';
+    superficie.style.opacity = '';
+  }
+
+  function garantirSheet() {
+    if (sheet) return sheet;
+    sheet = Spring.sheet(superficie, {
+      onProgress: (q) => setScrim(1 - q),
+      onDismiss: () => {
+        if (aberto) { // fechado pelo arraste, não por botão/Esc
+          aberto = false;
+          if (aoArrastarParaFechar) aoArrastarParaFechar();
+        }
+        esconder();
+      },
+    });
+    return sheet;
+  }
+
+  return {
+    get aberto() { return aberto; },
+    abrir() {
+      const jaVisivel = overlay.classList.contains('active');
+      aberto = true;
+      overlay.classList.add('active');
+      if (emSheet()) {
+        mola.stop();
+        overlay.classList.add('is-sheet');
+        superficie.style.opacity = '';
+        // Reaberto no meio da descida: o sheet sobe de novo a partir da base
+        // (Spring.sheet.open() recomeça de baixo).
+        garantirSheet().open();
+        return;
+      }
+      overlay.classList.remove('is-sheet');
+      if (sheet) { sheet.destroy(); sheet = null; } // mouse em tela larga: sem arraste
+      if (!jaVisivel) mola.jump(0);
+      mola.set(1);
+    },
+    fechar() {
+      if (!aberto) return;
+      aberto = false;
+      if (overlay.classList.contains('is-sheet') && sheet) { sheet.close(); return; }
+      mola.set(0, { onRest: esconder });
+    },
   };
-  overlay.addEventListener('animationend', (e) => { if (e.target === overlay) concluir(); }, { once: true });
-  setTimeout(concluir, SAIDA_MS + 50);
-}
-function cancelarSaida(overlay) {
-  overlay._saida = null;
-  overlay.classList.remove('closing');
 }
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 let focoAntesDoModal = null;
 
+const apresentacaoModal = criarApresentacao(
+  document.getElementById('modal'),
+  document.querySelector('#modal .modal-content'),
+  { podeArrastar: true, aoArrastarParaFechar: aposFecharModal },
+);
+// Edge effect da topbar: a sombra difusa só aparece com conteúdo passando por
+// baixo (no desktop rola o #admin-main; no mobile, a página).
+(() => {
+  const topbar = document.querySelector('.topbar');
+  const main = document.getElementById('admin-main');
+  const atualizar = () => topbar.classList.toggle('is-scrolled', main.scrollTop > 0 || window.scrollY > 0);
+  main.addEventListener('scroll', atualizar, { passive: true });
+  window.addEventListener('scroll', atualizar, { passive: true });
+})();
+
+// Confirmação é ação de risco: só fecha por botão ou Esc, nunca por arraste
+const apresentacaoConfirmacao = criarApresentacao(
+  document.getElementById('confirm-overlay'),
+  document.querySelector('#confirm-overlay .confirm-box'),
+);
+
 function openModal(title, html) {
   const modal = document.getElementById('modal');
-  if (!modal.classList.contains('active') || modal.classList.contains('closing')) {
-    focoAntesDoModal = document.activeElement;
-  }
+  if (!apresentacaoModal.aberto) focoAntesDoModal = document.activeElement;
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-body').innerHTML = html;
-  cancelarSaida(modal);
-  modal.classList.add('active');
+  modal.querySelector('.modal-content').scrollTop = 0;
+  apresentacaoModal.abrir();
   document.body.classList.add('modal-aberto');
   document.getElementById('admin-main').classList.add('modal-aberto');
   // Foco no primeiro campo do formulário; sem campo, no botão de fechar
@@ -1473,9 +1597,13 @@ function openModal(title, html) {
 }
 
 function closeModal() {
-  const modal = document.getElementById('modal');
-  if (!modal.classList.contains('active')) return;
-  fecharComAnimacao(modal);
+  if (!apresentacaoModal.aberto) return;
+  apresentacaoModal.fechar();
+  aposFecharModal();
+}
+
+// O que vale para qualquer fechamento (botão, Esc, fundo ou arraste do sheet)
+function aposFecharModal() {
   document.body.classList.remove('modal-aberto');
   document.getElementById('admin-main').classList.remove('modal-aberto');
   if (focoAntesDoModal && document.contains(focoAntesDoModal)) focoAntesDoModal.focus({ preventScroll: true });
@@ -1501,8 +1629,8 @@ function closeModal() {
 document.addEventListener('keydown', e => {
   const modal = document.getElementById('modal');
   // Com a confirmação aberta, o Esc/Tab são dela — não mexem no modal de baixo.
-  if (document.getElementById('confirm-overlay').classList.contains('active')) return;
-  if (!modal.classList.contains('active') || modal.classList.contains('closing')) return;
+  if (apresentacaoConfirmacao.aberto) return;
+  if (!apresentacaoModal.aberto) return;
   if (e.key === 'Escape') { closeModal(); return; }
   if (e.key !== 'Tab') return;
   // Tab preso dentro do modal
@@ -1558,9 +1686,9 @@ async function loadDashboard() {
         return `<tr>
         <td><strong style="letter-spacing:.08em">${esc(c.placa)}</strong></td>
         <td><span style="color:${velColor};font-weight:700">${c.velocidade} km/h</span></td>
-        <td style="font-size:13px;color:var(--text-secondary)">${esc(c.clientes?.nome || '---')}</td>
-        <td style="font-size:13px;color:var(--text-secondary)">${fmtDateTime(c.timestamp)}</td>
-        <td>${c.notificado ? '<span class="badge-inactive" style="background:rgba(255,23,68,0.15)">Alerta</span>' : '<span style="color:var(--text-muted);font-size:12px">Normal</span>'}</td>
+        <td style="font-size:0.8125rem;color:var(--text-secondary)">${esc(c.clientes?.nome || '---')}</td>
+        <td style="font-size:0.8125rem;color:var(--text-secondary)">${fmtDateTime(c.timestamp)}</td>
+        <td>${c.notificado ? '<span class="badge-inactive" style="background:rgba(255,23,68,0.15)">Alerta</span>' : '<span style="color:var(--text-muted);font-size:0.75rem">Normal</span>'}</td>
       </tr>`;
       }).join('');
     }
@@ -1576,14 +1704,14 @@ async function loadDashboard() {
         const bg = i < 3 ? 'var(--accent-light)' : 'transparent';
         const numColor = i < 3 ? 'var(--accent)' : 'var(--text-muted)';
         return `<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;background:${bg};margin-bottom:4px">
-          <span style="font-weight:700;font-size:14px;color:${numColor};width:20px;text-align:center">${medal}</span>
+          <span style="font-weight:700;font-size:0.875rem;color:${numColor};width:20px;text-align:center">${medal}</span>
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;letter-spacing:.08em">${esc(p.placa)}</div>
-            <div style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.cliente)}</div>
+            <div style="font-size:0.6875rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.cliente)}</div>
           </div>
           <div style="text-align:right">
             <div style="font-weight:700;color:var(--red)">${p.count}x</div>
-            <div style="font-size:11px;color:var(--text-muted)">max ${p.maxVel}km/h</div>
+            <div style="font-size:0.6875rem;color:var(--text-muted)">max ${p.maxVel}km/h</div>
           </div>
         </div>`;
       }).join('');
@@ -1620,7 +1748,14 @@ window.addEventListener('resize', () => {
   });
 });
 
-let ultimaPctSaude = 0;
+// A barra é recriada a cada carga; a mola guarda o valor e continua dele
+const molaSaude = Spring.create({
+  value: 0,
+  onUpdate(pct) {
+    const bar = document.getElementById('health-bar');
+    if (bar) bar.style.transform = `scaleX(${pct / 100})`;
+  },
+});
 function renderSystemHealth(stats, statusPorCliente, clientes) {
   const healthDiv = document.getElementById('dash-health');
   const healthDot = document.getElementById('health-dot');
@@ -1660,11 +1795,11 @@ function renderSystemHealth(stats, statusPorCliente, clientes) {
 
   let html = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <span style="color:${healthColor};font-weight:700;font-size:15px">${healthStatus}</span>
+      <span style="color:${healthColor};font-weight:700;font-size:0.9375rem">${healthStatus}</span>
     </div>
     <div style="background:var(--bg-input);border-radius:6px;padding:10px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="color:var(--text-secondary);font-size:12px">Câmeras Online</span>
+        <span style="color:var(--text-secondary);font-size:0.75rem">Câmeras Online</span>
         <span style="font-weight:600">${pctOnline}%</span>
       </div>
       <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
@@ -1672,26 +1807,21 @@ function renderSystemHealth(stats, statusPorCliente, clientes) {
              (layout thrash). transform roda no compositor. O arredondamento vem
              do overflow:hidden do container, então a barra não leva border-radius
              próprio — escalado, ele deformaria. -->
-        <div id="health-bar" style="height:100%;width:100%;transform:scaleX(${ultimaPctSaude / 100});transform-origin:left;background:${healthColor};transition:transform 0.5s"></div>
+        <div id="health-bar" style="height:100%;width:100%;transform:scaleX(${molaSaude.value / 100});transform-origin:left;background:${healthColor}"></div>
       </div>
     </div>
   `;
 
   if (offlineClients.length > 0) {
     html += `<div style="margin-top:8px">
-      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Clientes com câmeras offline:</div>
-      ${offlineClients.map(n => `<div style="color:var(--red);font-size:12px;padding:2px 0">&#9679; ${esc(n)}</div>`).join('')}
+      <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Clientes com câmeras offline:</div>
+      ${offlineClients.map(n => `<div style="color:var(--red);font-size:0.75rem;padding:2px 0">&#9679; ${esc(n)}</div>`).join('')}
     </div>`;
   }
 
   healthDiv.innerHTML = html;
-  // A barra nasce no valor anterior e anima até o novo: recriada já no valor
-  // final, a transition não tinha "de onde" partir e nunca rodava.
-  const bar = document.getElementById('health-bar');
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    bar.style.transform = `scaleX(${pctOnline / 100})`;
-  }));
-  ultimaPctSaude = pctOnline;
+  // A barra nasce no valor em que a mola está e segue até o novo
+  molaSaude.set(pctOnline);
 }
 
 function drawAdminChart7d(alertas7d) {
@@ -1783,7 +1913,7 @@ function drawAdminChart7d(alertas7d) {
       ctx.stroke();
 
       ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 9px Inter, sans-serif';
+      ctx.font = 'bold 9px system-ui, -apple-system, "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(data[i], p.x, p.y - 8);
     }
@@ -1791,7 +1921,7 @@ function drawAdminChart7d(alertas7d) {
 
   // Labels
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '9px Inter, sans-serif';
+  ctx.font = '9px system-ui, -apple-system, "Segoe UI", sans-serif';
   ctx.textAlign = 'center';
   labels.forEach((lbl, i) => {
     ctx.fillText(lbl, pts[i].x, h - 4);
@@ -2112,14 +2242,14 @@ function renderCameras() {
     const st = cameraStatus(c.last_seen);
     const lastSeenTitle = c.last_seen ? new Date(c.last_seen).toLocaleString('pt-BR') : 'Nunca conectou';
     const netInfo = (c.ip_address || c.mac_address)
-      ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${c.ip_address ? 'IP: ' + esc(c.ip_address) : ''}${c.ip_address && c.mac_address ? ' | ' : ''}${c.mac_address ? 'MAC: ' + esc(c.mac_address) : ''}</div>`
+      ? `<div style="font-size:0.625rem;color:#64748b;margin-top:1px">${c.ip_address ? 'IP: ' + esc(c.ip_address) : ''}${c.ip_address && c.mac_address ? ' | ' : ''}${c.mac_address ? 'MAC: ' + esc(c.mac_address) : ''}</div>`
       : '';
     const exibInfo = c.nome_exibicao
-      ? `<div style="font-size:10px;color:var(--accent);margin-top:1px">Exibição: ${esc(c.nome_exibicao)}</div>`
+      ? `<div style="font-size:0.625rem;color:var(--accent);margin-top:1px">Exibição: ${esc(c.nome_exibicao)}</div>`
       : '';
     return `<tr>
     <td><strong>${esc(c.nome)}</strong>${exibInfo}${netInfo}</td>
-    <td style="font-family:'SF Mono',Consolas,monospace;font-size:12px">${esc(c.serial_number || '---')}</td>
+    <td style="font-family:var(--font-mono);font-size:0.75rem">${esc(c.serial_number || '---')}</td>
     <td title="${lastSeenTitle}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80;margin-right:6px;vertical-align:middle"></span>${st.label}</td>
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
     <td>${fmtDate(c.criado_em)}</td>
@@ -2137,14 +2267,14 @@ function openCameraModal(camera = null) {
   const isEdit = !!camera;
   openModal(isEdit ? 'Editar Câmera' : 'Nova Câmera', `
     <div class="form-group"><label>Serial da Câmera *</label><input id="f-cam-serial" value="${esc(camera?.serial_number || '')}" placeholder="Ex: QFHVK21424180082"></div>
-    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Informe o serial da câmera ALPHADIGI. A câmera será identificada automaticamente.</div>
+    <div style="font-size:0.6875rem;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Informe o serial da câmera ALPHADIGI. A câmera será identificada automaticamente.</div>
     <div class="form-group"><label>Nome de Exibição</label><input id="f-cam-exibicao" value="${esc(camera?.nome_exibicao || '')}" placeholder="Ex: Clube Mata (nome curto p/ dashboard)"></div>
-    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Nome curto exibido no dashboard. Se vazio, usa o serial.</div>
+    <div style="font-size:0.6875rem;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Nome curto exibido no dashboard. Se vazio, usa o serial.</div>
     <div class="form-group"><label>Nome Técnico</label><input id="f-cam-nome" value="${esc(camera?.nome || '')}" placeholder="Ex: CPC-LOMB01-CLUBEMATA (opcional)"></div>
     <div class="form-group"><label>Modelo do equipamento</label><input id="f-cam-modelo" value="${esc(camera?.modelo || '')}" placeholder="Ex: ALPHADIGI ITS-9C"></div>
-    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Aparece no rodapé auditável do PDF de notificação.</div>
+    <div style="font-size:0.6875rem;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Aparece no rodapé auditável do PDF de notificação.</div>
     <div class="form-group"><label>Firmware</label><input id="f-cam-firmware" value="${esc(camera?.firmware || '')}" placeholder="Ex: V4.32.05"></div>
-    <div style="font-size:11px;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Versão do firmware da câmera. ALPHADIGI não expõe automaticamente — preencha manualmente.</div>
+    <div style="font-size:0.6875rem;color:var(--text-secondary);margin:-8px 0 12px;padding:0 4px">Versão do firmware da câmera. ALPHADIGI não expõe automaticamente — preencha manualmente.</div>
     ${isEdit ? `<div class="form-group"><label>Token (não editável)</label><input value="${camera.token}" disabled></div>` : ''}
     <div class="form-error" id="f-cam-error"></div>
     <div class="form-actions">
@@ -2437,11 +2567,11 @@ async function loadRelatorioEnvios() {
   try {
     const envios = await api(`/relatorio?cliente_id=${currentDetailCliente.id}`);
     if (!envios || !envios.length) {
-      box.innerHTML = '<div style="font-size:13px;color:var(--text-muted)">Nenhum relatório enviado ainda.</div>';
+      box.innerHTML = '<div style="font-size:0.8125rem;color:var(--text-muted)">Nenhum relatório enviado ainda.</div>';
       return;
     }
     box.innerHTML = `
-      <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Últimos envios</div>
+      <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Últimos envios</div>
       <table class="data-table">
         <thead><tr><th>Período</th><th>Destinatário</th><th>Enviado</th><th>Visto</th></tr></thead>
         <tbody>${envios.map(e => `<tr>
@@ -2756,11 +2886,11 @@ async function loadAudit() {
     if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhum registro</td></tr>'; return; }
 
     tbody.innerHTML = data.map(a => `<tr>
-      <td style="font-size:13px;color:var(--text-secondary)">${fmtDateTime(a.criado_em)}</td>
+      <td style="font-size:0.8125rem;color:var(--text-secondary)">${fmtDateTime(a.criado_em)}</td>
       <td>${esc(a.usuarios?.nome || '---')}</td>
       <td><strong>${esc(a.acao)}</strong></td>
       <td>${esc(a.tabela || '---')}</td>
-      <td style="font-size:12px;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(a.detalhes || {}))}</td>
+      <td style="font-size:0.75rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(a.detalhes || {}))}</td>
     </tr>`).join('');
   } catch (err) { console.error(err); erroNaTabela('audit-body', 5, 'loadAudit()'); }
 }
@@ -2800,7 +2930,7 @@ function diasRestantes(prazo) {
 
 function renderPrazo(prazo, status) {
   if (['atendida', 'rejeitada', 'cancelada'].includes(status)) {
-    return `<span style="color:var(--text-muted);font-size:12px">${fmtDate(prazo)}</span>`;
+    return `<span style="color:var(--text-muted);font-size:0.75rem">${fmtDate(prazo)}</span>`;
   }
   const dias = diasRestantes(prazo);
   if (dias < 0) return `<span style="color:#b91c1c;font-weight:700">VENCIDA (${Math.abs(dias)}d)</span>`;
@@ -2843,11 +2973,11 @@ async function loadDireitos(filtroStatus = '', filtroUrgencia = '') {
     tbody.innerHTML = data.map(s => {
       const st = STATUS_LABELS[s.status] || { label: s.status, color: '#475569' };
       return `<tr style="cursor:pointer" onclick="abrirDireitoDetalhe('${s.id}')">
-        <td style="font-family:monospace;font-size:12px;color:var(--accent)">${esc(s.protocolo)}</td>
-        <td><strong>${esc(s.nome)}</strong><br><span style="color:var(--text-muted);font-size:11px">${esc(s.email)}</span></td>
-        <td style="font-size:13px">${esc(TIPO_LABELS_FRONT[s.tipo] || s.tipo)}</td>
-        <td><span style="color:${st.color};font-weight:600;font-size:12px">● ${st.label}</span></td>
-        <td style="font-size:12px;color:var(--text-secondary)">${fmtDateTime(s.criada_em)}</td>
+        <td style="font-family:var(--font-mono);font-size:0.75rem;color:var(--accent)">${esc(s.protocolo)}</td>
+        <td><strong>${esc(s.nome)}</strong><br><span style="color:var(--text-muted);font-size:0.6875rem">${esc(s.email)}</span></td>
+        <td style="font-size:0.8125rem">${esc(TIPO_LABELS_FRONT[s.tipo] || s.tipo)}</td>
+        <td><span style="color:${st.color};font-weight:600;font-size:0.75rem">● ${st.label}</span></td>
+        <td style="font-size:0.75rem;color:var(--text-secondary)">${fmtDateTime(s.criada_em)}</td>
         <td>${renderPrazo(s.prazo_limite, s.status)}</td>
         <td><button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirDireitoDetalhe('${s.id}')">Abrir</button></td>
       </tr>`;
@@ -2879,19 +3009,19 @@ async function abrirDireitoDetalhe(id) {
     const html = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Protocolo</div>
-          <div style="font-family:monospace;font-size:13px;color:var(--accent)">${esc(s.protocolo)}</div>
+          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Protocolo</div>
+          <div style="font-family:var(--font-mono);font-size:0.8125rem;color:var(--accent)">${esc(s.protocolo)}</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Status</div>
+          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Status</div>
           <div style="color:${st.color};font-weight:700">● ${st.label}</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Recebida em</div>
+          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Recebida em</div>
           <div>${fmtDateTime(s.criada_em)}</div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Prazo legal</div>
+          <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Prazo legal</div>
           <div style="color:${dias < 0 && !jaRespondida ? '#b91c1c' : dias <= 3 && !jaRespondida ? '#c2410c' : 'var(--text-primary)'};font-weight:600">${prazoInfo}</div>
         </div>
       </div>
@@ -2899,14 +3029,14 @@ async function abrirDireitoDetalhe(id) {
       <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
 
       <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Solicitante</div>
+        <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Solicitante</div>
         <div><strong>${esc(s.nome)}</strong></div>
-        <div style="color:var(--text-secondary);font-size:13px">${esc(s.email)}${s.telefone ? ' · ' + esc(s.telefone) : ''}${s.cpf ? ' · CPF: ' + esc(s.cpf) : ''}</div>
+        <div style="color:var(--text-secondary);font-size:0.8125rem">${esc(s.email)}${s.telefone ? ' · ' + esc(s.telefone) : ''}${s.cpf ? ' · CPF: ' + esc(s.cpf) : ''}</div>
       </div>
 
       ${s.empreendimento || s.placa_veiculo || s.unidade ? `
       <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Vínculo informado</div>
+        <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Vínculo informado</div>
         ${s.empreendimento ? `<div>Empreendimento: <strong>${esc(s.empreendimento)}</strong></div>` : ''}
         ${s.placa_veiculo ? `<div>Placa: <strong>${esc(s.placa_veiculo)}</strong></div>` : ''}
         ${s.unidade ? `<div>Unidade: <strong>${esc(s.unidade)}</strong></div>` : ''}
@@ -2914,20 +3044,20 @@ async function abrirDireitoDetalhe(id) {
       ` : ''}
 
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Tipo</div>
+        <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Tipo</div>
         <div>${esc(tipoLabel)}</div>
       </div>
 
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Descrição da solicitação</div>
-        <div style="background:var(--bg-input);border-left:3px solid var(--accent);padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.descricao)}</div>
+        <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Descrição da solicitação</div>
+        <div style="background:var(--bg-input);border-left:3px solid var(--accent);padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:0.8125rem;line-height:1.6">${esc(s.descricao)}</div>
       </div>
 
       ${s.resposta_dpo ? `
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Resposta do DPO</div>
-        <div style="background:rgba(4,107,210,0.1);border-left:3px solid #046BD2;padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:13px;line-height:1.6">${esc(s.resposta_dpo)}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">
+        <div style="font-size:0.6875rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Resposta do DPO</div>
+        <div style="background:rgba(4,107,210,0.1);border-left:3px solid #046BD2;padding:12px 16px;border-radius:4px;white-space:pre-wrap;font-size:0.8125rem;line-height:1.6">${esc(s.resposta_dpo)}</div>
+        <div style="font-size:0.6875rem;color:var(--text-muted);margin-top:6px">
           ${s.respondida_por_usuario ? 'Por ' + esc(s.respondida_por_usuario.nome) + ' em ' : 'Em '}${fmtDateTime(s.respondida_em)}
         </div>
       </div>
@@ -2935,7 +3065,7 @@ async function abrirDireitoDetalhe(id) {
 
       ${!jaRespondida ? `
       <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-      <div style="font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Responder</div>
+      <div style="font-size:0.8125rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Responder</div>
 
       <form id="form-direito-resposta" onsubmit="return responderDireito(event, '${s.id}')">
         <div class="form-group">
