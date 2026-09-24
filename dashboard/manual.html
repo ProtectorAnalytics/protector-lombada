@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manual do Usuário - Protector Traffic Control</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #046bd2;
@@ -21,16 +18,21 @@
             --orange: #f59e0b;
             --red: #ef4444;
             --sidebar-w: 280px;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
         }
+
+        html { font-size: 100%; }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: var(--font-sans);
+            font-optical-sizing: auto;
             color: var(--text);
             background: var(--bg);
             line-height: 1.7;
-            font-size: 15px;
+            font-size: 0.9375rem;
         }
 
         /* ── Top Navbar ── */
@@ -41,12 +43,25 @@
             right: 0;
             z-index: 100;
             height: 60px;
-            background: var(--accent);
+            /* Material translúcido: o texto rola por baixo, desfocado. Tom escuro
+               do azul e .85 (não .72): texto branco precisa de contraste AA
+               sobre a página branca que passa por trás */
+            background: rgba(3,78,162,.85);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(180%);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        /* Edge effect no lugar da sombra dura */
+        .navbar::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; top: 100%;
+            height: 10px;
+            background: linear-gradient(rgba(3,78,162,.12), rgba(3,78,162,0));
+            pointer-events: none;
         }
         .navbar .brand {
             display: flex;
@@ -54,7 +69,7 @@
             gap: 12px;
             color: #fff;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 1rem;
             text-decoration: none;
         }
         .navbar .brand svg { flex-shrink: 0; }
@@ -65,7 +80,7 @@
             gap: 6px;
             padding: 8px 16px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
@@ -92,7 +107,7 @@
             z-index: 50;
         }
         .sidebar-title {
-            font-size: 11px;
+            font-size: 0.6875rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -103,7 +118,7 @@
         .sidebar a {
             display: block;
             padding: 7px 20px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             color: var(--text-light);
             text-decoration: none;
             border-left: 3px solid transparent;
@@ -126,24 +141,24 @@
 
         /* ── Typography ── */
         h1 {
-            font-size: 32px;
+            font-size: 2rem;
             font-weight: 700;
             color: var(--accent);
             margin-bottom: 4px;
         }
         .subtitle {
-            font-size: 18px;
+            font-size: 1.125rem;
             color: var(--text-light);
             font-weight: 400;
             margin-bottom: 4px;
         }
         .version {
-            font-size: 13px;
+            font-size: 0.8125rem;
             color: #888;
             margin-bottom: 32px;
         }
         h2 {
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--text);
             margin-top: 48px;
@@ -152,14 +167,14 @@
             border-bottom: 2px solid var(--accent-light);
         }
         h3 {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 600;
             color: var(--text);
             margin-top: 28px;
             margin-bottom: 10px;
         }
         h4 {
-            font-size: 15px;
+            font-size: 0.9375rem;
             font-weight: 600;
             margin-top: 20px;
             margin-bottom: 8px;
@@ -186,7 +201,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 16px 0 24px;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
         th {
             background: var(--accent);
@@ -206,8 +221,8 @@
 
         /* ── Code ── */
         code {
-            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 13px;
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
             background: #f1f5f9;
             padding: 2px 6px;
             border-radius: 4px;
@@ -220,7 +235,7 @@
             border-radius: 8px;
             overflow-x: auto;
             margin: 16px 0 24px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             line-height: 1.6;
         }
         pre code {
@@ -236,7 +251,7 @@
             padding: 14px 20px;
             margin: 16px 0 24px;
             border-radius: 0 8px 8px 0;
-            font-size: 14px;
+            font-size: 0.875rem;
             color: var(--text);
         }
         blockquote p { margin-bottom: 0; }
@@ -271,20 +286,25 @@
             z-index: 40;
             opacity: 0;
             visibility: hidden;
-            transition: opacity .3s, visibility 0s linear .3s;
         }
 
         @media (max-width: 860px) {
-            .sidebar { transform: translateX(-100%); transition: transform .3s; }
-            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
-            .sidebar.open + .sidebar-scrim { opacity: 1; visibility: visible; transition: opacity .3s; }
+            /* Posição e scrim vêm da mola (toggleSumario); isto é o repouso */
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { box-shadow: 4px 0 20px rgba(0,0,0,.15); }
             .main { margin-left: 0; padding: 32px 20px 60px; }
             .menu-toggle { display: block; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .sidebar, .sidebar-scrim { transition: none !important; }
             .navbar .btn:active { transform: none; }
+        }
+        @media (prefers-reduced-transparency: reduce) {
+            .navbar { background: var(--accent-dark); backdrop-filter: none; -webkit-backdrop-filter: none; }
+        }
+        @media (prefers-contrast: more) {
+            .navbar { background: var(--accent-dark); backdrop-filter: none; -webkit-backdrop-filter: none; }
+            .navbar::after { display: none; }
         }
 
         /* ── Print ── */
@@ -295,11 +315,11 @@
                 padding: 0;
                 max-width: 100%;
             }
-            body { font-size: 12px; line-height: 1.5; color: #000; }
-            h1 { font-size: 24px; color: #000; }
-            h2 { font-size: 18px; border-bottom-color: #ccc; page-break-after: avoid; }
-            h3 { font-size: 15px; page-break-after: avoid; }
-            table { font-size: 11px; }
+            body { font-size: 0.75rem; line-height: 1.5; color: #000; }
+            h1 { font-size: 1.5rem; color: #000; }
+            h2 { font-size: 1.125rem; border-bottom-color: #ccc; page-break-after: avoid; }
+            h3 { font-size: 0.9375rem; page-break-after: avoid; }
+            table { font-size: 0.6875rem; }
             th { background: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             tr:nth-child(even) td { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             blockquote { border-left-color: #333; background: #f5f5f5; }
@@ -309,6 +329,7 @@
         }
     </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+  <script src="/js/spring.js"></script>
 </head>
 <body>
 
@@ -702,7 +723,7 @@
 
     <hr>
 
-    <p style="text-align:center; color:#888; font-size:13px; margin-top:40px;">
+    <p style="text-align:center; color:#888; font-size:0.8125rem; margin-top:40px;">
         <strong>Protector Traffic Control</strong> - v1.0.1 | Build 2ea9b40 | Março 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
@@ -737,14 +758,41 @@
     });
 })();
 
-// Gaveta do sumário (mobile): estado refletido no botão para leitor de tela
+// Gaveta do sumário (mobile): entra e sai pela esquerda com mola; o scrim
+// acompanha. Estado refletido no botão para leitor de tela.
+const GAVETA_MQ = window.matchMedia('(max-width: 860px)');
+const molaGaveta = Spring.create({
+    value: 0,
+    onUpdate(p) {
+        const sidebar = document.getElementById('sidebar');
+        const scrim = document.querySelector('.sidebar-scrim');
+        if (!GAVETA_MQ.matches) return;
+        sidebar.style.transform = `translateX(${((p - 1) * 100).toFixed(3)}%)`;
+        scrim.style.opacity = p;
+        scrim.style.visibility = p > 0.001 ? 'visible' : 'hidden';
+    },
+});
+
 function toggleSumario(abrir) {
     const sidebar = document.getElementById('sidebar');
     const aberto = sidebar.classList.toggle('open', abrir);
     const btn = document.querySelector('.menu-toggle');
     btn.setAttribute('aria-expanded', String(aberto));
     btn.setAttribute('aria-label', aberto ? 'Fechar sumário' : 'Abrir sumário');
+    molaGaveta.set(aberto ? 1 : 0, Spring.DEFAULTS); // interrompível, do valor atual
 }
+
+// Voltou a ser tela larga: a gaveta vira coluna fixa, sem estilos da mola
+GAVETA_MQ.addEventListener('change', (e) => {
+    if (e.matches) return;
+    const sidebar = document.getElementById('sidebar');
+    const scrim = document.querySelector('.sidebar-scrim');
+    sidebar.classList.remove('open');
+    molaGaveta.jump(0);
+    sidebar.style.transform = '';
+    scrim.style.opacity = '';
+    scrim.style.visibility = '';
+});
 </script>
 
 </body>
