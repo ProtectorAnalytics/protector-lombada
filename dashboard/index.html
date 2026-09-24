@@ -1758,6 +1758,66 @@
       border-left-color: var(--accent);
     }
 
+    /* Toque não tem hover: sem isto o "levantar" fica preso depois do tap */
+    @media (hover: none) {
+      .recent-card:hover, .stat-card:hover, .btn-filter:hover, .btn-export:hover,
+      .modal-photo:hover, .btn-zoom:hover, .btn-pdf:hover,
+      .topbar .btn-veiculos:hover, .login-box button:hover,
+      .vm-actions .vm-btn-primary:hover {
+        transform: none;
+      }
+    }
+
+    /* Resposta no pressionar (pointer-down), não só no hover */
+    button:not(:disabled):active, .recent-card:active, .modal-photo:active,
+    .topbar .btn-veiculos:active, .topbar .btn-logout:active,
+    .login-box button:active, .vm-actions .vm-btn-primary:active,
+    .vm-actions .vm-btn-cancel:active,
+    .table-pagination .pg-btn:not(:disabled):active {
+      transform: scale(0.97);
+      transition: transform 100ms ease-out;
+    }
+    /* Linhas largas: escala menor, senão a linha inteira "encolhe" demais */
+    .table-row:active, .ranking-item:active {
+      transform: scale(0.99);
+      transition: transform 100ms ease-out;
+    }
+
+    .btn-retry {
+      margin-left: 8px;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Aviso de confirmação (ex.: veículo cadastrado) */
+    #aviso {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 1100;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      border: 1px solid var(--green);
+      color: var(--text-primary);
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+      pointer-events: none;
+    }
+    #aviso.visivel {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
     /* Respeitar preferência de movimento reduzido */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -2055,7 +2115,7 @@
         </div>
         <div class="vm-actions">
           <button class="vm-btn-cancel" onclick="vmSwitchTab('lista')">Cancelar</button>
-          <button class="vm-btn-primary" onclick="salvarVeiculo()">Cadastrar Veículo</button>
+          <button class="vm-btn-primary" id="vf-salvar" onclick="salvarVeiculo()">Cadastrar Veículo</button>
         </div>
         <div class="vm-error" id="vf-error"></div>
       </div>
@@ -2347,14 +2407,15 @@
       loadCamerasList();
       loadVeiculos();
       loadAll();
-      pollingInterval = setInterval(loadAll, 30000);
+      // Polling mantém a página da tabela em que o usuário está
+      pollingInterval = setInterval(() => loadAll({ resetPage: false }), 30000);
     }
 
-    async function loadAll() {
+    async function loadAll({ resetPage = true } = {}) {
       await Promise.all([
         loadStats(),
         loadRecentCards(),
-        loadCapturas(),
+        loadCapturas({ resetPage }),
         loadHourlyChart(),
         loadRanking(),
         loadCamerasStatus(),
@@ -2435,7 +2496,11 @@
 
       const container = document.getElementById('recent-cards');
 
-      if (error || !rawData || rawData.length === 0) {
+      if (error) {
+        container.innerHTML = '<div role="alert" style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="loadRecentCards()">Tentar de novo</button></div>';
+        return;
+      }
+      if (!rawData || rawData.length === 0) {
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Nenhuma captura recente</div>';
         return;
       }
@@ -2563,6 +2628,16 @@
       return window.cameraStatusLib.cameraStatus(lastSeen);
     }
 
+    // Falha na consulta não pode deixar pílulas antigas na tela: uma câmera
+    // caída seguiria aparecendo "online".
+    function renderCamerasIndisponivel() {
+      document.getElementById('cameras-status').innerHTML =
+        `<div role="alert" title="Não foi possível consultar o status das câmeras" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;font-size:0.85rem;border:1px solid var(--border)">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--text-muted)"></span>
+          <span style="color:var(--text-muted)">Status indisponível</span>
+        </div>`;
+    }
+
     async function loadCamerasStatus() {
       try {
         const { data: cameras, error } = await sb.from('cameras')
@@ -2570,7 +2645,7 @@
           .eq('cliente_id', currentCliente.id)
           .eq('ativa', true);
 
-        if (error || !cameras) return;
+        if (error || !cameras) { renderCamerasIndisponivel(); return; }
 
         const container = document.getElementById('cameras-status');
         if (!cameras.length) { container.innerHTML = ''; return; }
@@ -2587,13 +2662,14 @@
         }).join('');
       } catch (err) {
         console.error('Erro câmeras:', err);
+        renderCamerasIndisponivel();
       }
     }
 
     // ============================================
     // CAPTURAS TABLE
     // ============================================
-    async function loadCapturas() {
+    async function loadCapturas({ resetPage = true } = {}) {
       const dateStart = document.getElementById('filter-date-start').value;
       const dateEnd = document.getElementById('filter-date-end').value;
       const placa = document.getElementById('filter-placa').value.toUpperCase().trim();
@@ -2622,7 +2698,14 @@
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
 
-      if (error || !data || data.length === 0) {
+      if (error) {
+        // Erro não é "nenhuma captura": o síndico leria que ninguém passou.
+        // Mantém lastCapturas para o export não perder o último conjunto válido.
+        tbody.innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="loadCapturas({ resetPage: false })">Tentar de novo</button></div>';
+        pgEl.style.display = 'none';
+        return;
+      }
+      if (!data || data.length === 0) {
         tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
         lastCapturas = [];
         pgEl.style.display = 'none';
@@ -2631,7 +2714,8 @@
 
       lastCapturas = data;  // sempre o conjunto completo (export usa isto)
       allThumbUrls = {};
-      currentPage = 1;
+      // renderPage() faz o clamp caso o total de páginas tenha diminuído
+      if (resetPage) currentPage = 1;
 
       // Get thumbnail URLs (batch for first 50 visíveis), cache por foto_path
       const vis = capturasVisiveis();
@@ -3097,6 +3181,11 @@
         return;
       }
 
+      // Trava o botão durante o envio: duplo clique cadastrava a placa duas vezes
+      const btnSalvar = document.getElementById('vf-salvar');
+      btnSalvar.disabled = true;
+      btnSalvar.textContent = 'Salvando…';
+
       try {
         const resp = await fetch('/api/admin/veiculos', {
           method: 'POST',
@@ -3122,6 +3211,7 @@
         }
 
         fecharModalVeiculo();
+        mostrarAviso(`Veículo ${placa} cadastrado.`);
         await loadVeiculos();
         // Refresh cache and re-render captures with updated vehicle info
         await loadVeiculosCache();
@@ -3129,7 +3219,20 @@
         loadRecentCards();
       } catch (err) {
         errorEl.textContent = 'Erro de conexão. Tente novamente.';
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = 'Cadastrar Veículo';
       }
+    }
+
+    // Confirmação curta e não bloqueante (role="status" é lido por leitor de tela)
+    const AVISO_DURACAO_MS = 4000;
+    function mostrarAviso(texto) {
+      const el = document.getElementById('aviso');
+      el.textContent = texto;
+      el.classList.add('visivel');
+      clearTimeout(mostrarAviso._timer);
+      mostrarAviso._timer = setTimeout(() => el.classList.remove('visivel'), AVISO_DURACAO_MS);
     }
 
     async function removerVeiculo(id, placa) {
@@ -3176,10 +3279,31 @@
       }
     });
 
+    // Carregar jsPDF/XLSX da rede leva segundos: sem indicador a tela
+    // parece travada. O botão mostra que está trabalhando até terminar.
+    async function comIndicadorCarregando(btn, texto, fn) {
+      if (!btn) return fn();
+      const original = btn.innerHTML;
+      btn.classList.add('loading');
+      btn.setAttribute('aria-busy', 'true');
+      btn.textContent = texto;
+      try {
+        return await fn();
+      } finally {
+        btn.classList.remove('loading');
+        btn.removeAttribute('aria-busy');
+        btn.innerHTML = original;
+      }
+    }
+
     // ============================================
     // EXPORT EXCEL
     // ============================================
-    async function exportExcel() {
+    function exportExcel() {
+      return comIndicadorCarregando(document.getElementById('btn-exportar'), 'Gerando…', gerarExcel);
+    }
+
+    async function gerarExcel() {
       if (!lastCapturas || lastCapturas.length === 0) {
         alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
         return;
@@ -3221,7 +3345,11 @@
     // ============================================
     // EXPORT PDF
     // ============================================
-    async function exportPDF() {
+    function exportPDF() {
+      return comIndicadorCarregando(document.getElementById('btn-exportar'), 'Gerando…', gerarPDF);
+    }
+
+    async function gerarPDF() {
       if (!lastCapturas || lastCapturas.length === 0) {
         alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
         return;
@@ -3490,7 +3618,7 @@
         ? `<button class="btn-zoom" onclick="openLightbox('${photoUrl.replace(/"/g, '&quot;').replace(/'/g, "\\'")}')">Ver em tamanho real</button>`
         : '';
       html += `<div class="modal-actions">
-        <button class="btn-pdf" onclick='gerarNotificacaoPDF(${JSON.stringify(captura).replace(/'/g, "&#39;")})'>
+        <button class="btn-pdf" onclick='gerarNotificacaoPDF(${JSON.stringify(captura).replace(/'/g, "&#39;")}, this)'>
           Gerar Notificacao PDF
         </button>
         ${zoomBtn}
@@ -3560,7 +3688,11 @@
     // ============================================
     // PDF NOTIFICATION GENERATOR (client-side)
     // ============================================
-    async function gerarNotificacaoPDF(captura) {
+    function gerarNotificacaoPDF(captura, btn) {
+      return comIndicadorCarregando(btn, 'Gerando…', () => montarNotificacaoPDF(captura));
+    }
+
+    async function montarNotificacaoPDF(captura) {
       await lazyLoadExportLibs();
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
@@ -4450,5 +4582,6 @@
       }).join('');
     }
   </script>
+  <div id="aviso" role="status" aria-live="polite"></div>
 </body>
 </html>
