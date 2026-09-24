@@ -465,7 +465,12 @@
     </ul>
 
     <h3>Atualização automática</h3>
-    <p>As capturas são atualizadas automaticamente a cada <strong>30 segundos</strong>. O ponto verde pulsante no canto superior direito indica que o sistema está atualizando.</p>
+    <p>As capturas são atualizadas automaticamente a cada <strong>30 segundos</strong>. O ponto verde no canto superior direito pulsa <strong>enquanto</strong> a atualização acontece, e ao lado aparece o horário da última atualização (ex.: <em>"Atualizado às 14:32:05"</em>). Se a atualização falhar, o texto muda para <em>"Falha ao atualizar às…"</em>, em laranja.</p>
+    <ul>
+        <li>A atualização automática <strong>não muda a página</strong> da tabela em que você está.</li>
+        <li>Com a aba do navegador em segundo plano, a atualização pausa e é feita assim que você volta.</li>
+        <li>Se não for possível carregar as capturas, aparece <em>"Não foi possível carregar as capturas"</em> com o botão <strong>"Tentar de novo"</strong> — isso é diferente de <em>"Nenhuma captura encontrada"</em>, que significa que nenhum veículo passou no período.</li>
+    </ul>
 
     <hr>
 
@@ -473,11 +478,13 @@
     <h2 id="status-das-cameras">5. Status das Câmeras</h2>
     <p>Abaixo dos cards de estatísticas, badges coloridos indicam o status de cada câmera:</p>
     <ul>
-        <li><span class="color-dot" style="background:#4ade80"></span> <strong>Online (verde):</strong> A câmera está funcionando e enviando dados normalmente</li>
-        <li><span class="color-dot" style="background:#facc15"></span> <strong>Alerta (amarelo):</strong> A câmera não envia dados entre 5 e 15 minutos — pode ser instabilidade de rede</li>
-        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Offline (vermelho):</strong> A câmera não enviou dados há mais de 15 minutos</li>
+        <li><span class="color-dot" style="background:#4ade80"></span> <strong>Online (verde):</strong> A câmera enviou dados nos últimos 30 minutos</li>
+        <li><span class="color-dot" style="background:#facc15"></span> <strong>Alerta (amarelo):</strong> Sem dados entre 30 minutos e 6 horas — pode ser só um período sem veículos, ou instabilidade de rede</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Offline (vermelho):</strong> Sem dados há mais de 6 horas</li>
         <li><span class="color-dot" style="background:#3b82f6"></span> <strong>Aguardando (azul):</strong> A câmera foi cadastrada recentemente e ainda não enviou sua primeira captura</li>
     </ul>
+
+    <p>Se o status das câmeras não puder ser carregado, aparece <strong>"Status indisponível"</strong> em vez das informações anteriores — assim uma câmera caída nunca fica aparecendo como online.</p>
 
     <blockquote><p>Se uma câmera aparece como offline, verifique a conexão de internet e energia no local. Se o problema persistir, entre em contato com o suporte técnico.</p></blockquote>
 
@@ -639,9 +646,9 @@
         <li>Digite seu <strong>email cadastrado</strong></li>
         <li>Clique em <strong>"ENVIAR LINK DE RECUPERAÇÃO"</strong></li>
         <li>Verifique seu email (inclusive a caixa de spam)</li>
-        <li>Clique no link recebido</li>
-        <li>Defina sua <strong>nova senha</strong> (mínimo 6 caracteres)</li>
-        <li>Faça login com a nova senha</li>
+        <li>Clique no link recebido — o sistema abre direto no formulário de nova senha</li>
+        <li>Digite a <strong>nova senha</strong> (mínimo 6 caracteres) e repita no campo de confirmação. O sistema avisa na hora se a senha for curta ou se os dois campos não forem iguais</li>
+        <li>Clique em <strong>"SALVAR NOVA SENHA"</strong> e faça login com a nova senha</li>
     </ol>
 
     <blockquote><p>O link de recuperação expira após 24 horas. Se expirar, solicite um novo.</p></blockquote>
@@ -676,7 +683,10 @@
     <p>Aguarde alguns minutos e verifique novamente. Se persistir, contate o suporte.</p>
 
     <h3>Posso acessar o sistema pelo celular?</h3>
-    <p>Sim. O dashboard é responsivo e funciona em qualquer dispositivo com navegador: computador, tablet ou celular.</p>
+    <p>Sim. O dashboard é responsivo e funciona em qualquer dispositivo com navegador: computador, tablet ou celular. No celular, os detalhes de uma captura abrem como um <strong>painel que sobe da parte de baixo da tela</strong>: para fechar, arraste-o para baixo pela alça no topo (ou toque no ✕). Na foto ampliada, arraste para mover a imagem; sem zoom, puxe para baixo para fechar.</p>
+
+    <h3>O sistema funciona só com o teclado?</h3>
+    <p>Sim. Capturas, cards e linhas da tabela abrem com <strong>Enter</strong> ou <strong>Espaço</strong>, os filtros aplicam com <strong>Enter</strong> e a tecla <strong>Esc</strong> fecha a janela aberta (foto ampliada, menu Exportar, veículos, detalhes — nessa ordem).</p>
 
     <h3>Quantos emails de alerta posso cadastrar?</h3>
     <p>Não há limite. Você pode cadastrar quantos destinatários desejar.</p>

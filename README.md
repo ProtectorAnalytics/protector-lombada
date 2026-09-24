@@ -32,7 +32,8 @@ Fluxo completo em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
 | **Runtime** | Node.js serverless (Vercel Functions) |
 | **Banco de dados** | Supabase (PostgreSQL + RLS) |
 | **Storage** | Supabase Storage (bucket privado) |
-| **Frontend** | HTML + JS (SPA) — `dashboard/` e `admin/` |
+| **Frontend** | HTML + CSS + JS puro, sem build — `site/`, `dashboard/` e `admin/`; fonte do sistema (`system-ui`), textos em `rem` |
+| **Movimento** | `site/js/spring.js` — molas e gestos no estilo Apple (sem dependência) |
 | **PDF** | PDFKit |
 | **E-mail** | Nodemailer (SMTP cPanel / Gmail) |
 | **Imagens** | Sharp (redimensionamento/otimização) |
@@ -71,6 +72,18 @@ npm run dev   # usa vercel dev
 
 Deploy em produção: seguir [`docs/IMPLANTACAO.md`](docs/IMPLANTACAO.md).
 
+### Testes
+
+Sem framework: cada arquivo é um script Node com `node:assert`.
+
+```bash
+npm test                              # roda todos
+node test/spring.test.js              # física das molas e gestos
+node test/lead.test.js                # validação do pedido de proposta
+node test/camera-status.test.js       # regra online/alerta/offline
+node test/parse-vehicle-id.test.js    # vehicleId das câmeras
+```
+
 ---
 
 ## Endpoints principais
@@ -80,6 +93,8 @@ Deploy em produção: seguir [`docs/IMPLANTACAO.md`](docs/IMPLANTACAO.md).
 | `/placa` | POST | Recebe capturas das câmeras ALPHADIGI |
 | `/api/heartbeat` | POST | Sinal de vida das câmeras (a cada 10 s) |
 | `/api/config` | GET | Config pública do Supabase para frontend |
+| `/api/lead` | POST | Pedido de proposta do site → e-mail para `contato@appps.com.br` |
+| `/api/direitos-titular` | POST | Solicitação LGPD do titular → protocolo + e-mail ao DPO |
 | `/api/cron-limpeza` | GET | Limpeza de capturas > 15 dias (cron diário 06:00) |
 | `/api/admin/*` | CRUD | Clientes, câmeras, usuários, veículos, e-mails, dashboard |
 | `/admin` | UI | Painel multi-tenant (super_admin) |
@@ -91,7 +106,8 @@ Deploy em produção: seguir [`docs/IMPLANTACAO.md`](docs/IMPLANTACAO.md).
 
 - **Rate limit**: 120 req/min por câmera
 - **Retenção de capturas**: 15 dias (apagadas por cron diário)
-- **Offline threshold**: câmera marcada como offline após 5 min sem heartbeat
+- **Status da câmera** (último dado recebido): online até 30 min, alerta de 30 min a 6 h, offline acima de 6 h, aguardando se nunca transmitiu — regra única em `site/js/camera-status.js`
+- **Pedido de proposta** (`/api/lead`): 5 envios por hora por IP
 - **Tamanho máx. de foto**: otimizado via Sharp antes do upload
 
 ---
@@ -120,11 +136,13 @@ protector-lombada/
 │   ├── heartbeat.js  # Health check das câmeras
 │   └── cron-limpeza.js
 ├── lib/              # Lógica compartilhada (Supabase, PDF, e-mail, auth)
-├── site/             # Landing page
+├── site/             # Landing page, privacidade e direitos LGPD
+│   └── js/           # Libs UMD front+back: camera-status.js, spring.js
 ├── dashboard/        # SPA do cliente
 ├── admin/            # SPA do admin
 ├── sql/              # Schema + migrations do Supabase
 ├── scripts/          # Utilitários (create-super-admin, etc.)
+├── test/             # Testes (node test/<arquivo>.test.js)
 ├── docs/             # Documentação
 ├── .env.example
 ├── vercel.json

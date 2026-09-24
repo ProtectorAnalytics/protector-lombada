@@ -482,7 +482,29 @@
     </ul>
 
     <h3>Atualização automática</h3>
-    <p>As capturas são atualizadas automaticamente a cada <strong>30 segundos</strong>. O ponto verde pulsante no canto superior direito indica que o sistema está atualizando.</p>
+    <p>As capturas são atualizadas automaticamente a cada <strong>30 segundos</strong>. O ponto verde pulsa enquanto o painel busca dados novos, e ao lado aparece <strong>"Atualizado às HH:MM:SS"</strong> com a hora da última atualização.</p>
+    <ul>
+        <li>Se a atualização falhar (internet ou servidor fora do ar), o texto muda para <strong>"Falha ao atualizar às…"</strong> em laranja, e as listas mostram <strong>"Não foi possível carregar as capturas"</strong> com o botão <strong>"Tentar de novo"</strong>. "Nenhuma captura" aparece só quando realmente não houve passagem.</li>
+        <li>A atualização automática não tira você da página em que está na tabela.</li>
+        <li>Com a aba do navegador em segundo plano, o painel pausa as consultas e atualiza assim que você volta.</li>
+    </ul>
+
+    <h3>Filtros e tabela de capturas</h3>
+    <ul>
+        <li>Preencha os filtros e aperte <strong>Enter</strong> ou clique em <strong>"Filtrar"</strong>.</li>
+        <li><strong>"Só alertas"</strong> aplica na hora, sem precisar clicar em "Filtrar".</li>
+        <li><strong>"Limpar"</strong> remove os filtros e atualiza tabela, gráfico, indicadores e ranking.</li>
+        <li>A tabela mostra até as <strong>300 capturas mais recentes</strong> do período. Quando esse limite é atingido, o rodapé avisa "exibindo as 300 mais recentes; refine o período".</li>
+        <li><strong>"Exportar"</strong> oferece Excel (.xlsx) ou PDF. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
+    </ul>
+
+    <h3>Detalhes da captura e foto ampliada</h3>
+    <ul>
+        <li>Clique (ou toque) num card ou numa linha da tabela para abrir os detalhes. Pelo teclado, use <strong>Tab</strong> até a captura e aperte <strong>Enter</strong>.</li>
+        <li>No celular, os detalhes abrem como um painel que sobe da parte de baixo da tela. Para fechar, <strong>arraste o painel para baixo</strong> pela alça no topo, ou toque no ✕.</li>
+        <li>Clique na foto para ampliá-la. Um clique na foto ampliada aproxima <strong>no ponto clicado</strong>; com a foto aproximada, arraste para ver outras partes. Sem aproximação, puxar a foto para baixo fecha.</li>
+        <li>A tecla <strong>Esc</strong> fecha a foto ampliada, o menu Exportar e as janelas abertas, uma de cada vez.</li>
+    </ul>
 
     <hr>
 
@@ -490,9 +512,9 @@
     <h2 id="status-das-cameras">5. Status das Câmeras</h2>
     <p>Abaixo dos cards de estatísticas, badges coloridos indicam o status de cada câmera:</p>
     <ul>
-        <li><span class="color-dot" style="background:#4ade80"></span> <strong>Online (verde):</strong> A câmera está funcionando e enviando dados normalmente</li>
-        <li><span class="color-dot" style="background:#facc15"></span> <strong>Alerta (amarelo):</strong> A câmera não envia dados entre 5 e 15 minutos — pode ser instabilidade de rede</li>
-        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Offline (vermelho):</strong> A câmera não enviou dados há mais de 15 minutos</li>
+        <li><span class="color-dot" style="background:#4ade80"></span> <strong>Online (verde):</strong> A câmera enviou dados nos últimos 30 minutos</li>
+        <li><span class="color-dot" style="background:#facc15"></span> <strong>Alerta (amarelo):</strong> A câmera está sem enviar dados entre 30 minutos e 6 horas. Em condomínio isso costuma ser só falta de movimento: a câmera registra quando passa um veículo</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Offline (vermelho):</strong> A câmera não enviou dados há mais de 6 horas — vale verificar energia e rede</li>
         <li><span class="color-dot" style="background:#3b82f6"></span> <strong>Aguardando (azul):</strong> A câmera foi cadastrada recentemente e ainda não enviou sua primeira captura</li>
     </ul>
 
@@ -520,7 +542,7 @@
     <ul>
         <li><strong>Filtrar:</strong> Digite no campo de busca para filtrar por placa, morador, unidade ou marca</li>
         <li><strong>Paginação:</strong> Navega entre as páginas (10 veículos por página)</li>
-        <li><strong>Excluir:</strong> Clique em "Excluir" para remover um veículo</li>
+        <li><strong>Excluir:</strong> Clique em "Excluir" para remover um veículo. O sistema pede confirmação e avisa que as capturas dessa placa passam a aparecer como "Veículo não cadastrado".</li>
     </ul>
 
     <h3>Aba "Cadastrar"</h3>
@@ -536,7 +558,7 @@
                 <li><strong>Cor</strong> - ex: "Prata"</li>
             </ul>
         </li>
-        <li>Clique em <strong>"Cadastrar Veículo"</strong></li>
+        <li>Clique em <strong>"Cadastrar Veículo"</strong>. Enquanto salva, o botão mostra "Salvando…"; ao terminar, aparece o aviso <strong>"Veículo ABC1D23 cadastrado."</strong></li>
     </ol>
 
     <blockquote><p><strong>Vinculação automática:</strong> Ao cadastrar um veículo, todas as capturas existentes daquela placa passam a exibir imediatamente o nome do morador e unidade — sem necessidade de recarregar a página.</p></blockquote>
@@ -590,7 +612,7 @@
     <ol>
         <li>Clique no botão <strong>"Veículos"</strong> na barra superior</li>
         <li>Clique na aba <strong>"Importar / Exportar"</strong></li>
-        <li>Clique em <strong>"Exportar Excel"</strong></li>
+        <li>Clique em <strong>"Exportar Excel"</strong> (o botão mostra "Gerando…" enquanto prepara o arquivo)</li>
         <li>O arquivo <code>.xlsx</code> será baixado automaticamente</li>
     </ol>
     <p>O arquivo exportado contém todas as colunas: PLACA, MORADOR, UNIDADE, MARCA e COR.</p>
@@ -656,9 +678,9 @@
         <li>Digite seu <strong>email cadastrado</strong></li>
         <li>Clique em <strong>"ENVIAR LINK DE RECUPERAÇÃO"</strong></li>
         <li>Verifique seu email (inclusive a caixa de spam)</li>
-        <li>Clique no link recebido</li>
-        <li>Defina sua <strong>nova senha</strong> (mínimo 6 caracteres)</li>
-        <li>Faça login com a nova senha</li>
+        <li>Clique no link recebido. O painel abre direto no formulário de nova senha</li>
+        <li>Digite a <strong>nova senha</strong> (mínimo 6 caracteres) e repita no segundo campo. Se as senhas não conferirem, o aviso aparece na hora</li>
+        <li>Clique em <strong>"SALVAR NOVA SENHA"</strong>. Ao ver "Senha alterada. Entre com a nova senha.", faça login com a nova senha</li>
     </ol>
 
     <blockquote><p>O link de recuperação expira após 24 horas. Se expirar, solicite um novo.</p></blockquote>
