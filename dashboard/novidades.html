@@ -28,6 +28,43 @@
       --radius: 12px;
       --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      color-scheme: dark;
+      --accent-hover: #60A5FA;
+      --glass-bg: rgba(13,20,33,0.72);
+      --glass-edge: rgba(8,12,20,0.5);
+      --title-start: #FFFFFF;
+      --solid-bar: #0D1421;
+      --border-strong: rgba(255,255,255,0.35);
+    }
+
+    /* Tema claro (segue a escolha feita no painel) */
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg-primary: #F2F4F7;
+      --bg-secondary: #E9EDF2;
+      --bg-card: #FFFFFF;
+      --bg-input: #F1F4F8;
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --accent-light: rgba(37,99,235,0.08);
+      --cta: #C2410C;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #64748B;
+      --border: rgba(15,23,42,0.10);
+      --green: #15803D;
+      --orange: #C2410C;
+      --red: #B91C1C;
+      --purple: #7E22CE;
+      --glass-bg: rgba(255,255,255,0.72);
+      --glass-edge: rgba(15,23,42,0.07);
+      --title-start: #0F172A;
+      --solid-bar: #FFFFFF;
+      --border-strong: rgba(15,23,42,0.45);
+    }
+    /* Troca de tema sem salto brusco de brilho */
+    html.tema-trocando, html.tema-trocando *, html.tema-trocando *::before, html.tema-trocando *::after {
+      transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease !important;
     }
 
     html { font-size: 100%; }
@@ -39,17 +76,16 @@
       color: var(--text-primary);
       line-height: 1.65;
       font-size: 0.9375rem;
-      color-scheme: dark;
       -webkit-font-smoothing: antialiased;
     }
 
     a { color: var(--accent); text-decoration: none; }
-    a:hover { color: #60A5FA; }
+    a:hover { color: var(--accent-hover); }
 
     /* ===== TOPBAR ===== */
     .topbar {
       /* Material translúcido: o conteúdo rola por baixo */
-      background: rgba(13,20,33,0.72);
+      background: var(--glass-bg);
       padding: 14px 24px;
       display: flex;
       justify-content: space-between;
@@ -66,7 +102,7 @@
       position: absolute;
       left: 0; right: 0; top: 100%;
       height: 12px;
-      background: linear-gradient(rgba(8,12,20,0.5), rgba(8,12,20,0));
+      background: linear-gradient(var(--glass-edge), transparent);
       pointer-events: none;
     }
     .topbar-brand {
@@ -129,7 +165,7 @@
       line-height: 1.1;
       letter-spacing: -1px;
       margin-bottom: 16px;
-      background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--cta) 100%);
+      background: linear-gradient(135deg, var(--title-start) 0%, var(--accent) 50%, var(--cta) 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -353,15 +389,60 @@
 
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
+      html.tema-trocando, html.tema-trocando *, html.tema-trocando *::before, html.tema-trocando *::after { transition: none !important; }
     }
     @media (prefers-reduced-transparency: reduce) {
-      .topbar { background: #0D1421; backdrop-filter: none; -webkit-backdrop-filter: none; }
+      .topbar { background: var(--solid-bar); backdrop-filter: none; -webkit-backdrop-filter: none; }
     }
     @media (prefers-contrast: more) {
-      .topbar { background: #0D1421; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid rgba(255,255,255,0.35); }
+      .topbar { background: var(--solid-bar); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border-strong); }
       .topbar::after { display: none; }
     }
   </style>
+  <script>
+    // Tema resolvido ANTES de pintar (sem flash). 'auto' segue o sistema.
+    // Mesma chave em dashboard/, novidades e manual.
+    (function () {
+      var CHAVE = 'lombada-tema';
+      var mq = window.matchMedia('(prefers-color-scheme: light)');
+      var raiz = document.documentElement;
+      function escolha() {
+        try { var v = localStorage.getItem(CHAVE); return v === 'light' || v === 'dark' ? v : 'auto'; }
+        catch (e) { return 'auto'; }
+      }
+      function aplicar(pref) {
+        var tema = pref === 'auto' ? (mq.matches ? 'light' : 'dark') : pref;
+        raiz.setAttribute('data-theme', tema);
+        raiz.setAttribute('data-theme-pref', pref);
+        return tema;
+      }
+      function avisar(pref, tema) {
+        document.dispatchEvent(new CustomEvent('lombada:tema', { detail: { pref: pref, tema: tema } }));
+      }
+      var timerTroca = null;
+      function trocarSuave(pref) {
+        // Cores cruzam em 200 ms (sem salto de brilho); a classe sai logo depois
+        raiz.classList.add('tema-trocando');
+        var tema = aplicar(pref);
+        clearTimeout(timerTroca);
+        timerTroca = setTimeout(function () { raiz.classList.remove('tema-trocando'); }, 260);
+        avisar(pref, tema);
+      }
+      window.LombadaTema = {
+        escolha: escolha,
+        definir: function (pref) {
+          try { localStorage.setItem(CHAVE, pref); } catch (e) {}
+          trocarSuave(pref);
+        },
+      };
+      aplicar(escolha());
+      var aoMudarSistema = function () { if (escolha() === 'auto') trocarSuave('auto'); };
+      if (mq.addEventListener) mq.addEventListener('change', aoMudarSistema);
+      else if (mq.addListener) mq.addListener(aoMudarSistema);
+      // Outra aba trocou o tema: acompanha
+      window.addEventListener('storage', function (e) { if (e.key === CHAVE) trocarSuave(escolha()); });
+    })();
+  </script>
   <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
