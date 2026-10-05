@@ -654,7 +654,7 @@
     .recent-card .rc-vel.green { color: #22C55E; }
     /* Alerta: fundo vermelho opaco + texto branco (não depende só de cor do número) */
     .recent-card .rc-vel.red { color: #FFFFFF; background: var(--red-dark); }
-    .recent-card .rc-vel.unknown { color: #94A3B8; opacity: 0.7; }
+    .recent-card .rc-vel.unknown { color: #94A3B8; }
 
     /* Info bar: linha 1 = nome ↔ horário; linha 2 = veículo (altura fixa) */
     .recent-card .rc-info {
@@ -1339,7 +1339,7 @@
 
     .table-row .vel.green { color: var(--green); }
     .table-row .vel.red { color: var(--red); font-weight: 800; }
-    .table-row .vel.unknown { color: var(--text-muted); opacity: 0.7; }
+    .table-row .vel.unknown { color: var(--text-muted); } /* sem opacidade: ≥4,5:1 nos dois temas */
 
     /* Radar: uma linha com reticências (nome completo no title). A célula
        ocupa a altura da linha para o alvo do botão não ser cortado */
@@ -4511,7 +4511,7 @@
 
         document.getElementById('pg-controls').innerHTML = btns;
         // Página cheia desenhada: confere a sobra real (uma vez por desenho)
-        if (!conferida && pageData.length === linhasPorPagina && conferirSobraDaLista()) renderPage({ conferida: true });
+        if (!conferida && pageData.length === linhasPorPagina && conferirSobraDaLista()) await renderPage({ conferida: true });
       } else {
         mostrarPaginas(false);
       }
@@ -4521,15 +4521,28 @@
     // cálculo (fonte, zoom, arredondamento) e deixar uma faixa vazia acima da
     // paginação ou linhas cortadas. Mede o que ficou e corrige o tamanho da
     // página (mantendo a primeira passagem visível). true = mudou.
+    // Lista com altura travada na janela (desktop, sem a página rolante)
+    function listaTravada() {
+      return !ESTREITO_MQ.matches && !document.querySelector('.main-layout.lista-rolante');
+    }
+
     function conferirSobraDaLista() {
-      if (ESTREITO_MQ.matches || document.querySelector('.main-layout.lista-rolante')) return false;
+      if (!listaTravada()) return false;
       const tbody = document.getElementById('table-body');
       const linhas = tbody.querySelectorAll('.table-row');
       if (!linhas.length) return false;
-      const topo = linhas[0].getBoundingClientRect().top;
-      const fim = linhas[linhas.length - 1].getBoundingClientRect().bottom;
-      const sobra = tbody.clientHeight - (fim - topo);
-      const novo = Math.max(LINHAS_MIN, corrigirPelaSobra(linhasPorPagina, sobra, alturaLinhaAtual(), LINHAS_MIN, LINHAS_MAX));
+      // Mede sem a altura que a recarga reserva no #table-body (leitura síncrona)
+      const reservada = tbody.style.minHeight;
+      tbody.style.minHeight = '';
+      let sobra;
+      try {
+        const topo = linhas[0].getBoundingClientRect().top;
+        const fim = linhas[linhas.length - 1].getBoundingClientRect().bottom;
+        sobra = tbody.clientHeight - (fim - topo);
+      } finally {
+        tbody.style.minHeight = reservada;
+      }
+      const novo = corrigirPelaSobra(linhasPorPagina, sobra, alturaLinhaAtual(), LINHAS_MIN, LINHAS_MAX);
       if (novo === linhasPorPagina) return false;
       correcaoLinhas = novo - ultimoCalculo;
       const primeira = primeiroIndiceDaPagina(currentPage, linhasPorPagina);
@@ -4605,8 +4618,7 @@
       const calculado = calcularLinhasPorPagina(total);
       ultimoCalculo = calculado;
       // Correção medida na tela (conferirSobraDaLista) vale só com a lista travada
-      const travada = !ESTREITO_MQ.matches && !document.querySelector('.main-layout.lista-rolante');
-      const novo = travada ? Math.max(LINHAS_MIN, Math.min(LINHAS_MAX, calculado + correcaoLinhas)) : calculado;
+      const novo = listaTravada() ? Math.max(LINHAS_MIN, Math.min(LINHAS_MAX, calculado + correcaoLinhas)) : calculado;
       if (novo === linhasPorPagina) return false;
       const primeira = primeiroIndiceDaPagina(currentPage, linhasPorPagina);
       linhasPorPagina = novo;
@@ -5762,7 +5774,7 @@
           'Radar': camerasMapFull[c.camera_id] || '---',
           'Data': ts.toLocaleDateString('pt-BR'),
           'Hora': ts.toLocaleTimeString('pt-BR'),
-          'Status': c.velocidade > limite ? 'ALERTA' : 'OK',
+          'Status': acimaDoLimite(c.velocidade, limite) ? 'ALERTA' : 'OK',
           'Morador': veiculo?.nome_morador || '',
           'Unidade': veiculo?.unidade || '',
           'Tipo (câmera)': c.tipo_veiculo || '',
@@ -5840,7 +5852,7 @@
 
       // --- Resumo ---
       y += 18;
-      const totalAlertas = lastCapturas.filter(c => c.velocidade > limite).length;
+      const totalAlertas = lastCapturas.filter(c => acimaDoLimite(c.velocidade, limite)).length;
       const velMedia = lastCapturas.length > 0
         ? Math.round(lastCapturas.reduce((s, c) => s + c.velocidade, 0) / lastCapturas.length)
         : 0;
@@ -5907,7 +5919,7 @@
           y = drawTableHeader(y);
         }
 
-        const isAlert = c.velocidade > limite;
+        const isAlert = acimaDoLimite(c.velocidade, limite);
         const bg = idx % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
         doc.setFillColor(...bg);
         doc.rect(margin, y, usableW, rowH, 'F');
@@ -7062,7 +7074,7 @@
 
           const hts = new Date(h.timestamp);
           const hVel = h.velocidade <= 10 ? 1 : h.velocidade;
-          const isAbove = hVel > limite;
+          const isAbove = acimaDoLimite(hVel, limite);
 
           doc.setFontSize(5);
           doc.setFont('helvetica', 'normal');
@@ -7558,7 +7570,7 @@
         ? Math.round(medidas.reduce((s, c) => s + c.velocidade, 0) / medidas.length)
         : 0;
       avgEl.textContent = medidas.length ? avg : '--';
-      avgEl.style.color = avg > limite ? 'var(--red)' : 'var(--accent)';
+      avgEl.style.color = acimaDoLimite(avg, limite) ? 'var(--red)' : 'var(--accent)';
 
       // Conformidade — passagens abaixo de 10 km/h contam como conformes
       // (o veículo estava devagar); leituras acima de 250 são descartadas.
@@ -7589,7 +7601,7 @@
 
       // Reincidentes (placas com 2+ alertas no período)
       const alertsByPlaca = {};
-      data.filter(c => c.velocidade > limite).forEach(c => {
+      data.filter(c => acimaDoLimite(c.velocidade, limite)).forEach(c => {
         alertsByPlaca[c.placa] = (alertsByPlaca[c.placa] || 0) + 1;
       });
       const reincidentes = Object.values(alertsByPlaca).filter(c => c >= 2).length;
@@ -7767,7 +7779,7 @@
       const limite = currentCliente.limite_velocidade;
       data.forEach(c => {
         counts[c.placa] = (counts[c.placa] || 0) + 1;
-        if (c.velocidade > limite) alerts[c.placa] = (alerts[c.placa] || 0) + 1;
+        if (acimaDoLimite(c.velocidade, limite)) alerts[c.placa] = (alerts[c.placa] || 0) + 1;
       });
 
       const sorted = Object.entries(counts)
