@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required'",
-    "test": "node test/spring.test.js && node test/lead.test.js && node test/camera-status.test.js && node test/parse-vehicle-id.test.js",
+    "test": "node test/spring.test.js && node test/lead.test.js && node test/camera-status.test.js && node test/parse-vehicle-id.test.js && node test/grafico-acessivel.test.js",
     "test:captura": "bash scripts/test-captura.sh"
   },
   "dependencies": {

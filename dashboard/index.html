@@ -2289,6 +2289,7 @@
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <script src="/js/camera-status.js"></script>
   <script src="/js/spring.js"></script>
+  <script src="/js/grafico-acessivel.js"></script>
 </head>
 <body>
 
@@ -2668,7 +2669,7 @@
     <!-- sem src inicial: `src=""` faz o navegador tentar carregar a própria
          página como imagem. O caminho é preenchido por JS ao abrir o lightbox. -->
     <img class="lightbox-img" id="lightbox-img" alt="Foto do veículo em tamanho real" onclick="toggleLightboxZoom(event)">
-    <div class="lightbox-hint" id="lightbox-hint">Toque na foto para ampliar · arraste para mover · puxe para baixo ou ESC para fechar</div>
+    <div class="lightbox-hint" id="lightbox-hint">Toque ou faça pinça para ampliar · arraste para mover · puxe para baixo ou ESC para fechar</div>
   </div>
 
   <script>
@@ -4443,7 +4444,9 @@
     // ============================================
     const LB_ZOOM_MIN = 2;          // ampliação mínima quando a foto já cabe na tela
     const LB_FECHAR_FRACAO = 0.25;  // puxar 1/4 da tela (projetado) fecha
-    const lb = { x: 0, y: 0, escala: 1, p: 0, arrastou: false, gesto: null };
+    const LB_ZOOM_MAX = 6;          // teto da pinça (além disso a foto resiste)
+    const LB_PINCA_SOLTA = 1.1;     // soltar a pinça abaixo disso volta ao tamanho de tela
+    const lb = { x: 0, y: 0, escala: 1, p: 0, arrastou: false, gesto: null, pinca: null, dedos: new Map() };
     const lbMolaX = Spring.create({ value: 0, onUpdate(v) { lb.x = v; pintarLightbox(); } });
     const lbMolaY = Spring.create({ value: 0, onUpdate(v) { lb.y = v; pintarLightbox(); } });
     const lbMolaEscala = Spring.create({ value: 1, onUpdate(v) { lb.escala = v; pintarLightbox(); } });
@@ -4478,6 +4481,8 @@
     function resetLightbox() {
       lb.arrastou = false;
       lb.gesto = null;
+      lb.pinca = null;
+      lb.dedos.clear();
       lbMolaX.jump(0);
       lbMolaY.jump(0);
       lbMolaEscala.jump(1);
@@ -4542,6 +4547,9 @@
 
       img.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
+        lb.dedos.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (lb.dedos.size === 2) return iniciarPinca(img);
+        if (lb.dedos.size > 2) return;
         lbMolaX.stop(); lbMolaY.stop(); // agarra no meio do voo
         lb.arrastou = false;
         lb.gesto = {
@@ -4553,6 +4561,8 @@
       });
 
       img.addEventListener('pointermove', (e) => {
+        if (lb.dedos.has(e.pointerId)) lb.dedos.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (lb.pinca) return moverPinca();
         const g = lb.gesto;
         if (!g || e.pointerId !== g.id) return;
         const dx = e.clientX - g.x0;
@@ -4583,6 +4593,11 @@
       });
 
       function soltar(e) {
+        lb.dedos.delete(e.pointerId);
+        if (lb.pinca) {
+          if (lb.pinca.ids.includes(e.pointerId)) soltarPinca(img);
+          return;
+        }
         const g = lb.gesto;
         if (!g || e.pointerId !== g.id) return;
         lb.gesto = null;
@@ -4612,6 +4627,64 @@
       img.addEventListener('pointerup', soltar);
       img.addEventListener('pointercancel', soltar);
     })();
+
+    // ---- Pinça (dois dedos): o ponto entre os dedos fica preso à foto ----
+    // Só os dois dedos que começaram a pinça contam; um 3º apoiado é ignorado
+    function centroEDistancia(ids) {
+      const [a, b] = ids.map((id) => lb.dedos.get(id));
+      return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, d: Math.hypot(a.x - b.x, a.y - b.y) || 1 };
+    }
+
+    function iniciarPinca(img) {
+      lbMolaX.stop(); lbMolaY.stop(); lbMolaEscala.stop();
+      lb.gesto = null; // o arrasto de um dedo vira pinça
+      lb.arrastou = true; // soltar não pode virar o "toque para ampliar"
+      // Os dois dedos seguem na foto mesmo se saírem dela
+      lb.dedos.forEach((_, id) => { try { img.setPointerCapture(id); } catch (_) { /* ponteiro já solto */ } });
+      img.classList.remove('arrastando');
+      img.classList.add('zoomed');
+      const hint = document.getElementById('lightbox-hint');
+      if (hint) hint.style.display = 'none';
+      pintarScrim(document.getElementById('lightbox'), 1);
+      const ids = [...lb.dedos.keys()].slice(0, 2);
+      const c = centroEDistancia(ids);
+      // Ponto da foto (em coordenadas sem zoom) que está entre os dedos
+      lb.pinca = {
+        ids, d0: c.d, escala0: lb.escala,
+        px: (c.x - window.innerWidth / 2 - lb.x) / lb.escala,
+        py: (c.y - window.innerHeight / 2 - lb.y) / lb.escala,
+      };
+    }
+
+    function moverPinca() {
+      const p = lb.pinca;
+      const c = centroEDistancia(p.ids);
+      const bruta = p.escala0 * (c.d / p.d0);
+      // Fora da faixa a foto resiste em vez de travar
+      const escala = bruta > LB_ZOOM_MAX ? LB_ZOOM_MAX * (1 + Math.log(bruta / LB_ZOOM_MAX) * 0.25)
+        : bruta < 1 ? 1 - (1 - bruta) * 0.4 : bruta;
+      lbMolaEscala.jump(escala);
+      lbMolaX.jump(c.x - window.innerWidth / 2 - p.px * escala);
+      lbMolaY.jump(c.y - window.innerHeight / 2 - p.py * escala);
+    }
+
+    function soltarPinca(img) {
+      lb.pinca = null;
+      lb.dedos.clear(); // o dedo que sobrou não começa um arrasto no meio
+      if (lb.escala < LB_PINCA_SOLTA) {
+        img.classList.remove('zoomed');
+        lbMolaEscala.set(1, Spring.DEFAULTS);
+        lbMolaX.set(0, Spring.DEFAULTS);
+        lbMolaY.set(0, Spring.DEFAULTS);
+        return;
+      }
+      const escala = Math.min(lb.escala, LB_ZOOM_MAX);
+      const fator = escala / lb.escala;
+      const lim = limitesLightbox(escala);
+      lbMolaEscala.set(escala, Spring.DEFAULTS);
+      lbMolaX.set(limitar(lb.x * fator, lim.x), Spring.DEFAULTS);
+      lbMolaY.set(limitar(lb.y * fator, lim.y), Spring.DEFAULTS);
+    }
 
     // Esc fecha a camada de cima primeiro
     document.addEventListener('keydown', (e) => {
@@ -5209,8 +5282,13 @@
         // Agrupa por hora
         const hours = new Array(24).fill(0);
         if (data) data.forEach(c => { hours[new Date(c.timestamp).getHours()]++; });
-        document.getElementById('title-hourly').textContent = `Passagens por Hora · ${f.label}`;
+        const titulo = `Passagens por Hora · ${f.label}`;
+        document.getElementById('title-hourly').textContent = titulo;
         drawAreaChart('chart-hourly', hours);
+        graficoAcessivel.descreverGrafico(document.getElementById('chart-hourly'), {
+          titulo, cabecalho: 'Hora', unidade: 'passagens', valores: hours,
+          rotulos: hours.map((_, h) => `${String(h).padStart(2, '0')}h`),
+        });
       } else {
         // Agrupa por dia
         const d0 = new Date(f.tsStart); d0.setHours(0,0,0,0);
@@ -5224,8 +5302,14 @@
             if (idx >= 0 && idx < buckets.length) buckets[idx]++;
           });
         }
-        document.getElementById('title-hourly').textContent = `Passagens por Dia · ${f.label}`;
+        const titulo = `Passagens por Dia · ${f.label}`;
+        document.getElementById('title-hourly').textContent = titulo;
         drawAreaChart('chart-hourly', buckets);
+        graficoAcessivel.descreverGrafico(document.getElementById('chart-hourly'), {
+          titulo, cabecalho: 'Dia', unidade: 'passagens', valores: buckets,
+          rotulos: buckets.map((_, i) => new Date(d0.getTime() + i * 86400000)
+            .toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+        });
       }
     }
 
