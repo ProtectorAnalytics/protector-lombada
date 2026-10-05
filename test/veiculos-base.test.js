@@ -190,5 +190,64 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
     assert.strictEqual(repo.linhas.get('ABC1D23').status, 'consultado');
   });
 
+  await caso('fila consulta pendentes vencidas e respeita o lote', async () => {
+    const { repo, api, vb } = montar();
+    for (const p of ['AAA1A11', 'BBB2B22', 'CCC3C33']) {
+      await repo.reservar({ placa: p, status: 'pendente', visto_por_ultimo_em: '2026-10-04T00:00:00Z' });
+    }
+    await repo.reservar({ placa: 'DDD4D44', status: 'erro', tentativas: 1, proxima_tentativa_em: '2026-10-05T00:00:00Z', visto_por_ultimo_em: 'x' });
+    const r = await vb.processarFila({ limite: 2 });
+    assert.strictEqual(r.consultadas, 2);
+    assert.strictEqual(api.chamadas.length, 2);
+    assert.ok(!api.chamadas.includes('DDD4D44'));
+  });
+
+  await caso('fila PARA no meio quando o gasto alcança o teto', async () => {
+    const { repo, api, vb } = montar({ config: { teto_mensal: 0.06 } });
+    for (const p of ['AAA1A11', 'BBB2B22', 'CCC3C33', 'EEE5E55']) {
+      await repo.reservar({ placa: p, status: 'pendente', visto_por_ultimo_em: 'x' });
+    }
+    const r = await vb.processarFila({ limite: 50 });
+    assert.strictEqual(api.chamadas.length, 2);
+    assert.strictEqual(r.parou, 'teto');
+  });
+
+  await caso('fila pula placa em_andamento e consulta a próxima', async () => {
+    const { repo, api, vb } = montar();
+    for (const p of ['AAA1A11', 'BBB2B22']) {
+      await repo.reservar({ placa: p, status: 'pendente', visto_por_ultimo_em: 'x' });
+    }
+    const orig = repo.reivindicar;
+    repo.reivindicar = async (placa, a, b) => (placa === 'AAA1A11' ? false : orig(placa, a, b));
+    const r = await vb.processarFila({ limite: 50 });
+    assert.deepStrictEqual(api.chamadas, ['BBB2B22']);
+    assert.strictEqual(r.consultadas, 1);
+    assert.strictEqual(r.parou, null);
+  });
+
+  await caso('exceção em uma placa pula e segue o lote', async () => {
+    const { repo, api, vb } = montar();
+    for (const p of ['AAA1A11', 'BBB2B22']) {
+      await repo.reservar({ placa: p, status: 'pendente', visto_por_ultimo_em: 'x' });
+    }
+    const orig = repo.buscar;
+    repo.buscar = async (placa) => { if (placa === 'AAA1A11') throw new Error('banco fora'); return orig(placa); };
+    const r = await vb.processarFila({ limite: 50 });
+    assert.deepStrictEqual(api.chamadas, ['BBB2B22']);
+    assert.strictEqual(r.consultadas, 1);
+    assert.strictEqual(r.parou, null);
+  });
+
+  await caso('10 consultarAgora paralelos numa linha pendente sem posse = 1 chamada', async () => {
+    const { repo, api, vb } = montar();
+    await repo.reservar({ placa: 'ABC1D23', status: 'pendente', proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
+    const rs = await Promise.all(Array.from({ length: 10 }, () => vb.consultarAgora('ABC1D23', 'repescagem')));
+    assert.strictEqual(api.chamadas.length, 1);
+    assert.strictEqual(rs.filter((r) => r.executou).length, 1);
+    const outros = rs.filter((r) => !r.executou);
+    assert.strictEqual(outros.length, 9);
+    assert.ok(outros.every((r) => r.motivo === 'em_andamento'));
+  });
+
   console.log(`\n${passou} casos passaram`);
 })().catch((e) => { console.error(e); process.exit(1); });

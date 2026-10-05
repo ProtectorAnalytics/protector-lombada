@@ -25,6 +25,7 @@
     { "src": "/api/admin/relatorio", "dest": "/api/admin/relatorio.js" },
     { "src": "/api/cron-prazos-lgpd", "dest": "/api/cron-prazos-lgpd.js" },
     { "src": "/api/cron-monitor-cameras", "dest": "/api/cron-monitor-cameras.js" },
+    { "src": "/api/cron-apiplacas", "dest": "/api/cron-apiplacas.js" },
     { "src": "/api/cron-relatorio-semanal", "dest": "/api/cron-relatorio-semanal.js" },
     { "src": "/relatorio(.*)", "dest": "/api/relatorio.js" },
     { "src": "/admin", "dest": "/admin/index.html" },
@@ -50,6 +51,10 @@
     {
       "path": "/api/cron-monitor-cameras",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron-apiplacas",
+      "schedule": "*/5 * * * *"
     },
     {
       "path": "/api/cron-relatorio-semanal",
