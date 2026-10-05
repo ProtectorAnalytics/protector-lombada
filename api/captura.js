@@ -15,7 +15,7 @@ const {
 const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
 const { checkRateLimit } = require('../lib/rate-limiter');
-const { isValidToken, parseTimestamp, parseVehicleId } = require('../lib/validators');
+const { isValidToken, parseTimestamp, parseVehicleId, placaParaArquivo } = require('../lib/validators');
 const { criarClienteApiplacas } = require('../lib/apiplacas');
 const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
@@ -304,7 +304,8 @@ module.exports = async function handler(req, res) {
     if (fotoBuffer && fotoBuffer.length > 100) {
       const ts = new Date(timestamp);
       const dateStr = ts.toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      fotoPath = `${cliente.id}/${camera.id}/${dateStr}_${placa}.jpg`;
+      // Placa saneada SÓ no nome do arquivo (a captura grava a placa como veio)
+      fotoPath = `${cliente.id}/${camera.id}/${dateStr}_${placaParaArquivo(placa)}.jpg`;
     }
 
     // Salvar captura no banco. Continua ANTES da resposta: é o insert que dá o
