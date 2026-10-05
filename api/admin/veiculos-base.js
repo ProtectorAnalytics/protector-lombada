@@ -1,6 +1,6 @@
 /**
  * Painel → base de veículos.
- * - GET: marca/cor para preencher o cadastro (só placa vista no próprio cliente)
+ * - GET: marca/cor para preencher o cadastro (só placa capturada no próprio cliente)
  * - POST mesma_placa: corrige a leitura da captura para a placa frequente
  * - POST outro_carro: libera a suspeita e consulta (pago, respeita travas)
  */
@@ -29,13 +29,11 @@ function contar({ count, error }) {
   return count || 0;
 }
 
+// "Visto" = capturado no cliente. Cadastro em veiculos não prova passagem (F8):
+// qualquer um poderia cadastrar uma placa para ler os dados dela.
 async function placaVistaNoCliente(clienteId, m) {
-  const grafias = grafiasDe(m);
-  const [c, v] = await Promise.all([
-    supabase.from('capturas').select('id', { head: true, count: 'exact' }).eq('cliente_id', clienteId).in('placa', grafias),
-    supabase.from('veiculos').select('id', { head: true, count: 'exact' }).eq('cliente_id', clienteId).in('placa', grafias),
-  ]);
-  return contar(c) + contar(v) > 0;
+  return contar(await supabase.from('capturas').select('id', { head: true, count: 'exact' })
+    .eq('cliente_id', clienteId).in('placa', grafiasDe(m))) > 0;
 }
 
 // Grafia que o cliente realmente usa nos últimos 30 dias; empate fica com a primeira (suspeita_de);

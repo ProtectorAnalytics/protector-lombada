@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required'",
-    "test": "node test/spring.test.js && node test/lead.test.js && node test/camera-status.test.js && node test/parse-vehicle-id.test.js && node test/grafico-acessivel.test.js && node test/placa.test.js && node test/apiplacas.test.js && node test/validador-placa.test.js && node test/veiculos-base.test.js && node test/apiplacas-avisos.test.js && node test/pdf-veiculo.test.js && node test/nome-veiculo.test.js && node test/texto-seguro.test.js && node test/selo-veiculo.test.js && node test/apiplacas-config.test.js && node test/api-admin-apiplacas.test.js && node test/api-admin-veiculos-base.test.js && node test/api-admin-direitos-eliminacao.test.js && node test/veiculos-base-repo.test.js && node test/admin-apiplacas-ui.test.js",
+    "test": "node test/spring.test.js && node test/lead.test.js && node test/camera-status.test.js && node test/parse-vehicle-id.test.js && node test/grafico-acessivel.test.js && node test/placa.test.js && node test/apiplacas.test.js && node test/validador-placa.test.js && node test/veiculos-base.test.js && node test/apiplacas-avisos.test.js && node test/pdf-veiculo.test.js && node test/nome-veiculo.test.js && node test/texto-seguro.test.js && node test/selo-veiculo.test.js && node test/apiplacas-config.test.js && node test/api-admin-apiplacas.test.js && node test/api-admin-veiculos-base.test.js && node test/api-admin-direitos-eliminacao.test.js && node test/veiculos-base-repo.test.js && node test/admin-apiplacas-ui.test.js && node test/cron-apiplacas.test.js",
     "test:captura": "bash scripts/test-captura.sh"
   },
   "dependencies": {

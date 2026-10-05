@@ -69,6 +69,12 @@ function criarRepoMemoria({ config = {}, passagens = {} } = {}) {
       for (const [p, l] of linhas) if (l.visto_por_ultimo_em < iso) { linhas.delete(p); n++; }
       return n;
     },
+    async anonimizarExtratoAntesDe(iso) {
+      await ceder();
+      const alvo = consultas.filter((c) => c.placa !== null && c.criado_em < iso);
+      alvo.forEach((c) => { c.placa = null; });
+      return alvo.length;
+    },
     async apagar(placa) { await ceder(); linhas.delete(placa); },
   };
 }

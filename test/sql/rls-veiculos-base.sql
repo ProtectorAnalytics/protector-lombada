@@ -1,8 +1,9 @@
 -- Teste de isolamento da veiculos_base. Roda inteiro dentro de uma transação
 -- e termina em ROLLBACK: não deixa nada no banco.
 -- Uso: executar via MCP do Supabase (execute_sql). Resultado esperado: uma
--- linha com ve_a = 1, ve_b = 0, config = 0, extrato = 0. Falha com exceção
--- 'FALHOU: ...' se o painel conseguir ler suspeita_de (grant por coluna).
+-- linha com ve_a = 1, ve_b = 0, ve_so_cadastro = 0, config = 0, extrato = 0,
+-- placa_extrato_nula = YES e todas as colunas pode_* = false. Falha com
+-- exceção 'FALHOU: ...' se o painel conseguir ler suspeita_de (grant por coluna).
 begin;
 
 -- Dois clientes e dois usuários fictícios
@@ -24,7 +25,10 @@ insert into cameras (id, cliente_id, nome, token) values
 insert into capturas (camera_id, cliente_id, placa, velocidade, timestamp) values
   ('00000000-0000-0000-0000-00000000ca01', '00000000-0000-0000-0000-00000000aaaa', 'ZZZ9Z91', 20, now()),
   ('00000000-0000-0000-0000-00000000ca02', '00000000-0000-0000-0000-00000000bbbb', 'ZZZ9Z92', 20, now());
-insert into veiculos_base (placa, status) values ('ZZZ9Z91', 'consultado'), ('ZZZ9Z92', 'consultado');
+-- ZZZ9Z93 só está CADASTRADA em veiculos do A, nunca capturada no A (F8):
+-- cadastro não é prova de "visto", então o A não pode ler a linha da base.
+insert into veiculos (cliente_id, placa) values ('00000000-0000-0000-0000-00000000aaaa', 'ZZZ9Z93');
+insert into veiculos_base (placa, status) values ('ZZZ9Z91', 'consultado'), ('ZZZ9Z92', 'consultado'), ('ZZZ9Z93', 'consultado');
 insert into apiplacas_consultas (placa, resultado, custo, origem) values ('ZZZ9Z91', 'ok', 0.03, 'captura');
 
 -- Agir como o usuário do cliente A
@@ -51,7 +55,14 @@ end $$;
 select
   (select count(*) from veiculos_base where placa = 'ZZZ9Z91') as ve_a,
   (select count(*) from veiculos_base where placa = 'ZZZ9Z92') as ve_b,
+  (select count(*) from veiculos_base where placa = 'ZZZ9Z93') as ve_so_cadastro,
   (select count(*) from apiplacas_config) as config,
-  (select count(*) from apiplacas_consultas) as extrato;
+  (select count(*) from apiplacas_consultas) as extrato,
+  (select is_nullable from information_schema.columns
+    where table_schema = 'public' and table_name = 'apiplacas_consultas' and column_name = 'placa') as placa_extrato_nula,
+  has_table_privilege('authenticated', 'public.apiplacas_consultas', 'INSERT,UPDATE,DELETE,TRUNCATE') as pode_escrever_extrato_auth,
+  has_table_privilege('anon', 'public.apiplacas_consultas', 'INSERT,UPDATE,DELETE,TRUNCATE') as pode_escrever_extrato_anon,
+  has_table_privilege('authenticated', 'public.apiplacas_config', 'INSERT,UPDATE,DELETE,TRUNCATE') as pode_escrever_config_auth,
+  has_table_privilege('anon', 'public.apiplacas_config', 'INSERT,UPDATE,DELETE,TRUNCATE') as pode_escrever_config_anon;
 
 rollback;

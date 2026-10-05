@@ -88,7 +88,7 @@ Para identificar o veículo nas notificações orientativas e no painel, e para 
 - **Minimização:** não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE.
 - **Base técnica interna:** os dados do veículo ficam numa base compartilhada entre os condomínios atendidos, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio.
 - **Retenção:** os dados técnicos do veículo são apagados após 6 meses sem nova passagem em qualquer condomínio.
-- **Eliminação:** a exclusão feita pelo condomínio no painel atinge os cadastros do condomínio (morador e unidade), não a base técnica. A eliminação na base técnica compartilhada é feita pela Protector Sistemas, por pedido ao encarregado (DPO): o pedido de eliminação atendido no painel do encarregado apaga também a placa da base técnica.
+- **Eliminação:** a exclusão feita pelo condomínio no painel atinge os cadastros do condomínio (morador e unidade), não a base técnica. A eliminação na base técnica compartilhada é feita pela Protector Sistemas, por pedido ao encarregado (DPO): o pedido de eliminação atendido no painel do encarregado apaga também a placa da base técnica. O extrato de consultas guarda data, resultado e custo para fins de cobrança; a placa é removida do extrato após 6 meses ou quando a eliminação é atendida.
 
 ---
 

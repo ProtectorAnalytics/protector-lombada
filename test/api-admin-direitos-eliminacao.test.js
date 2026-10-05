@@ -5,7 +5,7 @@
 const assert = require('node:assert');
 const path = require('node:path');
 
-const estado = { solicitacao: null, apagados: [], erroDelete: null, erroInterno: 'detalhe-interno-secreto' };
+const estado = { solicitacao: null, anonimizados: [], apagados: [], erroDelete: null, erroInterno: 'detalhe-interno-secreto' };
 
 function stub(rel, exports) {
   const id = require.resolve(path.join('..', rel));
@@ -19,6 +19,14 @@ function tabela(nome) {
     select() { return q; },
     update(p) { modo = 'update'; patch = p; return q; },
     delete() { modo = 'delete'; return q; },
+    in(c, vs) {
+      if (modo === 'update' && nome === 'apiplacas_consultas') {
+        if (estado.erroDelete) return Promise.resolve({ error: { message: estado.erroInterno } });
+        estado.anonimizados.push({ patch, coluna: c, valores: vs });
+        return Promise.resolve({ error: null });
+      }
+      return q;
+    },
     eq(c, v) {
       if (modo === 'delete') {
         if (estado.erroDelete) return Promise.resolve({ error: { message: estado.erroInterno } });
@@ -54,7 +62,7 @@ const put = (body) => ({ method: 'PUT', headers: {}, query: {}, body });
 let passou = 0;
 async function caso(nome, solicitacao, body, fn, falhaDelete = false) {
   estado.solicitacao = solicitacao;
-  estado.apagados = []; estado.erroDelete = falhaDelete;
+  estado.apagados = []; estado.anonimizados = []; estado.erroDelete = falhaDelete;
   const r = resp();
   await handler(put(body), r);
   fn(r);
@@ -68,6 +76,18 @@ console.error = () => {};
   await caso('eliminação atendida com placa antiga apaga a placa Mercosul da base', sol(), { id: 's1', status: 'atendida' }, (r) => {
     assert.strictEqual(r.code, 200);
     assert.deepStrictEqual(estado.apagados, [{ tabela: 'veiculos_base', coluna: 'placa', valor: 'ABC1C34' }]);
+  });
+  await caso('eliminação atendida tira a placa do extrato nas duas grafias (F7)', sol(), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(estado.anonimizados, [{ patch: { placa: null }, coluna: 'placa', valores: ['ABC1C34', 'ABC1234'] }]);
+  });
+  await caso('eliminação de placa só Mercosul anonimiza só essa grafia (F7)', sol({ placa_veiculo: 'ABC1K23' }), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(estado.anonimizados, [{ patch: { placa: null }, coluna: 'placa', valores: ['ABC1K23'] }]);
+  });
+  await caso('status diferente de atendida não anonimiza o extrato (F7)', sol(), { id: 's1', status: 'em_analise' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(estado.anonimizados.length, 0);
   });
   await caso('status diferente de atendida não apaga', sol(), { id: 's1', status: 'em_analise' }, (r) => {
     assert.strictEqual(r.code, 200);

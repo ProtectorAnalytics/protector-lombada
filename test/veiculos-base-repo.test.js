@@ -76,6 +76,22 @@ async function caso(nome, fn) {
     assert.strictEqual(await criarRepoSupabase(bom).reservar({ placa: 'ABC1D23' }), true);
   });
 
+  await caso('anonimizarExtratoAntesDe tira a placa do extrato antigo e devolve quantas (F7)', async () => {
+    const db = criarDbFalso(() => ({ data: [{ id: 1 }, { id: 2 }], error: null }));
+    const n = await criarRepoSupabase(db).anonimizarExtratoAntesDe('2026-04-04T00:00:00.000Z');
+    assert.strictEqual(n, 2);
+    const c = db.chamadas[0];
+    assert.deepStrictEqual(c[0], ['from', 'apiplacas_consultas']);
+    assert.deepStrictEqual(metodo(c, 'update'), [[{ placa: null }]]);
+    assert.deepStrictEqual(metodo(c, 'lt'), [['criado_em', '2026-04-04T00:00:00.000Z']]);
+    assert.deepStrictEqual(metodo(c, 'not'), [['placa', 'is', null]]);
+  });
+
+  await caso('anonimizarExtratoAntesDe lança quando o banco falha (F7)', async () => {
+    const db = criarDbFalso(() => ({ data: null, error: { message: 'fora' } }));
+    await assert.rejects(() => criarRepoSupabase(db).anonimizarExtratoAntesDe('2026-04-04T00:00:00.000Z'), /fora/);
+  });
+
   console.log(`\n${passou} casos passaram${falhou ? `, ${falhou} falharam` : ''}`);
   if (falhou) process.exit(1);
 })().catch((e) => { console.error(e); process.exit(1); });

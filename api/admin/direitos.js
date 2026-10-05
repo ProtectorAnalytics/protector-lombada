@@ -15,7 +15,7 @@
 const nodemailer = require('nodemailer');
 const { autenticar, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
 const { escapeHtml } = require('../../lib/validators');
-const { paraMercosul } = require('../../site/js/placa');
+const { paraMercosul, paraAntiga } = require('../../site/js/placa');
 
 const STATUS_VALIDOS = [
   'recebida',
@@ -258,6 +258,10 @@ module.exports = async function handler(req, res) {
         if (m) {
           const del = await supabase.from('veiculos_base').delete().eq('placa', m);
           if (del.error) throw del.error;
+          // O extrato fica (cobrança), mas sem a placa, nas duas grafias.
+          const anon = await supabase.from('apiplacas_consultas').update({ placa: null })
+            .in('placa', [m, paraAntiga(m)].filter(Boolean));
+          if (anon.error) throw anon.error;
         }
       }
 

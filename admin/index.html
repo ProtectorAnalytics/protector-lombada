@@ -3189,7 +3189,7 @@ async function loadExtratoApiplacas(pagina = 0) {
     const r = await api(`/admin/apiplacas?extrato=1&pagina=${pagina}`);
     const tbody = document.getElementById('ap-extrato');
     tbody.innerHTML = r.itens.length ? r.itens.map((c) => `<tr>
-      <td>${esc(fmtDateTime(c.criado_em))}</td><td><strong>${esc(c.placa)}</strong></td><td>${esc(c.resultado)}</td>
+      <td>${esc(fmtDateTime(c.criado_em))}</td><td>${c.placa ? `<strong>${esc(c.placa)}</strong>` : '—'}</td><td>${esc(c.resultado)}</td>
       <td>${esc(c.origem)}</td><td>${c.duracao_ms == null ? '—' : num(c.duracao_ms) + ' ms'}</td><td>${esc(brl(c.custo))}</td></tr>`).join('')
       : '<tr><td colspan="6" class="table-empty">Nenhuma consulta</td></tr>';
     const pager = document.getElementById('ap-pager');

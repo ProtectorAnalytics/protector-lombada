@@ -106,6 +106,24 @@ async function caso(nome, fn) {
     assert.deepStrictEqual(r.body, { marca: 'VW GOL 1.0', cor: 'Branca' });
   });
 
+  await caso('GET de placa só cadastrada em veiculos do cliente (nunca capturada) devolve {} (F8)', async () => {
+    estado.tabelas.veiculos = [{ id: 'v1', cliente_id: 'c1', placa: 'ABC1D23' }];
+    estado.tabelas.veiculos_base = [{ placa: 'ABC1D23', status: 'consultado', marca: 'Marca', modelo: 'Modelo', cor: 'Preto' }];
+    const r = resp();
+    await handler(req({ query: { placa: 'ABC1D23' } }), r);
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(r.body, {});
+  });
+
+  await caso('outro_carro de placa só cadastrada (nunca capturada) devolve 404 (F8)', async () => {
+    estado.tabelas.veiculos = [{ id: 'v1', cliente_id: 'c1', placa: 'ABC1D28' }];
+    estado.tabelas.veiculos_base = [{ placa: 'ABC1D28', status: 'suspeita', suspeita_de: 'ABC1D23', suspeita_cliente_id: 'c1' }];
+    const r = resp();
+    await handler(req({ method: 'POST', body: { acao: 'outro_carro', placa: 'ABC1D28' } }), r);
+    assert.strictEqual(r.code, 404);
+    assert.strictEqual(estado.updates.length, 0);
+  });
+
   await caso('GET sem acesso ao cliente pedido devolve 403', async () => {
     const r = resp();
     await handler(req({ query: { placa: 'ABC1D23', cliente_id: 'c2' } }), r);

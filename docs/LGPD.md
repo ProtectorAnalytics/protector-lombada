@@ -224,7 +224,7 @@ Para a prestação do serviço, a Protector Sistemas utiliza os seguintes subpro
 
 A APIPLACAS recebe a placa dos veículos que passam pelos pontos de medição e devolve dados técnicos do veículo. **Finalidade:** identificar o veículo nas notificações orientativas e no painel, e conferir a leitura automática da placa. **Minimização:** não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE.
 
-Os dados do veículo ficam numa **base técnica interna, compartilhada entre os condomínios atendidos**, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio. Os dados técnicos são apagados após 6 meses sem nova passagem em qualquer condomínio. O pedido de eliminação atendido no painel do encarregado (DPO) apaga também a placa da base técnica.
+Os dados do veículo ficam numa **base técnica interna, compartilhada entre os condomínios atendidos**, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio. Os dados técnicos são apagados após 6 meses sem nova passagem em qualquer condomínio. O pedido de eliminação atendido no painel do encarregado (DPO) apaga também a placa da base técnica. O extrato de consultas guarda data, resultado e custo para fins de cobrança; a placa é removida do extrato após 6 meses ou quando a eliminação é atendida.
 
 Os subprocessadores de infraestrutura (Supabase, Vercel e provedor SMTP) possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e termos de processamento de dados aderentes à LGPD e ao GDPR.
 

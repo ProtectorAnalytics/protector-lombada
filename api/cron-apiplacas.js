@@ -4,7 +4,8 @@
  * 1. Lê o saldo (não consome) e guarda em apiplacas_config.
  * 2. Consulta a fila (pendente/erro vencidos), respeitando teto e saldo.
  * 3. Manda os avisos por e-mail (1x por período) e grava avisos_enviados.
- * 4. Retenção: apaga veículos sem passagem há 6 meses.
+ * 4. Retenção: apaga veículos sem passagem há 6 meses e tira a placa do
+ *    extrato de consultas com mais de 6 meses (o extrato fica para cobrança).
  *
  * Auth: SOMENTE `Authorization: Bearer ${CRON_SECRET}` (o Vercel Cron envia
  * esse header quando CRON_SECRET está definido). Sem segredo = recusa tudo.
@@ -31,7 +32,7 @@ module.exports = async function handler(req, res) {
   }
 
   const repo = criarRepoSupabase();
-  const resumo = { saldo: null, fila: null, avisos: [], avisosFalhos: [], apagados: 0 };
+  const resumo = { saldo: null, fila: null, avisos: [], avisosFalhos: [], apagados: 0, anonimizados: 0 };
   try {
     let api = null;
     try { api = criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }); } catch { /* sem token: só avisos/retenção */ }
@@ -58,6 +59,7 @@ module.exports = async function handler(req, res) {
     const limite = new Date();
     limite.setMonth(limite.getMonth() - RETENCAO_MESES);
     resumo.apagados = await repo.apagarVistosAntesDe(limite.toISOString());
+    resumo.anonimizados = await repo.anonimizarExtratoAntesDe(limite.toISOString());
 
     return res.status(200).json({ ok: true, ...resumo });
   } catch (err) {
