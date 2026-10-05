@@ -557,6 +557,8 @@
       position: relative;
       overflow: hidden;
       box-shadow: var(--shadow-sm);
+      /* rodapé de 2 linhas fixas: todos os cards com a mesma altura */
+      --rc-info-h: 3.25rem;
     }
 
     .recent-card:hover {
@@ -601,7 +603,7 @@
       content: '';
       position: absolute;
       left: 0; right: 0;
-      bottom: 30px; /* altura da info-bar */
+      bottom: var(--rc-info-h); /* altura da info-bar */
       height: 90px;
       background: linear-gradient(to top,
         rgba(0,0,0,0.88) 0%,
@@ -614,7 +616,7 @@
     /* Plate: chip escuro na base da imagem */
     .recent-card .rc-placa {
       position: absolute;
-      bottom: 36px;
+      bottom: calc(var(--rc-info-h) + 6px);
       left: 8px;
       font-size: 0.9375rem;
       font-weight: 700;
@@ -651,16 +653,25 @@
     .recent-card .rc-vel.red { color: #FFFFFF; background: var(--red-dark); }
     .recent-card .rc-vel.unknown { color: #94A3B8; opacity: 0.7; }
 
-    /* Info bar: name ↔ timestamp in one line */
+    /* Info bar: linha 1 = nome ↔ horário; linha 2 = veículo (altura fixa) */
     .recent-card .rc-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      padding: 0 10px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+      height: var(--rc-info-h);
+      box-sizing: border-box;
+      min-width: 0;
+    }
+    .recent-card .rc-linha {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      padding: 7px 10px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-card);
-      min-height: 32px;
+      min-width: 0;
     }
     .recent-card .rc-info .rc-name {
       font-size: 0.6875rem;
@@ -679,17 +690,34 @@
       flex-shrink: 0;
     }
 
-    /* Base de veículos (APIPLACAS): selo, quadro, cadastro e suspeita */
-    .vb-selo {
-      display: inline-block; max-width: 100%; vertical-align: middle;
-      font-size: 0.6875rem; font-weight: 500; line-height: 1.5;
-      color: var(--text-secondary); background: var(--chip-bg);
-      border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px;
+    /* Linha do veículo (cards e tabela): texto corta com reticências */
+    .vb-linha {
+      display: flex; align-items: center; gap: 5px; min-width: 0;
+      font-size: 0.6875rem; line-height: 1.35; color: var(--text-secondary);
+    }
+    .vb-linha .vb-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vb-linha.vb-vazio { color: var(--text-secondary); }
+    .vb-linha.vb-estado { color: var(--text-secondary); font-style: italic; }
+    .vb-linha.vb-alerta { color: var(--orange); font-weight: 600; }
+    .vb-cor {
+      flex-shrink: 0; width: 0.625rem; height: 0.625rem; border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(127,127,127,0.55) inset; /* borda: o branco aparece no tema claro */
+    }
+    .vb-nome {
+      font-size: 0.6875rem; font-weight: 600; color: var(--text-primary); line-height: 1.3;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .vb-selo.vb-alerta { color: var(--orange); border-color: currentColor; font-weight: 600; }
-    .recent-card .rc-veiculo { padding: 0 10px 7px; background: var(--bg-card); min-width: 0; }
-    .table-row .placa .vb-selo { display: block; margin-top: 2px; letter-spacing: 0; font-family: var(--font-sans); }
+    .table-row .veiculo-info, .table-row .morador-info { min-width: 0; }
+    .morador-nome {
+      font-size: 0.6875rem; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* text-secondary: o text-muted do tema escuro fica abaixo de 4.5:1 */
+    .morador-sub, .morador-nc {
+      font-size: 0.625rem; color: var(--text-secondary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* Base de veículos (APIPLACAS): quadro, cadastro e suspeita */
     .vb-quadro {
       margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--border);
       border-radius: 8px; background: var(--bg-input); min-width: 0;
@@ -865,6 +893,22 @@
     .filters-row input[type="number"] { width: 60px; }
     .filters-row select { width: 120px; }
 
+    /* Linha "Veículo" dos filtros (dados da base de veículos) */
+    .filtros-veiculo {
+      flex-basis: 100%;
+      display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
+      padding-top: 8px; border-top: 1px solid var(--border);
+    }
+    .filtros-veiculo .fv-titulo {
+      align-self: center; font-size: 0.75rem; font-weight: 600; color: var(--text-primary);
+    }
+    .filtros-veiculo label { display: block; margin-bottom: 2px; }
+    .filters-row .filtros-veiculo input[type="text"] { width: 130px; }
+    .filters-row .filtros-veiculo input[type="number"] { width: 72px; }
+    .fv-aviso { flex-basis: 100%; font-size: 0.75rem; color: var(--text-secondary); margin: 0; }
+    .fv-nota { flex-basis: 100%; font-size: 0.6875rem; color: var(--text-secondary); margin: 0; }
+    .fv-aviso:empty { display: none; }
+
     .filters-row .filter-check {
       display: flex;
       align-items: center;
@@ -942,7 +986,7 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 48px 82px 78px minmax(120px, 1.2fr) 150px minmax(140px, 1.5fr) 64px;
+      grid-template-columns: 48px 82px 5.75rem minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
       gap: 8px;
       padding: 10px 14px;
       /* Cabeçalho discreto: a faixa azul sólida competia com os dados (hierarquia) */
@@ -1010,7 +1054,7 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 48px 82px 78px minmax(120px, 1.2fr) 150px minmax(140px, 1.5fr) 64px;
+      grid-template-columns: 48px 82px 5.75rem minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
       gap: 8px;
       padding: 6px 14px;
       border-bottom: 1px solid var(--border);
@@ -1054,6 +1098,7 @@
       font-weight: 700;
       font-size: 0.9375rem;
       font-family: var(--font-mono);
+      white-space: nowrap;
     }
 
     .table-row .vel.green { color: var(--green); }
@@ -1940,6 +1985,13 @@
       .recent-cards { grid-template-columns: repeat(2, 1fr); }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .filters-row { flex-direction: column; align-items: stretch; }
+      /* Filtros de veículo: grade fluida, campos ocupam a largura disponível */
+      .filtros-veiculo { flex-basis: auto; align-items: stretch; }
+      .filtros-veiculo .fv-titulo { flex-basis: 100%; }
+      .filtros-veiculo > div { flex: 1 1 8rem; min-width: 0; }
+      .filters-row .filtros-veiculo select,
+      .filters-row .filtros-veiculo input[type="text"],
+      .filters-row .filtros-veiculo input[type="number"] { width: 100%; box-sizing: border-box; }
       .modal-details { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 600px) {
@@ -1951,13 +2003,27 @@
       .topbar-status { order: 5; flex-basis: 100%; justify-content: flex-start; }
       .topbar-logo { height: 26px; }
       .topbar-titulos { padding-left: 10px; }
+      /* Tabela compacta (2 linhas por passagem):
+         linha 1 = Foto · Placa · Velocidade · Status;
+         linha 2 = Veículo · Data/Hora. Radar e Morador ficam no detalhe. */
       .table-header, .table-row {
-        grid-template-columns: 50px minmax(80px, 1fr) minmax(60px, 80px) 1fr minmax(40px, 60px);
+        grid-template-columns: 40px 4.5rem minmax(0, 1fr) auto;
+        grid-template-areas: "foto placa vel status" "foto veic veic data";
+        column-gap: 8px; row-gap: 2px; padding-left: 10px; padding-right: 10px;
       }
+      .table-header { grid-template-areas: "foto placa vel status"; }
       .table-header > div:nth-child(4), .table-row > div:nth-child(4),
-      .table-header > div:nth-child(6), .table-row > div:nth-child(6) {
+      .table-header > div:nth-child(5), .table-header > div:nth-child(6),
+      .table-header > div:nth-child(7), .table-row > div:nth-child(7) {
         display: none;
       }
+      .table-header > div:nth-child(1), .table-row > div:nth-child(1) { grid-area: foto; }
+      .table-header > div:nth-child(2), .table-row > div:nth-child(2) { grid-area: placa; }
+      .table-header > div:nth-child(3), .table-row > div:nth-child(3) { grid-area: vel; }
+      .table-row > div:nth-child(5) { grid-area: veic; }
+      .table-row > div:nth-child(6) { grid-area: data; text-align: right; align-self: start; }
+      .table-header > div:nth-child(8), .table-row > div:nth-child(8) { grid-area: status; text-align: right !important; white-space: nowrap; }
+      .table-row .datetime { font-size: 0.75rem; }
       /* Mobile: font mínimo legível */
       body { font-size: 1rem; }
       .modal-details { grid-template-columns: 1fr 1fr; }
@@ -2228,6 +2294,7 @@
       .conta-btn, .topbar .btn-veiculos { min-height: 44px; }
       .conta-avatar { width: 32px; height: 32px; }
       .conta-sair, .bv-link, .bv-entendi { min-height: 44px; }
+      .filtros-veiculo input, .filtros-veiculo select { min-height: 44px; }
     }
 
 
@@ -2342,6 +2409,7 @@
   <script src="/js/texto-seguro.js"></script>
   <script src="/js/nome-veiculo.js"></script>
   <script src="/js/selo-veiculo.js"></script>
+  <script src="/js/filtro-veiculo.js"></script>
 </head>
 <body>
 
@@ -2510,6 +2578,31 @@
               </div>
             </div>
             </div>
+            <div class="filtros-veiculo" role="group" aria-labelledby="fv-titulo">
+              <span class="fv-titulo" id="fv-titulo">Veículo</span>
+              <div>
+                <label for="filter-marca">Marca</label>
+                <select id="filter-marca"><option value="">Todas</option></select>
+              </div>
+              <div>
+                <label for="filter-modelo">Modelo</label>
+                <input type="text" id="filter-modelo" placeholder="Ex.: Onix" maxlength="40" autocomplete="off">
+              </div>
+              <div>
+                <label for="filter-cor">Cor</label>
+                <select id="filter-cor"><option value="">Todas</option></select>
+              </div>
+              <div>
+                <label for="filter-ano-de">Ano de</label>
+                <input type="number" id="filter-ano-de" inputmode="numeric" min="1950" step="1" placeholder="aaaa">
+              </div>
+              <div>
+                <label for="filter-ano-ate">Ano até</label>
+                <input type="number" id="filter-ano-ate" inputmode="numeric" min="1950" step="1" placeholder="aaaa">
+              </div>
+              <p class="fv-aviso" id="fv-aviso" role="status" aria-live="polite"></p>
+              <p class="fv-nota">Filtros de veículo valem para a lista e o gráfico.</p>
+            </div>
           </form>
 
           <!-- Table -->
@@ -2519,8 +2612,9 @@
               <div>Placa</div>
               <div>Velocidade</div>
               <div>Radar</div>
+              <div>Veículo</div>
               <div>Data / Hora</div>
-              <div>Morador / Veículo</div>
+              <div>Morador</div>
               <div>Status</div>
             </div>
             <div class="table-body" id="table-body">
@@ -2732,6 +2826,10 @@
     const escHtml = esc; // nome antigo, mesmo escape
     const { nomeVeiculo, linhaVeiculo } = nomeVeiculoLib;
     const { estadoSelo } = seloVeiculoLib;
+    const {
+      temFiltroVeiculo, placasParaFiltro, montarFiltroVeiculo, opcoesDistintas,
+      corExibicao, corHex, coletarPaginado, LIMITE_PLACAS_FILTRO,
+    } = filtroVeiculoLib;
 
     // ============================================
     // CONFIG
@@ -3042,8 +3140,10 @@
       document.getElementById('filter-date-start').value = today;
       document.getElementById('filter-date-end').value = today;
       document.getElementById('filter-sem-vel').checked = mostrarSemVel();
+      limparFiltrosVeiculo();
 
       loadVeiculosCache();
+      loadOpcoesVeiculo();
       loadCamerasList();
       loadVeiculos();
       loadAll();
@@ -3109,7 +3209,7 @@
     // A RLS só devolve placas que passaram neste condomínio. Chave Mercosul: a
     // passagem pode estar gravada na grafia antiga. Só colunas concedidas ao
     // painel (suspeita_de NÃO: vem da API, e só quando a suspeita é daqui).
-    const COLUNAS_BASE = 'placa, status, marca, modelo, versao, cor, ano_fabricacao, ano_modelo, municipio, uf, tipo_veiculo, situacao, consultado_em';
+    const COLUNAS_BASE = 'placa, placa_antiga, status, marca, modelo, versao, cor, cor_normalizada, ano_fabricacao, ano_modelo, municipio, uf, tipo_veiculo, situacao, consultado_em';
     const STATUS_A_RECARREGAR = ['pendente', 'erro', 'suspeita'];
     let veiculosBaseCache = {};
     // Mercosul → suspeita_de (string) ou null. Só respostas bem-sucedidas ficam
@@ -3171,10 +3271,6 @@
       suspeitaFalhouEm.delete(m);
     }
 
-    function resumoVeiculo(v) {
-      return [nomeVeiculo(v), v.cor, v.ano_modelo].filter(Boolean).join(' · ');
-    }
-
     // Estado do selo para a passagem exibida (R17: 'consultando' só em passagem recente)
     function estadoSeloDe(v, capturaTs) {
       if (!v) return null;
@@ -3182,17 +3278,145 @@
       return estadoSelo({ status: v.status, temSuspeitaPropria: !!sd, capturaTs, agora: Date.now() });
     }
 
-    function seloVeiculo(placa, capturaTs) {
+    // Dados do veículo para cards e tabela. null = sem dado (mostra "—").
+    function infoVeiculo(placa, capturaTs) {
       const v = veiculoBaseDe(placa);
       const estado = estadoSeloDe(v, capturaTs);
-      if (estado === 'consultando') return '<span class="vb-selo">consultando…</span>';
-      if (estado === 'suspeita') {
-        const sd = suspeitaCache.get(v.placa);
-        return `<span class="vb-selo vb-alerta" title="Pode ser ${esc(sd)}. Abra a passagem para conferir.">⚠ verificar leitura</span>`;
-      }
-      if (estado !== 'consultado') return '';
-      const texto = resumoVeiculo(v);
-      return texto ? `<span class="vb-selo" title="${esc(texto)}">${esc(texto)}</span>` : '';
+      if (estado === 'consultando') return { estado };
+      if (estado === 'suspeita') return { estado, suspeitaDe: suspeitaCache.get(v.placa) };
+      if (estado !== 'consultado') return null;
+      const info = {
+        estado,
+        marca: v.marca || '',
+        nome: nomeVeiculo(v),
+        cor: corExibicao(v.cor || v.cor_normalizada),
+        hex: corHex(v.cor_normalizada),
+        ano: v.ano_modelo ? String(v.ano_modelo) : '',
+      };
+      return info.nome || info.cor || info.ano ? info : null;
+    }
+
+    // Bolinha decorativa: o hex vem do mapa fixo (corHex), nunca do banco
+    function bolinhaCor(hex) {
+      return hex ? `<span class="vb-cor" style="background:${hex}" aria-hidden="true"></span>` : '';
+    }
+
+    // Estados "consultando…" / "⚠ verificar leitura" / "—" (cards e tabela)
+    function estadoVeiculoHtml(info) {
+      if (!info) return '<div class="vb-linha vb-vazio"><span class="vb-txt" title="Sem dados do veículo">—</span></div>';
+      if (info.estado === 'consultando') return '<div class="vb-linha vb-estado"><span class="vb-txt">consultando…</span></div>';
+      const dica = `Pode ser ${info.suspeitaDe || 'outra placa'}. Abra a passagem para conferir.`;
+      return `<div class="vb-linha vb-alerta" title="${esc(dica)}"><span class="vb-txt">⚠ verificar leitura</span></div>`;
+    }
+
+    // Card: "Marca Modelo · Cor · Ano" numa linha só
+    function linhaVeiculoCard(placa, capturaTs) {
+      const info = infoVeiculo(placa, capturaTs);
+      if (!info || info.estado !== 'consultado') return estadoVeiculoHtml(info);
+      const texto = [info.nome, info.cor, info.ano].filter(Boolean).join(' · ');
+      return `<div class="vb-linha" title="${esc(texto)}">${bolinhaCor(info.hex)}<span class="vb-txt">${esc(texto)}</span></div>`;
+    }
+
+    // Tabela: linha 1 = marca + nome (negrito); linha 2 = cor · ano (cinza)
+    function celulaVeiculoTabela(placa, capturaTs) {
+      const info = infoVeiculo(placa, capturaTs);
+      if (!info || info.estado !== 'consultado') return estadoVeiculoHtml(info);
+      const sub = [info.cor, info.ano].filter(Boolean).join(' · ');
+      const nome = info.nome || '—';
+      return `<div class="vb-nome" title="${esc(nome)}">${esc(nome)}</div>`
+        + (sub ? `<div class="vb-linha" title="${esc(sub)}">${bolinhaCor(info.hex)}<span class="vb-txt">${esc(sub)}</span></div>` : '');
+    }
+
+    // Morador cadastrado (nome + unidade) ou "Não cadastrado" em cinza neutro
+    function celulaMorador(placa) {
+      const m = veiculosCache[placa];
+      if (!m) return '<div class="morador-nc">Não cadastrado</div>';
+      const nome = m.nome_morador || '—';
+      return `<div class="morador-nome" title="${esc(nome)}">${esc(nome)}</div>`
+        + (m.unidade ? `<div class="morador-sub" title="${esc(m.unidade)}">${esc(m.unidade)}</div>` : '');
+    }
+
+    // ============================================
+    // FILTRO POR DADOS DO VEÍCULO (marca, modelo, cor, ano)
+    // ============================================
+    // Consulta veiculos_base (RLS: só placas deste condomínio) e devolve as
+    // placas nas duas grafias para `.in('placa', …)` nas capturas. Tabela e
+    // gráfico pedem ao mesmo tempo: uma consulta em voo/recente é reaproveitada.
+    const MSG_FILTRO_VEICULO_VAZIO = 'Nenhum veículo com esses dados no período.';
+    const FILTRO_VEICULO_TTL_MS = 20000;
+    let filtroVeiculoMemo = null; // { chave, em, promessa }
+    let opcoesVeiculoDoCliente = null;
+
+    function lerFiltroVeiculo() {
+      const val = (id) => document.getElementById(id).value;
+      return montarFiltroVeiculo({
+        marca: val('filter-marca'), modelo: val('filter-modelo'), cor: val('filter-cor'),
+        anoDe: val('filter-ano-de'), anoAte: val('filter-ano-ate'),
+      }, new Date().getFullYear());
+    }
+
+    async function consultarPlacasDoFiltro(f) {
+      let q = sb.from('veiculos_base').select('placa, placa_antiga').eq('status', 'consultado');
+      if (f.marca) q = q.eq('marca', f.marca);
+      if (f.modelo) q = q.or(`modelo.ilike.*${f.modelo}*,versao.ilike.*${f.modelo}*`);
+      if (f.cor) q = q.eq('cor_normalizada', f.cor);
+      if (f.anoDe) q = q.gte('ano_modelo', f.anoDe);
+      if (f.anoAte) q = q.lte('ano_modelo', f.anoAte);
+      // Cada veículo rende 1 ou 2 grafias: LIMITE+1 linhas bastam para detectar o excesso
+      const { data, error } = await q.limit(LIMITE_PLACAS_FILTRO + 1);
+      if (error) return { ativo: true, erro: true };
+      const placas = placasParaFiltro(data);
+      if (placas.length > LIMITE_PLACAS_FILTRO) return { ativo: true, excesso: true };
+      return { ativo: true, placas };
+    }
+
+    // { ativo:false } | { ativo:true, placas } | { ativo:true, excesso:true } | { ativo:true, erro:true }
+    function placasDoFiltroVeiculo() {
+      const f = lerFiltroVeiculo();
+      if (!temFiltroVeiculo(f)) return Promise.resolve({ ativo: false });
+      const chave = currentCliente.id + '|' + JSON.stringify(f);
+      const memo = filtroVeiculoMemo;
+      if (memo && memo.chave === chave && Date.now() - memo.em < FILTRO_VEICULO_TTL_MS) return memo.promessa;
+      const promessa = consultarPlacasDoFiltro(f)
+        .catch(() => ({ ativo: true, erro: true }))
+        .then((r) => {
+          // Erro não fica guardado: o próximo "Filtrar" consulta de novo
+          if (r.erro && filtroVeiculoMemo && filtroVeiculoMemo.promessa === promessa) filtroVeiculoMemo = null;
+          return r;
+        });
+      filtroVeiculoMemo = { chave, em: Date.now(), promessa };
+      return promessa;
+    }
+
+    function avisoFiltroVeiculo(texto) {
+      document.getElementById('fv-aviso').textContent = texto || '';
+    }
+
+    // Marcas e cores da base visível ao condomínio: uma vez por condomínio
+    async function loadOpcoesVeiculo() {
+      if (!currentCliente || opcoesVeiculoDoCliente === currentCliente.id) return;
+      const anoMax = String(new Date().getFullYear() + 1);
+      ['filter-ano-de', 'filter-ano-ate'].forEach((id) => { document.getElementById(id).max = anoMax; });
+      try {
+        // Paginado: o max-rows do PostgREST cortaria marcas/cores em silêncio
+        const data = await coletarPaginado((de, ate) => sb.from('veiculos_base')
+          .select('marca, cor_normalizada').eq('status', 'consultado')
+          .order('placa').range(de, ate));
+        opcoesVeiculoDoCliente = currentCliente.id;
+        const marcas = opcoesDistintas(data, 'marca');
+        const cores = opcoesDistintas(data, 'cor_normalizada');
+        document.getElementById('filter-marca').innerHTML = '<option value="">Todas</option>'
+          + marcas.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+        document.getElementById('filter-cor').innerHTML = '<option value="">Todas</option>'
+          + cores.map((c) => `<option value="${esc(c)}">${esc(corExibicao(c))}</option>`).join('');
+      } catch { /* filtros de veículo ficam só com "Todas" */ }
+    }
+
+    function limparFiltrosVeiculo() {
+      ['filter-marca', 'filter-modelo', 'filter-cor', 'filter-ano-de', 'filter-ano-ate']
+        .forEach((id) => { document.getElementById(id).value = ''; });
+      filtroVeiculoMemo = null;
+      avisoFiltroVeiculo('');
     }
 
     // Chamada autenticada às rotas /api/admin/*. Erro carrega o status HTTP.
@@ -3346,17 +3570,18 @@
           : `<span class="vel-dash">—</span> <span style="font-size:0.8125rem">km/h</span>`;
 
         const radarNome = camerasMap[c.camera_id] || '';
-        const selo = seloVeiculo(c.placa, c.timestamp);
         return `<div class="recent-card ${isAlert ? 'alerta' : ''}" tabindex="0" role="button" aria-label="Abrir captura ${esc(c.placa)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="openModal(recentCardsData[${i}])">
           <div class="rc-badge ${badgeClass}">${badgeText}</div>
           ${photoHtml}
           <div class="rc-placa">${esc(c.placa)}</div>
           <div class="rc-vel ${velClass}">${velHtml}</div>
           <div class="rc-info">
-            <span class="rc-name">${esc(morador || radarNome) || '<span style="color:var(--text-muted)">N/C</span>'}</span>
-            <span class="rc-time">${hora}&nbsp;·&nbsp;${data_str}</span>
+            <div class="rc-linha">
+              <span class="rc-name" title="${esc(morador || radarNome)}">${esc(morador || radarNome) || '<span style="color:var(--text-muted)">N/C</span>'}</span>
+              <span class="rc-time">${hora}&nbsp;·&nbsp;${data_str}</span>
+            </div>
+            ${linhaVeiculoCard(c.placa, c.timestamp)}
           </div>
-          ${selo ? `<div class="rc-veiculo">${selo}</div>` : ''}
         </div>`;
       }).join('');
     }
@@ -3451,7 +3676,10 @@
     // ============================================
     // CAPTURAS TABLE
     // ============================================
+    // Respostas fora de ordem (Limpar + Filtrar, polling) não sobrescrevem a mais nova
+    let capturasSeq = 0;
     async function loadCapturas({ resetPage = true } = {}) {
+      const seq = ++capturasSeq;
       const dateStart = document.getElementById('filter-date-start').value;
       const dateEnd = document.getElementById('filter-date-end').value;
       const placa = document.getElementById('filter-placa').value.toUpperCase().trim();
@@ -3476,9 +3704,30 @@
       if (cameraId) query = query.eq('camera_id', cameraId);
       if (alertasOnly) query = query.gt('velocidade', currentCliente.limite_velocidade);
 
-      const { data, error } = await query;
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
+
+      // Filtro por dados do veículo: vira lista de placas (sem lista, sem consulta)
+      const fv = await placasDoFiltroVeiculo();
+      if (seq !== capturasSeq) return;
+      if (fv.ativo) {
+        const motivo = fv.erro ? 'Não foi possível consultar os dados dos veículos. Tente de novo.'
+          : fv.excesso ? 'Veículos demais atendem a esse filtro para listar de uma vez. Refine marca, modelo, cor ou ano.'
+          : !fv.placas.length ? MSG_FILTRO_VEICULO_VAZIO : '';
+        if (motivo) {
+          avisoFiltroVeiculo(fv.placas ? '' : motivo);
+          tbody.innerHTML = `<div class="table-empty"${fv.erro ? ' role="alert"' : ''}>${esc(motivo)}</div>`;
+          lastCapturas = []; // export não pode sair sem o filtro de veículo
+          limiteAtingido = false;
+          pgEl.style.display = 'none';
+          return;
+        }
+        query = query.in('placa', fv.placas);
+      }
+      avisoFiltroVeiculo('');
+
+      const { data, error } = await query;
+      if (seq !== capturasSeq) return;
 
       if (error) {
         // Erro não é "nenhuma captura": o síndico leria que ninguém passou.
@@ -3488,7 +3737,8 @@
         return;
       }
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
+        const vazio = fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : 'Nenhuma captura encontrada';
+        tbody.innerHTML = `<div class="table-empty">${vazio}</div>`;
         lastCapturas = [];
         pgEl.style.display = 'none';
         return;
@@ -3563,17 +3813,14 @@
           : `<div class="row-no-thumb">&#128663;</div>`;
 
         const radarNome = camerasMap[c.camera_id] || '---';
-        const veiculo = veiculosCache[c.placa];
-        const moradorInfo = veiculo
-          ? `<div style="font-size:0.6875rem;font-weight:600;color:var(--text-primary);line-height:1.3">${esc(veiculo.nome_morador) || '---'}</div><div style="font-size:0.625rem;color:var(--text-muted)">${esc([veiculo.unidade, veiculo.marca, veiculo.cor].filter(Boolean).join(' · '))}</div>`
-          : `<div style="font-size:0.625rem;font-weight:600;color:var(--orange)">VEÍCULO NÃO CADASTRADO</div>`;
         return `<div class="table-row" tabindex="0" role="button" aria-label="Abrir captura ${esc(c.placa)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="openModal(tabelaPaginaData[${pi}])">
           <div>${thumbHtml}</div>
-          <div class="placa">${esc(c.placa)}${seloVeiculo(c.placa, c.timestamp)}</div>
+          <div class="placa">${esc(c.placa)}</div>
           <div class="vel ${velClass}">${velTexto}</div>
           <div style="font-size:0.6875rem;color:var(--text-secondary);font-weight:500">${esc(radarNome)}</div>
+          <div class="veiculo-info">${celulaVeiculoTabela(c.placa, c.timestamp)}</div>
           <div class="datetime">${dt}</div>
-          <div>${moradorInfo}</div>
+          <div class="morador-info">${celulaMorador(c.placa)}</div>
           <div style="text-align:center;font-size:0.75rem;font-weight:600;color:${statusCor}">${statusTexto}</div>
         </div>`;
       }).join('');
@@ -3643,6 +3890,7 @@
       document.getElementById('filter-vel-max').value = '';
       document.getElementById('filter-camera').value = '';
       document.getElementById('filter-alertas-only').checked = false;
+      limparFiltrosVeiculo();
       applyFilters();
     }
 
@@ -4171,17 +4419,32 @@
       return comIndicadorCarregando(document.getElementById('btn-exportar'), 'Gerando…', gerarExcel);
     }
 
+    // Marca / Modelo (sem a marca) / Cor / Ano da base, só com dado consultado
+    function dadosVeiculoExport(placa) {
+      const v = veiculoBaseDe(placa);
+      if (!v || v.status !== 'consultado') return { marca: '', modelo: '', cor: '', ano: '' };
+      return {
+        marca: v.marca || '',
+        modelo: nomeVeiculo({ ...v, marca: null }),
+        cor: corExibicao(v.cor || v.cor_normalizada),
+        ano: v.ano_modelo ? String(v.ano_modelo) : '',
+      };
+    }
+
     async function gerarExcel() {
       if (!lastCapturas || lastCapturas.length === 0) {
         alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
         return;
       }
       await lazyLoadExportLibs();
+      // Dados da base de veículos de todas as passagens exportadas (não só da página)
+      await loadVeiculosBase(lastCapturas.map(c => c.placa));
 
       const limite = currentCliente.limite_velocidade;
       const rows = lastCapturas.map(c => {
         const ts = new Date(c.timestamp);
         const veiculo = veiculosCache[c.placa];
+        const vb = dadosVeiculoExport(c.placa);
         return {
           'Placa': c.placa,
           'Velocidade (km/h)': c.velocidade,
@@ -4191,8 +4454,12 @@
           'Status': c.velocidade > limite ? 'ALERTA' : 'OK',
           'Morador': veiculo?.nome_morador || '',
           'Unidade': veiculo?.unidade || '',
-          'Tipo Veículo': c.tipo_veiculo || '',
-          'Cor Veículo': c.cor_veiculo || '',
+          'Tipo (câmera)': c.tipo_veiculo || '',
+          'Cor (câmera)': c.cor_veiculo || '',
+          'Marca': vb.marca,
+          'Modelo': vb.modelo,
+          'Cor (cadastro)': vb.cor,
+          'Ano': vb.ano,
         };
       });
 
@@ -5621,7 +5888,9 @@
     // ============================================
     // HOURLY CHART (Canvas) — respeita filtros
     // ============================================
+    let graficoSeq = 0;
     async function loadHourlyChart() {
+      const seq = ++graficoSeq;
       const f = getActiveFilters();
 
       let q = sb.from('capturas')
@@ -5632,7 +5901,12 @@
       if (f.cameraId) q = q.eq('camera_id', f.cameraId);
       if (f.placa)    q = q.ilike('placa', `%${f.placa}%`);
 
-      const { data } = await q;
+      // Mesmo filtro de veículo da tabela; lista vazia/erro/excesso = gráfico zerado
+      const fv = await placasDoFiltroVeiculo();
+      const semPlacas = fv.ativo && !(fv.placas && fv.placas.length);
+      if (fv.ativo && !semPlacas) q = q.in('placa', fv.placas);
+      const { data } = semPlacas ? { data: [] } : await q;
+      if (seq !== graficoSeq) return; // resposta antiga não redesenha por cima
 
       if (f.isSingleDay) {
         // Agrupa por hora
