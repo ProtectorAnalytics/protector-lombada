@@ -29,6 +29,16 @@ function fetchFalso(status, corpo, { atraso = 0, lancar = null } = {}) {
   return fn;
 }
 
+function fetchComJson(status, jsonFn, { ok = status >= 200 && status < 300 } = {}) {
+  const chamadas = [];
+  const fn = async (url, opts) => {
+    chamadas.push(url);
+    return { status, ok, json: jsonFn };
+  };
+  fn.chamadas = chamadas;
+  return fn;
+}
+
 const RESPOSTA_OK = {
   MARCA: 'VW', MODELO: 'CROSSFOX', VERSAO: 'CROSSFOX 1.6', cor: 'Prata',
   ano: '2007', anoModelo: '2008', municipio: 'São Leopoldo', uf: 'RS',
@@ -131,12 +141,40 @@ const RESPOSTA_OK = {
     assert.throws(() => criarClienteApiplacas({ token: '   \n  ' }), /APIPLACAS_TOKEN/);
   });
 
-  await caso('fetch 200 com json() que demora mais que timeout → timeout, consome false', async () => {
-    const api = criarClienteApiplacas({ token: TOKEN, timeoutMs: 50, fetchImpl: fetchFalso(200, RESPOSTA_OK, { atraso: 500 }) });
+  await caso('200 cujo json() rejeita com TimeoutError → timeout, consome false, httpStatus null', async () => {
+    const jsonFn = async () => { throw Object.assign(new Error('timeout'), { name: 'TimeoutError' }); };
+    const api = criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchComJson(200, jsonFn) });
     const r = await api.consultar('ABC1D23');
     assert.strictEqual(r.resultado, 'timeout');
     assert.strictEqual(r.consome, false);
     assert.strictEqual(r.httpStatus, null);
+  });
+
+  await caso('429 cujo json() rejeita com SyntaxError → limite', async () => {
+    const jsonFn = async () => { throw new SyntaxError('invalid json'); };
+    const api = criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchComJson(429, jsonFn, { ok: false }) });
+    const r = await api.consultar('ABC1D23');
+    assert.strictEqual(r.resultado, 'limite');
+    assert.strictEqual(r.consome, false);
+    assert.strictEqual(r.httpStatus, 429);
+  });
+
+  await caso('406 cujo json() rejeita com SyntaxError → sem_resultado, consome true', async () => {
+    const jsonFn = async () => { throw new SyntaxError('invalid json'); };
+    const api = criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchComJson(406, jsonFn, { ok: false }) });
+    const r = await api.consultar('ABC1D23');
+    assert.strictEqual(r.resultado, 'sem_resultado');
+    assert.strictEqual(r.consome, true);
+    assert.strictEqual(r.httpStatus, 406);
+  });
+
+  await caso('402 cujo json() rejeita com SyntaxError → token_invalido', async () => {
+    const jsonFn = async () => { throw new SyntaxError('invalid json'); };
+    const api = criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchComJson(402, jsonFn, { ok: false }) });
+    const r = await api.consultar('ABC1D23');
+    assert.strictEqual(r.resultado, 'token_invalido');
+    assert.strictEqual(r.consome, false);
+    assert.strictEqual(r.httpStatus, 402);
   });
 
   console.log(`\n${passou} casos passaram`);
