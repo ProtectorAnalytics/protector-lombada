@@ -13,7 +13,7 @@ const { criarClienteApiplacas } = require('../lib/apiplacas');
 const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarVeiculosBase } = require('../lib/veiculos-base');
-const { avisosPendentes, chavesLimpas } = require('../lib/apiplacas-avisos');
+const { enviarAvisos } = require('../lib/apiplacas-avisos');
 const { enviarEmailSimples } = require('../lib/email-sender');
 const { supabase } = require('../lib/supabase');
 
@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
   }
 
   const repo = criarRepoSupabase();
-  const resumo = { saldo: null, fila: null, avisos: [], apagados: 0 };
+  const resumo = { saldo: null, fila: null, avisos: [], avisosFalhos: [], apagados: 0 };
   try {
     let api = null;
     try { api = criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }); } catch { /* sem token: só avisos/retenção */ }
@@ -46,15 +46,14 @@ module.exports = async function handler(req, res) {
     const cfg = await repo.lerConfig();
     const gasto = await repo.gastoDoMes();
     const fila = await repo.tamanhoFila();
-    const enviados = chavesLimpas({ cfg, saldo: cfg.saldo_atual });
     const tokenInvalido = !cfg.ativo && (await repo.ultimoResultado()) === 'token_invalido';
-    const avisos = avisosPendentes({ cfg: { ...cfg, avisos_enviados: enviados }, gasto, saldo: cfg.saldo_atual, mes: mesSP(), tokenInvalido, fila });
-    for (const a of avisos) {
-      await enviarEmailSimples({ destinatarios: cfg.emails_aviso, assunto: a.assunto, texto: a.texto });
-      enviados[a.chave] = new Date().toISOString();
-      resumo.avisos.push(a.chave);
-    }
-    await repo.atualizarConfig({ avisos_enviados: enviados });
+    const r = await enviarAvisos({
+      cfg, gasto, saldo: cfg.saldo_atual, mes: mesSP(), tokenInvalido, fila,
+      enviarEmail: ({ assunto, texto }) => enviarEmailSimples({ destinatarios: cfg.emails_aviso, assunto, texto }),
+      salvarAvisos: (av) => repo.atualizarConfig({ avisos_enviados: av }),
+    });
+    resumo.avisos = r.enviados;
+    resumo.avisosFalhos = r.falhas;
 
     const limite = new Date();
     limite.setMonth(limite.getMonth() - RETENCAO_MESES);
