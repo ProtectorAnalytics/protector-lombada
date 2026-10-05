@@ -198,6 +198,15 @@
     .ap-email-add input, .ap-reconsulta input { flex: 1 1 200px; max-width: 320px; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.875rem; }
     .ap-reconsulta label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
     .ap-reconsulta { margin-bottom: 16px; }
+    .ap-resultado { grid-column: 1 / -1; font-size: 0.875rem; color: var(--text-secondary); margin: 0; }
+    .ap-resultado:empty { display: none; }
+    .ap-config input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
+    @media (max-width: 600px) {
+      .ap-config .btn, .ap-reconsulta .btn, .ap-email-add .btn, .ap-emails .btn, .ap-pager-wrap .btn, #ap-pager .btn { min-height: 44px; min-width: 44px; }
+      .ap-config input:not([type="checkbox"]), .ap-reconsulta input, .ap-email-add input { min-height: 44px; }
+      .ap-switch { min-height: 44px; }
+      .ap-emails li { padding-top: 0; padding-bottom: 0; }
+    }
     .ap-tabela { overflow-x: auto; max-width: 100%; border-radius: var(--radius); }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
@@ -1038,7 +1047,7 @@
           <div class="ap-resumo" id="ap-resumo" aria-live="polite">Carregando…</div>
 
           <form class="ap-config" id="ap-config" onsubmit="salvarApiplacas(event)" novalidate>
-            <label class="ap-switch"><input type="checkbox" id="ap-ativo"> Consultas ligadas</label>
+            <label class="ap-switch" for="ap-ativo"><input type="checkbox" id="ap-ativo"> Consultas ligadas</label>
             <div class="form-group"><label for="ap-teto">Teto mensal (R$)</label><input id="ap-teto" inputmode="decimal"><div class="field-error" data-for="ap-teto"></div></div>
             <div class="form-group"><label for="ap-aviso">Avisar em (% do teto)</label><input id="ap-aviso" inputmode="numeric"><div class="field-error" data-for="ap-aviso"></div></div>
             <div class="form-group"><label for="ap-saldo-min">Avisar com saldo abaixo de (consultas)</label><input id="ap-saldo-min" inputmode="numeric"><div class="field-error" data-for="ap-saldo-min"></div></div>
@@ -1050,14 +1059,15 @@
               <div class="field-error" data-for="ap-emails"></div>
             </fieldset>
             <div class="ap-acoes">
-              <button type="submit" class="btn btn-primary">Salvar</button>
-              <button type="button" class="btn btn-ghost" onclick="validarPlacasHoje()">Validar placas de hoje</button>
+              <button type="submit" class="btn btn-primary" id="ap-salvar">Salvar</button>
+              <button type="button" class="btn btn-ghost" id="ap-validar" onclick="validarPlacasHoje()">Validar placas de hoje</button>
             </div>
+            <p class="ap-resultado" id="ap-resultado" role="status"></p>
           </form>
 
           <div class="ap-reconsulta">
             <label for="ap-placa">Consultar de novo (pago)</label>
-            <input id="ap-placa" maxlength="8" placeholder="ABC1D23"><button type="button" class="btn btn-ghost btn-sm" onclick="reconsultarPlaca()">Consultar</button>
+            <input id="ap-placa" maxlength="8" placeholder="ABC1D23"><button type="button" class="btn btn-ghost btn-sm" id="ap-reconsultar" onclick="reconsultarPlaca()">Consultar</button>
           </div>
 
           <div class="ap-tabela" role="region" aria-label="Extrato de consultas" tabindex="0">
@@ -1332,7 +1342,7 @@ async function api(endpoint, method = 'GET', body = null) {
 
   const resp = await fetch(API + endpoint, opts);
   const data = await resp.json();
-  if (!resp.ok) { const e = new Error(data.error || 'Erro na requisição'); e.campos = data.campos; throw e; }
+  if (!resp.ok) { const e = new Error(data.error || 'Erro na requisição'); e.status = resp.status; e.data = data; e.campos = data.campos; throw e; }
   return data;
 }
 
@@ -2988,6 +2998,9 @@ const AP_POR_PAGINA = 50;
 const AP_MAX_EMAILS = 10;
 const AP_PARADAS = { tempo: 'tempo', teto: 'teto mensal', sem_saldo: 'sem saldo', desligado: 'consultas desligadas', inexistente: 'placa inexistente' };
 let apEmails = [];
+let apPreco = 0;
+// Número seguro para HTML; null/undefined vira '—' (o esc() global apaga o 0)
+const num = (v) => (v == null ? '—' : String(Number(v) || 0));
 const brl = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 async function loadApiplacas() {
@@ -2999,16 +3012,17 @@ async function loadApiplacas() {
     document.getElementById('ap-resumo').innerHTML = `
       <div class="ap-kpi"><div class="n">${esc(brl(r.gasto))}</div><div class="l">gasto no mês · teto ${esc(brl(c.teto_mensal))}</div>
         <div class="ap-barra"><div class="${estourou ? 'estourou' : ''}" style="transform:scaleX(${pct.toFixed(3)})"></div></div></div>
-      <div class="ap-kpi"><div class="n">${esc(r.consultasMes)}</div><div class="l">consultas no mês</div></div>
-      <div class="ap-kpi"><div class="n">${esc(c.saldo_atual ?? '—')}</div><div class="l">saldo do pacote${c.saldo_em ? ' · ' + esc(fmtDateTime(c.saldo_em)) : ''}</div></div>
-      <div class="ap-kpi"><div class="n">${esc(r.fila)}</div><div class="l">placas na fila</div></div>
-      <div class="ap-kpi"><div class="n">${esc(r.suspeitas)}</div><div class="l">barradas pelo validador</div></div>
+      <div class="ap-kpi"><div class="n">${num(r.consultasMes)}</div><div class="l">consultas no mês</div></div>
+      <div class="ap-kpi"><div class="n">${num(c.saldo_atual)}</div><div class="l">saldo do pacote${c.saldo_em ? ' · ' + esc(fmtDateTime(c.saldo_em)) : ''}</div></div>
+      <div class="ap-kpi"><div class="n">${num(r.fila)}</div><div class="l">placas na fila</div></div>
+      <div class="ap-kpi"><div class="n">${num(r.suspeitas)}</div><div class="l">barradas pelo validador</div></div>
       <div class="ap-kpi"><div class="n">${c.ativo ? 'Ligadas' : 'Desligadas'}</div><div class="l">consultas</div></div>`;
     document.getElementById('ap-ativo').checked = !!c.ativo;
     document.getElementById('ap-teto').value = String(c.teto_mensal).replace('.', ',');
     document.getElementById('ap-aviso').value = c.aviso_percentual;
     document.getElementById('ap-saldo-min').value = c.saldo_minimo;
     document.getElementById('ap-preco').value = String(c.preco_consulta).replace('.', ',');
+    apPreco = c.preco_consulta;
     apEmails = [...c.emails_aviso];
     renderEmailsAviso();
     loadExtratoApiplacas(0);
@@ -3019,23 +3033,54 @@ function renderEmailsAviso() {
   document.getElementById('ap-emails').innerHTML = apEmails.map((e, i) => `
     <li>${esc(e)} <button type="button" class="btn btn-ghost btn-sm" aria-label="Remover ${esc(e)}" onclick="removerEmailAviso(${i})">×</button></li>`).join('');
 }
+function erroEmailAviso(msg) {
+  mostrarErroCampo('ap-emails', msg);
+  const novo = document.getElementById('ap-email-novo');
+  novo.setAttribute('aria-invalid', 'true');
+  novo.setAttribute('aria-describedby', 'ap-emails-erro');
+  document.getElementById('ap-emails').removeAttribute('aria-invalid');
+  document.getElementById('ap-emails').removeAttribute('aria-describedby');
+  return false;
+}
 function adicionarEmailAviso() {
   const input = document.getElementById('ap-email-novo');
   const e = input.value.trim().toLowerCase();
   limparErrosCampo();
-  if (!EMAIL_RE.test(e)) return mostrarErroCampo('ap-emails', 'E-mail inválido');
-  if (apEmails.includes(e)) return mostrarErroCampo('ap-emails', 'E-mail já está na lista');
-  if (apEmails.length >= AP_MAX_EMAILS) return mostrarErroCampo('ap-emails', 'Máximo de 10 e-mails');
+  if (!EMAIL_RE.test(e)) return erroEmailAviso('E-mail inválido');
+  if (apEmails.includes(e)) return erroEmailAviso('E-mail já está na lista');
+  if (apEmails.length >= AP_MAX_EMAILS) return erroEmailAviso('Máximo de 10 e-mails');
   apEmails = [...apEmails, e];
   input.value = '';
   renderEmailsAviso();
 }
 function removerEmailAviso(i) {
   limparErrosCampo();
-  if (apEmails.length <= 1) return mostrarErroCampo('ap-emails', 'Mantenha ao menos um e-mail');
+  if (apEmails.length <= 1) return erroEmailAviso('Mantenha ao menos um e-mail');
   apEmails = apEmails.filter((_, j) => j !== i);
   renderEmailsAviso();
 }
+
+/** Trava o botão (disabled + aria-busy + texto) enquanto `fn` roda; restaura no fim. */
+async function apOcupado(btn, textoBusy, fn) {
+  if (btn.disabled) return;
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  btn.textContent = textoBusy;
+  try { return await fn(); } finally {
+    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+    btn.textContent = original;
+  }
+}
+
+const AP_DICA = {
+  teto_mensal: 'Informe um valor em reais, de 0 a 100.000',
+  aviso_percentual: 'Informe um número inteiro de 1 a 100',
+  saldo_minimo: 'Informe um número inteiro maior ou igual a 0',
+  preco_consulta: 'Informe um valor em reais, de 0 a 10',
+  emails_aviso: 'Informe de 1 a 10 e-mails válidos',
+};
 
 async function salvarApiplacas(ev) {
   ev.preventDefault();
@@ -3049,51 +3094,89 @@ async function salvarApiplacas(ev) {
     emails_aviso: apEmails,
   };
   const CAMPO = { teto_mensal: 'ap-teto', aviso_percentual: 'ap-aviso', saldo_minimo: 'ap-saldo-min', preco_consulta: 'ap-preco', emails_aviso: 'ap-emails' };
-  try {
-    await api('/admin/apiplacas', 'PUT', body);
-    toast('Configuração salva');
-    loadApiplacas();
-  } catch (err) {
-    (err.campos || []).forEach((c) => CAMPO[c] && mostrarErroCampo(CAMPO[c], 'Valor inválido'));
-    focarPrimeiroErro();
-    toast(err.message, true);
-  }
+  await apOcupado(document.getElementById('ap-salvar'), 'Salvando…', async () => {
+    try {
+      await api('/admin/apiplacas', 'PUT', body);
+      toast('Configuração salva');
+      loadApiplacas();
+    } catch (err) {
+      (err.campos || []).forEach((c) => {
+        if (!CAMPO[c]) return;
+        if (c === 'emails_aviso') erroEmailAviso(AP_DICA[c]);
+        else mostrarErroCampo(CAMPO[c], AP_DICA[c]);
+      });
+      focarPrimeiroErro();
+      toast(err.message, true);
+    }
+  });
+}
+
+/** Frase de leigo para o resultado do "validar placas de hoje". */
+function resumoValidacao(r) {
+  const nPlacas = (n) => `${n} ${n === 1 ? 'placa' : 'placas'}`;
+  let t = `${nPlacas(r.consultadas)} ${r.consultadas === 1 ? 'consultada' : 'consultadas'}`;
+  if (r.puladas) t += `, ${r.puladas} já ${r.puladas === 1 ? 'estava' : 'estavam'} na base ou em andamento`;
+  if (r.falhas) t += `, ${r.falhas} com falha`;
+  t += '.';
+  const PARADA = {
+    tempo: ' Parou por falta de tempo — clique de novo para continuar (nada é cobrado duas vezes).',
+    teto: ' Parou porque o teto do mês foi atingido.',
+    sem_saldo: ' Parou porque o pacote de consultas acabou.',
+    desligado: ' Parou porque as consultas estão desligadas.',
+    inexistente: ' Parou porque a placa não foi encontrada na base.',
+  };
+  return t + (r.parou ? (PARADA[r.parou] || ' Parou antes de terminar.') : ' Concluído.');
 }
 
 async function validarPlacasHoje() {
   const ok = await confirmarAcao({
     titulo: 'Validar placas de hoje?',
-    mensagem: 'Consulta na APIPLACAS as placas distintas lidas hoje em <strong>todos os condomínios</strong> que ainda não estão na base. Cada uma custa uma consulta do pacote.',
+    mensagem: `Vamos consultar as placas lidas hoje, em todos os condomínios, que ainda não estão na base. Cada placa nova gasta uma consulta do pacote (${esc(brl(apPreco))} cada).`,
     textoOk: 'Consultar', textoCancel: 'Cancelar', perigo: false,
   });
   if (!ok) return;
-  try {
-    const r = await api('/admin/apiplacas', 'POST', { acao: 'validar_hoje' });
-    let msg = `${r.consultadas} de ${r.placas} consultadas · ${r.puladas} puladas`;
-    if (r.falhas) msg += ` · ${r.falhas} com falha`;
-    if (r.parou) msg += ` · parou: ${AP_PARADAS[r.parou] || r.parou}`;
-    if (r.parou === 'tempo') msg += '. Clique de novo para continuar (não cobra duas vezes).';
-    toast(msg);
-    loadApiplacas();
-  } catch (err) { toast(err.message, true); }
+  await apOcupado(document.getElementById('ap-validar'), 'Consultando…', async () => {
+    const resultado = document.getElementById('ap-resultado');
+    try {
+      const r = await api('/admin/apiplacas', 'POST', { acao: 'validar_hoje' });
+      resultado.textContent = resumoValidacao(r);
+      toast(`${r.consultadas} de ${r.placas} consultadas · ${r.puladas} puladas${r.parou === 'tempo' ? ' · clique de novo para continuar' : ''}`);
+      loadApiplacas();
+    } catch (err) { toast(err.message, true); }
+  });
 }
+
+const AP_MOTIVO_409 = {
+  em_andamento: 'Já há uma consulta desta placa em andamento. Aguarde alguns minutos.',
+  desligado: 'As consultas estão desligadas.',
+  teto: 'O teto do mês foi atingido.',
+  sem_saldo: 'O pacote de consultas acabou.',
+  inexistente: 'Placa não encontrada na base.',
+};
+const AP_STATUS_RECONSULTA = {
+  consultado: 'Dados do veículo atualizados.',
+  sem_resultado: 'A APIPLACAS não encontrou dados para esta placa.',
+};
 
 async function reconsultarPlaca() {
   const placa = document.getElementById('ap-placa').value.trim().toUpperCase();
   if (!PLACA_RE.test(placa)) return toast('Informe uma placa válida (ex.: ABC1D23)', true);
   const ok = await confirmarAcao({
-    titulo: `Consultar ${esc(placa)} de novo?`,
+    titulo: `Consultar ${placa} de novo?`,
     mensagem: 'A consulta é paga e substitui os dados guardados desta placa.',
     textoOk: 'Consultar', textoCancel: 'Cancelar', perigo: false,
   });
   if (!ok) return;
-  try {
-    const r = await api('/admin/apiplacas', 'POST', { acao: 'reconsultar', placa });
-    toast(`Consulta: ${r.linha?.status || r.motivo || 'concluída'}`);
-    loadApiplacas();
-  } catch (err) {
-    toast(err.message === 'Erro na requisição' ? 'Não foi possível consultar agora; pode haver outra consulta desta placa em andamento.' : err.message, true);
-  }
+  await apOcupado(document.getElementById('ap-reconsultar'), 'Consultando…', async () => {
+    try {
+      const r = await api('/admin/apiplacas', 'POST', { acao: 'reconsultar', placa });
+      toast(AP_STATUS_RECONSULTA[r.linha?.status] || 'Consulta concluída.');
+      loadApiplacas();
+    } catch (err) {
+      if (err.status === 409) toast(AP_MOTIVO_409[err.data?.motivo] || 'Não foi possível consultar agora.', true);
+      else toast(err.message, true);
+    }
+  });
 }
 
 async function loadExtratoApiplacas(pagina = 0) {
@@ -3102,7 +3185,7 @@ async function loadExtratoApiplacas(pagina = 0) {
     const tbody = document.getElementById('ap-extrato');
     tbody.innerHTML = r.itens.length ? r.itens.map((c) => `<tr>
       <td>${esc(fmtDateTime(c.criado_em))}</td><td><strong>${esc(c.placa)}</strong></td><td>${esc(c.resultado)}</td>
-      <td>${esc(c.origem)}</td><td>${esc(c.duracao_ms ?? '—')} ms</td><td>${esc(brl(c.custo))}</td></tr>`).join('')
+      <td>${esc(c.origem)}</td><td>${c.duracao_ms == null ? '—' : num(c.duracao_ms) + ' ms'}</td><td>${esc(brl(c.custo))}</td></tr>`).join('')
       : '<tr><td colspan="6" class="table-empty">Nenhuma consulta</td></tr>';
     const pager = document.getElementById('ap-pager');
     const paginas = Math.max(1, Math.ceil(r.total / AP_POR_PAGINA));
