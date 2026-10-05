@@ -67,7 +67,7 @@ module.exports = async function handler(req, res) {
         const limite = c.clientes?.limite_velocidade || 30;
         if (c.velocidade > limite) {
           if (!placaCounts[c.placa]) {
-            placaCounts[c.placa] = { placa: c.placa, count: 0, cliente: c.clientes?.nome || '---', maxVel: 0 };
+            placaCounts[c.placa] = { placa: c.placa, count: 0, cliente: c.clientes?.nome || '—', maxVel: 0 };
           }
           placaCounts[c.placa].count++;
           if (c.velocidade > placaCounts[c.placa].maxVel) placaCounts[c.placa].maxVel = c.velocidade;

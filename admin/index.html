@@ -1761,7 +1761,7 @@ async function loadDashboard() {
         return `<tr>
         <td><strong style="letter-spacing:.08em">${esc(c.placa)}</strong></td>
         <td><span style="color:${velColor};font-weight:700">${c.velocidade} km/h</span></td>
-        <td style="font-size:0.8125rem;color:var(--text-secondary)">${esc(c.clientes?.nome || '---')}</td>
+        <td style="font-size:0.8125rem;color:var(--text-secondary)">${esc(c.clientes?.nome || '—')}</td>
         <td style="font-size:0.8125rem;color:var(--text-secondary)">${fmtDateTime(c.timestamp)}</td>
         <td>${c.notificado ? '<span class="badge-inactive" style="background:rgba(255,23,68,0.15)">Alerta</span>' : '<span style="color:var(--text-muted);font-size:0.75rem">Normal</span>'}</td>
       </tr>`;
@@ -2029,7 +2029,7 @@ function renderClientes() {
   tbody.innerHTML = filtered.map(c => `<tr>
     <td><a href="#" onclick="openClienteDetail('${c.id}');return false" style="color:var(--accent);text-decoration:none;font-weight:600">${esc(c.nome)}</a></td>
     <td>${esc(c.cidade_uf || '')}</td>
-    <td>${esc(c.cnpj || '---')}</td>
+    <td>${esc(c.cnpj || '—')}</td>
     <td>${c.limite_velocidade} km/h</td>
     <td>${c.cameras?.[0]?.count || 0}</td>
     <td>${c.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
@@ -2281,11 +2281,11 @@ async function openClienteDetail(id, opts = {}) {
   document.getElementById('detail-info').innerHTML = `
     <div class="detail-field"><div class="label">Cidade/UF</div><div class="value">${esc(cliente.cidade_uf)}</div></div>
     <div class="detail-field"><div class="label">Local/Via</div><div class="value">${esc(cliente.local_via)}</div></div>
-    <div class="detail-field"><div class="label">CNPJ</div><div class="value">${esc(cliente.cnpj || '---')}</div></div>
+    <div class="detail-field"><div class="label">CNPJ</div><div class="value">${esc(cliente.cnpj || '—')}</div></div>
     <div class="detail-field"><div class="label">Limite</div><div class="value">${cliente.limite_velocidade} km/h</div></div>
     <div class="detail-field"><div class="label">Teto radar</div><div class="value">${cliente.velocidade_maxima_plausivel || 80} km/h</div></div>
-    <div class="detail-field"><div class="label">Telefone</div><div class="value">${esc(cliente.telefone || '---')}</div></div>
-    <div class="detail-field"><div class="label">Contato</div><div class="value">${esc(cliente.contato_nome || '---')}</div></div>
+    <div class="detail-field"><div class="label">Telefone</div><div class="value">${esc(cliente.telefone || '—')}</div></div>
+    <div class="detail-field"><div class="label">Contato</div><div class="value">${esc(cliente.contato_nome || '—')}</div></div>
   `;
 
   showPage('cliente-detail', { hash: 'cliente/' + id, fromHistory: opts.fromHistory });
@@ -2330,7 +2330,7 @@ function renderCameras() {
       : '';
     return `<tr>
     <td><strong>${esc(c.nome)}</strong>${exibInfo}${netInfo}</td>
-    <td style="font-family:var(--font-mono);font-size:0.75rem">${esc(c.serial_number || '---')}</td>
+    <td style="font-family:var(--font-mono);font-size:0.75rem">${esc(c.serial_number || '—')}</td>
     <td title="${lastSeenTitle}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};box-shadow:0 0 6px ${st.color}80;margin-right:6px;vertical-align:middle"></span>${st.label}</td>
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
     <td>${fmtDate(c.criado_em)}</td>
@@ -2711,10 +2711,10 @@ function renderVeiculos() {
 
   tbody.innerHTML = filtered.map(v => `<tr>
     <td><strong style="letter-spacing:.08em">${esc(v.placa)}</strong></td>
-    <td>${esc(v.nome_morador || '---')}</td>
-    <td>${esc(v.unidade || '---')}</td>
-    <td>${esc(v.marca || '---')}</td>
-    <td>${esc(v.cor || '---')}</td>
+    <td>${esc(v.nome_morador || '—')}</td>
+    <td>${esc(v.unidade || '—')}</td>
+    <td>${esc(v.marca || '—')}</td>
+    <td>${esc(v.cor || '—')}</td>
     <td>${v.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openVeiculoModal(veiculosData.find(x=>x.id==='${v.id}'))">Editar</button>
@@ -2847,7 +2847,7 @@ function renderUsuariosGlobal() {
     <td><strong>${esc(u.nome)}</strong></td>
     <td>${esc(u.email)}</td>
     <td><span class="badge-role">${roleLabel[u.role]}</span></td>
-    <td>${esc(u.clientes?.nome || '---')}</td>
+    <td>${esc(u.clientes?.nome || '—')}</td>
     <td>${u.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
     <td class="actions-cell">
       <button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
@@ -2972,9 +2972,9 @@ async function loadAudit(pagina = 0) {
 
     tbody.innerHTML = data.map(a => `<tr>
       <td style="font-size:0.8125rem;color:var(--text-secondary)">${fmtDateTime(a.criado_em)}</td>
-      <td>${esc(a.usuarios?.nome || '---')}</td>
+      <td>${esc(a.usuarios?.nome || '—')}</td>
       <td><strong>${esc(a.acao)}</strong></td>
-      <td>${esc(a.tabela || '---')}</td>
+      <td>${esc(a.tabela || '—')}</td>
       <td style="font-size:0.75rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(a.detalhes || {}))}</td>
     </tr>`).join('');
   } catch (err) { console.error(err); erroNaTabela('audit-body', 5, `loadAudit(${pagina})`); }
@@ -3321,7 +3321,7 @@ async function abrirDireitoDetalhe(id) {
     const st = STATUS_LABELS[s.status] || { label: s.status, color: '#475569' };
     const dias = diasRestantes(s.prazo_limite);
     const prazoInfo = ['atendida','rejeitada','cancelada'].includes(s.status)
-      ? `Encerrada em ${s.respondida_em ? fmtDateTime(s.respondida_em) : '---'}`
+      ? `Encerrada em ${s.respondida_em ? fmtDateTime(s.respondida_em) : '—'}`
       : (dias < 0 ? `VENCIDA há ${Math.abs(dias)} dia(s)` : `${dias} dia(s) restantes (até ${fmtDate(s.prazo_limite)})`);
 
     const jaRespondida = ['atendida','rejeitada','cancelada'].includes(s.status);
@@ -3492,12 +3492,12 @@ function esc(str) {
 }
 
 function fmtDate(iso) {
-  if (!iso) return '---';
+  if (!iso) return '—';
   return new Date(iso).toLocaleDateString('pt-BR');
 }
 
 function fmtDateTime(iso) {
-  if (!iso) return '---';
+  if (!iso) return '—';
   const d = new Date(iso);
   return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
 }
