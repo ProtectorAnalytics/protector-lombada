@@ -5,12 +5,17 @@
  * formulário: o que foi digitado e não confirmado ("Filtrar") não vale.
  * Também decide se o polling precisa reconsultar o período.
  *
+ * Fuso: o banco compara em UTC. As bordas do período são data+hora LOCAIS do
+ * navegador convertidas para ISO UTC (intervaloDoPeriodo) — nunca texto sem
+ * offset, que o PostgREST leria como UTC (hoje viraria 21:00 de ontem em -03).
+ *
  * Carregado no browser (window.estadoFiltrosLib) e no Node (require).
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.estadoFiltrosLib = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
   const PLACA_BUSCA_MAX = 7;
   const HORA_INICIO_PADRAO = '00:00';
   const HORA_FIM_PADRAO = '23:59';
@@ -40,22 +45,31 @@
     });
   }
 
+  const dataOu = (v, padrao) => (RE_DATA.test(texto(v)) ? texto(v) : padrao);
+  const horaOu = (v, padrao) => (RE_HORA.test(texto(v)) ? texto(v) : padrao);
+
   /**
-   * Campos crus do formulário → estado congelado.
+   * Campos crus do formulário → estado congelado (invertidos são trocados).
    * @param {object} campos dataInicio, horaInicio, dataFim, horaFim, placa,
    *   velMin, velMax, cameraId, soAlertas, veiculo (já montado por filtro-veiculo)
    * @param {string} hoje 'AAAA-MM-DD' local
    */
   function montarFiltros(campos, hoje) {
     const c = campos || {};
+    let ini = [dataOu(c.dataInicio, hoje), horaOu(c.horaInicio, HORA_INICIO_PADRAO)];
+    let fim = [dataOu(c.dataFim, hoje), horaOu(c.horaFim, HORA_FIM_PADRAO)];
+    if (ini.join('T') > fim.join('T')) [ini, fim] = [fim, ini];
+    let velMin = inteiroPositivo(c.velMin) || 0;
+    let velMax = inteiroPositivo(c.velMax);
+    if (velMax && velMin > velMax) [velMin, velMax] = [velMax, velMin];
     return Object.freeze({
-      dataInicio: texto(c.dataInicio) || hoje,
-      horaInicio: texto(c.horaInicio) || HORA_INICIO_PADRAO,
-      dataFim: texto(c.dataFim) || hoje,
-      horaFim: texto(c.horaFim) || HORA_FIM_PADRAO,
+      dataInicio: ini[0],
+      horaInicio: ini[1],
+      dataFim: fim[0],
+      horaFim: fim[1],
       placa: normalizarPlacaBusca(c.placa),
-      velMin: inteiroPositivo(c.velMin) || 0,
-      velMax: inteiroPositivo(c.velMax),
+      velMin,
+      velMax,
       cameraId: texto(c.cameraId),
       soAlertas: c.soAlertas === true,
       veiculo: veiculoDe(c.veiculo),
@@ -66,18 +80,40 @@
     return montarFiltros({}, hoje);
   }
 
-  /** Bordas do período em hora local (sem fuso), como a consulta já usava. */
+  // 'AAAA-MM-DD' + 'HH:MM' locais → instante (ms); formato inválido → NaN
+  function instante(data, hora, seg) {
+    if (!RE_DATA.test(data) || !RE_HORA.test(hora)) return NaN;
+    return new Date(`${data}T${hora}:${seg}`).getTime();
+  }
+
+  /**
+   * Bordas do período (data+hora LOCAIS) em ISO UTC, par único de todas as
+   * consultas do período: tabela, gráfico, indicadores, alertas, Top 10, export.
+   */
   function intervaloDoPeriodo(f) {
     return {
-      tsInicio: `${f.dataInicio}T${f.horaInicio}:00`,
-      tsFim: `${f.dataFim}T${f.horaFim}:59`,
+      tsInicio: new Date(instante(f.dataInicio, f.horaInicio, '00')).toISOString(),
+      tsFim: new Date(instante(f.dataFim, f.horaFim, '59.999')).toISOString(),
       umDia: f.dataInicio === f.dataFim,
     };
   }
 
-  function instante(data, hora, seg) {
-    if (!RE_DATA.test(data) || !RE_HORA.test(hora)) return NaN;
-    return new Date(`${data}T${hora}:${seg}`).getTime();
+  /** 'AAAA-MM-DD' do relógio local (não UTC). */
+  function hojeLocal(agora) {
+    const d = agora instanceof Date ? agora : new Date();
+    const dois = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`;
+  }
+
+  /**
+   * Meia-noite: se o estado é o padrão "hoje" do dia anterior (ninguém mexeu),
+   * passa ao padrão do novo dia. Filtro personalizado fica como está.
+   */
+  function virarDia(f, hojeAnterior, agora) {
+    const hoje = hojeLocal(agora);
+    if (hoje === hojeAnterior) return f;
+    if (chaveFiltros(f) !== chaveFiltros(filtrosPadrao(hojeAnterior))) return f;
+    return filtrosPadrao(hoje);
   }
 
   /** O período confirmado ainda pode ganhar passagens (inclui agora, com margem)? */
@@ -101,7 +137,7 @@
 
   return {
     normalizarPlacaBusca, montarFiltros, filtrosPadrao, intervaloDoPeriodo,
-    periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo,
+    periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo, hojeLocal, virarDia,
     PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
   };
 });

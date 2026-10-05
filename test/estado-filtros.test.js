@@ -6,8 +6,13 @@ const assert = require('node:assert');
 const {
   normalizarPlacaBusca, montarFiltros, filtrosPadrao, intervaloDoPeriodo,
   periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo,
-  PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
+  virarDia, hojeLocal, PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
 } = require('../site/js/estado-filtros');
+
+// Os casos de fuso supõem Brasília (-03, sem horário de verão): rode com
+// TZ=America/Sao_Paulo (o npm test já faz isso).
+assert.strictEqual(new Date('2026-10-05T00:00:00').getTimezoneOffset(), 180,
+  'rode com TZ=America/Sao_Paulo');
 
 let passou = 0;
 function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
@@ -75,15 +80,51 @@ caso('o estado devolvido é congelado (ninguém altera por fora)', () => {
   assert.ok(Object.isFrozen(f));
   assert.ok(Object.isFrozen(f.veiculo));
 });
-caso('não altera o objeto de campos recebido', () => {
-  const campos = Object.freeze({ placa: 'abc-1d23', veiculo: Object.freeze({ marca: 'VW' }) });
-  assert.doesNotThrow(() => montarFiltros(campos, '2026-10-05'));
+caso('não altera o objeto de campos recebido (nem ao trocar invertidos)', () => {
+  const campos = {
+    dataInicio: '2026-10-03', horaInicio: '10:00', dataFim: '2026-10-01', horaFim: '08:00',
+    placa: 'abc-1d23', velMin: '50', velMax: '20', veiculo: { marca: 'VW' },
+  };
+  const copia = JSON.parse(JSON.stringify(campos));
+  montarFiltros(campos, '2026-10-05');
+  assert.deepStrictEqual(campos, copia);
+});
+caso('o estado congelado recusa alteração (modo estrito)', () => {
+  const f = montarFiltros({}, '2026-10-05');
+  assert.throws(() => { 'use strict'; f.placa = 'X'; }, TypeError);
+});
+caso('vel. mín. maior que a máx. é trocada', () => {
+  const f = montarFiltros({ velMin: '60', velMax: '20' }, '2026-10-05');
+  assert.strictEqual(f.velMin, 20);
+  assert.strictEqual(f.velMax, 60);
+});
+caso('início depois do fim: troca data e hora juntas', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-03', horaInicio: '10:00', dataFim: '2026-10-01', horaFim: '08:00' }, '2026-10-05');
+  assert.deepStrictEqual([f.dataInicio, f.horaInicio, f.dataFim, f.horaFim], ['2026-10-01', '08:00', '2026-10-03', '10:00']);
+});
+caso('data ou hora em formato inválido cai no padrão', () => {
+  const f = montarFiltros({ dataInicio: 'xx', horaInicio: '9h', dataFim: 'yy', horaFim: '25' }, '2026-10-05');
+  assert.deepStrictEqual([f.dataInicio, f.horaInicio, f.dataFim, f.horaFim], ['2026-10-05', '00:00', '2026-10-05', '23:59']);
 });
 
 // ---- intervaloDoPeriodo
-caso('intervalo usa as horas com segundos de borda', () => {
+caso('intervalo vai em UTC: hoje local (-03) é 03:00Z até 02:59:59.999Z do dia seguinte', () => {
   const r = intervaloDoPeriodo(filtrosPadrao('2026-10-05'));
-  assert.deepStrictEqual(r, { tsInicio: '2026-10-05T00:00:00', tsFim: '2026-10-05T23:59:59', umDia: true });
+  assert.deepStrictEqual(r, {
+    tsInicio: '2026-10-05T03:00:00.000Z', tsFim: '2026-10-06T02:59:59.999Z', umDia: true,
+  });
+});
+caso('passagem às 22:30 local de hoje cai dentro; ontem 22:30, fora', () => {
+  const r = intervaloDoPeriodo(filtrosPadrao('2026-10-05'));
+  const dentro = (ts) => ts >= new Date(r.tsInicio).getTime() && ts <= new Date(r.tsFim).getTime();
+  assert.strictEqual(dentro(new Date('2026-10-05T22:30:00').getTime()), true);
+  assert.strictEqual(dentro(new Date('2026-10-04T22:30:00').getTime()), false);
+});
+caso('horas do filtro também viram UTC', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-05', horaInicio: '06:00', dataFim: '2026-10-05', horaFim: '18:30' }, '2026-10-05');
+  const r = intervaloDoPeriodo(f);
+  assert.strictEqual(r.tsInicio, '2026-10-05T09:00:00.000Z');
+  assert.strictEqual(r.tsFim, '2026-10-05T21:30:59.999Z');
 });
 caso('período de vários dias não é dia único', () => {
   const f = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-03' }, '2026-10-05');
@@ -108,13 +149,15 @@ caso('fim recente ainda recarrega dentro da margem de atraso do envio', () => {
   const f = montarFiltros({ dataInicio: '2026-10-05', horaFim: '13:58', dataFim: '2026-10-05' }, '2026-10-05');
   assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), true);
 });
+caso('fronteira da margem: 11 min depois do fim já não recarrega', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-05', horaFim: '13:48', dataFim: '2026-10-05' }, '2026-10-05');
+  // fim = 13:48:59; 13:58:59 ainda está na margem de 10 min; 14:00 (11 min) não
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T13:58:59')), true);
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), false);
+});
 caso('período que só começa no futuro não inclui agora', () => {
   const f = montarFiltros({ dataInicio: '2026-10-06', dataFim: '2026-10-07' }, '2026-10-05');
   assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), false);
-});
-caso('data inválida recarrega por segurança', () => {
-  const f = montarFiltros({ dataInicio: 'xx', dataFim: 'yy' }, '2026-10-05');
-  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), true);
 });
 
 // ---- chaveFiltros / precisaRecarregarPeriodo
@@ -141,6 +184,23 @@ caso('nada carregado ainda (chave nula) recarrega', () => {
 caso('período que inclui agora sempre recarrega', () => {
   const f = filtrosPadrao('2026-10-05');
   assert.strictEqual(precisaRecarregarPeriodo(f, chaveFiltros(f), local('2026-10-05T14:00:00')), true);
+});
+
+// ---- hojeLocal / virarDia (relógio injetado)
+caso('hojeLocal usa a data do relógio local, não a UTC', () => {
+  assert.strictEqual(hojeLocal(local('2026-10-05T22:30:00')), '2026-10-05'); // já é 06/10 em UTC
+});
+caso('padrão "hoje" vira o dia à meia-noite (23:59 → 00:01)', () => {
+  const f = filtrosPadrao('2026-10-05');
+  assert.strictEqual(virarDia(f, '2026-10-05', local('2026-10-05T23:59:00')), f);
+  const g = virarDia(f, '2026-10-05', local('2026-10-06T00:01:00'));
+  assert.deepStrictEqual(g, filtrosPadrao('2026-10-06'));
+});
+caso('filtro personalizado não vira o dia', () => {
+  const f = montarFiltros({ soAlertas: true }, '2026-10-05');
+  assert.strictEqual(virarDia(f, '2026-10-05', local('2026-10-06T00:01:00')), f);
+  const g = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-05' }, '2026-10-05');
+  assert.strictEqual(virarDia(g, '2026-10-05', local('2026-10-06T00:01:00')), g);
 });
 
 console.log(`\n${passou} casos passaram`);
