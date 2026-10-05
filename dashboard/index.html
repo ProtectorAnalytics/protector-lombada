@@ -2735,6 +2735,7 @@
   <script src="/js/barra-filtros.js"></script>
   <script src="/js/lista-dinamica.js"></script>
   <script src="/js/severidade-velocidade.js"></script>
+  <script src="/js/miniatura.js"></script>
 </head>
 <body>
 
@@ -2776,7 +2777,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.5.1 &middot; 2026-10-05
+        v1.5.2 &middot; 2026-10-05
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2997,7 +2998,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.5.1
+      Protector Traffic Control &middot; v1.5.2
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3573,6 +3574,8 @@
       recentCardsData = [];
       tabelaPaginaData = [];
       allThumbUrls = {};
+      fotosAssinadas.limpar(); // URL assinada é da sessão: nada do condomínio anterior
+      fotosQueFalharam = new Set();
       veiculosCache = {};
       placasCadastradas = new Set();
       cadastro = { estado: 'carregando' };
@@ -4077,16 +4080,76 @@
     }
 
     // ============================================
-    // PHOTO URL HELPER
+    // FOTOS: URL assinada em lote, com cache por path
     // ============================================
+    // A URL de cada path é reaproveitada enquanto faltar > 5 min para expirar
+    // (TTL 3600 s): o polling de 30 s não troca o src e o navegador usa o
+    // cache HTTP em vez de baixar a foto de novo. Zerado na troca de sessão.
+    const fotosAssinadas = miniaturaLib.criarCacheUrlAssinada({
+      assinar: async (paths, ttl) => {
+        const { data, error } = await sb.storage.from('capturas-fotos').createSignedUrls(paths, ttl);
+        if (error) throw error;
+        return data;
+      },
+    });
+
+    // Original (modal, lightbox, "Ver em tamanho real" e PDF)
     async function getPhotoUrl(fotoPath) {
       if (!fotoPath) return null;
-      try {
-        const { data } = await sb.storage.from('capturas-fotos')
-          .createSignedUrl(fotoPath, 600);
-        return data?.signedUrl || null;
-      } catch { return null; }
+      const urls = await fotosAssinadas.urls([fotoPath]);
+      return urls[fotoPath] || null;
     }
+
+    // Tabela e cartões: miniatura + original assinados numa chamada só.
+    // Recebe as capturas; devolve { [foto_path]: { src, original } | null }.
+    // Falha de assinatura (captura antiga sem miniatura, foto ainda subindo)
+    // fica guardada por validadeDaFalha: 2 min se a passagem é dos últimos
+    // 5 min, 10 min no resto — o polling não reassina a cada ciclo.
+    async function fotosDaLista(capturas) {
+      const quando = new Map();
+      for (const c of capturas) {
+        if (!c || !c.foto_path) continue;
+        quando.set(c.foto_path, c.timestamp);
+        quando.set(miniaturaLib.caminhoMiniatura(c.foto_path), c.timestamp);
+      }
+      const validos = capturas.filter((c) => c && c.foto_path).map((c) => c.foto_path);
+      const agora = Date.now();
+      const urls = await fotosAssinadas.urls(miniaturaLib.comMiniaturas(validos), {
+        validadeFalha: (p) => miniaturaLib.validadeDaFalha(quando.get(p), agora),
+      });
+      return Object.fromEntries(validos.map((p) => [p, miniaturaLib.escolherFoto(p, urls)]));
+    }
+
+    // <img> de lista: miniatura com recuo para o original (data-original) e,
+    // se nem o original carregar, o marcador "sem foto" (data-sem-foto).
+    // O recuo é feito pelo listener de 'error' abaixo — nada em onclick/onerror.
+    // URLs que já falharam nesta sessão: o redesenho do polling vai direto ao
+    // recuo, sem pedir de novo um arquivo que não existe
+    let fotosQueFalharam = new Set();
+    function htmlFotoLista(foto, { classe, alt, largura, altura, adiada, semFoto }) {
+      const falhou = (u) => fotosQueFalharam.has(u);
+      const src = falhou(foto.src) && foto.original ? foto.original : foto.src;
+      if (falhou(src)) return semFoto === 'linha' ? '<div class="row-no-thumb">&#128663;</div>' : '<span class="rc-no-photo">&#128663;</span>';
+      const recuo = src !== foto.original && foto.original && !falhou(foto.original) ? ` data-original="${esc(foto.original)}"` : '';
+      return `<img class="${classe}" src="${esc(src)}"${recuo} data-sem-foto="${esc(semFoto)}" alt="${esc(alt)}" width="${largura}" height="${altura}" decoding="async"${adiada ? ' loading="lazy"' : ''}>`;
+    }
+
+    document.addEventListener('error', (ev) => {
+      const img = ev.target;
+      if (!(img instanceof HTMLImageElement) || !img.hasAttribute('data-sem-foto')) return;
+      if (fotosQueFalharam.size > 2000) fotosQueFalharam = new Set();
+      fotosQueFalharam.add(img.src);
+      const original = img.getAttribute('data-original');
+      if (original) {
+        img.removeAttribute('data-original'); // um recuo só: se falhar de novo, vira marcador
+        img.src = original;
+        return;
+      }
+      const marcador = document.createElement(img.dataset.semFoto === 'linha' ? 'div' : 'span');
+      marcador.className = img.dataset.semFoto === 'linha' ? 'row-no-thumb' : 'rc-no-photo';
+      marcador.textContent = '\u{1F697}';
+      img.replaceWith(marcador);
+    }, true);
 
     // ============================================
     // RECENT CARDS (6 ultimas capturas de placas DISTINTAS)
@@ -4148,8 +4211,8 @@
 
       // Fotos e dados da base de veículos em paralelo; a suspeita só é
       // perguntada à API para placas em 'suspeita' (e fica guardada na sessão)
-      const [photoUrls] = await Promise.all([
-        Promise.all(data.map(c => getPhotoUrl(c.foto_path))),
+      const [fotos] = await Promise.all([
+        fotosDaLista(data),
         loadVeiculosBase(data.map(c => c.placa)).then(() => carregarSuspeitas(data.map(c => c.placa))),
       ]);
       if (!sessaoValida(sessao)) return;
@@ -4165,8 +4228,15 @@
         const veiculo = veiculosCache[c.placa];
         const morador = veiculo ? veiculo.nome_morador || veiculo.unidade || '' : '';
 
-        const photoHtml = photoUrls[i]
-          ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="${esc(`Passagem da placa ${c.placa} às ${hora}`)}" loading="lazy">`
+        // Cartões ficam no topo: só os que podem estar fora da tela (ou
+        // ocultos pelo CSS, 4º em diante na largura média) são adiados
+        const foto = c.foto_path ? fotos[c.foto_path] : null;
+        const photoHtml = foto
+          ? htmlFotoLista(foto, {
+            classe: 'rc-thumb', alt: `Passagem da placa ${c.placa} às ${hora}`,
+            largura: 640, altura: 360, semFoto: 'cartao',
+            adiada: i >= 3 || (i >= 2 && ESTREITO_MQ.matches),
+          })
           : `<span class="rc-no-photo">&#128663;</span>`;
 
         // Badge: ícone redundante + texto (não depende só de cor — daltonismo).
@@ -4367,13 +4437,14 @@
       // renderPage() faz o clamp caso o total de páginas tenha diminuído
       if (resetPage) currentPage = 1;
 
-      // Get thumbnail URLs (batch for first 50 visíveis), cache por foto_path
+      // Miniaturas das primeiras 50 visíveis numa chamada só (assinatura em
+      // lote; o cache de URL evita reassinar no polling), por foto_path
       const vis = capturasVisiveis();
       const firstVis = vis.slice(0, 50).filter(c => c.foto_path);
       const sessao = marcaDaSessao();
-      const thumbResults = await Promise.all(firstVis.map(c => getPhotoUrl(c.foto_path)));
+      const fotos = await fotosDaLista(firstVis);
       if (seq !== capturasSeq || !sessaoValida(sessao)) return; // mais nova (ou outro condomínio) desenha
-      firstVis.forEach((c, i) => { allThumbUrls[c.foto_path] = thumbResults[i]; });
+      Object.assign(allThumbUrls, fotos);
 
       await renderPage();
       return true;
@@ -4434,9 +4505,9 @@
       // Load thumbs for current page if not cached (keyed por foto_path)
       const needThumb = pageData.filter(c => c.foto_path && !(c.foto_path in allThumbUrls));
       if (needThumb.length > 0) {
-        const results = await Promise.all(needThumb.map(c => getPhotoUrl(c.foto_path)));
+        const fotos = await fotosDaLista(needThumb);
         if (!atual()) return;
-        needThumb.forEach((c, i) => { allThumbUrls[c.foto_path] = results[i]; });
+        Object.assign(allThumbUrls, fotos);
       }
 
       await loadVeiculosBase(pageData.map(c => c.placa));
@@ -4455,8 +4526,11 @@
         const statusTexto = isAlert ? '▲ ALERTA' : (!velMedida ? '⊘ SEM RADAR' : '✓ OK');
         const statusCor = isAlert ? 'var(--red)' : (!velMedida ? 'var(--text-secondary)' : 'var(--green)');
 
+        // A lista cabe na tela no desktop; só adia quando a página rola (≤ 900 px)
         const thumbHtml = c.foto_path && allThumbUrls[c.foto_path]
-          ? `<img class="row-thumb" src="${allThumbUrls[c.foto_path]}" alt="" loading="lazy">`
+          ? htmlFotoLista(allThumbUrls[c.foto_path], {
+            classe: 'row-thumb', alt: '', largura: 40, altura: 28, semFoto: 'linha', adiada: ESTREITO_MQ.matches,
+          })
           : `<div class="row-no-thumb">&#128663;</div>`;
 
         const radarNome = camerasMap[c.camera_id] || '—';

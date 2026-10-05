@@ -16,12 +16,13 @@
  *   trigger.
  *
  * Política de retenção (LGPD — ver docs/LGPD.md § 6):
- *   - Foto:      15 dias  ← este endpoint
+ *   - Foto:      15 dias  ← este endpoint (original + miniatura .mini.jpg)
  *   - Metadados:  6 meses ← pg_cron cleanup_old_capturas
  *   - debug_log: 24 horas ← pg_cron cleanup_debug_log
  */
 
 const { createClient } = require('@supabase/supabase-js');
+const { comMiniaturas } = require('../site/js/miniatura');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -30,6 +31,23 @@ const supabase = createClient(
 
 const RETENTION_DAYS = 15;
 const BATCH_SIZE = 500;
+// Arquivos por chamada de remove (a Storage API aceita até 1000 por vez;
+// cada foto agora são 2 arquivos: original + miniatura)
+const REMOVE_CHUNK = 500;
+
+/**
+ * Remove do Storage os originais e as miniaturas (mesmo nome + .mini.jpg).
+ * Miniatura inexistente (captura antiga) não é erro para o remove.
+ */
+async function removerFotos(fotoPaths, rotulo) {
+  const arquivos = comMiniaturas(fotoPaths);
+  for (let i = 0; i < arquivos.length; i += REMOVE_CHUNK) {
+    const { error } = await supabase.storage
+      .from('capturas-fotos')
+      .remove(arquivos.slice(i, i + REMOVE_CHUNK));
+    if (error) console.error(`[cron-limpeza] ${rotulo} storage:`, error.message);
+  }
+}
 
 async function limparFotosCapturas(cutoff) {
   const { data, error } = await supabase
@@ -43,12 +61,7 @@ async function limparFotosCapturas(cutoff) {
   if (!data || data.length === 0) return { fotos: 0, registros: 0 };
 
   const fotoPaths = data.map((c) => c.foto_path).filter(Boolean);
-  if (fotoPaths.length > 0) {
-    const { error: delErr } = await supabase.storage
-      .from('capturas-fotos')
-      .remove(fotoPaths);
-    if (delErr) console.error('[cron-limpeza] capturas storage:', delErr.message);
-  }
+  if (fotoPaths.length > 0) await removerFotos(fotoPaths, 'capturas');
 
   const ids = data.map((c) => c.id);
   await supabase.from('capturas').update({ foto_path: null }).in('id', ids);
@@ -69,12 +82,7 @@ async function limparFotosHistorico(cutoff) {
   if (!data || data.length === 0) return { fotos: 0, registros: 0 };
 
   const fotoPaths = data.map((c) => c.foto_path).filter(Boolean);
-  if (fotoPaths.length > 0) {
-    const { error: delErr } = await supabase.storage
-      .from('capturas-fotos')
-      .remove(fotoPaths);
-    if (delErr) console.error('[cron-limpeza] historico storage:', delErr.message);
-  }
+  if (fotoPaths.length > 0) await removerFotos(fotoPaths, 'historico');
 
   const ids = data.map((c) => c.id);
   await supabase

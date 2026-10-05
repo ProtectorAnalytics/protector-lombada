@@ -1,5 +1,6 @@
 const { supabase, updateCameraLastSeen } = require('../lib/supabase');
 const { createClient } = require('@supabase/supabase-js');
+const { placaParaArquivo } = require('../lib/validators');
 
 const CLIENTE_ID = 'e24b3bcc-cb64-4de0-a430-4d5ffca577c9';
 const CAMERA_ID = '302af029-5e58-4bcf-8af8-4968642a4d84';
@@ -94,7 +95,7 @@ async function handleCompress(req, res) {
 
   if (mode === 'original') {
     res.setHeader('Content-Type', 'image/jpeg');
-    res.setHeader('Content-Disposition', `inline; filename="original_${cap.placa}.jpg"`);
+    res.setHeader('Content-Disposition', `inline; filename="original_${placaParaArquivo(cap.placa)}.jpg"`);
     return res.send(originalBuffer);
   }
 
@@ -104,7 +105,7 @@ async function handleCompress(req, res) {
 
   if (mode === 'compressed') {
     res.setHeader('Content-Type', 'image/jpeg');
-    res.setHeader('Content-Disposition', `inline; filename="compressed_${cap.placa}.jpg"`);
+    res.setHeader('Content-Disposition', `inline; filename="compressed_${placaParaArquivo(cap.placa)}.jpg"`);
     return res.send(compressed);
   }
 

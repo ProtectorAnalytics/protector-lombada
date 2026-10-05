@@ -1,5 +1,6 @@
 const { autenticar, verificarAcessoCliente, supabase } = require('../../lib/auth-middleware');
 const { isValidUUID } = require('../../lib/validators');
+const { comMiniaturas, caminhoMiniatura } = require('../../site/js/miniatura');
 
 const ENDPOINT_RECOMENDADO = 'lombada.appps.com.br';
 
@@ -54,7 +55,8 @@ module.exports = async function handler(req, res) {
       countCap(30 * 24 * 3600 * 1000),
     ]);
 
-    // Últimas 20 capturas + signed URL das fotos (TTL 10min)
+    // Últimas 20 capturas + signed URL das fotos (TTL 10min). Original para a
+    // foto grande; miniatura (quando existir) para a lista — numa chamada só.
     const { data: ultimasCapturasRaw } = await supabase
       .from('capturas')
       .select('id, timestamp, placa, velocidade, foto_path')
@@ -69,7 +71,7 @@ module.exports = async function handler(req, res) {
     if (pathsValidos.length > 0) {
       const { data: signed } = await supabase
         .storage.from('capturas-fotos')
-        .createSignedUrls(pathsValidos, 600);
+        .createSignedUrls(comMiniaturas(pathsValidos), 600);
       if (Array.isArray(signed)) {
         for (const s of signed) {
           if (s.path && s.signedUrl) urlByPath[s.path] = s.signedUrl;
@@ -79,6 +81,8 @@ module.exports = async function handler(req, res) {
     const ultimasCapturas = (ultimasCapturasRaw || []).map(c => ({
       ...c,
       foto_url: c.foto_path ? urlByPath[c.foto_path] || null : null,
+      // null em captura antiga (sem miniatura): a tela usa o original
+      foto_mini_url: c.foto_path ? urlByPath[caminhoMiniatura(c.foto_path)] || null : null,
     }));
 
     // Sparkline: capturas por dia nos últimos 30 dias (agregado em JS)
