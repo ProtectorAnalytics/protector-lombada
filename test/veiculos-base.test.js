@@ -155,5 +155,40 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
     assert.strictEqual(await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' }), null);
   });
 
+  await caso('captura em voo + fila = 1 chamada', async () => {
+    const { api, vb } = montar({ api: apiFalsa('ok', { atraso: 50 }) });
+    const captura = vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    await new Promise((r) => setTimeout(r, 10));
+    const r = await vb.consultarAgora('ABC1D23', 'repescagem');
+    await captura;
+    assert.strictEqual(api.chamadas.length, 1);
+    assert.strictEqual(r.executou, false);
+    assert.strictEqual(r.motivo, 'em_andamento');
+  });
+
+  await caso('consultarAgora não paga placa já consultada', async () => {
+    const { api, vb } = montar();
+    await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    const r = await vb.consultarAgora('ABC1D23', 'repescagem');
+    assert.strictEqual(r.executou, false);
+    assert.strictEqual(api.chamadas.length, 1);
+  });
+
+  await caso('linha reservada nasce com posse de 5 min', async () => {
+    const { repo, vb } = montar({ config: { ativo: false } });
+    await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    const l = repo.linhas.get('ABC1D23');
+    assert.strictEqual(l.status, 'pendente');
+    assert.strictEqual(l.proxima_tentativa_em, '2026-10-04T12:05:00.000Z');
+    assert.strictEqual((await repo.fila(50, '2026-10-04T12:00:00.000Z')).length, 0);
+  });
+
+  await caso('atualizar antes de registrarConsulta', async () => {
+    const { repo, vb } = montar();
+    repo.registrarConsulta = async () => { throw new Error('extrato fora'); };
+    await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    assert.strictEqual(repo.linhas.get('ABC1D23').status, 'consultado');
+  });
+
   console.log(`\n${passou} casos passaram`);
 })().catch((e) => { console.error(e); process.exit(1); });

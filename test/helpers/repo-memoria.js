@@ -23,6 +23,14 @@ function criarRepoMemoria({ config = {}, passagens = {} } = {}) {
       return true;
     },
     async atualizar(placa, campos) { await ceder(); Object.assign(linhas.get(placa), campos); },
+    async reivindicar(placa, agoraIso, ateIso) {
+      await ceder();
+      const l = linhas.get(placa);
+      if (!l || !['pendente', 'erro'].includes(l.status)) return false;
+      if (l.proxima_tentativa_em && l.proxima_tentativa_em > agoraIso) return false;
+      l.proxima_tentativa_em = ateIso;
+      return true;
+    },
     async registrarConsulta(c) { await ceder(); consultas.push(c); },
     async ultimoResultado() {
       await ceder();
