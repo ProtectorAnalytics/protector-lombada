@@ -87,7 +87,7 @@ function zerar() { Object.assign(estado, { uploads: [], falharOriginal: false, f
 
 let jpeg;
 
-caso('miniatura de 1920×1080 sai com 320 px de largura, JPEG, ≤ 25 KB', async () => {
+caso('miniatura de 1920×1080 sai com 640 px de largura, JPEG, ≤ 30 KB', async () => {
   jpeg = await jpegDeTeste();
   await gerarMiniatura(jpeg); // aquece o sharp (primeira carga do libvips)
   const t0 = process.hrtime.bigint();
@@ -95,13 +95,13 @@ caso('miniatura de 1920×1080 sai com 320 px de largura, JPEG, ≤ 25 KB', async
   const ms = Number(process.hrtime.bigint() - t0) / 1e6;
   const meta = await sharp(mini).metadata();
   assert.strictEqual(meta.format, 'jpeg');
-  assert.strictEqual(meta.width, 320);
-  assert.strictEqual(meta.height, 180);
-  assert.ok(mini.length <= 25 * 1024, `miniatura com ${mini.length} bytes`);
+  assert.strictEqual(meta.width, 640);
+  assert.strictEqual(meta.height, 360);
+  assert.ok(mini.length <= 30 * 1024, `miniatura com ${mini.length} bytes`);
   console.log(`   original ${jpeg.length} B → miniatura ${mini.length} B em ${ms.toFixed(1)} ms`);
   assert.ok(ms <= 150, `levou ${ms} ms`);
 });
-caso('foto menor que 320 px não é ampliada', async () => {
+caso('foto menor que 640 px não é ampliada', async () => {
   const pequena = await sharp({ create: { width: 200, height: 100, channels: 3, background: '#888' } }).jpeg().toBuffer();
   const meta = await sharp(await gerarMiniatura(pequena)).metadata();
   assert.strictEqual(meta.width, 200);
