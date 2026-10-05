@@ -865,83 +865,253 @@
       color: var(--text-secondary);
     }
 
-    /* Filters */
-    .filter-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0; }
-    .filters-row {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 16px;
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      flex-wrap: wrap;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
+    /* ===== Filtros do período: perguntas prontas, barra de 1 linha, chips ===== */
+    .visualmente-oculto {
+      position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
     }
-    .filters-row .campo-filtro { display: flex; flex-direction: column; gap: 2px; }
+    .filtros { display: flex; flex-direction: column; gap: 6px; min-width: 0; container: filtros / inline-size; }
 
-    .filters-row label {
-      color: var(--text-secondary);
-      font-size: 0.6875rem;
-      text-transform: uppercase;
+    /* Perguntas prontas: chips pequenos; rolam na horizontal no celular */
+    .visoes { display: flex; gap: 6px; flex-wrap: wrap; }
+    .visao {
+      min-height: 30px; padding: 0 12px; border-radius: 999px;
+      border: 1px solid var(--border-campo); background: transparent;
+      color: var(--text-secondary); font: inherit; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap; transition: var(--transition);
     }
+    .visao:hover { color: var(--text-primary); background: var(--bg-input); }
+    .visao[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    /* Borda ≥3:1 contra o card nos dois temas (--border-campo); alvo ≥36 px */
-    .filters-row input, .filters-row select {
-      background: var(--bg-input);
-      border: 1px solid var(--border-campo);
-      border-radius: 6px;
-      color: var(--text-primary);
-      padding: 6px 10px;
-      min-height: 36px;
-      box-sizing: border-box;
-      font-family: var(--font-sans);
-      font-size: 0.8125rem;
-      outline: none;
+    .barra-filtros {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 8px; min-height: 56px; box-sizing: border-box;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow-sm);
     }
+    .barra-grupo { display: flex; align-items: center; }
+    .barra-btn, .barra-select, .busca-wrap input, .campos-pop input, .campos-pop select {
+      min-height: 40px; box-sizing: border-box;
+      border: 1px solid var(--border-campo); border-radius: 8px;
+      background: var(--bg-input); color: var(--text-primary);
+      font-family: var(--font-sans); font-size: 0.8125rem;
+    }
+    .barra-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;
+      font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    .barra-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .barra-btn .barra-seta { width: 14px; height: 14px; color: var(--text-secondary); }
+    .barra-btn:hover { border-color: var(--text-secondary); }
+    .barra-btn[aria-expanded="true"] { border-color: var(--accent); }
+    .barra-select { padding: 0 8px; max-width: 200px; }
+    .barra-btn:focus-visible, .barra-select:focus-visible, .busca-wrap input:focus-visible,
+    .campos-pop input:focus-visible, .campos-pop select:focus-visible, .visao:focus-visible,
+    .segmentado button:focus-visible, .chip-x:focus-visible, .atalho:focus-visible,
+    .btn-ver-passagens:focus-visible, .dd:focus-visible, .ranking-btn:focus-visible,
+    button.cam-pill:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px;
+    }
+    .rotulo-celular { display: none; }
+    .contador-filtros {
+      min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px;
+      background: var(--accent); color: #fff; font-size: 0.6875rem; line-height: 20px; text-align: center;
+    }
+    .contador-filtros[hidden] { display: none; }
 
-    .filters-row input::placeholder { color: var(--placeholder); text-transform: none; } /* ≥4,5:1, não confunde com valor */
-    .filters-row input:focus, .filters-row select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
+    /* Busca tipada (combobox) */
+    .busca-wrap { position: relative; flex: 1 1 180px; min-width: 160px; }
+    .busca-wrap input { width: 100%; padding: 0 10px 0 34px; }
+    .busca-wrap input::placeholder { color: var(--placeholder); }
+    .busca-icone {
+      position: absolute; left: 10px; top: 50%; width: 16px; height: 16px;
+      transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;
     }
-    .filters-row input[type="date"] { width: 130px; }
-    .filters-row input[type="text"] { width: 90px; }
-    .filters-row input[type="number"] { width: 72px; }
-    .filters-row select { width: 120px; }
-    .filters-row #filter-placa { width: 120px; text-transform: uppercase; }
+    .busca-lista { max-height: 300px; overflow-y: auto; }
+    .busca-lista:empty { display: none; }
+    .busca-rodape {
+      margin: 0; padding: 6px 10px 4px; border-top: 1px solid var(--border);
+      font-size: 0.6875rem; color: var(--text-secondary);
+    }
+    .busca-lista:empty + .busca-rodape { border-top: none; font-size: 0.8125rem; padding: 10px; }
+    .busca-pop {
+      position: absolute; top: calc(100% + 4px); left: 0; z-index: 60;
+      width: max(100%, 300px); padding: 4px;
+      background: var(--bg-card); border: 1px solid var(--border-campo);
+      border-radius: 10px; box-shadow: var(--shadow-md);
+    }
+    .busca-pop[hidden] { display: none; }
+    .busca-grupo-titulo {
+      padding: 8px 10px 4px; font-size: 0.6875rem; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary);
+    }
+    .busca-opcao {
+      display: flex; align-items: center; min-height: 40px; padding: 0 10px; border-radius: 6px;
+      font-size: 0.875rem; color: var(--text-primary); cursor: pointer;
+    }
+    .busca-opcao.placa-opcao { font-family: var(--font-mono); letter-spacing: 0.06em; font-weight: 600; }
+    .busca-opcao:hover { background: var(--bg-input); }
+    .busca-opcao[aria-selected="true"] { background: var(--accent); color: #fff; }
 
-    /* Linha "Veículo" dos filtros (dados da base de veículos) */
-    .filtros-veiculo {
-      flex-basis: 100%;
-      display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
-      padding-top: 8px; border-top: 1px solid var(--border);
+    /* Todas | Acima do limite */
+    .segmentado {
+      display: inline-flex; padding: 2px; gap: 2px; border-radius: 9px;
+      background: var(--seg-track); border: 1px solid var(--border-campo);
     }
-    .filtros-veiculo .fv-titulo {
-      align-self: center; font-size: 0.75rem; font-weight: 600; color: var(--text-primary);
+    .segmentado button {
+      min-height: 34px; padding: 0 12px; border: none; border-radius: 7px; background: transparent;
+      color: var(--text-secondary); font: inherit; font-size: 0.8125rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
     }
-    .filtros-veiculo label { display: block; margin-bottom: 2px; }
-    .filters-row .filtros-veiculo input[type="text"] { width: 130px; }
-    .filters-row .filtros-veiculo input[type="number"] { width: 72px; }
-    .fv-aviso { flex-basis: 100%; font-size: 0.75rem; color: var(--text-secondary); margin: 0; }
-    .fv-aviso:empty { display: none; }
+    .segmentado button[aria-checked="true"] { background: var(--seg-thumb); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+    .segmentado button[data-alerta="1"][aria-checked="true"] { color: var(--red); }
 
-    /* Checkbox: o rótulo inteiro é o alvo (≥44 px de altura) */
-    .filters-row .filter-check label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      min-height: 44px;
-      padding: 0 6px;
-      font-size: 0.8125rem;
-      text-transform: none;
-      color: var(--text-primary);
-      cursor: pointer;
+    /* Chips dos filtros ativos */
+    .chips-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .chips-filtros[hidden] { display: none; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 2px; min-height: 30px; padding: 0 2px 0 10px;
+      border-radius: 999px; background: var(--accent-light); border: 1px solid var(--accent);
+      color: var(--text-primary); font-size: 0.75rem; font-weight: 600;
     }
-    .filters-row .filter-check input[type="checkbox"]:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+    .chip-x {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border: none; border-radius: 50%; background: transparent;
+      color: var(--text-secondary); font: inherit; font-size: 0.875rem; cursor: pointer;
+    }
+    .chip-x:hover { background: var(--bg-input); color: var(--text-primary); }
+    .chips-lista { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+    .filtros { scroll-margin-top: 64px; }
+    .slot-celular label.visualmente-oculto {
+      position: static !important; width: auto; height: auto; margin: 0 0 4px; clip: auto;
+      font-size: 0.75rem; color: var(--text-secondary);
+    }
+    .slot-celular .barra-grupo { flex-direction: column; align-items: stretch; }
+    .aviso-filtros { margin: 0; font-size: 0.75rem; color: var(--text-secondary); }
+    .aviso-filtros:empty, .aviso-filtros[hidden] { display: none; }
+    .aviso-filtros.aviso-falha { color: var(--orange); font-weight: 600; }
+
+    /* Painéis "Período" e "Mais filtros": popover no desktop, sheet no celular */
+    .modal-content.painel-pop { width: 360px; max-width: calc(100vw - 32px); padding: 16px; margin: 0; }
+    .painel-pop .modal-header { margin-bottom: 10px; }
+    .painel-pop .modal-header h3 { font-size: 1rem; color: var(--text-primary); }
+    .modal-overlay.como-popover { background: transparent; padding: 0; overflow: visible; }
+    .como-popover .painel-pop { position: fixed; box-shadow: var(--shadow-md); }
+    .atalhos-periodo { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .atalho {
+      flex: 1 1 auto; min-height: 40px; padding: 0 12px; border-radius: 8px;
+      border: 1px solid var(--border-campo); background: var(--bg-input); color: var(--text-primary);
+      font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+    }
+    .atalho[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .periodo-personalizado { border: none; margin: 0; padding: 0; min-width: 0; }
+    #aviso-periodo { margin-top: 8px; }
+    .periodo-personalizado legend { padding: 0; margin-bottom: 6px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); }
+    .campos-pop { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .campos-pop > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .campos-pop .campo-largo { grid-column: 1 / -1; }
+    .campos-pop label { font-size: 0.75rem; color: var(--text-secondary); }
+    .campos-pop input, .campos-pop select { width: 100%; padding: 0 10px; }
+    .slot-celular { display: none; }
+    .slot-celular:not(:empty) { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+    .slot-celular .barra-select { max-width: none; width: 100%; }
+    .slot-celular .segmentado { display: flex; }
+    .slot-celular .segmentado button { flex: 1; }
+    .btn-ver-passagens {
+      display: none; width: 100%; min-height: 48px; margin-top: 16px; border: none; border-radius: 10px;
+      background: var(--accent); color: #fff; font: inherit; font-size: 0.9375rem; font-weight: 700; cursor: pointer;
+    }
+    .is-sheet .btn-ver-passagens { display: block; }
+
+    /* Recarga: dados anteriores esmaecidos, sem esqueleto e sem salto */
+    .recarregando { opacity: 0.55; transition: opacity 0.15s; }
+
+    /* Clicar no dado filtra: link discreto, sublinhado no hover/foco */
+    .dd {
+      margin: -6px -4px; padding: 6px 4px; border: none; background: none;
+      color: inherit; font: inherit; letter-spacing: inherit; text-align: inherit;
+      cursor: pointer; border-radius: 4px; max-width: 100%; white-space: nowrap;
+    }
+    /* Veículo: uma linha com reticências, como o texto que substitui */
+    .dd.dd-veiculo { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dd:hover, .dd:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+    .recent-card .dd.rc-placa, .recent-card .dd.rc-badge { margin: 0; }
+    .recent-card .dd.rc-placa { padding: 4px 9px; }
+    .recent-card .dd.rc-badge { padding: 3px 8px; }
+    .ranking-btn {
+      display: flex; justify-content: space-between; align-items: center; width: 100%;
+      padding: 7px 10px; border: none; background: none; color: inherit; font: inherit;
+      text-align: left; border-radius: 6px; cursor: pointer;
+    }
+    button.cam-pill { border: none; font-family: var(--font-sans); cursor: pointer; }
+    button.cam-pill:hover { background: var(--bg-input); }
+
+    /* Celular: [Período ▾] [🔍] [Filtros (n)] numa linha; busca expande ao tocar */
+    @media (max-width: 600px) {
+      .visoes { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 0 2px; }
+      .visoes::-webkit-scrollbar { display: none; }
+      .visao { min-height: 36px; flex-shrink: 0; }
+      .barra-filtros { flex-wrap: nowrap; padding: 6px; gap: 6px; }
+      .barra-btn, .busca-wrap input { min-height: 44px; }
+      .barra-filtros > .barra-grupo { display: none; }
+      .rotulo-desktop { display: none; }
+      .rotulo-celular { display: inline; }
+      #btn-periodo { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+      #rotulo-periodo { overflow: hidden; text-overflow: ellipsis; }
+      .busca-wrap { flex: 0 0 44px; min-width: 44px; }
+      .busca-wrap input { padding-right: 0; }
+      .busca-wrap input::placeholder { color: transparent; }
+      .busca-wrap:focus-within { flex: 1 1 100%; }
+      .busca-wrap:focus-within input::placeholder { color: var(--placeholder); }
+      .barra-filtros:has(.busca-wrap:focus-within) > .barra-btn { display: none; }
+      .busca-pop { width: 100%; }
+      .chip { max-width: 100%; }
+      .filtros { scroll-margin-top: 100px; } /* topo do celular é mais alto */
+    }
+    /* Tablet / coluna estreita: a barra continua em 1 linha. "Mais filtros" vira
+       ícone (o nome acessível fica no aria-label) e período/câmera encolhem. */
+    @container filtros (max-width: 960px) {
+      .barra-filtros { flex-wrap: nowrap; }
+      #btn-periodo { max-width: 190px; min-width: 0; }
+      #rotulo-periodo { overflow: hidden; text-overflow: ellipsis; }
+      .barra-select { max-width: 160px; }
+      .busca-wrap { flex: 1 1 120px; min-width: 120px; }
+    }
+    @container filtros (max-width: 860px) {
+      .barra-filtros { flex-wrap: nowrap; }
+      #btn-mais-filtros .rotulo-desktop { display: none; }
+      #btn-periodo { max-width: 170px; min-width: 0; }
+      #rotulo-periodo { overflow: hidden; text-overflow: ellipsis; }
+      .barra-select { max-width: 150px; }
+      .busca-wrap { flex: 1 1 100px; min-width: 100px; }
+    }
+    /* Mais estreito: busca vira lupa que expande ao tocar; "Acima do limite" → "Acima" */
+    @container filtros (max-width: 760px) {
+      .seg-longo { display: none; }
+      .busca-wrap { flex: 0 0 44px; min-width: 44px; }
+      .busca-wrap input { padding-right: 0; }
+      .busca-wrap input::placeholder { color: transparent; }
+      .busca-wrap:focus-within { flex: 1 1 100%; }
+      .busca-wrap:focus-within input::placeholder { color: var(--placeholder); }
+      .barra-filtros:has(.busca-wrap:focus-within) > :not(.busca-wrap) { display: none; }
+      .busca-pop { width: 100%; }
+    }
+    @container filtros (max-width: 620px) {
+      #btn-periodo { max-width: 130px; }
+      .barra-select { max-width: 120px; }
+    }
+    /* Toque: alvos de 44 px. Fica DEPOIS do bloco do celular para vencer os 36 px dele */
+    @media (pointer: coarse) {
+      .dd { margin: -12px -6px; padding: 12px 6px; }
+      .barra-btn, .barra-select, .busca-wrap input, .campos-pop input, .campos-pop select,
+      .atalho, .segmentado button, .visao { min-height: 44px; }
+      .chip-x { width: 44px; height: 44px; margin: -7px -2px -7px 0; }
+      button.cam-pill { min-height: 44px; }
+      /* Placa e ALERTA dos cards: alvo de 44 px sem mudar o visual do selo */
+      .recent-card .dd.rc-placa::before, .recent-card .dd.rc-badge::before {
+        content: ''; position: absolute; top: 50%; left: 50%;
+        width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%);
+      }
     }
     .card-falha {
       margin: 0 0 6px;
@@ -949,51 +1119,7 @@
       color: var(--text-secondary);
     }
     .card-falha[hidden] { display: none; }
-    .filters-row .filter-check input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      min-height: 0;
-      margin: 0;
-      accent-color: var(--accent);
-    }
-
-    .btn-filter, .btn-clear {
-      min-height: 36px;
-      padding: 6px 16px;
-      border: none;
-      border-radius: 6px;
-      font-family: var(--font-sans);
-      font-size: 0.8125rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .btn-filter {
-      background: var(--accent);
-      color: white;
-    }
-
-    .btn-filter:hover {
-      background: var(--accent-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(4,107,210,0.25);
-    }
-
-    .btn-clear {
-      background: transparent;
-      border: 1px solid var(--border-campo);
-      color: var(--text-secondary);
-      transition: var(--transition);
-    }
-
-    .btn-clear:hover {
-      border-color: var(--text-primary);
-      color: var(--text-primary);
-      background: var(--bg-input);
-    }
-
-    .btn-filter:focus-visible, .btn-clear:focus-visible, .btn-secundario:focus-visible, .btn-link:focus-visible {
+    .btn-secundario:focus-visible, .btn-link:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
@@ -1058,8 +1184,7 @@
 
     /* Celular e toque: alvos de 44 px nos filtros */
     @media (max-width: 600px), (pointer: coarse) {
-      .filters-row input, .filters-row select,
-      .btn-filter, .btn-clear, .btn-secundario, .btn-link { min-height: 44px; }
+      .btn-secundario, .btn-link { min-height: 44px; }
     }
 
     /* Table */
@@ -1311,16 +1436,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 7px 10px;
+      padding: 0;
       margin: 0 -4px;
       border-bottom: 1px solid var(--border);
       border-radius: 6px;
       font-size: 0.8125rem;
-      cursor: pointer;
       transition: background 0.15s, color 0.15s;
     }
+    /* Linha sem botão ("Carregando...", "Sem dados"): texto, não alvo de clique */
+    .ranking-item:not(:has(.ranking-btn)) { padding: 7px 10px; cursor: default; }
 
-    .ranking-item:hover {
+    .ranking-item:has(.ranking-btn):hover {
       color: var(--accent);
       background: var(--accent-light);
     }
@@ -2051,14 +2177,6 @@
       .stat-card .value { font-size: 1.375rem; }
       .stat-card.destaque .value { font-size: 1.625rem; }
       .stat-card .label, .stat-card .unit { font-size: 0.75rem; }
-      .filters-row { padding: 6px 12px; gap: 8px; }
-      .filters-row label { font-size: 0.625rem; }
-      .filters-row input, .filters-row select {
-        padding: 4px 8px; font-size: 0.75rem;
-      }
-      .filters-row input[type="date"] { width: 110px; }
-      .filters-row input[type="text"] { width: 80px; }
-      .filters-row select { width: 110px; }
       .recent-cards { gap: 8px; }
       .recent-card .rc-thumb,
       .recent-card .rc-no-photo { height: 108px; }
@@ -2076,16 +2194,6 @@
       .sidebar { height: auto; overflow: visible; }
       .recent-cards { grid-template-columns: repeat(2, 1fr); }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
-      .filters-row { flex-direction: column; align-items: stretch; }
-      .filters-row .campo-filtro input, .filters-row .campo-filtro select,
-      .filters-row #filter-placa { width: 100%; }
-      /* Filtros de veículo: grade fluida, campos ocupam a largura disponível */
-      .filtros-veiculo { flex-basis: auto; align-items: stretch; }
-      .filtros-veiculo .fv-titulo { flex-basis: 100%; }
-      .filtros-veiculo > div { flex: 1 1 8rem; min-width: 0; }
-      .filters-row .filtros-veiculo select,
-      .filters-row .filtros-veiculo input[type="text"],
-      .filters-row .filtros-veiculo input[type="number"] { width: 100%; box-sizing: border-box; }
       .modal-details { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 600px) {
@@ -2139,7 +2247,7 @@
 
     /* Cursor pointer nos stat-cards (têm hover mas sem cursor) */
     .stat-card { cursor: default; }
-    .recent-card, .ranking-item { cursor: pointer; }
+    .recent-card { cursor: pointer; }
 
     /* Botão desabilitado */
     button:disabled,
@@ -2230,14 +2338,17 @@
     .table-row:hover {
       border-left-color: var(--accent);
     }
-    .table-row:focus-visible, .recent-card:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+    /* Botão de detalhe: a foto do card e a data/hora da linha */
+    .rc-foto-btn {
+      display: block; width: 100%; padding: 0; margin: 0; border: none;
+      background: none; color: inherit; font: inherit; cursor: pointer;
     }
+    .rc-foto-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+    .dd.dd-detalhe { font-variant-numeric: tabular-nums; }
 
     /* Toque não tem hover: sem isto o "levantar" fica preso depois do tap */
     @media (hover: none), (pointer: coarse) {
-      .recent-card:hover, .btn-filter:hover, .btn-secundario:hover,
+      .recent-card:hover, .btn-secundario:hover,
       .modal-photo:hover, .btn-zoom:hover, .btn-pdf:hover,
       .topbar .btn-veiculos:hover, .login-box button:hover,
       .vm-actions .vm-btn-primary:hover {
@@ -2255,7 +2366,7 @@
       transition: transform 100ms ease-out;
     }
     /* Linhas largas: escala menor, senão a linha inteira "encolhe" demais */
-    .table-row:active, .ranking-item:active {
+    .table-row:active, .ranking-item:has(.ranking-btn):active {
       transform: scale(0.99);
       transition: transform 100ms ease-out;
     }
@@ -2388,7 +2499,6 @@
       .conta-btn, .topbar .btn-veiculos { min-height: 44px; }
       .conta-avatar { width: 32px; height: 32px; }
       .conta-sair, .bv-link, .bv-entendi { min-height: 44px; }
-      .filtros-veiculo input, .filtros-veiculo select { min-height: 44px; }
     }
 
 
@@ -2458,7 +2568,7 @@
         transition: none !important;
       }
       /* Molas pulam direto ao estado final (spring.js); nada "levanta" */
-      .recent-card:hover, .btn-filter:hover, .btn-secundario:hover, .modal-photo:hover,
+      .recent-card:hover, .btn-secundario:hover, .modal-photo:hover,
       .btn-zoom:hover, .topbar .btn-veiculos:hover, .login-box button:hover,
       .vm-actions .vm-btn-primary:hover { transform: none; }
     }
@@ -2505,6 +2615,7 @@
   <script src="/js/selo-veiculo.js"></script>
   <script src="/js/filtro-veiculo.js"></script>
   <script src="/js/estado-filtros.js"></script>
+  <script src="/js/barra-filtros.js"></script>
 </head>
 <body>
 
@@ -2546,7 +2657,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.3.0 &middot; 2026-10-05
+        v1.4.0 &middot; 2026-10-05
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2615,74 +2726,54 @@
           <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>
         </div>
 
-        <!-- Filters: só valem depois de "Filtrar" (estado único filtrosAtivos) -->
-          <form class="filters-row" onsubmit="event.preventDefault();applyFilters()" aria-label="Filtros do período">
-            <div class="campo-filtro">
-              <label for="filter-date-start">Data inicial</label>
-              <input type="date" id="filter-date-start">
+        <!-- Filtros do período: tudo aplica sozinho e atualiza filtrosAtivos (estado único) -->
+        <section class="filtros" id="filtros" aria-label="Filtros do período">
+          <div class="visoes" id="visoes" role="group" aria-label="Perguntas prontas"></div>
+
+          <div class="barra-filtros" id="barra-filtros">
+            <button type="button" class="barra-btn" id="btn-periodo" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-periodo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+              <span class="visualmente-oculto">Período: </span><span id="rotulo-periodo">Hoje</span>
+              <svg class="barra-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
+            <div class="busca-wrap" id="busca-wrap">
+              <svg class="busca-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <label for="busca" class="visualmente-oculto">Buscar placa, modelo ou marca</label>
+              <input type="text" id="busca" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="busca-lista" aria-describedby="busca-dica" placeholder="Placa, modelo ou marca" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+              <span id="busca-dica" class="visualmente-oculto">Digite 2 letras ou mais para ver sugestões. Enter busca placa se houver número; senão, modelo.</span>
+              <div class="busca-pop" id="busca-pop" hidden>
+                <div class="busca-lista" id="busca-lista" role="listbox" aria-label="Sugestões"></div>
+                <p class="busca-rodape" id="busca-rodape"></p>
+              </div>
             </div>
-            <div class="campo-filtro">
-              <label for="filter-time-start">Hora inicial</label>
-              <input type="time" id="filter-time-start" value="00:00">
-            </div>
-            <div class="campo-filtro">
-              <label for="filter-date-end">Data final</label>
-              <input type="date" id="filter-date-end">
-            </div>
-            <div class="campo-filtro">
-              <label for="filter-time-end">Hora final</label>
-              <input type="time" id="filter-time-end" value="23:59">
-            </div>
-            <div class="campo-filtro">
-              <label for="filter-placa">Placa</label>
-              <input type="text" id="filter-placa" placeholder="Placa" title="Ex.: ABC1D23 (aceita ABC-1D23)" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false">
-            </div>
-            <div class="campo-filtro">
-              <label for="filter-vel-min">Vel. mín.</label>
-              <input type="number" id="filter-vel-min" placeholder="mín." min="0" inputmode="numeric">
-            </div>
-            <div class="campo-filtro">
-              <label for="filter-vel-max">Vel. máx.</label>
-              <input type="number" id="filter-vel-max" placeholder="máx." min="0" inputmode="numeric">
-            </div>
-            <div class="campo-filtro">
-              <label for="filter-camera">Câmera</label>
-              <select id="filter-camera">
-                <option value="">Todas</option>
+
+            <div class="barra-grupo" id="grupo-camera">
+              <label for="filter-camera" class="visualmente-oculto">Câmera</label>
+              <select id="filter-camera" class="barra-select">
+                <option value="">Todas as câmeras</option>
               </select>
             </div>
-            <div class="filter-check">
-              <label for="filter-alertas-only"><input type="checkbox" id="filter-alertas-only" onchange="applyFilters()"> Só alertas</label>
+
+            <div class="barra-grupo" id="grupo-alerta">
+              <div class="segmentado" id="seg-alerta" role="radiogroup" aria-label="Velocidade">
+                <button type="button" role="radio" data-alerta="0" aria-checked="true">Todas</button>
+                <button type="button" role="radio" data-alerta="1" aria-checked="false" tabindex="-1" aria-label="Acima do limite">Acima<span class="seg-longo"> do limite</span></button>
+              </div>
             </div>
-            <div class="filter-actions">
-              <button type="submit" class="btn-filter">Filtrar</button>
-              <button type="button" class="btn-clear" onclick="clearFilters()">Limpar</button>
-            </div>
-            <div class="filtros-veiculo" role="group" aria-labelledby="fv-titulo">
-              <span class="fv-titulo" id="fv-titulo">Veículo</span>
-              <div>
-                <label for="filter-marca">Marca</label>
-                <select id="filter-marca"><option value="">Todas</option></select>
-              </div>
-              <div>
-                <label for="filter-modelo">Modelo</label>
-                <input type="text" id="filter-modelo" placeholder="Ex.: Onix" maxlength="40" autocomplete="off">
-              </div>
-              <div>
-                <label for="filter-cor">Cor</label>
-                <select id="filter-cor"><option value="">Todas</option></select>
-              </div>
-              <div>
-                <label for="filter-ano-de">Ano de</label>
-                <input type="number" id="filter-ano-de" inputmode="numeric" min="1950" step="1" placeholder="aaaa">
-              </div>
-              <div>
-                <label for="filter-ano-ate">Ano até</label>
-                <input type="number" id="filter-ano-ate" inputmode="numeric" min="1950" step="1" placeholder="aaaa">
-              </div>
-              <p class="fv-aviso" id="fv-aviso" role="status" aria-live="polite"></p>
-            </div>
-          </form>
+
+            <button type="button" class="barra-btn" id="btn-mais-filtros" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-filtros">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+              <span class="rotulo-desktop">Mais filtros</span><span class="rotulo-celular">Filtros</span>
+              <span class="contador-filtros" id="contador-filtros" hidden></span>
+            </button>
+          </div>
+
+          <div class="chips-filtros" id="chips-filtros" hidden></div>
+          <p class="aviso-filtros" id="aviso-nc" role="status" hidden></p>
+          <p class="aviso-filtros" id="fv-aviso" role="status" aria-live="polite"></p>
+          <p class="visualmente-oculto" id="anuncio-resultado" aria-live="polite"></p>
+        </section>
 
           <!-- Topo da tabela: período ativo + Exportar (exporta a tabela) -->
           <div class="tabela-topo">
@@ -2783,7 +2874,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.3.0
+      Protector Traffic Control &middot; v1.4.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -2879,6 +2970,53 @@
     </div>
   </div>
 
+  <!-- ===== PERÍODO (popover no desktop, sheet no celular) ===== -->
+  <div class="modal-overlay painel-filtro-overlay" id="painel-periodo" onclick="if(event.target===this)fecharPainelFiltro(this)">
+    <div class="modal-content painel-pop" role="dialog" aria-modal="true" aria-labelledby="painel-periodo-titulo">
+      <div class="modal-header">
+        <h3 id="painel-periodo-titulo">Período</h3>
+        <button type="button" class="modal-close" onclick="fecharPainelFiltro(document.getElementById('painel-periodo'))" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="atalhos-periodo" role="group" aria-label="Atalhos">
+        <button type="button" class="atalho" data-atalho="hoje" data-foco-inicial>Hoje</button>
+        <button type="button" class="atalho" data-atalho="ontem">Ontem</button>
+        <button type="button" class="atalho" data-atalho="7d">Últimos 7 dias</button>
+      </div>
+      <fieldset class="periodo-personalizado">
+        <legend>Personalizado</legend>
+        <div class="campos-pop">
+          <div><label for="filter-date-start">Data inicial</label><input type="date" id="filter-date-start" min="2000-01-01"></div>
+          <div><label for="filter-time-start">Hora inicial</label><input type="time" id="filter-time-start"></div>
+          <div><label for="filter-date-end">Data final</label><input type="date" id="filter-date-end" min="2000-01-01"></div>
+          <div><label for="filter-time-end">Hora final</label><input type="time" id="filter-time-end"></div>
+        </div>
+        <p class="aviso-filtros aviso-falha" id="aviso-periodo" role="status" aria-live="polite"></p>
+      </fieldset>
+    </div>
+  </div>
+
+  <!-- ===== MAIS FILTROS (popover no desktop, sheet "Filtros" no celular) ===== -->
+  <div class="modal-overlay painel-filtro-overlay" id="painel-filtros" onclick="if(event.target===this)fecharPainelFiltro(this)">
+    <div class="modal-content painel-pop" role="dialog" aria-modal="true" aria-labelledby="painel-filtros-titulo">
+      <div class="modal-header">
+        <h3 id="painel-filtros-titulo">Mais filtros</h3>
+        <button type="button" class="modal-close" onclick="fecharPainelFiltro(document.getElementById('painel-filtros'))" aria-label="Fechar">&times;</button>
+      </div>
+      <!-- No celular, câmera e "Todas | Acima do limite" vêm para cá -->
+      <div class="slot-celular" id="slot-celular"></div>
+      <div class="campos-pop">
+        <div><label for="filter-vel-min">Vel. mín. (km/h)</label><input type="number" id="filter-vel-min" min="0" max="300" inputmode="numeric" placeholder="mín." data-foco-inicial></div>
+        <div><label for="filter-vel-max">Vel. máx. (km/h)</label><input type="number" id="filter-vel-max" min="0" max="300" inputmode="numeric" placeholder="máx."></div>
+        <div><label for="filter-marca">Marca</label><select id="filter-marca"><option value="">Todas</option></select></div>
+        <div><label for="filter-cor">Cor</label><select id="filter-cor"><option value="">Todas</option></select></div>
+        <div><label for="filter-ano-de">Ano de</label><input type="number" id="filter-ano-de" inputmode="numeric" min="1950" step="1" placeholder="aaaa"></div>
+        <div><label for="filter-ano-ate">Ano até</label><input type="number" id="filter-ano-ate" inputmode="numeric" min="1950" step="1" placeholder="aaaa"></div>
+        <div class="campo-largo"><label for="filter-modelo">Modelo</label><input type="text" id="filter-modelo" placeholder="Ex.: Onix" maxlength="40" autocomplete="off"></div>
+      </div>
+      <button type="button" class="btn-ver-passagens" id="btn-ver-passagens" onclick="fecharPainelFiltro(document.getElementById('painel-filtros'))">Ver passagens</button>
+    </div>
+  </div>
+
   <!-- ===== MODAL ===== -->
   <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -2932,12 +3070,18 @@
     const { estadoSelo } = seloVeiculoLib;
     const {
       temFiltroVeiculo, placasParaFiltro, montarFiltroVeiculo, opcoesDistintas,
-      corExibicao, corHex, coletarPaginado, LIMITE_PLACAS_FILTRO,
+      corExibicao, corHex, coletarPaginado, LIMITE_PLACAS_FILTRO, termoModelo,
     } = filtroVeiculoLib;
     const {
       montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo,
-      hojeLocal, virarDia,
+      hojeLocal, virarDia, periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro,
+      contarMaisFiltros, VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString,
+      validarPeriodo,
     } = estadoFiltrosLib;
+    const {
+      rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
+      conjuntoCadastradas, filtrarNaoCadastradas,
+    } = barraFiltrosLib;
 
     // ============================================
     // CONFIG
@@ -2948,7 +3092,7 @@
     let currentProfile = null;
     let pollingInterval = null;
     let painelAtivo = false; // polling só com o painel aberto e a aba visível
-    // Filtros confirmados ("Filtrar"/"Limpar"): única fonte do período filtrado
+    // Filtros ativos (barra, chips, visões, drill-down, URL): única fonte do período filtrado
     let filtrosAtivos = null;
     // Chave dos filtros cujo período já está na tela (null = recarregar)
     let chavePeriodoCarregado = null;
@@ -2989,6 +3133,11 @@
     let camerasMapFull = {}; // camera_id -> nome (completo, p/ relatórios)
     let camerasMeta = {}; // camera_id -> { serial, modelo, firmware } (auditoria PDF)
     let veiculosCache = {};
+    // Cadastro carregado: "Não cadastrados" espera por ele (senão tudo pareceria não cadastrado)
+    let veiculosCachePronto = Promise.resolve();
+    let placasCadastradas = new Set();
+    // Estado do cadastro de moradores: 'carregando' | 'ok' | 'erro'
+    let cadastro = { estado: 'carregando' };
     let recentCardsData = []; // capturas dos cards (o clique abre pelo índice, sem JSON no HTML)
     let tabelaPaginaData = [];  // idem para as linhas da tabela
     let lastCapturas = []; // store last filtered captures for export
@@ -3246,17 +3395,116 @@
       pararPolling();
       filtrosAtivos = null;
       chavePeriodoCarregado = null;
+      limparFiltrosDaUrl(); // a placa não fica na barra de endereço depois de sair
+      esquecerDadosDoCliente();
       await sb.auth.signOut();
       currentUser = null;
       currentCliente = null;
+      document.getElementById('topbar-cliente').textContent = '';
+      document.getElementById('topbar-email').textContent = '';
       document.getElementById('dashboard-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    // Sessão do painel: muda a cada sair/entrar. Resposta que chega depois de
+    // trocar de condomínio (ou de sair) é descartada, nunca desenhada.
+    let sessaoSeq = 0;
+    function marcaDaSessao() {
+      return { seq: sessaoSeq, clienteId: currentCliente ? currentCliente.id : null };
+    }
+    function sessaoValida(m) {
+      return m.seq === sessaoSeq && !!currentCliente && currentCliente.id === m.clienteId;
+    }
+
+    // Troca de condomínio na mesma aba (PC de portaria compartilhado): nada do
+    // anterior pode aparecer, nem por um instante — dados, caches, opções e a
+    // tela já desenhada. Respostas em voo são invalidadas (sessão e seqs).
+    function esquecerDadosDoCliente() {
+      sessaoSeq++;
+      capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recargaSeq++; renderSeq++;
+      camerasList = [];
+      camerasMap = {};
+      camerasMapFull = {};
+      camerasMeta = {};
+      veiculosList = [];
+      vmListaFiltered = [];
+      limiteAtingido = false;
+      lastCapturas = [];
+      recentCardsData = [];
+      tabelaPaginaData = [];
+      allThumbUrls = {};
+      veiculosCache = {};
+      placasCadastradas = new Set();
+      cadastro = { estado: 'carregando' };
+      veiculosCachePronto = Promise.resolve();
+      veiculosBaseCache = {};
+      suspeitaCache.clear();
+      suspeitaEmVoo.clear();
+      suspeitaFalhouEm.clear();
+      filtroVeiculoMemo = null;
+      opcoesVeiculoDoCliente = null;
+      opcoesBusca = { modelos: [], marcas: [] };
+      busca.remotas = [];
+      ['filter-marca', 'filter-cor'].forEach((id) => {
+        document.getElementById(id).innerHTML = '<option value="">Todas</option>';
+      });
+      document.getElementById('filter-camera').innerHTML = '<option value="">Todas as câmeras</option>';
+      limparTelaDoPainel();
+    }
+
+    // Tela de volta a "Carregando…": tabela, cards, câmeras "Agora", KPIs,
+    // indicadores, Top 10, gráficos, lista de veículos e janelas abertas.
+    function limparTelaDoPainel() {
+      const html = (id, v) => { document.getElementById(id).innerHTML = v; };
+      const texto = (id, v) => { document.getElementById(id).textContent = v; };
+      fecharJanelasDoPainel();
+      html('table-body', '<div class="table-empty">Carregando...</div>');
+      document.getElementById('table-pagination').style.display = 'none';
+      document.getElementById('rodape-sem-vel').hidden = true;
+      html('recent-cards', '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>');
+      html('cameras-status', '');
+      html('ranking-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
+      ['stat-total', 'stat-alertas', 'stat-maxvel', 'ind-vel-media', 'ind-conformidade', 'ind-hora-pico', 'ind-reincidentes']
+        .forEach((id) => texto(id, '--'));
+      texto('titulo-tabela', 'Passagens');
+      texto('title-hourly', 'Passagens por Hora');
+      texto('title-ranking', 'Top 10 Placas');
+      limparGraficos();
+      texto('btn-topbar-veiculos', 'Veículos');
+      texto('vm-count', '');
+      html('vm-lista', '<div class="vm-result-empty">Carregando...</div>');
+      html('vm-lista-pg', '');
+      html('modal-body', '');
+      desfazerEsmaecer(); // sair durante uma recarga não deixa o próximo painel esmaecido
+      texto('btn-ver-passagens', 'Ver passagens');
+      document.getElementById('lightbox-img').removeAttribute('src');
+    }
+
+    function limparGraficos() {
+      ultimosGraficos.clear();
+      ['chart-hourly', 'chart-alerts-7d'].forEach((id) => {
+        const canvas = document.getElementById(id);
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        canvas.removeAttribute('aria-label');
+        const tabela = document.getElementById(`${id}-dados`);
+        if (tabela) tabela.innerHTML = '';
+      });
+    }
+
+    function fecharJanelasDoPainel() {
+      ['modal', 'vm-overlay', 'lightbox', 'painel-periodo', 'painel-filtros'].forEach((id) => {
+        const o = document.getElementById(id);
+        o.classList.remove('active', 'closing', 'is-sheet');
+        o.style.opacity = '';
+      });
+      document.body.style.overflow = '';
     }
 
     // ============================================
     // DASHBOARD
     // ============================================
     function showDashboard() {
+      esquecerDadosDoCliente();
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('dashboard-screen').style.display = 'block';
       document.getElementById('topbar-cliente').textContent = currentCliente.nome;
@@ -3267,14 +3515,18 @@
       sincronizarSeletores(); // o seletor do topo só tem tamanho depois de visível
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
-      filtrosAtivos = filtrosPadrao(todayLocalISO());
+      // Filtro guardado na URL (recarregar a página mantém); inválido é ignorado
+      filtrosAtivos = deQueryString(window.location.search, todayLocalISO(), new Date().getFullYear());
       hojeDoPainel = todayLocalISO();
       chavePeriodoCarregado = null;
-      escreverFiltrosNoFormulario(filtrosAtivos);
-      limparFiltrosVeiculo();
+      filtroVeiculoMemo = null;
+      avisoFiltroVeiculo('');
+      montarBarraFiltros();
+      escreverEstadoNaBarra(filtrosAtivos);
+      salvarFiltrosNaUrl(filtrosAtivos);
       atualizarTitulosPeriodo();
 
-      loadVeiculosCache();
+      veiculosCachePronto = loadVeiculosCache();
       loadOpcoesVeiculo();
       loadCamerasList();
       loadVeiculos();
@@ -3314,6 +3566,11 @@
     async function loadPeriodo({ resetPage = true } = {}) {
       const chave = chaveFiltros(filtrosAtivos);
       chavePeriodoCarregado = null;
+      if (filtrosAtivos.naoCadastrados) {
+        if (cadastro.estado === 'erro') veiculosCachePronto = loadVeiculosCache(); // tenta de novo
+        await veiculosCachePronto;
+        escreverAvisoNaoCadastrados(filtrosAtivos);
+      }
       const r = await Promise.allSettled([
         loadCapturas({ resetPage }),
         loadHourlyChart(),
@@ -3324,31 +3581,34 @@
       const falha = r.find((x) => x.status === 'rejected' || x.value === false);
       if (falha) throw (falha.reason || new Error('falha ao carregar as capturas'));
       if (chave === chaveFiltros(filtrosAtivos)) chavePeriodoCarregado = chave;
+      atualizarBotaoVerPassagens();
     }
 
-    // "Filtrar", "Limpar" e "Tentar de novo": recarrega só o período filtrado
+    // Mudança de filtro e "Tentar de novo": recarrega só o período filtrado
     async function recarregarPeriodo(opts) {
       try {
         await loadPeriodo(opts);
         marcarAtualizacao(true);
+        return true;
       } catch (err) {
         console.error('Erro ao filtrar:', err);
         marcarAtualizacao(false);
+        return false;
       }
     }
 
     // KPIs, câmeras e cards ao vivo sempre; o período filtrado só se os filtros
     // mudaram ou se ele inclui agora (período todo no passado não muda).
-    // Meia-noite: o padrão "hoje" intocado (estado e formulário) passa ao novo dia
+    // Meia-noite: o padrão "hoje" intocado passa ao novo dia
     function virarDiaSeNecessario(agora) {
       const hoje = hojeLocal(agora);
       if (!filtrosAtivos || hoje === hojeDoPainel) return;
       const novo = virarDia(filtrosAtivos, hojeDoPainel, agora);
-      const formIntocado = chaveFiltros(lerFiltrosDoFormulario()) === chaveFiltros(filtrosAtivos);
       hojeDoPainel = hoje;
-      if (novo === filtrosAtivos || !formIntocado) return;
+      if (novo === filtrosAtivos) return;
       filtrosAtivos = novo;
-      escreverFiltrosNoFormulario(novo);
+      escreverEstadoNaBarra(novo);
+      salvarFiltrosNaUrl(novo);
       atualizarTitulosPeriodo();
     }
 
@@ -3377,17 +3637,25 @@
     // ============================================
     // VEICULOS CACHE (for plate cross-reference)
     // ============================================
+    // Paginado (max-rows do PostgREST). Falha não é "ninguém cadastrado":
+    // fica registrada em `cadastro` e o filtro "Não cadastrados" avisa e não filtra.
     async function loadVeiculosCache() {
-      const { data } = await sb.from('veiculos')
-        .select('placa, nome_morador, unidade, marca, cor')
-        .eq('cliente_id', currentCliente.id)
-        .eq('ativo', true);
-
-      if (data) {
+      const sessao = marcaDaSessao();
+      const clienteId = sessao.clienteId;
+      try {
+        const data = await coletarPaginado((de, ate) => sb.from('veiculos')
+          .select('placa, nome_morador, unidade, marca, cor')
+          .eq('cliente_id', clienteId)
+          .eq('ativo', true)
+          .order('placa').range(de, ate));
+        if (!sessaoValida(sessao)) return; // trocou de condomínio ou saiu
         veiculosCache = {};
-        data.forEach(v => {
-          veiculosCache[v.placa] = v;
-        });
+        data.forEach((v) => { veiculosCache[v.placa] = v; });
+        placasCadastradas = conjuntoCadastradas(data.map((v) => v.placa));
+        cadastro = { estado: 'ok' };
+      } catch (err) {
+        console.error('Erro ao carregar o cadastro de moradores:', err);
+        if (sessaoValida(sessao)) cadastro = { estado: 'erro' };
       }
     }
 
@@ -3412,9 +3680,10 @@
       const chaves = [...new Set((placas || []).map((p) => placaLib.paraMercosul(p)).filter(Boolean))]
         .filter((m) => !veiculosBaseCache[m] || STATUS_A_RECARREGAR.includes(veiculosBaseCache[m].status));
       if (!chaves.length) return;
+      const sessao = marcaDaSessao();
       try {
         const { data, error } = await sb.from('veiculos_base').select(COLUNAS_BASE).in('placa', chaves);
-        if (error || !data) return; // painel segue sem o selo
+        if (error || !data || !sessaoValida(sessao)) return; // painel segue sem o selo
         data.forEach((v) => { veiculosBaseCache[v.placa] = v; });
       } catch { /* painel segue sem o selo */ }
     }
@@ -3434,15 +3703,17 @@
       if (suspeitaEmVoo.has(m)) return suspeitaEmVoo.get(m);
       const falhou = suspeitaFalhouEm.get(m);
       if (falhou && Date.now() - falhou < SUSPEITA_RETENTAR_MS) return Promise.resolve(null);
+      const sessao = marcaDaSessao();
       const pedido = chamarApiPainel(`/api/admin/veiculos-base?placa=${encodeURIComponent(m)}&cliente_id=${encodeURIComponent(currentCliente.id)}`, 'GET')
         .then((r) => {
+          if (!sessaoValida(sessao)) return null; // resposta de outro condomínio/sessão
           const s = r && typeof r.suspeita_de === 'string' && r.suspeita_de ? r.suspeita_de : null;
           suspeitaCache.set(m, s);
           suspeitaFalhouEm.delete(m);
           return s;
         })
-        .catch(() => { suspeitaFalhouEm.set(m, Date.now()); return null; })
-        .finally(() => { suspeitaEmVoo.delete(m); });
+        .catch(() => { if (sessaoValida(sessao)) suspeitaFalhouEm.set(m, Date.now()); return null; })
+        .finally(() => { if (suspeitaEmVoo.get(m) === pedido) suspeitaEmVoo.delete(m); });
       suspeitaEmVoo.set(m, pedido);
       return pedido;
     }
@@ -3477,6 +3748,7 @@
         estado,
         marca: v.marca || '',
         nome: nomeVeiculo(v),
+        modelo: v.modelo || '',
         cor: corExibicao(v.cor || v.cor_normalizada),
         hex: corHex(v.cor_normalizada),
         ano: v.ano_modelo ? String(v.ano_modelo) : '',
@@ -3497,12 +3769,24 @@
       return `<div class="vb-linha vb-alerta" title="${esc(dica)}"><span class="vb-txt">⚠ verificar leitura</span></div>`;
     }
 
+    // Drill-down: botão que aplica um filtro (dado em data-*, listener delegado)
+    function botaoFiltro(tipo, valor, conteudoHtml, rotulo, classe) {
+      return `<button type="button" class="dd${classe ? ' ' + classe : ''}" data-filtro="${esc(tipo)}"`
+        + ` data-valor="${esc(valor)}" aria-label="${esc(rotulo)}">${conteudoHtml}</button>`;
+    }
+    // Veículo com modelo conhecido vira "filtrar pelo modelo"
+    // O nome acessível começa pelo texto visível (WCAG 2.5.3)
+    function botaoModelo(info, conteudoHtml, textoVisivel) {
+      if (!info.modelo) return conteudoHtml;
+      return botaoFiltro('modelo', info.modelo, conteudoHtml, `${textoVisivel} — filtrar por modelo`, 'dd-veiculo');
+    }
+
     // Card: "Marca Modelo · Cor · Ano" numa linha só
     function linhaVeiculoCard(placa, capturaTs) {
       const info = infoVeiculo(placa, capturaTs);
       if (!info || info.estado !== 'consultado') return estadoVeiculoHtml(info);
       const texto = [info.nome, info.cor, info.ano].filter(Boolean).join(' · ');
-      return `<div class="vb-linha" title="${esc(texto)}">${bolinhaCor(info.hex)}<span class="vb-txt">${esc(texto)}</span></div>`;
+      return `<div class="vb-linha" title="${esc(texto)}">${bolinhaCor(info.hex)}${botaoModelo(info, `<span class="vb-txt">${esc(texto)}</span>`, texto)}</div>`;
     }
 
     // Tabela: linha 1 = marca + nome (negrito); linha 2 = cor · ano (cinza)
@@ -3511,7 +3795,7 @@
       if (!info || info.estado !== 'consultado') return estadoVeiculoHtml(info);
       const sub = [info.cor, info.ano].filter(Boolean).join(' · ');
       const nome = info.nome || '—';
-      return `<div class="vb-nome" title="${esc(nome)}">${esc(nome)}</div>`
+      return `<div class="vb-nome" title="${esc(nome)}">${botaoModelo(info, esc(nome), nome)}</div>`
         + (sub ? `<div class="vb-linha" title="${esc(sub)}">${bolinhaCor(info.hex)}<span class="vb-txt">${esc(sub)}</span></div>` : '');
     }
 
@@ -3534,14 +3818,8 @@
     const FILTRO_VEICULO_TTL_MS = 20000;
     let filtroVeiculoMemo = null; // { chave, em, promessa }
     let opcoesVeiculoDoCliente = null;
-
-    function lerFiltroVeiculo() {
-      const val = (id) => document.getElementById(id).value;
-      return montarFiltroVeiculo({
-        marca: val('filter-marca'), modelo: val('filter-modelo'), cor: val('filter-cor'),
-        anoDe: val('filter-ano-de'), anoAte: val('filter-ano-ate'),
-      }, new Date().getFullYear());
-    }
+    // Sugestões da busca tipada: modelos e marcas da base visível ao condomínio
+    let opcoesBusca = { modelos: [], marcas: [] };
 
     async function consultarPlacasDoFiltro(f) {
       let q = sb.from('veiculos_base').select('placa, placa_antiga').eq('status', 'consultado');
@@ -3568,7 +3846,7 @@
       const promessa = consultarPlacasDoFiltro(f)
         .catch(() => ({ ativo: true, erro: true }))
         .then((r) => {
-          // Erro não fica guardado: o próximo "Filtrar" consulta de novo
+          // Erro não fica guardado: a próxima mudança de filtro consulta de novo
           if (r.erro && filtroVeiculoMemo && filtroVeiculoMemo.promessa === promessa) filtroVeiculoMemo = null;
           return r;
         });
@@ -3585,26 +3863,23 @@
       if (!currentCliente || opcoesVeiculoDoCliente === currentCliente.id) return;
       const anoMax = String(new Date().getFullYear() + 1);
       ['filter-ano-de', 'filter-ano-ate'].forEach((id) => { document.getElementById(id).max = anoMax; });
+      const sessao = marcaDaSessao();
       try {
         // Paginado: o max-rows do PostgREST cortaria marcas/cores em silêncio
         const data = await coletarPaginado((de, ate) => sb.from('veiculos_base')
-          .select('marca, cor_normalizada').eq('status', 'consultado')
+          .select('marca, modelo, cor_normalizada').eq('status', 'consultado')
           .order('placa').range(de, ate));
+        if (!sessaoValida(sessao)) return; // trocou de condomínio no meio
         opcoesVeiculoDoCliente = currentCliente.id;
         const marcas = opcoesDistintas(data, 'marca');
         const cores = opcoesDistintas(data, 'cor_normalizada');
+        opcoesBusca = { marcas, modelos: opcoesDistintas(data, 'modelo') };
         document.getElementById('filter-marca').innerHTML = '<option value="">Todas</option>'
           + marcas.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
         document.getElementById('filter-cor').innerHTML = '<option value="">Todas</option>'
           + cores.map((c) => `<option value="${esc(c)}">${esc(corExibicao(c))}</option>`).join('');
+        escreverEstadoNaBarra(filtrosAtivos); // marca/cor vindas da URL ganham a opção agora
       } catch { /* filtros de veículo ficam só com "Todas" */ }
-    }
-
-    function limparFiltrosVeiculo() {
-      ['filter-marca', 'filter-modelo', 'filter-cor', 'filter-ano-de', 'filter-ano-ate']
-        .forEach((id) => { document.getElementById(id).value = ''; });
-      filtroVeiculoMemo = null;
-      avisoFiltroVeiculo('');
     }
 
     // Chamada autenticada às rotas /api/admin/*. Erro carrega o status HTTP.
@@ -3630,10 +3905,13 @@
     // CAMERAS LIST (for filter dropdown)
     // ============================================
     async function loadCamerasList() {
-      const { data } = await sb.from('cameras')
+      const sessao = marcaDaSessao();
+      const { data, error } = await sb.from('cameras')
         .select('id, nome, nome_exibicao, serial_number, modelo, firmware')
         .eq('cliente_id', currentCliente.id)
         .eq('ativa', true);
+      if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
+      if (error) { console.error('Erro ao carregar câmeras:', error); return; }
 
       if (data) {
         camerasList = data;
@@ -3650,8 +3928,9 @@
           };
         });
         const sel = document.getElementById('filter-camera');
-        sel.innerHTML = '<option value="">Todas</option>' +
+        sel.innerHTML = '<option value="">Todas as câmeras</option>' +
           data.map(c => `<option value="${esc(c.id)}">${esc(c.nome_exibicao || c.nome)}</option>`).join('');
+        escreverEstadoNaBarra(filtrosAtivos); // câmera vinda da URL ganha nome no chip
       }
     }
 
@@ -3673,11 +3952,13 @@
     // repetidas vezes quando passa várias vezes em sequência.
     // ============================================
     async function loadRecentCards() {
+      const sessao = marcaDaSessao();
       const { data: rawData, error } = await sb.from('capturas')
         .select('*')
         .eq('cliente_id', currentCliente.id)
         .order('timestamp', { ascending: false })
         .limit(60);
+      if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
 
       const container = document.getElementById('recent-cards');
 
@@ -3728,6 +4009,7 @@
         Promise.all(data.map(c => getPhotoUrl(c.foto_path))),
         loadVeiculosBase(data.map(c => c.placa)).then(() => carregarSuspeitas(data.map(c => c.placa))),
       ]);
+      if (!sessaoValida(sessao)) return;
 
       recentCardsData = data;
       container.innerHTML = data.map((c, i) => {
@@ -3745,7 +4027,7 @@
 
         const photoHtml = photoUrls[i]
           ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="Foto" loading="lazy">`
-          : `<div class="rc-no-photo">&#128663;</div>`;
+          : `<span class="rc-no-photo">&#128663;</span>`;
 
         // Badge: ícone redundante + texto (não depende só de cor — daltonismo).
         const badgeClass = isAlert ? 'alert-badge' : (!velMedida ? 'noradar-badge' : 'ok-badge');
@@ -3758,14 +4040,23 @@
           : `<span class="vel-dash">—</span> <span style="font-size:0.8125rem">km/h</span>`;
 
         const radarNome = camerasMap[c.camera_id] || '';
-        return `<div class="recent-card ${isAlert ? 'alerta' : ''}" tabindex="0" role="button" aria-label="Abrir captura ${esc(c.placa)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="openModal(recentCardsData[${i}])">
-          <div class="rc-badge ${badgeClass}">${badgeText}</div>
-          ${photoHtml}
-          <div class="rc-placa">${esc(c.placa)}</div>
+        const badgeHtml = isAlert
+          ? botaoFiltro('alerta', '1', badgeText, `${badgeText} — filtrar só acima do limite`, `rc-badge ${badgeClass}`)
+          : `<div class="rc-badge ${badgeClass}">${badgeText}</div>`;
+        // Sem morador, o nome mostrado é o do radar: vira "filtrar pela câmera"
+        const nomeHtml = morador ? esc(morador)
+          : radarNome ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`)
+          : '<span style="color:var(--text-muted)">N/C</span>';
+        // O card não é botão (teria botões dentro): o detalhe abre pela foto,
+        // que é um <button>; clicar na área vazia do card é só atalho de mouse
+        return `<div class="recent-card ${isAlert ? 'alerta' : ''}" onclick="openModal(recentCardsData[${i}])">
+          ${badgeHtml}
+          <button type="button" class="rc-foto-btn" aria-label="${esc(`Ver detalhes da passagem ${c.placa}`)}">${photoHtml}</button>
+          ${botaoFiltro('placa', c.placa, esc(c.placa), `Filtrar pela placa ${c.placa}`, 'rc-placa')}
           <div class="rc-vel ${velClass}">${velHtml}</div>
           <div class="rc-info">
             <div class="rc-linha">
-              <span class="rc-name" title="${esc(morador || radarNome)}">${esc(morador || radarNome) || '<span style="color:var(--text-muted)">N/C</span>'}</span>
+              <span class="rc-name" title="${esc(morador || radarNome)}">${nomeHtml}</span>
               <span class="rc-time">${hora}&nbsp;·&nbsp;${data_str}</span>
             </div>
             ${linhaVeiculoCard(c.placa, c.timestamp)}
@@ -3781,12 +4072,13 @@
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
+      const sessao = marcaDaSessao();
       const { data, error } = await sb.from('capturas')
         .select('velocidade')
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', todayStart.toISOString());
 
-      if (error || !data) return;
+      if (error || !data || !sessaoValida(sessao)) return;
 
       const total = data.length;
       const alertas = data.filter(c => c.velocidade > currentCliente.limite_velocidade).length;
@@ -3834,11 +4126,13 @@
     }
 
     async function loadCamerasStatus() {
+      const sessao = marcaDaSessao();
       try {
         const { data: cameras, error } = await sb.from('cameras')
           .select('id, nome, nome_exibicao, last_seen, ativa')
           .eq('cliente_id', currentCliente.id)
           .eq('ativa', true);
+        if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
 
         if (error || !cameras) { renderCamerasIndisponivel(); return; }
 
@@ -3849,11 +4143,13 @@
           const st = cameraStatus(cam.last_seen);
           const displayName = cam.nome_exibicao || cam.nome;
           const title = (cam.last_seen ? new Date(cam.last_seen).toLocaleString('pt-BR') : 'Nunca conectou') + ' | ' + cam.nome;
-          return `<div class="cam-pill cam-${st.status}" title="${escHtml(title)}">
+          // Ao vivo, mas o clique filtra a câmera na lista (e rola até ela)
+          return `<button type="button" class="cam-pill cam-${st.status}" title="${escHtml(title)}"
+            data-filtro="camera" data-valor="${escHtml(cam.id)}" aria-label="${escHtml(`Filtrar pela câmera ${displayName} (${st.label})`)}">
             <span class="cam-dot"></span>
             <span class="cam-nome">${escHtml(displayName)}</span>
-            <span class="cam-estado">${st.label}</span>
-          </div>`;
+            <span class="cam-estado">${escHtml(st.label)}</span>
+          </button>`;
         }).join('');
       } catch (err) {
         console.error('Erro câmeras:', err);
@@ -3864,7 +4160,7 @@
     // ============================================
     // CAPTURAS TABLE
     // ============================================
-    // Respostas fora de ordem (Limpar + Filtrar, polling) não sobrescrevem a mais nova
+    // Respostas fora de ordem (mudanças seguidas de filtro, polling) não sobrescrevem a mais nova
     let capturasSeq = 0;
     async function loadCapturas({ resetPage = true } = {}) {
       const seq = ++capturasSeq;
@@ -3898,8 +4194,10 @@
         .lte('timestamp', f.tsEnd), f, fv)
         .order('timestamp', { ascending: false })
         .limit(LIMITE_CAPTURAS);
-      const { data, error } = await query;
+      const { data: brutos, error } = await query;
       if (seq !== capturasSeq) return;
+      // "Não cadastrados" é filtro no cliente sobre o que veio (até LIMITE_CAPTURAS)
+      const data = error ? brutos : soNaoCadastradasSeAtivo(f, brutos);
 
       if (error) {
         // Erro não é "nenhuma captura": o síndico leria que ninguém passou.
@@ -3914,13 +4212,14 @@
         const vazio = fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : 'Nenhuma captura encontrada';
         tbody.innerHTML = `<div class="table-empty">${vazio}</div>`;
         lastCapturas = [];
+        limiteAtingido = false;
         pgEl.style.display = 'none';
         atualizarRodapeSemVel();
         return true;
       }
 
       lastCapturas = data;  // sempre o conjunto completo (export usa isto)
-      limiteAtingido = data.length === LIMITE_CAPTURAS;
+      limiteAtingido = brutos.length === LIMITE_CAPTURAS;
       allThumbUrls = {};
       // renderPage() faz o clamp caso o total de páginas tenha diminuído
       if (resetPage) currentPage = 1;
@@ -3928,7 +4227,9 @@
       // Get thumbnail URLs (batch for first 50 visíveis), cache por foto_path
       const vis = capturasVisiveis();
       const firstVis = vis.slice(0, 50).filter(c => c.foto_path);
+      const sessao = marcaDaSessao();
       const thumbResults = await Promise.all(firstVis.map(c => getPhotoUrl(c.foto_path)));
+      if (seq !== capturasSeq || !sessaoValida(sessao)) return; // mais nova (ou outro condomínio) desenha
       firstVis.forEach((c, i) => { allThumbUrls[c.foto_path] = thumbResults[i]; });
 
       await renderPage();
@@ -3941,8 +4242,15 @@
     let limiteAtingido = false;
     let currentPage = 1;
     let allThumbUrls = {};
+    let renderSeq = 0;
 
     async function renderPage() {
+      // Sessão e número da chamada conferidos depois de cada espera, antes de
+      // gravar: uma renderPage mais antiga (outro filtro, outra página) não
+      // escreve por cima da mais nova
+      const sessao = marcaDaSessao();
+      const minha = ++renderSeq;
+      const atual = () => minha === renderSeq && sessaoValida(sessao);
       const data = capturasVisiveis();
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
@@ -3965,11 +4273,13 @@
       const needThumb = pageData.filter(c => c.foto_path && !(c.foto_path in allThumbUrls));
       if (needThumb.length > 0) {
         const results = await Promise.all(needThumb.map(c => getPhotoUrl(c.foto_path)));
+        if (!atual()) return;
         needThumb.forEach((c, i) => { allThumbUrls[c.foto_path] = results[i]; });
       }
 
       await loadVeiculosBase(pageData.map(c => c.placa));
       await carregarSuspeitas(pageData.map(c => c.placa));
+      if (!atual()) return; // chamada mais nova, saída ou troca de condomínio durante as esperas
 
       tabelaPaginaData = pageData;
       tbody.innerHTML = pageData.map((c, pi) => {
@@ -3990,15 +4300,20 @@
           : `<div class="row-no-thumb">&#128663;</div>`;
 
         const radarNome = camerasMap[c.camera_id] || '---';
-        return `<div class="table-row" tabindex="0" role="button" aria-label="Abrir captura ${esc(c.placa)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="openModal(tabelaPaginaData[${pi}])">
+        const radarHtml = camerasMap[c.camera_id]
+          ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`) : esc(radarNome);
+        const statusHtml = isAlert ? botaoFiltro('alerta', '1', statusTexto, `${statusTexto} — filtrar só acima do limite`) : statusTexto;
+        // A linha não é botão (teria botões dentro): o detalhe abre pela data/hora,
+        // que é um <button>; clicar na área vazia da linha é só atalho de mouse
+        return `<div class="table-row" onclick="openModal(tabelaPaginaData[${pi}])">
           <div>${thumbHtml}</div>
-          <div class="placa">${esc(c.placa)}</div>
+          <div class="placa">${botaoFiltro('placa', c.placa, esc(c.placa), `Filtrar pela placa ${c.placa}`)}</div>
           <div class="vel ${velClass}">${velTexto}</div>
-          <div style="font-size:0.6875rem;color:var(--text-secondary);font-weight:500">${esc(radarNome)}</div>
+          <div class="celula-radar" style="font-size:0.6875rem;color:var(--text-secondary);font-weight:500">${radarHtml}</div>
           <div class="veiculo-info">${celulaVeiculoTabela(c.placa, c.timestamp)}</div>
-          <div class="datetime">${dt}</div>
+          <div class="datetime"><button type="button" class="dd dd-detalhe" aria-label="${esc(`${dt} — ver detalhes da passagem ${c.placa}`)}">${dt}</button></div>
           <div class="morador-info">${celulaMorador(c.placa)}</div>
-          <div style="text-align:center;font-size:0.75rem;font-weight:600;color:${statusCor}">${statusTexto}</div>
+          <div style="text-align:center;font-size:0.75rem;font-weight:600;color:${statusCor}">${statusHtml}</div>
         </div>`;
       }).join('');
 
@@ -4047,50 +4362,541 @@
       renderPage();
     }
 
-    // Formulário → estado confirmado (só aqui o que foi digitado passa a valer)
-    function lerFiltrosDoFormulario() {
-      const val = (id) => document.getElementById(id).value;
-      return montarFiltros({
-        dataInicio: val('filter-date-start'), horaInicio: val('filter-time-start'),
-        dataFim: val('filter-date-end'), horaFim: val('filter-time-end'),
-        placa: val('filter-placa'), velMin: val('filter-vel-min'), velMax: val('filter-vel-max'),
-        cameraId: val('filter-camera'),
-        soAlertas: document.getElementById('filter-alertas-only').checked,
-        veiculo: lerFiltroVeiculo(),
-      }, todayLocalISO());
-    }
-
-    // Estado → formulário (Limpar e abertura do painel); veículo é limpo à parte
-    function escreverFiltrosNoFormulario(f) {
-      const definir = (id, v) => { document.getElementById(id).value = v; };
-      definir('filter-date-start', f.dataInicio);
-      definir('filter-time-start', f.horaInicio);
-      definir('filter-date-end', f.dataFim);
-      definir('filter-time-end', f.horaFim);
-      definir('filter-placa', f.placa);
-      definir('filter-vel-min', f.velMin > 0 ? f.velMin : '');
-      definir('filter-vel-max', f.velMax || '');
-      definir('filter-camera', f.cameraId);
-      document.getElementById('filter-alertas-only').checked = f.soAlertas;
-    }
+    // ============================================
+    // BARRA DE FILTROS — tudo aplica sozinho e muda filtrosAtivos (estado único)
+    // Perguntas prontas, período, busca tipada, câmera, "Todas | Acima do
+    // limite", "Mais filtros", chips, drill-down e URL passam por aplicarEstado.
+    // ============================================
+    const DEBOUNCE_CAMPO_MS = 400;
+    const DEBOUNCE_PERIODO_MS = 600;
+    let timerPeriodo = null;
+    const DEBOUNCE_SUGESTAO_MS = 250;
+    const DIAS_SUGESTAO_PLACA = 30;
+    const SUGESTOES_REMOTAS_LINHAS = 40;
+    const CELULAR_MQ = window.matchMedia('(max-width: 600px)');
+    const MOVIMENTO_REDUZIDO_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let barraMontada = false;
+    let recargaSeq = 0;
+    const REGIOES_RECARGA = '.tabela-topo, .table-container, .sidebar';
 
     function atualizarTitulosPeriodo() {
       document.getElementById('titulo-tabela').textContent = `Passagens · ${getActiveFilters().label}`;
     }
 
-    function applyFilters() {
-      filtrosAtivos = lerFiltrosDoFormulario();
+    // Ponto único de mudança: estado novo → barra, URL, títulos e recarga
+    function aplicarEstado(novo, opts) {
+      if (!novo || !filtrosAtivos) return;
+      const mudou = chaveFiltros(novo) !== chaveFiltros(filtrosAtivos);
+      filtrosAtivos = novo;
       hojeDoPainel = todayLocalISO();
-      // Mostra a placa como será buscada (ABC-1D23 → ABC1D23)
-      document.getElementById('filter-placa').value = filtrosAtivos.placa;
+      escreverEstadoNaBarra(novo);
+      if (!mudou) return;
+      salvarFiltrosNaUrl(novo);
       atualizarTitulosPeriodo();
-      recarregarPeriodo();
+      if (opts && opts.rolar) rolarAteFiltros();
+      recarregarComEsmaecer();
     }
 
-    function clearFilters() {
-      escreverFiltrosNoFormulario(filtrosPadrao(todayLocalISO()));
-      limparFiltrosVeiculo();
-      applyFilters();
+    function mudarFiltros(mudancas, opts) {
+      aplicarEstado(comMudancas(filtrosAtivos, mudancas, todayLocalISO()), opts);
+    }
+
+    function rolarAteFiltros() {
+      document.getElementById('filtros').scrollIntoView({
+        behavior: MOVIMENTO_REDUZIDO_MQ.matches ? 'auto' : 'smooth', block: 'start',
+      });
+    }
+
+    // Recarga: dados anteriores esmaecidos (sem esqueleto, sem salto de altura)
+    // e o resultado anunciado ("36 passagens") quando termina
+    async function recarregarComEsmaecer() {
+      const seq = ++recargaSeq;
+      const regioes = [...document.querySelectorAll(REGIOES_RECARGA)];
+      const tbody = document.getElementById('table-body');
+      tbody.style.minHeight = `${tbody.offsetHeight}px`;
+      regioes.forEach((r) => { r.classList.add('recarregando'); r.setAttribute('aria-busy', 'true'); });
+      document.getElementById('btn-ver-passagens').textContent = 'Carregando…';
+      let ok = false;
+      try {
+        ok = await recarregarPeriodo();
+      } finally {
+        if (seq === recargaSeq) desfazerEsmaecer(); // a mais nova (ou a limpeza ao sair) cuida da tela
+      }
+      if (seq !== recargaSeq) return;
+      anunciarResultado(ok);
+    }
+
+    // Tira opacidade, aria-busy e a altura reservada da recarga
+    function desfazerEsmaecer() {
+      // Só as regiões da recarga (o Exportar em uso tem o próprio aria-busy)
+      document.querySelectorAll(REGIOES_RECARGA).forEach((r) => {
+        r.classList.remove('recarregando');
+        r.removeAttribute('aria-busy');
+      });
+      document.getElementById('table-body').style.minHeight = '';
+    }
+
+    // O que a lista mostra ("36 passagens", já sem os não cadastrados/sem
+    // velocidade ocultos); no teto da consulta ganha "+" (há mais no período)
+    function textoDoResultadoAtual() {
+      return textoResultado(capturasVisiveis().length, limiteAtingido);
+    }
+
+    function anunciarResultado(ok) {
+      const texto = ok ? textoDoResultadoAtual() : 'Não foi possível atualizar a lista';
+      const anuncio = document.getElementById('anuncio-resultado');
+      anuncio.textContent = '';
+      setTimeout(() => { anuncio.textContent = texto; }, 100); // esvaziar antes: o mesmo texto é anunciado de novo
+      atualizarBotaoVerPassagens();
+    }
+
+    // Botão do sheet "Filtros" no celular: "Ver 36 passagens" / "Ver 300+ passagens"
+    function atualizarBotaoVerPassagens() {
+      const carregado = filtrosAtivos && chavePeriodoCarregado;
+      document.getElementById('btn-ver-passagens').textContent = carregado
+        ? `Ver ${textoDoResultadoAtual().toLowerCase()}` : 'Ver passagens';
+    }
+
+    // ---------- URL (a placa vai junto: página autenticada, sem link público)
+    function salvarFiltrosNaUrl(f) {
+      try {
+        const qs = paraQueryString(f, todayLocalISO());
+        history.replaceState(history.state, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash);
+      } catch { /* sem history: o filtro só não sobrevive ao recarregar */ }
+    }
+    function limparFiltrosDaUrl() {
+      try {
+        history.replaceState(history.state, '', window.location.pathname + window.location.hash);
+      } catch { /* sem history */ }
+    }
+
+    // ---------- Estado → barra (nunca sobrescreve o campo em que a pessoa digita)
+    function escreverEstadoNaBarra(f) {
+      if (!f || !barraMontada) return;
+      const hoje = todayLocalISO();
+      document.getElementById('rotulo-periodo').textContent = rotuloDoPeriodo(f, hoje);
+      escreverCampos(f);
+      escreverSegmentado(f.soAlertas);
+      escreverContador(f);
+      const atalho = atalhoDoPeriodo(f, hoje);
+      document.querySelectorAll('#painel-periodo [data-atalho]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.atalho === atalho));
+      });
+      const visao = visaoAtiva(f, hoje);
+      document.querySelectorAll('#visoes [data-visao]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.visao === visao));
+      });
+      renderChips(f, hoje);
+      escreverAvisoNaoCadastrados(f);
+    }
+
+    const AVISO_NC = 'Não cadastrados: placas fora do cadastro de moradores, entre as passagens carregadas (até 300).';
+    const AVISO_NC_FALHA = 'Não foi possível conferir o cadastro agora: mostrando todas as passagens. Tente de novo em instantes.';
+    function escreverAvisoNaoCadastrados(f) {
+      const el = document.getElementById('aviso-nc');
+      el.hidden = !f.naoCadastrados;
+      el.textContent = cadastro.estado === 'erro' ? AVISO_NC_FALHA : AVISO_NC;
+      el.classList.toggle('aviso-falha', cadastro.estado === 'erro');
+    }
+
+    function escreverCampos(f) {
+      const emFoco = document.activeElement;
+      const definir = (id, v) => {
+        const el = document.getElementById(id);
+        if (el !== emFoco) el.value = v === null || v === undefined ? '' : v;
+      };
+      definir('filter-date-start', f.dataInicio);
+      definir('filter-time-start', f.horaInicio);
+      definir('filter-date-end', f.dataFim);
+      definir('filter-time-end', f.horaFim);
+      definir('filter-camera', f.cameraId);
+      definir('filter-vel-min', f.velMin > 0 ? f.velMin : '');
+      definir('filter-vel-max', f.velMax);
+      definir('filter-marca', f.veiculo.marca);
+      definir('filter-modelo', f.veiculo.modelo);
+      definir('filter-cor', f.veiculo.cor);
+      definir('filter-ano-de', f.veiculo.anoDe);
+      definir('filter-ano-ate', f.veiculo.anoAte);
+    }
+
+    function escreverSegmentado(soAlertas) {
+      document.querySelectorAll('#seg-alerta [data-alerta]').forEach((b) => {
+        const marcado = (b.dataset.alerta === '1') === soAlertas;
+        b.setAttribute('aria-checked', String(marcado));
+        b.tabIndex = marcado ? 0 : -1; // Tab entra só na opção marcada
+      });
+    }
+
+    // (n): no celular câmera e "Acima do limite" moram no sheet e contam também
+    function escreverContador(f) {
+      const celular = CELULAR_MQ.matches;
+      const n = contarMaisFiltros(f) + (celular ? Number(Boolean(f.cameraId)) + Number(f.soAlertas) : 0);
+      const el = document.getElementById('contador-filtros');
+      el.hidden = n === 0;
+      el.textContent = String(n);
+      const nome = celular ? 'Filtros' : 'Mais filtros';
+      document.getElementById('btn-mais-filtros')
+        .setAttribute('aria-label', n ? `${nome} (${n} ${n === 1 ? 'ativo' : 'ativos'})` : nome);
+    }
+
+    function renderChips(f, hoje) {
+      const chips = chipsDosFiltros(f, hoje, { nomeCamera: (id) => camerasMap[id] || '', nomeCor: corExibicao });
+      const el = document.getElementById('chips-filtros');
+      el.hidden = chips.length === 0;
+      el.innerHTML = chips.length === 0 ? '' : `<ul class="chips-lista" aria-label="Filtros ativos">${chips.map((c) =>
+        `<li class="chip"><span>${esc(c.rotulo)}</span><button type="button" class="chip-x" data-remover="${esc(c.chave)}"`
+        + ` aria-label="${esc(`Remover filtro ${c.rotulo}`)}">✕</button></li>`).join('')}</ul>`
+        + '<button type="button" class="btn-link" data-limpar-tudo>Limpar tudo</button>';
+    }
+
+    // ---------- Chips: ✕ remove um filtro; "Limpar tudo" volta ao padrão
+    function aoClicarChips(e) {
+      const hoje = todayLocalISO();
+      const x = e.target.closest('[data-remover]');
+      if (x) {
+        const botoes = [...document.querySelectorAll('#chips-filtros [data-remover]')];
+        const i = botoes.indexOf(x);
+        aplicarEstado(removerFiltro(filtrosAtivos, x.dataset.remover, hoje));
+        const restantes = document.querySelectorAll('#chips-filtros [data-remover]');
+        const alvo = restantes[Math.min(i, restantes.length - 1)] || document.getElementById('btn-periodo');
+        alvo.focus();
+        return;
+      }
+      if (e.target.closest('[data-limpar-tudo]')) {
+        aplicarEstado(filtrosPadrao(hoje));
+        document.getElementById('btn-periodo').focus();
+      }
+    }
+
+    // ---------- Painéis "Período" e "Mais filtros": popover no desktop, sheet no celular
+    function abrirPainelFiltro(overlay, botao) {
+      const painel = overlay.querySelector('.painel-pop');
+      const popover = !SHEET_MQ.matches;
+      overlay.classList.toggle('como-popover', popover);
+      ['left', 'top', 'bottom', 'maxHeight'].forEach((k) => { painel.style[k] = ''; });
+      if (popover) posicionarPopover(painel, botao);
+      botao.setAttribute('aria-expanded', 'true');
+      abrirOverlay(overlay);
+    }
+
+    // Abaixo do botão; se não couber, acima. Nunca sai da tela (16 px de margem)
+    function posicionarPopover(painel, botao) {
+      const r = botao.getBoundingClientRect();
+      const largura = Math.min(360, window.innerWidth - 32);
+      painel.style.left = `${Math.max(16, Math.min(r.left, window.innerWidth - largura - 16))}px`;
+      const abaixo = window.innerHeight - r.bottom - 22;
+      if (abaixo >= 320 || abaixo >= r.top - 22) {
+        painel.style.top = `${r.bottom + 6}px`;
+        painel.style.maxHeight = `${abaixo}px`;
+      } else {
+        painel.style.bottom = `${window.innerHeight - r.top + 6}px`;
+        painel.style.maxHeight = `${r.top - 22}px`;
+      }
+      painel.style.overflowY = 'auto';
+    }
+
+    function fecharPainelFiltro(overlay) {
+      if (overlay.id === 'painel-periodo') {
+        clearTimeout(timerPeriodo);
+        document.getElementById('aviso-periodo').textContent = '';
+      }
+      const botao = document.querySelector(`[aria-controls="${overlay.id}"]`);
+      if (botao) botao.setAttribute('aria-expanded', 'false');
+      fecharOverlay(overlay);
+    }
+
+    function painelFiltroAberto() {
+      return ['painel-periodo', 'painel-filtros'].map((id) => document.getElementById(id)).find(overlayAberto) || null;
+    }
+
+    // Foco preso no painel aberto (Tab e Shift+Tab dão a volta)
+    function prenderFoco(e) {
+      if (e.key !== 'Tab') return;
+      const focaveis = [...e.currentTarget.querySelectorAll('button:not([tabindex="-1"]), input, select')]
+        .filter((el) => !el.disabled && el.getClientRects().length > 0);
+      if (!focaveis.length) return;
+      const primeiro = focaveis[0];
+      const ultimo = focaveis[focaveis.length - 1];
+      if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+      else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
+    }
+
+    // ---------- Campos: período personalizado e "Mais filtros"
+    function lerPeriodoPersonalizado() {
+      const val = (id) => document.getElementById(id).value;
+      return {
+        dataInicio: val('filter-date-start'), horaInicio: val('filter-time-start'),
+        dataFim: val('filter-date-end'), horaFim: val('filter-time-end'),
+      };
+    }
+
+    const CAMPOS_MAIS = {
+      'filter-vel-min': (v) => ({ velMin: v }),
+      'filter-vel-max': (v) => ({ velMax: v }),
+      'filter-marca': (v) => ({ veiculo: { marca: v } }),
+      'filter-cor': (v) => ({ veiculo: { cor: v } }),
+      'filter-modelo': (v) => ({ veiculo: { modelo: v } }),
+      'filter-ano-de': (v) => ({ veiculo: { anoDe: v } }),
+      'filter-ano-ate': (v) => ({ veiculo: { anoAte: v } }),
+    };
+    const timersCampo = new Map();
+
+    // Só o campo alterado muda (os outros ficam como estão no estado)
+    function aplicarCampoMais(id) {
+      clearTimeout(timersCampo.get(id));
+      const m = CAMPOS_MAIS[id](document.getElementById(id).value);
+      if (!m.veiculo) return mudarFiltros(m);
+      const veiculo = montarFiltroVeiculo(Object.assign({}, filtrosAtivos.veiculo, m.veiculo), new Date().getFullYear());
+      mudarFiltros({ veiculo });
+    }
+
+    function ligarCamposMais() {
+      Object.keys(CAMPOS_MAIS).forEach((id) => {
+        const el = document.getElementById(id);
+        el.addEventListener('change', () => aplicarCampoMais(id));
+        if (el.tagName === 'SELECT') return;
+        el.addEventListener('input', () => {
+          clearTimeout(timersCampo.get(id));
+          timersCampo.set(id, setTimeout(() => aplicarCampoMais(id), DEBOUNCE_CAMPO_MS));
+        });
+      });
+    }
+
+    // ---------- "Todas | Acima do limite" (radiogroup: setas trocam e aplicam)
+    function aoTeclarSegmentado(e) {
+      const passo = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (!passo) return;
+      e.preventDefault();
+      const soAlertas = !filtrosAtivos.soAlertas;
+      mudarFiltros({ soAlertas });
+      document.querySelector(`#seg-alerta [data-alerta="${soAlertas ? 1 : 0}"]`).focus();
+    }
+
+    // ---------- Busca tipada (combobox ARIA com sugestões agrupadas)
+    const busca = { opcoes: [], ativo: -1, timer: null, remotas: [] };
+
+    function fontesBusca() {
+      return {
+        placas: [...(lastCapturas || []).map((c) => c.placa), ...Object.keys(veiculosCache), ...busca.remotas],
+        modelos: opcoesBusca.modelos,
+        marcas: opcoesBusca.marcas,
+      };
+    }
+
+    function atualizarSugestoes() {
+      const termo = document.getElementById('busca').value;
+      renderSugestoes(termo, sugestoesBusca(termo, fontesBusca()));
+      clearTimeout(busca.timer);
+      if (termo.trim().length >= barraFiltrosLib.BUSCA_MIN) {
+        busca.timer = setTimeout(() => buscarPlacasRemotas(termo), DEBOUNCE_SUGESTAO_MS);
+      }
+    }
+
+    // Consulta leve: placas do condomínio nos últimos 30 dias que contêm o termo
+    async function buscarPlacasRemotas(termo) {
+      const t = placaLib.limpar(termo);
+      if (t.length < barraFiltrosLib.BUSCA_MIN || !currentCliente) return;
+      const sessao = marcaDaSessao();
+      const desde = new Date(Date.now() - DIAS_SUGESTAO_PLACA * 86400000).toISOString();
+      try {
+        const { data, error } = await sb.from('capturas').select('placa')
+          .eq('cliente_id', currentCliente.id).gte('timestamp', desde)
+          .ilike('placa', `%${t}%`).order('timestamp', { ascending: false })
+          .limit(SUGESTOES_REMOTAS_LINHAS); // várias passagens da mesma placa: pede mais e deduplica
+        const input = document.getElementById('busca');
+        if (error || !data || !sessaoValida(sessao) || input.value !== termo || document.activeElement !== input) return;
+        busca.remotas = [...new Set([...busca.remotas, ...data.map((d) => d.placa)])].slice(-200);
+        renderSugestoes(termo, sugestoesBusca(termo, fontesBusca()));
+      } catch { /* fica só com as sugestões locais */ }
+    }
+
+    function renderSugestoes(termo, grupos) {
+      const lista = document.getElementById('busca-lista');
+      busca.opcoes = [];
+      busca.ativo = -1;
+      if (termo.trim().length < barraFiltrosLib.BUSCA_MIN) return fecharSugestoes();
+      const enter = decidirEnter(termo);
+      // Rodapé fora do listbox (não é opção): dica do Enter ou "nenhuma sugestão"
+      document.getElementById('busca-rodape').textContent = grupos.length > 0
+        ? 'Enter: placa se tiver número; senão, modelo'
+        : `Nenhuma sugestão. ${enter ? `Enter busca ${enter.tipo === 'placa' ? 'a placa' : 'o modelo'} “${enter.valor}”.` : ''}`;
+      lista.innerHTML = grupos.length === 0 ? ''
+        : grupos.map((g, gi) => `<div role="group" aria-labelledby="busca-g${gi}">`
+          + `<div class="busca-grupo-titulo" id="busca-g${gi}">${esc(g.titulo)}</div>`
+          + g.itens.map((item) => {
+            const i = busca.opcoes.push({ tipo: g.tipo, valor: item }) - 1;
+            return `<div class="busca-opcao${g.tipo === 'placa' ? ' placa-opcao' : ''}" role="option"`
+              + ` id="busca-op-${i}" data-i="${i}" aria-selected="false">${esc(item)}</div>`;
+          }).join('') + '</div>').join('');
+      document.getElementById('busca-pop').hidden = false;
+      const input = document.getElementById('busca');
+      input.setAttribute('aria-expanded', String(grupos.length > 0));
+      input.removeAttribute('aria-activedescendant');
+    }
+
+    function fecharSugestoes() {
+      const input = document.getElementById('busca');
+      document.getElementById('busca-pop').hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+      input.removeAttribute('aria-activedescendant');
+      busca.ativo = -1;
+    }
+
+    function moverAtivo(passo) {
+      const n = busca.opcoes.length;
+      if (!n) return;
+      busca.ativo = busca.ativo < 0 ? (passo > 0 ? 0 : n - 1) : (busca.ativo + passo + n) % n;
+      document.querySelectorAll('#busca-lista [role="option"]').forEach((op) => {
+        op.setAttribute('aria-selected', String(Number(op.dataset.i) === busca.ativo));
+      });
+      const atual = document.getElementById(`busca-op-${busca.ativo}`);
+      document.getElementById('busca').setAttribute('aria-activedescendant', atual.id);
+      atual.scrollIntoView({ block: 'nearest' });
+    }
+
+    // Escolha (sugestão ou Enter) cria o filtro do tipo certo
+    function escolherBusca(op) {
+      if (!op) return;
+      const input = document.getElementById('busca');
+      fecharSugestoes();
+      input.value = '';
+      if (CELULAR_MQ.matches) input.blur(); // a barra volta e o chip aparece
+      const mudanca = op.tipo === 'placa' ? { placa: op.valor }
+        : op.tipo === 'marca' ? { veiculo: { marca: op.valor } }
+        : { veiculo: { modelo: termoModelo(op.valor) } };
+      mudarFiltros(mudanca);
+    }
+
+    function aoTeclarBusca(e) {
+      const input = e.currentTarget;
+      const aberta = !document.getElementById('busca-pop').hidden;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!aberta) atualizarSugestoes();
+        moverAtivo(e.key === 'ArrowDown' ? 1 : -1);
+      } else if ((e.key === 'Home' || e.key === 'End') && aberta && busca.opcoes.length) {
+        e.preventDefault(); // com a lista aberta, Home/End vão à primeira/última sugestão
+        busca.ativo = -1;
+        moverAtivo(e.key === 'Home' ? 1 : -1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        escolherBusca(busca.opcoes[busca.ativo] || decidirEnter(input.value));
+      } else if (e.key === 'Escape' && (aberta || input.value)) {
+        e.stopPropagation(); // Esc da busca não fecha outras camadas
+        if (aberta) fecharSugestoes(); else input.value = '';
+      }
+    }
+
+    function ligarBusca() {
+      const input = document.getElementById('busca');
+      const lista = document.getElementById('busca-pop');
+      input.addEventListener('input', atualizarSugestoes);
+      input.addEventListener('keydown', aoTeclarBusca);
+      input.addEventListener('blur', fecharSugestoes);
+      lista.addEventListener('mousedown', (e) => e.preventDefault()); // clicar não tira o foco do campo
+      lista.addEventListener('click', (e) => {
+        const op = e.target.closest('[role="option"]');
+        if (op) escolherBusca(busca.opcoes[Number(op.dataset.i)]);
+      });
+    }
+
+    // ---------- Clicar no dado filtra (tabela, cards, câmeras "Agora", Top 10)
+    const MUDANCA_DO_DADO = {
+      placa: (v) => ({ placa: v }),
+      camera: (v) => ({ cameraId: v }),
+      alerta: () => ({ soAlertas: true }),
+      modelo: (v) => ({ veiculo: { modelo: termoModelo(v) } }),
+    };
+
+    // Captura: o botão filtra sem chegar ao clique do card/linha (que abre o detalhe)
+    function ligarDrillDown(id, rolar) {
+      const el = document.getElementById(id);
+      el.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-filtro]');
+        if (!b || !el.contains(b) || !MUDANCA_DO_DADO[b.dataset.filtro]) return;
+        e.stopPropagation();
+        e.preventDefault();
+        mudarFiltros(MUDANCA_DO_DADO[b.dataset.filtro](b.dataset.valor), { rolar });
+      }, true);
+    }
+
+    // ---------- Celular: câmera e segmentado vão para o sheet "Filtros"
+    function posicionarControlesCelular() {
+      const celular = CELULAR_MQ.matches;
+      const grupos = ['grupo-camera', 'grupo-alerta'].map((id) => document.getElementById(id));
+      const slot = document.getElementById('slot-celular');
+      const barra = document.getElementById('barra-filtros');
+      const mais = document.getElementById('btn-mais-filtros');
+      grupos.forEach((g) => (celular ? slot.append(g) : barra.insertBefore(g, mais)));
+      document.getElementById('painel-filtros-titulo').textContent = celular ? 'Filtros' : 'Mais filtros';
+      if (filtrosAtivos) escreverContador(filtrosAtivos);
+    }
+
+    function ligarPeriodo() {
+      const overlay = document.getElementById('painel-periodo');
+      document.getElementById('btn-periodo').addEventListener('click', (e) => abrirPainelFiltro(overlay, e.currentTarget));
+      overlay.querySelectorAll('[data-atalho]').forEach((b) => b.addEventListener('click', () => {
+        document.getElementById('aviso-periodo').textContent = '';
+        mudarFiltros(periodoDoAtalho(b.dataset.atalho, todayLocalISO()));
+        fecharPainelFiltro(overlay);
+      }));
+      ['filter-date-start', 'filter-time-start', 'filter-date-end', 'filter-time-end'].forEach((id) => {
+        const el = document.getElementById(id);
+        // Digitar a data gera uma rajada (0002 → 0020 → 0202 → 2026): espera
+        // 600 ms parado ou a saída do campo, o que vier primeiro
+        el.addEventListener('input', () => {
+          clearTimeout(timerPeriodo);
+          timerPeriodo = setTimeout(() => aplicarPeriodoPersonalizado(false), DEBOUNCE_PERIODO_MS);
+        });
+        // Painel já fechando (Esc, fora, ✕): não reaplica nem avisa
+        el.addEventListener('blur', () => { if (overlayAberto(overlay)) aplicarPeriodoPersonalizado(true); });
+      });
+    }
+
+    // Só aplica período válido (data real, de 2000 em diante, até 31 dias).
+    // O aviso aparece ao sair do campo; durante a digitação o inválido é ignorado.
+    function aplicarPeriodoPersonalizado(saiuDoCampo) {
+      clearTimeout(timerPeriodo);
+      const campos = lerPeriodoPersonalizado();
+      const motivo = validarPeriodo(campos);
+      const aviso = document.getElementById('aviso-periodo');
+      if (motivo) {
+        if (saiuDoCampo) aviso.textContent = motivo;
+        return;
+      }
+      aviso.textContent = '';
+      mudarFiltros(campos);
+    }
+
+    // Uma vez por página: monta as visões e liga todos os controles
+    function montarBarraFiltros() {
+      if (barraMontada) return;
+      barraMontada = true;
+      const visoes = document.getElementById('visoes');
+      visoes.innerHTML = VISOES.map((v) =>
+        `<button type="button" class="visao" data-visao="${esc(v.id)}" aria-pressed="false">${esc(v.rotulo)}</button>`).join('');
+      visoes.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-visao]');
+        if (b) aplicarEstado(estadoDaVisao(b.dataset.visao, todayLocalISO()));
+      });
+      ligarPeriodo();
+      ligarBusca();
+      ligarCamposMais();
+      document.getElementById('filter-camera').addEventListener('change', (e) => mudarFiltros({ cameraId: e.target.value }));
+      const seg = document.getElementById('seg-alerta');
+      seg.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-alerta]');
+        if (b) mudarFiltros({ soAlertas: b.dataset.alerta === '1' });
+      });
+      seg.addEventListener('keydown', aoTeclarSegmentado);
+      document.getElementById('btn-mais-filtros').addEventListener('click', (e) =>
+        abrirPainelFiltro(document.getElementById('painel-filtros'), e.currentTarget));
+      document.getElementById('chips-filtros').addEventListener('click', aoClicarChips);
+      ['painel-periodo', 'painel-filtros'].forEach((id) => document.getElementById(id).addEventListener('keydown', prenderFoco));
+      ligarDrillDown('table-body', false);
+      ['recent-cards', 'cameras-status', 'ranking-list'].forEach((id) => ligarDrillDown(id, true));
+      CELULAR_MQ.addEventListener('change', posicionarControlesCelular);
+      posicionarControlesCelular();
     }
 
     // ============================================
@@ -4103,14 +4909,16 @@
 
     async function loadVeiculos() {
       if (!currentCliente) return;
+      const sessao = marcaDaSessao();
       const token = (await sb.auth.getSession()).data.session?.access_token;
-      if (!token) return;
+      if (!token || !sessaoValida(sessao)) return;
 
       try {
-        const resp = await fetch(`/api/admin/veiculos?cliente_id=${currentCliente.id}`, {
+        const resp = await fetch(`/api/admin/veiculos?cliente_id=${encodeURIComponent(sessao.clienteId)}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         const data = await resp.json();
+        if (!sessaoValida(sessao)) return; // trocou de condomínio no meio
 
         if (Array.isArray(data)) {
           veiculosList = data.filter(v => v.ativo !== false);
@@ -4850,7 +5658,12 @@
     // ============================================
     // MODAL - Full detail view
     // ============================================
+    // Cada abertura tem um número: resposta atrasada de outra abertura (ou de
+    // outra sessão/condomínio) não escreve no modal
+    let aberturaModalSeq = 0;
     async function openModal(captura) {
+      const abertura = ++aberturaModalSeq;
+      const sessao = marcaDaSessao();
       const modal = document.getElementById('modal');
       const body = document.getElementById('modal-body');
       const limite = currentCliente.limite_velocidade;
@@ -4868,6 +5681,7 @@
         loadHistoricoPlaca(captura.placa),
         loadVeiculosBase([captura.placa]).then(() => suspeitaDe(captura.placa)),
       ]);
+      if (abertura !== aberturaModalSeq || !sessaoValida(sessao)) return;
 
       const veiculo = veiculosCache[captura.placa];
       const vb = veiculoBaseDe(captura.placa);
@@ -4878,7 +5692,7 @@
       // Photo (clicável → abre lightbox em tamanho real)
       if (photoUrl) {
         const safeUrl = photoUrl.replace(/"/g, '&quot;');
-        html += `<img class="modal-photo" src="${safeUrl}" alt="Foto do veículo — clique para ampliar" tabindex="0" onclick="openLightbox('${safeUrl}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox('${safeUrl}')}">`;
+        html += `<img class="modal-photo" src="${safeUrl}" alt="Foto do veículo — clique para ampliar" tabindex="0" role="button" data-acao="ampliar-foto">`;
       } else {
         html += `<div class="modal-no-photo">Sem foto disponivel</div>`;
       }
@@ -4939,7 +5753,7 @@
 
       // Actions
       const zoomBtn = photoUrl
-        ? `<button class="btn-zoom" onclick="openLightbox('${photoUrl.replace(/"/g, '&quot;').replace(/'/g, "\\'")}')">Ver em tamanho real</button>`
+        ? '<button type="button" class="btn-zoom" data-acao="ampliar-foto">Ver em tamanho real</button>'
         : '';
       html += `<div class="modal-actions">
         <button type="button" class="btn-pdf" data-acao="gerar-pdf">
@@ -4949,7 +5763,7 @@
       </div>`;
 
       body.innerHTML = html;
-      ligarControlesModal(body, captura);
+      ligarControlesModal(body, captura, photoUrl);
     }
 
     // ---- Quadros do modal (base de veículos, morador, cadastro, suspeita) ----
@@ -5010,7 +5824,16 @@
     }
 
     // Controles novos: data-* + addEventListener (nada de dado dentro de onclick)
-    function ligarControlesModal(body, captura) {
+    function ligarControlesModal(body, captura, photoUrl) {
+      // A URL da foto fica no fechamento, não no HTML
+      body.querySelectorAll('[data-acao="ampliar-foto"]').forEach((el) => {
+        el.addEventListener('click', () => openLightbox(photoUrl));
+        el.addEventListener('keydown', (ev) => {
+          if (el.tagName === 'BUTTON' || (ev.key !== 'Enter' && ev.key !== ' ')) return;
+          ev.preventDefault();
+          openLightbox(photoUrl);
+        });
+      });
       const pdf = body.querySelector('[data-acao="gerar-pdf"]');
       if (pdf) pdf.addEventListener('click', () => gerarNotificacaoPDF(captura, pdf));
       const mesma = body.querySelector('[data-acao="mesma-placa"]');
@@ -5141,6 +5964,7 @@
     function pintarScrim(overlay, p) {
       overlay.style.opacity = p;
       if (overlay.id === 'lightbox') return;
+      if (overlay.classList.contains('como-popover')) { overlay.style.backdropFilter = ''; overlay.style.webkitBackdropFilter = ''; return; } // popover: sem desfoque
       const blur = (SCRIM_BLUR_MAX * p).toFixed(1);
       overlay.style.backdropFilter = `blur(${blur}px)`;
       overlay.style.webkitBackdropFilter = `blur(${blur}px)`;
@@ -5231,6 +6055,9 @@
       const aoFechar = ctl.aoFechar;
       ctl.aoFechar = null;
       if (aoFechar) aoFechar();
+      // Fechado por qualquer caminho (inclui arrastar o sheet): o botão que abriu volta a "fechado"
+      const controlador = document.querySelector(`[aria-controls="${overlay.id}"][aria-expanded]`);
+      if (controlador) controlador.setAttribute('aria-expanded', 'false');
       if (overlay.id === 'boas-vindas') marcarBoasVindasVista(); // fechar por qualquer caminho (inclui arrastar)
       const anterior = focoAntesDoOverlay.get(overlay.id);
       focoAntesDoOverlay.delete(overlay.id);
@@ -5507,6 +6334,8 @@
       if (overlayAberto(lbEl)) return closeLightbox();
       if (contaMenuAberto()) return fecharContaMenu();
       if (overlayAberto(document.getElementById('boas-vindas'))) return fecharBoasVindas();
+      const painelFiltro = painelFiltroAberto();
+      if (painelFiltro) return fecharPainelFiltro(painelFiltro); // o foco volta ao botão
       if (exportMenuAberto()) {
         closeExportMenu();
         document.getElementById('btn-exportar').focus();
@@ -6062,8 +6891,8 @@
     }
 
     // ============================================
-    // FILTROS CONFIRMADOS — fonte única de tabela, gráfico, indicadores,
-    // alertas e Top 10. O formulário só vale depois de "Filtrar".
+    // FILTROS ATIVOS — fonte única de tabela, gráfico, indicadores,
+    // alertas e Top 10. Toda mudança passa por aplicarEstado (barra de filtros).
     // ============================================
     function rotuloPeriodo(f) {
       const curto = (d, opts) => new Date(d + 'T12:00').toLocaleDateString('pt-BR', opts);
@@ -6113,9 +6942,16 @@
       return data || [];
     }
 
+    // "Não cadastrados": placa fora do cadastro de moradores (as duas grafias)
+    // Sem o cadastro (falha), não filtra: marcaria todo mundo como não cadastrado
+    function soNaoCadastradasSeAtivo(f, linhas) {
+      if (!f.naoCadastrados || cadastro.estado !== 'ok') return linhas;
+      return filtrarNaoCadastradas(linhas, placasCadastradas);
+    }
+
     async function consultaELinhas(colunas) {
       const { f, q } = await consultaDoPeriodo(colunas);
-      return { f, data: await linhasDe(q) };
+      return { f, data: soNaoCadastradasSeAtivo(f, await linhasDe(q)) };
     }
 
     // Roda a consulta de um card. Erro: mostra "Não foi possível atualizar ·
@@ -6142,8 +6978,8 @@
     async function loadHourlyChart() {
       const seq = ++graficoSeq;
       // Mesmos filtros da tabela; filtro de veículo sem placas = gráfico zerado
-      const { f, q } = await consultaDoPeriodo('timestamp');
-      const data = await linhasDe(q);
+      const { f, q } = await consultaDoPeriodo('timestamp, placa');
+      const data = soNaoCadastradasSeAtivo(f, await linhasDe(q));
       if (seq !== graficoSeq) return; // resposta antiga não redesenha por cima
 
       if (f.isSingleDay) {
@@ -6480,8 +7316,8 @@
         });
       }
 
-      const { q } = await consultaDoPeriodo('velocidade, timestamp');
-      const data = await linhasDe(q && q.gt('velocidade', currentCliente.limite_velocidade));
+      const { q } = await consultaDoPeriodo('velocidade, timestamp, placa');
+      const data = soNaoCadastradasSeAtivo(f, await linhasDe(q && q.gt('velocidade', currentCliente.limite_velocidade)));
       if (seq !== alertasSeq) return; // resposta antiga não redesenha por cima
       if (data) {
         data.forEach(c => {
@@ -6631,11 +7467,12 @@
 
       document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => {
         const hasAlert = (alerts[item[0]] || 0) > 0;
-        return `<li class="ranking-item" data-placa="${esc(item[0])}" onclick="document.getElementById('filter-placa').value=this.dataset.placa;applyFilters()">
+        const rotulo = `Filtrar pela placa ${item[0]} (${item[1]} passagens${hasAlert ? `, ${alerts[item[0]]} acima do limite` : ''})`;
+        return `<li class="ranking-item"><button type="button" class="ranking-btn" data-filtro="placa" data-valor="${esc(item[0])}" aria-label="${esc(rotulo)}">
           <span class="pos">${i + 1}.</span>
           <span class="placa" style="${hasAlert ? 'color:var(--red)' : ''}">${esc(item[0])}</span>
           <span class="count">${item[1]}x${hasAlert ? ` <span style="color:var(--red);font-size:0.5625rem">${alerts[item[0]]}⚠</span>` : ''}</span>
-        </li>`;
+        </button></li>`;
       }).join('');
     }
   </script>
