@@ -3475,6 +3475,8 @@
       html('vm-lista', '<div class="vm-result-empty">Carregando...</div>');
       html('vm-lista-pg', '');
       html('modal-body', '');
+      desfazerEsmaecer(); // sair durante uma recarga não deixa o próximo painel esmaecido
+      texto('btn-ver-passagens', 'Ver passagens');
       document.getElementById('lightbox-img').removeAttribute('src');
     }
 
@@ -3710,8 +3712,8 @@
           suspeitaFalhouEm.delete(m);
           return s;
         })
-        .catch(() => { suspeitaFalhouEm.set(m, Date.now()); return null; })
-        .finally(() => { suspeitaEmVoo.delete(m); });
+        .catch(() => { if (sessaoValida(sessao)) suspeitaFalhouEm.set(m, Date.now()); return null; })
+        .finally(() => { if (suspeitaEmVoo.get(m) === pedido) suspeitaEmVoo.delete(m); });
       suspeitaEmVoo.set(m, pedido);
       return pedido;
     }
@@ -4225,7 +4227,9 @@
       // Get thumbnail URLs (batch for first 50 visíveis), cache por foto_path
       const vis = capturasVisiveis();
       const firstVis = vis.slice(0, 50).filter(c => c.foto_path);
+      const sessao = marcaDaSessao();
       const thumbResults = await Promise.all(firstVis.map(c => getPhotoUrl(c.foto_path)));
+      if (seq !== capturasSeq || !sessaoValida(sessao)) return; // mais nova (ou outro condomínio) desenha
       firstVis.forEach((c, i) => { allThumbUrls[c.foto_path] = thumbResults[i]; });
 
       await renderPage();
@@ -4240,6 +4244,7 @@
     let allThumbUrls = {};
 
     async function renderPage() {
+      const sessao = marcaDaSessao(); // conferida depois de cada espera, antes de gravar
       const data = capturasVisiveis();
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
@@ -4262,11 +4267,13 @@
       const needThumb = pageData.filter(c => c.foto_path && !(c.foto_path in allThumbUrls));
       if (needThumb.length > 0) {
         const results = await Promise.all(needThumb.map(c => getPhotoUrl(c.foto_path)));
+        if (!sessaoValida(sessao)) return;
         needThumb.forEach((c, i) => { allThumbUrls[c.foto_path] = results[i]; });
       }
 
       await loadVeiculosBase(pageData.map(c => c.placa));
       await carregarSuspeitas(pageData.map(c => c.placa));
+      if (!sessaoValida(sessao)) return; // saiu/trocou de condomínio durante as esperas
 
       tabelaPaginaData = pageData;
       tbody.innerHTML = pageData.map((c, pi) => {
@@ -4402,11 +4409,23 @@
       tbody.style.minHeight = `${tbody.offsetHeight}px`;
       regioes.forEach((r) => { r.classList.add('recarregando'); r.setAttribute('aria-busy', 'true'); });
       document.getElementById('btn-ver-passagens').textContent = 'Carregando…';
-      const ok = await recarregarPeriodo();
-      if (seq !== recargaSeq) return; // uma mudança mais nova cuida da tela
-      regioes.forEach((r) => { r.classList.remove('recarregando'); r.removeAttribute('aria-busy'); });
-      tbody.style.minHeight = '';
+      let ok = false;
+      try {
+        ok = await recarregarPeriodo();
+      } finally {
+        if (seq === recargaSeq) desfazerEsmaecer(); // a mais nova (ou a limpeza ao sair) cuida da tela
+      }
+      if (seq !== recargaSeq) return;
       anunciarResultado(ok);
+    }
+
+    // Tira opacidade, aria-busy e a altura reservada da recarga
+    function desfazerEsmaecer() {
+      document.querySelectorAll('.recarregando, [aria-busy]').forEach((r) => {
+        r.classList.remove('recarregando');
+        r.removeAttribute('aria-busy');
+      });
+      document.getElementById('table-body').style.minHeight = '';
     }
 
     // O que a lista mostra ("36 passagens", já sem os não cadastrados/sem
@@ -4821,7 +4840,8 @@
           clearTimeout(timerPeriodo);
           timerPeriodo = setTimeout(() => aplicarPeriodoPersonalizado(false), DEBOUNCE_PERIODO_MS);
         });
-        el.addEventListener('blur', () => aplicarPeriodoPersonalizado(true));
+        // Painel já fechando (Esc, fora, ✕): não reaplica nem avisa
+        el.addEventListener('blur', () => { if (overlayAberto(overlay)) aplicarPeriodoPersonalizado(true); });
       });
     }
 
@@ -5630,7 +5650,12 @@
     // ============================================
     // MODAL - Full detail view
     // ============================================
+    // Cada abertura tem um número: resposta atrasada de outra abertura (ou de
+    // outra sessão/condomínio) não escreve no modal
+    let aberturaModalSeq = 0;
     async function openModal(captura) {
+      const abertura = ++aberturaModalSeq;
+      const sessao = marcaDaSessao();
       const modal = document.getElementById('modal');
       const body = document.getElementById('modal-body');
       const limite = currentCliente.limite_velocidade;
@@ -5648,6 +5673,7 @@
         loadHistoricoPlaca(captura.placa),
         loadVeiculosBase([captura.placa]).then(() => suspeitaDe(captura.placa)),
       ]);
+      if (abertura !== aberturaModalSeq || !sessaoValida(sessao)) return;
 
       const veiculo = veiculosCache[captura.placa];
       const vb = veiculoBaseDe(captura.placa);
@@ -5658,7 +5684,7 @@
       // Photo (clicável → abre lightbox em tamanho real)
       if (photoUrl) {
         const safeUrl = photoUrl.replace(/"/g, '&quot;');
-        html += `<img class="modal-photo" src="${safeUrl}" alt="Foto do veículo — clique para ampliar" tabindex="0" onclick="openLightbox('${safeUrl}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox('${safeUrl}')}">`;
+        html += `<img class="modal-photo" src="${safeUrl}" alt="Foto do veículo — clique para ampliar" tabindex="0" role="button" data-acao="ampliar-foto">`;
       } else {
         html += `<div class="modal-no-photo">Sem foto disponivel</div>`;
       }
@@ -5719,7 +5745,7 @@
 
       // Actions
       const zoomBtn = photoUrl
-        ? `<button class="btn-zoom" onclick="openLightbox('${photoUrl.replace(/"/g, '&quot;').replace(/'/g, "\\'")}')">Ver em tamanho real</button>`
+        ? '<button type="button" class="btn-zoom" data-acao="ampliar-foto">Ver em tamanho real</button>'
         : '';
       html += `<div class="modal-actions">
         <button type="button" class="btn-pdf" data-acao="gerar-pdf">
@@ -5729,7 +5755,7 @@
       </div>`;
 
       body.innerHTML = html;
-      ligarControlesModal(body, captura);
+      ligarControlesModal(body, captura, photoUrl);
     }
 
     // ---- Quadros do modal (base de veículos, morador, cadastro, suspeita) ----
@@ -5790,7 +5816,16 @@
     }
 
     // Controles novos: data-* + addEventListener (nada de dado dentro de onclick)
-    function ligarControlesModal(body, captura) {
+    function ligarControlesModal(body, captura, photoUrl) {
+      // A URL da foto fica no fechamento, não no HTML
+      body.querySelectorAll('[data-acao="ampliar-foto"]').forEach((el) => {
+        el.addEventListener('click', () => openLightbox(photoUrl));
+        el.addEventListener('keydown', (ev) => {
+          if (el.tagName === 'BUTTON' || (ev.key !== 'Enter' && ev.key !== ' ')) return;
+          ev.preventDefault();
+          openLightbox(photoUrl);
+        });
+      });
       const pdf = body.querySelector('[data-acao="gerar-pdf"]');
       if (pdf) pdf.addEventListener('click', () => gerarNotificacaoPDF(captura, pdf));
       const mesma = body.querySelector('[data-acao="mesma-placa"]');
