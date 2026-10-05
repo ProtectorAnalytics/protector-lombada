@@ -373,6 +373,7 @@
   </main>
 
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="/js/miniatura.js"></script>
   <script>
   (async () => {
     const params = new URLSearchParams(location.search);
@@ -437,6 +438,34 @@
     function statusLabel(s) {
       return ({ online: 'Online', atrasada: 'Atrasada', offline: 'Offline', nunca_conectou: 'Nunca conectou' })[s] || s;
     }
+    // A API reassina as fotos a cada atualização (30 s) e a URL nova faria o
+    // navegador baixar tudo de novo: reaproveita a URL já mostrada para o
+    // mesmo path enquanto faltar > 1 min para expirar (TTL do servidor: 600 s).
+    const TTL_URL_SERVIDOR_MS = 600000;
+    const MARGEM_URL_MS = 60000;
+    const urlsMostradas = new Map();
+    function urlEstavel(path, urlNova) {
+      if (!path || !urlNova) return urlNova || null;
+      const agora = Date.now();
+      const antes = urlsMostradas.get(path);
+      if (miniaturaLib.urlAindaVale(antes, agora, MARGEM_URL_MS)) return antes.url;
+      urlsMostradas.set(path, { url: urlNova, expiraEm: agora + TTL_URL_SERVIDOR_MS });
+      return urlNova;
+    }
+
+    // Miniatura da lista com recuo para o original; se nem o original
+    // carregar, vira o marcador "sem foto" (listener, nada em onerror)
+    document.addEventListener('error', (ev) => {
+      const img = ev.target;
+      if (!(img instanceof HTMLImageElement) || !img.hasAttribute('data-sem-foto')) return;
+      const original = img.getAttribute('data-original');
+      if (original) { img.removeAttribute('data-original'); img.src = original; return; }
+      const marcador = document.createElement('span');
+      marcador.className = 'nofoto';
+      marcador.textContent = 'sem foto';
+      img.replaceWith(marcador);
+    }, true);
+
     function esc(s) { return String(s ?? '').replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c])); }
 
     // ─── load + render ───
@@ -508,7 +537,7 @@
       const ult = ultimas[0];
       const fotoCard = ult
         ? `<div class="foto-wrap">
-             ${ult.foto_url ? `<img src="${ult.foto_url}" alt="Última captura" />` : `<div class="foto-empty">Captura sem foto<br>(salvada há ${fmtRelativa(ult.timestamp)})</div>`}
+             ${ult.foto_url ? `<img src="${esc(urlEstavel(ult.foto_path, ult.foto_url))}" alt="Última captura" decoding="async" />` : `<div class="foto-empty">Captura sem foto<br>(salvada há ${fmtRelativa(ult.timestamp)})</div>`}
              <div class="foto-overlay">${esc(ult.placa || '—')}</div>
              <div class="foto-vel${ult.velocidade != null && cli?.limite_velocidade != null && ult.velocidade > cli.limite_velocidade ? ' alerta' : ''}">${ult.velocidade != null ? ult.velocidade + ' km/h' : '—'}</div>
            </div>
@@ -522,13 +551,19 @@
         : `<div class="spark">${sparkRaw.map(p => `<div class="spark-bar ${p.count === 0 ? 'zero' : ''}" style="height: ${Math.max(2, (p.count / maxSpark) * 60)}px" title="${p.day}: ${p.count}"></div>`).join('')}</div>
            <div class="spark-labels"><span>${sparkRaw[0]?.day || ''}</span><span>hoje</span></div>`;
 
-      // Lista de últimas capturas
+      // Lista de últimas capturas: miniatura (80×60) com recuo para o original
+      const fotoDaLista = (c) => {
+        const original = urlEstavel(c.foto_path, c.foto_url);
+        const mini = c.foto_mini_url ? urlEstavel(miniaturaLib.caminhoMiniatura(c.foto_path), c.foto_mini_url) : null;
+        const recuo = mini ? ` data-original="${esc(original)}"` : '';
+        return `<img src="${esc(mini || original)}"${recuo} data-sem-foto alt="" width="80" height="60" decoding="async" loading="lazy"/>`;
+      };
       const capItems = ultimas.length === 0
         ? '<div class="cap-empty">Nenhuma captura registrada ainda.</div>'
         : ultimas.map(c => {
             const isAlerta = c.velocidade != null && cli?.limite_velocidade != null && c.velocidade > cli.limite_velocidade;
             return `<div class="cap-item">
-              <div class="cap-thumb">${c.foto_url ? `<img src="${c.foto_url}" alt=""/>` : '<span class="nofoto">sem foto</span>'}</div>
+              <div class="cap-thumb">${c.foto_url ? fotoDaLista(c) : '<span class="nofoto">sem foto</span>'}</div>
               <div class="cap-info">
                 <div class="placa">${esc(c.placa || '—')}</div>
                 <div class="meta">
