@@ -5,7 +5,7 @@
 const assert = require('node:assert');
 const path = require('node:path');
 
-const estado = { profile: null, tabelas: {}, updates: [], vbLinha: null, consultas: [], resultadoConsulta: null, repoEscritas: [] };
+const estado = { profile: null, tabelas: {}, updates: [], consultas: [], resultadoConsulta: null };
 
 function stub(rel, exports) {
   const id = require.resolve(path.join('..', rel));
@@ -28,7 +28,12 @@ function tabela(nome) {
     maybeSingle() { const l = linhas(); return Promise.resolve({ data: l[0] || null, error: null }); },
     then(ok, ko) {
       let res;
-      if (modo === 'update') { estado.updates.push({ tabela: nome, patch, ids: linhas().map((r) => r.id) }); res = { error: null }; }
+      if (modo === 'update') {
+        const alvo = linhas();
+        alvo.forEach((r) => Object.assign(r, patch));
+        estado.updates.push({ tabela: nome, patch, ids: alvo.map((r) => r.id) });
+        res = { data: alvo, error: null };
+      }
       else res = head ? { count: linhas().length, error: null } : { data: linhas(), error: null };
       return Promise.resolve(res).then(ok, ko);
     },
@@ -44,8 +49,6 @@ stub('lib/auth-middleware', {
 });
 stub('lib/veiculos-base-repo', {
   criarRepoSupabase: () => ({
-    buscar: async () => estado.vbLinha,
-    atualizar: async (p, c) => { estado.repoEscritas.push({ p, c }); },
     contarPassagens: async () => 0,
   }),
 });
@@ -71,7 +74,7 @@ const recente = () => new Date(Date.now() - 86400000).toISOString();
 let passou = 0;
 async function caso(nome, fn) {
   estado.profile = { id: 'u1', role: 'operador', cliente_id: 'c1' };
-  estado.tabelas = {}; estado.updates = []; estado.vbLinha = null; estado.consultas = []; estado.repoEscritas = [];
+  estado.tabelas = {}; estado.updates = []; estado.consultas = [];
   estado.resultadoConsulta = { executou: true, linha: { placa: 'ABC1D23', status: 'consultado' } };
   await fn(); passou++; console.log(`ok - ${nome}`);
 }
@@ -100,64 +103,142 @@ async function caso(nome, fn) {
     assert.strictEqual(r.code, 403);
   });
 
+  const susp = 'ABC1D23';
+  const { paraAntiga } = require('../site/js/placa');
+  const antiga = paraAntiga(susp);
+  const vbSusp = (cli, extra = {}) => ({ placa: 'ABC1D28', status: 'suspeita', suspeita_de: susp, suspeita_cliente_id: cli, ...extra });
+  const capC1 = (id, placa) => ({ id, cliente_id: 'c1', placa, timestamp: recente() });
+  const post = (body) => req({ method: 'POST', body });
+
   await caso('mesma_placa em captura de outro cliente devolve 404 e não grava', async () => {
-    estado.tabelas.capturas = [{ id: 9, cliente_id: 'c2', placa: 'ABC1D2Z' }];
+    estado.tabelas.capturas = [{ id: 'k9', cliente_id: 'c2', placa: 'ABC1D28' }];
     const r = resp();
-    await handler(req({ method: 'POST', body: { acao: 'mesma_placa', captura_id: 9 } }), r);
+    await handler(post({ acao: 'mesma_placa', captura_id: 'k9' }), r);
     assert.strictEqual(r.code, 404);
     assert.strictEqual(estado.updates.length, 0);
   });
 
   await caso('mesma_placa usa a grafia que o cliente tem (R13); empate fica com suspeita_de', async () => {
-    const { paraAntiga } = require('../site/js/placa');
-    const susp = 'ABC1D23';
-    const antiga = paraAntiga(susp);
-    estado.tabelas.capturas = [
-      { id: 1, cliente_id: 'c1', placa: 'ZZZ9Z99', timestamp: recente() },
-      { id: 2, cliente_id: 'c1', placa: antiga, timestamp: recente() },
-      { id: 3, cliente_id: 'c1', placa: antiga, timestamp: recente() },
-      { id: 4, cliente_id: 'c1', placa: susp, timestamp: recente() },
-    ];
-    estado.tabelas.veiculos_base = [{ placa: 'ZZZ9Z99', status: 'suspeita', suspeita_de: susp }];
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28'), capC1('k2', antiga), capC1('k3', antiga), capC1('k4', susp)];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
     let r = resp();
-    await handler(req({ method: 'POST', body: { acao: 'mesma_placa', captura_id: 1 } }), r);
+    await handler(post({ acao: 'mesma_placa', captura_id: 'k1' }), r);
     assert.strictEqual(r.body.placa, antiga);
-    estado.tabelas.capturas.push({ id: 10, cliente_id: 'c1', placa: susp, timestamp: recente() });
-    estado.updates = [];
+    estado.tabelas.capturas.push(capC1('k10', susp));
+    estado.tabelas.capturas[0].placa = 'ABC1D28'; // a 1ª correção já gravou; volta a leitura errada
     r = resp();
-    await handler(req({ method: 'POST', body: { acao: 'mesma_placa', captura_id: 1 } }), r);
+    await handler(post({ acao: 'mesma_placa', captura_id: 'k1' }), r);
     assert.strictEqual(r.body.placa, susp);
   });
 
-  await caso('outro_carro em placa não vista no cliente devolve 404 sem chamar a API', async () => {
-    estado.tabelas.capturas = [{ id: 1, cliente_id: 'c2', placa: 'ABC1D23', timestamp: recente() }];
-    estado.vbLinha = { status: 'suspeita' };
+  await caso('mesma_placa com suspeita levantada por outro cliente devolve 409 e não grava', async () => {
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28'), capC1('k4', susp)];
+    estado.tabelas.veiculos_base = [vbSusp('c2')];
     const r = resp();
-    await handler(req({ method: 'POST', body: { acao: 'outro_carro', placa: 'ABC1D23' } }), r);
+    await handler(post({ acao: 'mesma_placa', captura_id: 'k1' }), r);
+    assert.strictEqual(r.code, 409);
+    assert.ok(!JSON.stringify(r.body).includes(susp));
+    assert.strictEqual(estado.updates.length, 0);
+  });
+
+  await caso('mesma_placa sem passagem do cliente na placa frequente devolve 409 e não grava', async () => {
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    const r = resp();
+    await handler(post({ acao: 'mesma_placa', captura_id: 'k1' }), r);
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(estado.updates.length, 0);
+  });
+
+  await caso('mesma_placa sem captura_id string devolve 400', async () => {
+    const r = resp();
+    await handler(post({ acao: 'mesma_placa', captura_id: 7 }), r);
+    assert.strictEqual(r.code, 400);
+  });
+
+  await caso('GET devolve suspeita_de só para o cliente que a levantou', async () => {
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28'), { id: 'x', cliente_id: 'c2', placa: 'ABC1D28', timestamp: recente() }];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    let r = resp();
+    await handler(req({ query: { placa: 'ABC1D28' } }), r);
+    assert.deepStrictEqual(r.body, { suspeita_de: susp });
+    estado.profile = { id: 'u2', role: 'operador', cliente_id: 'c2' };
+    r = resp();
+    await handler(req({ query: { placa: 'ABC1D28' } }), r);
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(r.body, {});
+  });
+
+  await caso('outro_carro em placa não vista no cliente devolve 404 sem chamar a API', async () => {
+    estado.tabelas.capturas = [{ id: 'k1', cliente_id: 'c2', placa: 'ABC1D23', timestamp: recente() }];
+    estado.tabelas.veiculos_base = [{ placa: 'ABC1D23', status: 'suspeita', suspeita_cliente_id: 'c1' }];
+    const r = resp();
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D23' }), r);
     assert.strictEqual(r.code, 404);
     assert.strictEqual(estado.consultas.length, 0);
-    assert.strictEqual(estado.repoEscritas.length, 0);
+    assert.strictEqual(estado.updates.length, 0);
+  });
+
+  await caso('outro_carro de suspeita levantada por outro cliente devolve 404 sem chamar a API', async () => {
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c2')];
+    const r = resp();
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), r);
+    assert.strictEqual(r.code, 404);
+    assert.strictEqual(estado.consultas.length, 0);
+    assert.strictEqual(estado.updates.length, 0);
   });
 
   await caso('outro_carro libera a linha e consulta uma única vez', async () => {
-    estado.tabelas.capturas = [{ id: 1, cliente_id: 'c1', placa: 'ABC1D23', timestamp: recente() }];
-    estado.vbLinha = { status: 'suspeita', suspeita_de: 'ABC1D2Z' };
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
     const r = resp();
-    await handler(req({ method: 'POST', body: { acao: 'outro_carro', placa: 'ABC1D23' } }), r);
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), r);
     assert.strictEqual(r.code, 200);
     assert.deepStrictEqual(r.body, { placa: 'ABC1D23', status: 'consultado' });
     assert.strictEqual(estado.consultas.length, 1);
     assert.strictEqual(estado.consultas[0].origem, 'reconsulta');
-    assert.deepStrictEqual(estado.repoEscritas[0].c, { status: 'pendente', suspeita_de: null, tentativas: 0, proxima_tentativa_em: null });
+    assert.deepStrictEqual(estado.updates[0].patch, { status: 'pendente', suspeita_de: null, suspeita_cliente_id: null, tentativas: 0, proxima_tentativa_em: null });
+  });
+
+  await caso('duas outro_carro concorrentes = 1 consulta paga e 1 resposta 409', async () => {
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    const [a, b] = [resp(), resp()];
+    await Promise.all([handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), a), handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), b)]);
+    assert.strictEqual(estado.consultas.length, 1);
+    assert.deepStrictEqual([a.code, b.code].sort(), [200, 409]);
   });
 
   await caso('outro_carro não executado devolve placa, status pendente e motivo', async () => {
-    estado.tabelas.capturas = [{ id: 1, cliente_id: 'c1', placa: 'ABC1D23', timestamp: recente() }];
-    estado.vbLinha = { status: 'suspeita' };
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
     estado.resultadoConsulta = { executou: false, motivo: 'teto' };
     const r = resp();
-    await handler(req({ method: 'POST', body: { acao: 'outro_carro', placa: 'ABC1D23' } }), r);
-    assert.deepStrictEqual(r.body, { placa: 'ABC1D23', status: 'pendente', motivo: 'teto' });
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), r);
+    assert.deepStrictEqual(r.body, { placa: 'ABC1D28', status: 'pendente', motivo: 'teto' });
+  });
+
+  await caso('outro_carro com body.cliente_id de outro cliente devolve 403', async () => {
+    estado.tabelas.capturas = [{ id: 'x', cliente_id: 'c2', placa: 'ABC1D28', timestamp: recente() }];
+    estado.tabelas.veiculos_base = [vbSusp('c2')];
+    const r = resp();
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D28', cliente_id: 'c2' }), r);
+    assert.strictEqual(r.code, 403);
+    assert.strictEqual(estado.consultas.length, 0);
+  });
+
+  await caso('super_admin acessa outro cliente (GET e outro_carro)', async () => {
+    estado.profile = { id: 'sa', role: 'super_admin', cliente_id: null };
+    estado.tabelas.capturas = [{ id: 'x', cliente_id: 'c2', placa: 'ABC1D28', timestamp: recente() }];
+    estado.tabelas.veiculos_base = [vbSusp('c2')];
+    let r = resp();
+    await handler(req({ query: { placa: 'ABC1D28', cliente_id: 'c2' } }), r);
+    assert.deepStrictEqual(r.body, { suspeita_de: susp });
+    r = resp();
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D28', cliente_id: 'c2' }), r);
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(estado.consultas.length, 1);
   });
 
   await caso('JSON malformado devolve 400', async () => {

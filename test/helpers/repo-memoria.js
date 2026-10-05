@@ -31,6 +31,13 @@ function criarRepoMemoria({ config = {}, passagens = {} } = {}) {
       l.proxima_tentativa_em = ateIso;
       return true;
     },
+    async liberarSuspeita(placa, clienteAntigo, posseIso) {
+      await ceder();
+      const l = linhas.get(placa);
+      if (!l || l.status !== 'suspeita' || l.suspeita_cliente_id !== clienteAntigo) return false;
+      Object.assign(l, { status: 'pendente', suspeita_de: null, suspeita_cliente_id: null, tentativas: 0, proxima_tentativa_em: posseIso });
+      return true;
+    },
     async registrarConsulta(c) { await ceder(); consultas.push(c); },
     async ultimoResultado() {
       await ceder();

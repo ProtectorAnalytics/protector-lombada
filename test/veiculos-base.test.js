@@ -91,6 +91,33 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
     assert.strictEqual(repo.linhas.get('ABC1D28').suspeita_cliente_id, 'c1');
   });
 
+  await caso('suspeita de c2 passando em c1 sem vizinha frequente em c1 vira consultada com 1 chamada', async () => {
+    const { repo, api, vb } = montar({ passagens: { c2: { ABC1D23: 10 } } });
+    await repo.reservar({ placa: 'ABC1D28', status: 'suspeita', suspeita_de: 'ABC1D23', suspeita_cliente_id: 'c2' });
+    const l = await vb.aoPassar({ placa: 'ABC1D28', clienteId: 'c1' });
+    assert.strictEqual(api.chamadas.length, 1);
+    assert.strictEqual(l.status, 'consultado');
+    const g = repo.linhas.get('ABC1D28');
+    assert.strictEqual(g.suspeita_de, null);
+    assert.strictEqual(g.suspeita_cliente_id, null);
+  });
+
+  await caso('suspeita de c2 passando em c1 com vizinha frequente em c1 continua suspeita, 0 chamadas', async () => {
+    const { repo, api, vb } = montar({ passagens: { c1: { ABC1D23: 10 }, c2: { ABC1D23: 10 } } });
+    await repo.reservar({ placa: 'ABC1D28', status: 'suspeita', suspeita_de: 'ABC1D23', suspeita_cliente_id: 'c2' });
+    await vb.aoPassar({ placa: 'ABC1D28', clienteId: 'c1' });
+    assert.strictEqual(api.chamadas.length, 0);
+    assert.strictEqual(repo.linhas.get('ABC1D28').status, 'suspeita');
+    assert.strictEqual(repo.linhas.get('ABC1D28').suspeita_cliente_id, 'c2');
+  });
+
+  await caso('RAJADA em suspeita de outro cliente: 10 chegadas = 1 chamada', async () => {
+    const { repo, api, vb } = montar({ passagens: { c2: { ABC1D23: 10 } }, api: apiFalsa('ok', { atraso: 30 }) });
+    await repo.reservar({ placa: 'ABC1D28', status: 'suspeita', suspeita_de: 'ABC1D23', suspeita_cliente_id: 'c2' });
+    await Promise.all(Array.from({ length: 10 }, () => vb.aoPassar({ placa: 'ABC1D28', clienteId: 'c1' })));
+    assert.strictEqual(api.chamadas.length, 1);
+  });
+
   for (const [nome, config, motivo] of [
     ['consultas desligadas', { ativo: false }, 'desligado'],
     ['saldo zerado', { saldo_atual: 0 }, 'sem_saldo'],

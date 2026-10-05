@@ -1,7 +1,8 @@
 -- Teste de isolamento da veiculos_base. Roda inteiro dentro de uma transação
 -- e termina em ROLLBACK: não deixa nada no banco.
 -- Uso: executar via MCP do Supabase (execute_sql). Resultado esperado: uma
--- linha com ve_a = 1, ve_b = 0, config = 0, extrato = 0.
+-- linha com ve_a = 1, ve_b = 0, config = 0, extrato = 0. Falha com exceção
+-- 'FALHOU: ...' se o painel conseguir ler suspeita_de (grant por coluna).
 begin;
 
 -- Dois clientes e dois usuários fictícios
@@ -29,6 +30,23 @@ insert into apiplacas_consultas (placa, resultado, custo, origem) values ('ZZZ9Z
 -- Agir como o usuário do cliente A
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
+
+-- Colunas de suspeita/controle não são legíveis pelo painel (42501); as de
+-- exibição continuam funcionando.
+do $$
+begin
+  begin
+    perform suspeita_de from veiculos_base;
+    raise exception 'FALHOU: authenticated leu suspeita_de';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform suspeita_cliente_id from veiculos_base;
+    raise exception 'FALHOU: authenticated leu suspeita_cliente_id';
+  exception when insufficient_privilege then null;
+  end;
+  perform placa, status, marca from veiculos_base;
+end $$;
 
 select
   (select count(*) from veiculos_base where placa = 'ZZZ9Z91') as ve_a,

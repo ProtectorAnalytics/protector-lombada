@@ -37,12 +37,14 @@ async function placaVistaNoCliente(clienteId, m) {
   return contar(c) + contar(v) > 0;
 }
 
-// Grafia que o cliente realmente usa nos últimos 30 dias; empate fica com a primeira (suspeita_de).
+// Grafia que o cliente realmente usa nos últimos 30 dias; empate fica com a primeira (suspeita_de);
+// null quando o cliente não tem nenhuma das duas.
 async function grafiaDoCliente(clienteId, suspeitaDe) {
   const desde = new Date(Date.now() - JANELA_DIAS * 86400000).toISOString();
   const grafias = grafiasDe(suspeitaDe);
   const contagens = await Promise.all(grafias.map(async (g) => contar(await supabase.from('capturas')
     .select('id', { head: true, count: 'exact' }).eq('cliente_id', clienteId).eq('placa', g).gte('timestamp', desde))));
+  if (contagens.every((n) => n === 0)) return null; // nunca grava placa que o cliente não tem
   return grafias.reduce((melhor, g, i) => (contagens[i] > contagens[grafias.indexOf(melhor)] ? g : melhor), grafias[0]);
 }
 
@@ -51,20 +53,27 @@ async function buscarMarcaCor(req, res, profile) {
   if (!clienteId || !verificarAcessoCliente(profile, clienteId)) return res.status(403).json({ error: 'Sem acesso' });
   const m = paraMercosul(req.query.placa);
   if (!m || !(await placaVistaNoCliente(clienteId, m))) return res.status(200).json({});
-  const { data, error } = await supabase.from('veiculos_base').select('marca, modelo, cor, status').eq('placa', m).maybeSingle();
+  const { data, error } = await supabase.from('veiculos_base').select('marca, modelo, cor, status, suspeita_de, suspeita_cliente_id').eq('placa', m).maybeSingle();
   if (error) throw new Error(error.message);
+  if (data && data.status === 'suspeita' && data.suspeita_cliente_id === clienteId && data.suspeita_de) {
+    return res.status(200).json({ suspeita_de: data.suspeita_de });
+  }
   if (!data || data.status !== 'consultado') return res.status(200).json({});
   return res.status(200).json({ marca: [data.marca, data.modelo].filter(Boolean).join(' '), cor: data.cor });
 }
 
 async function mesmaPlaca({ body, profile, ip, res }) {
+  if (typeof body.captura_id !== 'string' || !body.captura_id) return res.status(400).json({ error: 'captura_id inválido' });
   const { data: cap, error } = await supabase.from('capturas').select('id, cliente_id, placa').eq('id', body.captura_id).maybeSingle();
   if (error) throw new Error(error.message);
   if (!cap || !verificarAcessoCliente(profile, cap.cliente_id)) return res.status(404).json({ error: 'Captura não encontrada' });
-  const { data: vb, error: e2 } = await supabase.from('veiculos_base').select('status, suspeita_de').eq('placa', paraMercosul(cap.placa)).maybeSingle();
+  const { data: vb, error: e2 } = await supabase.from('veiculos_base').select('status, suspeita_de, suspeita_cliente_id').eq('placa', paraMercosul(cap.placa)).maybeSingle();
   if (e2) throw new Error(e2.message);
-  if (!vb || vb.status !== 'suspeita' || !vb.suspeita_de) return res.status(409).json({ error: 'Placa não está em suspeita' });
+  if (!vb || vb.status !== 'suspeita' || !vb.suspeita_de || vb.suspeita_cliente_id !== cap.cliente_id) {
+    return res.status(409).json({ error: 'Placa não está em suspeita' });
+  }
   const placa = await grafiaDoCliente(cap.cliente_id, vb.suspeita_de);
+  if (!placa) return res.status(409).json({ error: 'Placa não está em suspeita' });
   const upd = await supabase.from('capturas').update({ placa }).eq('id', cap.id);
   if (upd.error) throw new Error(upd.error.message);
   await registrarAuditoria({ usuarioId: profile.id, acao: 'corrigir_leitura_placa', tabela: 'capturas', registroId: cap.id, detalhes: { de: cap.placa, para: placa }, ip });
@@ -77,10 +86,18 @@ async function outroCarro({ body, profile, ip, res }) {
   const clienteId = body.cliente_id || profile.cliente_id;
   if (!clienteId || !verificarAcessoCliente(profile, clienteId)) return res.status(403).json({ error: 'Sem acesso' });
   if (!(await placaVistaNoCliente(clienteId, m))) return res.status(404).json({ error: 'Placa não encontrada' });
+  const { data: linha, error } = await supabase.from('veiculos_base').select('status, suspeita_cliente_id').eq('placa', m).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!linha || linha.status !== 'suspeita' || linha.suspeita_cliente_id !== clienteId) {
+    return res.status(404).json({ error: 'Placa não encontrada' });
+  }
+  // Liberação atômica: só uma chamada concorrente leva a linha; as outras 409 (sem pagar de novo).
+  const lib = await supabase.from('veiculos_base')
+    .update({ status: 'pendente', suspeita_de: null, suspeita_cliente_id: null, tentativas: 0, proxima_tentativa_em: null })
+    .eq('placa', m).eq('status', 'suspeita').eq('suspeita_cliente_id', clienteId).select('placa');
+  if (lib.error) throw new Error(lib.error.message);
+  if (!Array.isArray(lib.data) || lib.data.length !== 1) return res.status(409).json({ error: 'Placa não está em suspeita' });
   const repo = criarRepoSupabase();
-  const linha = await repo.buscar(m);
-  if (!linha || linha.status !== 'suspeita') return res.status(409).json({ error: 'Placa não está em suspeita' });
-  await repo.atualizar(m, { status: 'pendente', suspeita_de: null, tentativas: 0, proxima_tentativa_em: null });
   const vb = criarVeiculosBase({
     repo,
     api: criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }),
