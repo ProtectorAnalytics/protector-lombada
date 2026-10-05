@@ -52,9 +52,9 @@ function resp() {
 const put = (body) => ({ method: 'PUT', headers: {}, query: {}, body });
 
 let passou = 0;
-async function caso(nome, solicitacao, body, fn) {
+async function caso(nome, solicitacao, body, fn, falhaDelete = false) {
   estado.solicitacao = solicitacao;
-  estado.apagados = []; estado.erroDelete = null;
+  estado.apagados = []; estado.erroDelete = falhaDelete;
   const r = resp();
   await handler(put(body), r);
   fn(r);
@@ -77,15 +77,18 @@ console.error = () => {};
     assert.strictEqual(r.code, 200);
     assert.strictEqual(estado.apagados.length, 0);
   });
-  estado.erroDelete = null;
-  estado.solicitacao = sol();
-  estado.apagados = [];
-  estado.erroDelete = true;
-  const r = resp();
-  await handler(put({ id: 's1', status: 'atendida' }), r);
-  assert.strictEqual(r.code, 500);
-  assert.ok(!JSON.stringify(r.body).includes(estado.erroInterno));
-  passou++; console.log('ok - erro no delete vira 500 sem mensagem interna');
+  await caso('placa inválida não apaga e responde 200', sol({ placa_veiculo: 'XX' }), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(estado.apagados.length, 0);
+  });
+  await caso('sem placa não apaga', sol({ placa_veiculo: null }), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(estado.apagados.length, 0);
+  });
+  await caso('erro no delete vira 500 sem mensagem interna', sol(), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 500);
+    assert.ok(!JSON.stringify(r.body).includes(estado.erroInterno));
+  }, true);
   console.error = originalError;
   console.log(`${passou} testes passaram`);
 })().catch((e) => { console.error = originalError; console.error(e); process.exit(1); });

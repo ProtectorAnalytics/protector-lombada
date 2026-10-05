@@ -88,7 +88,7 @@ Para identificar o veículo nas notificações orientativas e no painel, e para 
 - **Minimização:** não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE.
 - **Base técnica interna:** os dados do veículo ficam numa base compartilhada entre os condomínios atendidos, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio.
 - **Retenção:** os dados técnicos do veículo são apagados após 6 meses sem nova passagem em qualquer condomínio.
-- **Eliminação:** o pedido de eliminação atendido no painel do encarregado (DPO) apaga também a placa da base técnica.
+- **Eliminação:** a exclusão feita pelo condomínio no painel atinge os cadastros do condomínio (morador e unidade), não a base técnica. A eliminação na base técnica compartilhada é feita pela Protector Sistemas, por pedido ao encarregado (DPO): o pedido de eliminação atendido no painel do encarregado apaga também a placa da base técnica.
 
 ---
 
@@ -113,7 +113,7 @@ Os dados tratados pela Protector Sistemas são compartilhados apenas com os **su
 | **Supabase** (Supabase Inc.) | Banco de dados e armazenamento de arquivos | Região `sa-east-1` (São Paulo, Brasil) |
 | **Vercel** (Vercel Inc.) | Hospedagem da aplicação (serverless) | Multi-região, com compute podendo ocorrer fora do Brasil |
 | **Provedor SMTP** | Envio de e-mails transacionais | Conforme provedor contratado |
-| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira |
+| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira; local de processamento não declarado |
 
 A Protector Sistemas **não vende, não cede e não comercializa** dados pessoais a terceiros. Compartilhamentos adicionais ocorrem apenas quando houver obrigação legal ou ordem judicial.
 

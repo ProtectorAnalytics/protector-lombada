@@ -144,7 +144,7 @@ Para tratamentos baseados em legítimo interesse (art. 7º IX), o Controlador de
 | Foto da passagem | 15 dias | Automática, via rotina do banco de dados |
 | Metadados (placa, velocidade, data/hora) | 6 meses | Automática, via rotina do banco de dados |
 | Dados técnicos do veículo (base interna compartilhada) | 6 meses após a última passagem em qualquer condomínio | Automática; o pedido de eliminação atendido pelo encarregado (DPO) apaga também a placa da base |
-| Cadastro de veículo/morador | Enquanto o morador for residente | Exclusão manual pelo responsável |
+| Cadastro de veículo/morador | Enquanto o morador for residente | Exclusão manual pelo responsável; atinge os cadastros do condomínio, não a base técnica de veículos, cuja eliminação é feita pela Operadora por pedido ao encarregado (DPO) |
 | Cadastro de destinatário de e-mail | Enquanto o destinatário for ativo | Exclusão manual pelo responsável |
 
 Prazos e mecanismos são geridos tecnicamente pela Operadora e documentados em `docs/LGPD.md`.
@@ -165,7 +165,7 @@ Prazos e mecanismos são geridos tecnicamente pela Operadora e documentados em `
 - **Supabase** (banco de dados, região sa-east-1 São Paulo)
 - **Vercel** (hospedagem serverless)
 - **Provedor SMTP** (envio de notificações por e-mail)
-- **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) — suboperadora. Recebe a placa dos veículos que passam pelos pontos de medição e devolve dados técnicos do veículo (marca, modelo, versão, cor, ano, município/UF de registro, tipo e situação). **Finalidade:** identificar o veículo nas notificações orientativas e no painel, e conferir a leitura automática da placa. **Minimização:** não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE. Empresa brasileira; não há transferência internacional. Os dados do veículo ficam numa base técnica interna, compartilhada entre os condomínios atendidos, que contém apenas dados do veículo; morador, unidade e passagens continuam isolados por condomínio.
+- **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) — suboperadora. Recebe a placa dos veículos que passam pelos pontos de medição e devolve dados técnicos do veículo (marca, modelo, versão, cor, ano, município/UF de registro, tipo e situação). **Finalidade:** identificar o veículo nas notificações orientativas e no painel, e conferir a leitura automática da placa. **Minimização:** não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE. Empresa brasileira. Os dados do veículo ficam numa base técnica interna, compartilhada entre os condomínios atendidos, que contém apenas dados do veículo; morador, unidade e passagens continuam isolados por condomínio.
 
 ---
 

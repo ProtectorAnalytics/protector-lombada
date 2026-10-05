@@ -125,7 +125,7 @@ A Operadora aplica a seguinte política técnica de retenção, **executada auto
 |---|---|---|
 | **Foto da passagem** (arquivo no Storage) | **15 dias** | Vercel Cron `api/cron-limpeza` — diário às 06:00 UTC (aplica a `capturas` e `capturas_historico`) |
 | **Metadados da captura** (placa, velocidade, data/hora, local) | **6 meses** | pg_cron `cleanup_old_capturas` — diário às 04:00 UTC |
-| **Cadastro de veículo** | Enquanto o contrato estiver ativo | Exclusão pelo Controlador via painel admin |
+| **Cadastro de veículo** (do condomínio) | Enquanto o contrato estiver ativo | Exclusão pelo Controlador via painel admin (não atinge a base técnica de veículos) |
 | **Cadastro de destinatário de e-mail** | Enquanto o contrato estiver ativo | Exclusão pelo Controlador via painel admin |
 | **Log de auditoria** (`audit_log`) | Enquanto o contrato estiver ativo | Revisão periódica pelo DPO |
 | **Log de depuração técnica** (`debug_log`) | **24 horas** | pg_cron `cleanup_debug_log` — a cada 6 horas |
@@ -182,7 +182,7 @@ Os titulares (moradores, proprietários, visitantes com veículos registrados) t
 | Correção de dados incompletos ou inexatos | Via administração do Controlador |
 | Anonimização, bloqueio ou eliminação | Solicitação ao Controlador |
 | Portabilidade dos dados | Exportação disponível no painel do Controlador (CSV/Excel) |
-| Eliminação dos dados tratados | Exclusão pelo Controlador via painel administrativo |
+| Eliminação dos dados tratados | Exclusão pelo Controlador via painel administrativo, que atinge os cadastros do condomínio (morador e unidade), não a base técnica de veículos. A eliminação na base técnica compartilhada de veículos é feita pela Operadora, por pedido ao encarregado (DPO) |
 | Informação sobre compartilhamento | A Operadora não compartilha dados com terceiros além dos subprocessadores listados na seção 9 |
 | Revogação do consentimento | Quando aplicável, diretamente com o Controlador |
 
@@ -218,7 +218,7 @@ Para a prestação do serviço, a Protector Sistemas utiliza os seguintes subpro
 | **Supabase** (Supabase Inc.) | Banco de dados PostgreSQL + Storage de fotos | Região `sa-east-1` (São Paulo, Brasil) |
 | **Vercel** (Vercel Inc.) | Hospedagem serverless (Functions + Edge) | Multi-região; camada de compute pode rodar fora do Brasil |
 | **Provedor SMTP** (definido por contrato) | Envio de e-mails de notificação | Conforme provedor escolhido |
-| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira |
+| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira; local de processamento não declarado |
 
 ### 9.1 APIPLACAS e a base técnica de veículos
 
@@ -226,13 +226,13 @@ A APIPLACAS recebe a placa dos veículos que passam pelos pontos de medição e 
 
 Os dados do veículo ficam numa **base técnica interna, compartilhada entre os condomínios atendidos**, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio. Os dados técnicos são apagados após 6 meses sem nova passagem em qualquer condomínio. O pedido de eliminação atendido no painel do encarregado (DPO) apaga também a placa da base técnica.
 
-Todos os demais subprocessadores possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e termos de processamento de dados aderentes à LGPD e ao GDPR.
+Os subprocessadores de infraestrutura (Supabase, Vercel e provedor SMTP) possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e termos de processamento de dados aderentes à LGPD e ao GDPR.
 
 ---
 
 ## 10. Transferência Internacional de Dados
 
-A APIPLACAS é empresa brasileira e não há transferência internacional no tratamento por ela realizado. Os dados de clientes brasileiros são armazenados na região **sa-east-1 (São Paulo)** do Supabase. Eventuais operações de compute pela Vercel podem ocorrer em outras regiões conforme a arquitetura do provedor, sem transferência persistente para fora do Brasil. Quando houver transferência internacional, a Operadora observa as garantias previstas no art. 33 da LGPD.
+A APIPLACAS é empresa brasileira. Os dados de clientes brasileiros são armazenados na região **sa-east-1 (São Paulo)** do Supabase. Eventuais operações de compute pela Vercel podem ocorrer em outras regiões conforme a arquitetura do provedor, sem transferência persistente para fora do Brasil. Quando houver transferência internacional, a Operadora observa as garantias previstas no art. 33 da LGPD.
 
 ---
 
