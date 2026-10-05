@@ -1444,7 +1444,7 @@
       transition: background 0.15s, color 0.15s;
     }
     /* Linha sem botão ("Carregando...", "Sem dados"): texto, não alvo de clique */
-    .ranking-item:not(:has(.ranking-btn)) { padding: 7px 10px; }
+    .ranking-item:not(:has(.ranking-btn)) { padding: 7px 10px; cursor: default; }
 
     .ranking-item:has(.ranking-btn):hover {
       color: var(--accent);
@@ -2366,7 +2366,7 @@
       transition: transform 100ms ease-out;
     }
     /* Linhas largas: escala menor, senão a linha inteira "encolhe" demais */
-    .table-row:active, .ranking-item:active {
+    .table-row:active, .ranking-item:has(.ranking-btn):active {
       transform: scale(0.99);
       transition: transform 100ms ease-out;
     }
@@ -3400,13 +3400,35 @@
       await sb.auth.signOut();
       currentUser = null;
       currentCliente = null;
+      document.getElementById('topbar-cliente').textContent = '';
+      document.getElementById('topbar-email').textContent = '';
       document.getElementById('dashboard-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    // Troca de condomínio na mesma aba (sair/entrar): nada do anterior pode
-    // aparecer em sugestões, "não cadastrados", selos ou opções de filtro.
+    // Sessão do painel: muda a cada sair/entrar. Resposta que chega depois de
+    // trocar de condomínio (ou de sair) é descartada, nunca desenhada.
+    let sessaoSeq = 0;
+    function marcaDaSessao() {
+      return { seq: sessaoSeq, clienteId: currentCliente ? currentCliente.id : null };
+    }
+    function sessaoValida(m) {
+      return m.seq === sessaoSeq && !!currentCliente && currentCliente.id === m.clienteId;
+    }
+
+    // Troca de condomínio na mesma aba (PC de portaria compartilhado): nada do
+    // anterior pode aparecer, nem por um instante — dados, caches, opções e a
+    // tela já desenhada. Respostas em voo são invalidadas (sessão e seqs).
     function esquecerDadosDoCliente() {
+      sessaoSeq++;
+      capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recargaSeq++;
+      camerasList = [];
+      camerasMap = {};
+      camerasMapFull = {};
+      camerasMeta = {};
+      veiculosList = [];
+      vmListaFiltered = [];
+      limiteAtingido = false;
       lastCapturas = [];
       recentCardsData = [];
       tabelaPaginaData = [];
@@ -3426,6 +3448,54 @@
       ['filter-marca', 'filter-cor'].forEach((id) => {
         document.getElementById(id).innerHTML = '<option value="">Todas</option>';
       });
+      document.getElementById('filter-camera').innerHTML = '<option value="">Todas as câmeras</option>';
+      limparTelaDoPainel();
+    }
+
+    // Tela de volta a "Carregando…": tabela, cards, câmeras "Agora", KPIs,
+    // indicadores, Top 10, gráficos, lista de veículos e janelas abertas.
+    function limparTelaDoPainel() {
+      const html = (id, v) => { document.getElementById(id).innerHTML = v; };
+      const texto = (id, v) => { document.getElementById(id).textContent = v; };
+      fecharJanelasDoPainel();
+      html('table-body', '<div class="table-empty">Carregando...</div>');
+      document.getElementById('table-pagination').style.display = 'none';
+      document.getElementById('rodape-sem-vel').hidden = true;
+      html('recent-cards', '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>');
+      html('cameras-status', '');
+      html('ranking-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
+      ['stat-total', 'stat-alertas', 'stat-maxvel', 'ind-vel-media', 'ind-conformidade', 'ind-hora-pico', 'ind-reincidentes']
+        .forEach((id) => texto(id, '--'));
+      texto('titulo-tabela', 'Passagens');
+      texto('title-hourly', 'Passagens por Hora');
+      texto('title-ranking', 'Top 10 Placas');
+      limparGraficos();
+      texto('btn-topbar-veiculos', 'Veículos');
+      texto('vm-count', '');
+      html('vm-lista', '<div class="vm-result-empty">Carregando...</div>');
+      html('vm-lista-pg', '');
+      html('modal-body', '');
+      document.getElementById('lightbox-img').removeAttribute('src');
+    }
+
+    function limparGraficos() {
+      ultimosGraficos.clear();
+      ['chart-hourly', 'chart-alerts-7d'].forEach((id) => {
+        const canvas = document.getElementById(id);
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        canvas.removeAttribute('aria-label');
+        const tabela = document.getElementById(`${id}-dados`);
+        if (tabela) tabela.innerHTML = '';
+      });
+    }
+
+    function fecharJanelasDoPainel() {
+      ['modal', 'vm-overlay', 'lightbox', 'painel-periodo', 'painel-filtros'].forEach((id) => {
+        const o = document.getElementById(id);
+        o.classList.remove('active', 'closing', 'is-sheet');
+        o.style.opacity = '';
+      });
+      document.body.style.overflow = '';
     }
 
     // ============================================
@@ -3568,21 +3638,22 @@
     // Paginado (max-rows do PostgREST). Falha não é "ninguém cadastrado":
     // fica registrada em `cadastro` e o filtro "Não cadastrados" avisa e não filtra.
     async function loadVeiculosCache() {
-      const clienteId = currentCliente.id;
+      const sessao = marcaDaSessao();
+      const clienteId = sessao.clienteId;
       try {
         const data = await coletarPaginado((de, ate) => sb.from('veiculos')
           .select('placa, nome_morador, unidade, marca, cor')
           .eq('cliente_id', clienteId)
           .eq('ativo', true)
           .order('placa').range(de, ate));
-        if (!currentCliente || currentCliente.id !== clienteId) return; // trocou de condomínio
+        if (!sessaoValida(sessao)) return; // trocou de condomínio ou saiu
         veiculosCache = {};
         data.forEach((v) => { veiculosCache[v.placa] = v; });
         placasCadastradas = conjuntoCadastradas(data.map((v) => v.placa));
         cadastro = { estado: 'ok' };
       } catch (err) {
         console.error('Erro ao carregar o cadastro de moradores:', err);
-        cadastro = { estado: 'erro' };
+        if (sessaoValida(sessao)) cadastro = { estado: 'erro' };
       }
     }
 
@@ -3607,9 +3678,10 @@
       const chaves = [...new Set((placas || []).map((p) => placaLib.paraMercosul(p)).filter(Boolean))]
         .filter((m) => !veiculosBaseCache[m] || STATUS_A_RECARREGAR.includes(veiculosBaseCache[m].status));
       if (!chaves.length) return;
+      const sessao = marcaDaSessao();
       try {
         const { data, error } = await sb.from('veiculos_base').select(COLUNAS_BASE).in('placa', chaves);
-        if (error || !data) return; // painel segue sem o selo
+        if (error || !data || !sessaoValida(sessao)) return; // painel segue sem o selo
         data.forEach((v) => { veiculosBaseCache[v.placa] = v; });
       } catch { /* painel segue sem o selo */ }
     }
@@ -3629,8 +3701,10 @@
       if (suspeitaEmVoo.has(m)) return suspeitaEmVoo.get(m);
       const falhou = suspeitaFalhouEm.get(m);
       if (falhou && Date.now() - falhou < SUSPEITA_RETENTAR_MS) return Promise.resolve(null);
+      const sessao = marcaDaSessao();
       const pedido = chamarApiPainel(`/api/admin/veiculos-base?placa=${encodeURIComponent(m)}&cliente_id=${encodeURIComponent(currentCliente.id)}`, 'GET')
         .then((r) => {
+          if (!sessaoValida(sessao)) return null; // resposta de outro condomínio/sessão
           const s = r && typeof r.suspeita_de === 'string' && r.suspeita_de ? r.suspeita_de : null;
           suspeitaCache.set(m, s);
           suspeitaFalhouEm.delete(m);
@@ -3787,11 +3861,13 @@
       if (!currentCliente || opcoesVeiculoDoCliente === currentCliente.id) return;
       const anoMax = String(new Date().getFullYear() + 1);
       ['filter-ano-de', 'filter-ano-ate'].forEach((id) => { document.getElementById(id).max = anoMax; });
+      const sessao = marcaDaSessao();
       try {
         // Paginado: o max-rows do PostgREST cortaria marcas/cores em silêncio
         const data = await coletarPaginado((de, ate) => sb.from('veiculos_base')
           .select('marca, modelo, cor_normalizada').eq('status', 'consultado')
           .order('placa').range(de, ate));
+        if (!sessaoValida(sessao)) return; // trocou de condomínio no meio
         opcoesVeiculoDoCliente = currentCliente.id;
         const marcas = opcoesDistintas(data, 'marca');
         const cores = opcoesDistintas(data, 'cor_normalizada');
@@ -3827,10 +3903,13 @@
     // CAMERAS LIST (for filter dropdown)
     // ============================================
     async function loadCamerasList() {
-      const { data } = await sb.from('cameras')
+      const sessao = marcaDaSessao();
+      const { data, error } = await sb.from('cameras')
         .select('id, nome, nome_exibicao, serial_number, modelo, firmware')
         .eq('cliente_id', currentCliente.id)
         .eq('ativa', true);
+      if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
+      if (error) { console.error('Erro ao carregar câmeras:', error); return; }
 
       if (data) {
         camerasList = data;
@@ -3871,11 +3950,13 @@
     // repetidas vezes quando passa várias vezes em sequência.
     // ============================================
     async function loadRecentCards() {
+      const sessao = marcaDaSessao();
       const { data: rawData, error } = await sb.from('capturas')
         .select('*')
         .eq('cliente_id', currentCliente.id)
         .order('timestamp', { ascending: false })
         .limit(60);
+      if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
 
       const container = document.getElementById('recent-cards');
 
@@ -3926,6 +4007,7 @@
         Promise.all(data.map(c => getPhotoUrl(c.foto_path))),
         loadVeiculosBase(data.map(c => c.placa)).then(() => carregarSuspeitas(data.map(c => c.placa))),
       ]);
+      if (!sessaoValida(sessao)) return;
 
       recentCardsData = data;
       container.innerHTML = data.map((c, i) => {
@@ -3943,7 +4025,7 @@
 
         const photoHtml = photoUrls[i]
           ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="Foto" loading="lazy">`
-          : `<div class="rc-no-photo">&#128663;</div>`;
+          : `<span class="rc-no-photo">&#128663;</span>`;
 
         // Badge: ícone redundante + texto (não depende só de cor — daltonismo).
         const badgeClass = isAlert ? 'alert-badge' : (!velMedida ? 'noradar-badge' : 'ok-badge');
@@ -3988,12 +4070,13 @@
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
+      const sessao = marcaDaSessao();
       const { data, error } = await sb.from('capturas')
         .select('velocidade')
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', todayStart.toISOString());
 
-      if (error || !data) return;
+      if (error || !data || !sessaoValida(sessao)) return;
 
       const total = data.length;
       const alertas = data.filter(c => c.velocidade > currentCliente.limite_velocidade).length;
@@ -4041,11 +4124,13 @@
     }
 
     async function loadCamerasStatus() {
+      const sessao = marcaDaSessao();
       try {
         const { data: cameras, error } = await sb.from('cameras')
           .select('id, nome, nome_exibicao, last_seen, ativa')
           .eq('cliente_id', currentCliente.id)
           .eq('ativa', true);
+        if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
 
         if (error || !cameras) { renderCamerasIndisponivel(); return; }
 
@@ -4324,9 +4409,10 @@
       anunciarResultado(ok);
     }
 
-    // "36 passagens"; no teto da consulta, "300+ passagens" (há mais no período)
+    // O que a lista mostra ("36 passagens", já sem os não cadastrados/sem
+    // velocidade ocultos); no teto da consulta ganha "+" (há mais no período)
     function textoDoResultadoAtual() {
-      return limiteAtingido ? textoResultado(LIMITE_CAPTURAS, true) : textoResultado(capturasVisiveis().length);
+      return textoResultado(capturasVisiveis().length, limiteAtingido);
     }
 
     function anunciarResultado(ok) {
@@ -4483,6 +4569,10 @@
     }
 
     function fecharPainelFiltro(overlay) {
+      if (overlay.id === 'painel-periodo') {
+        clearTimeout(timerPeriodo);
+        document.getElementById('aviso-periodo').textContent = '';
+      }
       const botao = document.querySelector(`[aria-controls="${overlay.id}"]`);
       if (botao) botao.setAttribute('aria-expanded', 'false');
       fecharOverlay(overlay);
@@ -4579,6 +4669,7 @@
     async function buscarPlacasRemotas(termo) {
       const t = placaLib.limpar(termo);
       if (t.length < barraFiltrosLib.BUSCA_MIN || !currentCliente) return;
+      const sessao = marcaDaSessao();
       const desde = new Date(Date.now() - DIAS_SUGESTAO_PLACA * 86400000).toISOString();
       try {
         const { data, error } = await sb.from('capturas').select('placa')
@@ -4586,7 +4677,7 @@
           .ilike('placa', `%${t}%`).order('timestamp', { ascending: false })
           .limit(SUGESTOES_REMOTAS_LINHAS); // várias passagens da mesma placa: pede mais e deduplica
         const input = document.getElementById('busca');
-        if (error || !data || input.value !== termo || document.activeElement !== input) return;
+        if (error || !data || !sessaoValida(sessao) || input.value !== termo || document.activeElement !== input) return;
         busca.remotas = [...new Set([...busca.remotas, ...data.map((d) => d.placa)])].slice(-200);
         renderSugestoes(termo, sugestoesBusca(termo, fontesBusca()));
       } catch { /* fica só com as sugestões locais */ }
@@ -4718,6 +4809,7 @@
       const overlay = document.getElementById('painel-periodo');
       document.getElementById('btn-periodo').addEventListener('click', (e) => abrirPainelFiltro(overlay, e.currentTarget));
       overlay.querySelectorAll('[data-atalho]').forEach((b) => b.addEventListener('click', () => {
+        document.getElementById('aviso-periodo').textContent = '';
         mudarFiltros(periodoDoAtalho(b.dataset.atalho, todayLocalISO()));
         fecharPainelFiltro(overlay);
       }));
@@ -4789,14 +4881,16 @@
 
     async function loadVeiculos() {
       if (!currentCliente) return;
+      const sessao = marcaDaSessao();
       const token = (await sb.auth.getSession()).data.session?.access_token;
-      if (!token) return;
+      if (!token || !sessaoValida(sessao)) return;
 
       try {
-        const resp = await fetch(`/api/admin/veiculos?cliente_id=${currentCliente.id}`, {
+        const resp = await fetch(`/api/admin/veiculos?cliente_id=${encodeURIComponent(sessao.clienteId)}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         const data = await resp.json();
+        if (!sessaoValida(sessao)) return; // trocou de condomínio no meio
 
         if (Array.isArray(data)) {
           veiculosList = data.filter(v => v.ativo !== false);

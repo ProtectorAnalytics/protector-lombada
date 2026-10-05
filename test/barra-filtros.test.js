@@ -138,6 +138,10 @@ caso('anúncio do resultado em português', () => {
 });
 caso('no limite da consulta o resultado vira "N+"', () => {
   assert.strictEqual(textoResultado(300, true), '300+ passagens');
+  // conta o que a lista mostra (ex.: "Não cadastrados" filtrados no navegador)
+  assert.strictEqual(textoResultado(287, true), '287+ passagens');
+  assert.strictEqual(textoResultado(1, true), '1+ passagem');
+  assert.strictEqual(textoResultado(0, true), 'Nenhuma passagem');
   assert.strictEqual(textoResultado(36, false), '36 passagens');
 });
 

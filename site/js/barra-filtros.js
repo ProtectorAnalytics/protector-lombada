@@ -121,9 +121,9 @@
    * no limite da consulta, "300+ passagens" (há mais do que o carregado).
    */
   function textoResultado(n, noLimite) {
-    if (noLimite) return `${n}+ passagens`;
     if (!n) return 'Nenhuma passagem';
-    return n === 1 ? '1 passagem' : `${n} passagens`;
+    const mais = noLimite ? '+' : '';
+    return n === 1 ? `1${mais} passagem` : `${n}${mais} passagens`;
   }
 
   // Mesma placa nas duas grafias (antiga/Mercosul) vira a mesma chave
