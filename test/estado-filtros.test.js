@@ -1,0 +1,206 @@
+/**
+ * Estado único dos filtros do painel do síndico.
+ * Uso: node test/estado-filtros.test.js
+ */
+const assert = require('node:assert');
+const {
+  normalizarPlacaBusca, montarFiltros, filtrosPadrao, intervaloDoPeriodo,
+  periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo,
+  virarDia, hojeLocal, PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
+} = require('../site/js/estado-filtros');
+
+// Os casos de fuso supõem Brasília (-03, sem horário de verão): rode com
+// TZ=America/Sao_Paulo (o npm test já faz isso).
+assert.strictEqual(new Date('2026-10-05T00:00:00').getTimezoneOffset(), 180,
+  'rode com TZ=America/Sao_Paulo');
+
+let passou = 0;
+function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
+
+const VEICULO_VAZIO = { marca: '', modelo: '', cor: '', anoDe: null, anoAte: null };
+
+// ---- normalizarPlacaBusca
+caso('placa colada com hífen vira a placa sem hífen', () => {
+  assert.strictEqual(normalizarPlacaBusca('ABC-1D23'), 'ABC1D23');
+});
+caso('remove espaços e põe em maiúsculas', () => {
+  assert.strictEqual(normalizarPlacaBusca('  abc 1d23 '), 'ABC1D23');
+});
+caso('tira curingas do ilike (% e _) e qualquer símbolo', () => {
+  assert.strictEqual(normalizarPlacaBusca('A%B_C.1'), 'ABC1');
+});
+caso('corta em 7 caracteres úteis', () => {
+  assert.strictEqual(PLACA_BUSCA_MAX, 7);
+  assert.strictEqual(normalizarPlacaBusca('ABC1D234'), 'ABC1D23');
+});
+caso('vazio, nulo e indefinido viram texto vazio', () => {
+  assert.strictEqual(normalizarPlacaBusca(''), '');
+  assert.strictEqual(normalizarPlacaBusca(null), '');
+  assert.strictEqual(normalizarPlacaBusca(undefined), '');
+});
+caso('busca parcial continua parcial', () => {
+  assert.strictEqual(normalizarPlacaBusca('ab-c'), 'ABC');
+});
+
+// ---- montarFiltros / filtrosPadrao
+caso('padrão: o dia de hoje inteiro, sem nenhum outro filtro', () => {
+  const f = filtrosPadrao('2026-10-05');
+  assert.deepStrictEqual(f, {
+    dataInicio: '2026-10-05', horaInicio: '00:00', dataFim: '2026-10-05', horaFim: '23:59',
+    placa: '', velMin: 0, velMax: null, cameraId: '', soAlertas: false, veiculo: VEICULO_VAZIO,
+  });
+});
+caso('copia os campos do formulário normalizando placa e velocidades', () => {
+  const f = montarFiltros({
+    dataInicio: '2026-10-01', horaInicio: '06:00', dataFim: '2026-10-03', horaFim: '18:30',
+    placa: 'abc-1d23', velMin: '20', velMax: '60', cameraId: 'cam-1', soAlertas: true,
+    veiculo: { marca: 'FIAT', modelo: '', cor: 'prata', anoDe: 2010, anoAte: null },
+  }, '2026-10-05');
+  assert.strictEqual(f.placa, 'ABC1D23');
+  assert.strictEqual(f.velMin, 20);
+  assert.strictEqual(f.velMax, 60);
+  assert.strictEqual(f.soAlertas, true);
+  assert.strictEqual(f.cameraId, 'cam-1');
+  assert.deepStrictEqual(f.veiculo, { marca: 'FIAT', modelo: '', cor: 'prata', anoDe: 2010, anoAte: null });
+});
+caso('datas e horas vazias caem no dia de hoje inteiro', () => {
+  const f = montarFiltros({ dataInicio: '', horaInicio: '', dataFim: '', horaFim: '' }, '2026-10-05');
+  assert.strictEqual(f.dataInicio, '2026-10-05');
+  assert.strictEqual(f.dataFim, '2026-10-05');
+  assert.strictEqual(f.horaInicio, '00:00');
+  assert.strictEqual(f.horaFim, '23:59');
+});
+caso('velocidades inválidas ou negativas não filtram', () => {
+  const f = montarFiltros({ velMin: 'abc', velMax: '-3' }, '2026-10-05');
+  assert.strictEqual(f.velMin, 0);
+  assert.strictEqual(f.velMax, null);
+});
+caso('o estado devolvido é congelado (ninguém altera por fora)', () => {
+  const f = montarFiltros({}, '2026-10-05');
+  assert.ok(Object.isFrozen(f));
+  assert.ok(Object.isFrozen(f.veiculo));
+});
+caso('não altera o objeto de campos recebido (nem ao trocar invertidos)', () => {
+  const campos = {
+    dataInicio: '2026-10-03', horaInicio: '10:00', dataFim: '2026-10-01', horaFim: '08:00',
+    placa: 'abc-1d23', velMin: '50', velMax: '20', veiculo: { marca: 'VW' },
+  };
+  const copia = JSON.parse(JSON.stringify(campos));
+  montarFiltros(campos, '2026-10-05');
+  assert.deepStrictEqual(campos, copia);
+});
+caso('o estado congelado recusa alteração (modo estrito)', () => {
+  const f = montarFiltros({}, '2026-10-05');
+  assert.throws(() => { 'use strict'; f.placa = 'X'; }, TypeError);
+});
+caso('vel. mín. maior que a máx. é trocada', () => {
+  const f = montarFiltros({ velMin: '60', velMax: '20' }, '2026-10-05');
+  assert.strictEqual(f.velMin, 20);
+  assert.strictEqual(f.velMax, 60);
+});
+caso('início depois do fim: troca data e hora juntas', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-03', horaInicio: '10:00', dataFim: '2026-10-01', horaFim: '08:00' }, '2026-10-05');
+  assert.deepStrictEqual([f.dataInicio, f.horaInicio, f.dataFim, f.horaFim], ['2026-10-01', '08:00', '2026-10-03', '10:00']);
+});
+caso('data ou hora em formato inválido cai no padrão', () => {
+  const f = montarFiltros({ dataInicio: 'xx', horaInicio: '9h', dataFim: 'yy', horaFim: '25' }, '2026-10-05');
+  assert.deepStrictEqual([f.dataInicio, f.horaInicio, f.dataFim, f.horaFim], ['2026-10-05', '00:00', '2026-10-05', '23:59']);
+});
+
+// ---- intervaloDoPeriodo
+caso('intervalo vai em UTC: hoje local (-03) é 03:00Z até 02:59:59.999Z do dia seguinte', () => {
+  const r = intervaloDoPeriodo(filtrosPadrao('2026-10-05'));
+  assert.deepStrictEqual(r, {
+    tsInicio: '2026-10-05T03:00:00.000Z', tsFim: '2026-10-06T02:59:59.999Z', umDia: true,
+  });
+});
+caso('passagem às 22:30 local de hoje cai dentro; ontem 22:30, fora', () => {
+  const r = intervaloDoPeriodo(filtrosPadrao('2026-10-05'));
+  const dentro = (ts) => ts >= new Date(r.tsInicio).getTime() && ts <= new Date(r.tsFim).getTime();
+  assert.strictEqual(dentro(new Date('2026-10-05T22:30:00').getTime()), true);
+  assert.strictEqual(dentro(new Date('2026-10-04T22:30:00').getTime()), false);
+});
+caso('horas do filtro também viram UTC', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-05', horaInicio: '06:00', dataFim: '2026-10-05', horaFim: '18:30' }, '2026-10-05');
+  const r = intervaloDoPeriodo(f);
+  assert.strictEqual(r.tsInicio, '2026-10-05T09:00:00.000Z');
+  assert.strictEqual(r.tsFim, '2026-10-05T21:30:59.999Z');
+});
+caso('período de vários dias não é dia único', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-03' }, '2026-10-05');
+  assert.strictEqual(intervaloDoPeriodo(f).umDia, false);
+});
+
+// ---- periodoIncluiAgora
+const local = (s) => new Date(s); // sem fuso: hora local
+caso('hoje inteiro inclui agora', () => {
+  assert.strictEqual(periodoIncluiAgora(filtrosPadrao('2026-10-05'), local('2026-10-05T14:00:00')), true);
+});
+caso('período todo no passado não inclui agora', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-03' }, '2026-10-05');
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), false);
+});
+caso('hoje até 10h, às 14h, já é passado', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-05', horaFim: '10:00', dataFim: '2026-10-05' }, '2026-10-05');
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), false);
+});
+caso('fim recente ainda recarrega dentro da margem de atraso do envio', () => {
+  assert.ok(MARGEM_ATRASO_MS > 0);
+  const f = montarFiltros({ dataInicio: '2026-10-05', horaFim: '13:58', dataFim: '2026-10-05' }, '2026-10-05');
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), true);
+});
+caso('fronteira da margem: 11 min depois do fim já não recarrega', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-05', horaFim: '13:48', dataFim: '2026-10-05' }, '2026-10-05');
+  // fim = 13:48:59; 13:58:59 ainda está na margem de 10 min; 14:00 (11 min) não
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T13:58:59')), true);
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), false);
+});
+caso('período que só começa no futuro não inclui agora', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-06', dataFim: '2026-10-07' }, '2026-10-05');
+  assert.strictEqual(periodoIncluiAgora(f, local('2026-10-05T14:00:00')), false);
+});
+
+// ---- chaveFiltros / precisaRecarregarPeriodo
+caso('mesmos filtros têm a mesma chave; filtros diferentes, chaves diferentes', () => {
+  const a = filtrosPadrao('2026-10-05');
+  const b = montarFiltros({}, '2026-10-05');
+  assert.strictEqual(chaveFiltros(a), chaveFiltros(b));
+  const c = montarFiltros({ soAlertas: true }, '2026-10-05');
+  assert.notStrictEqual(chaveFiltros(a), chaveFiltros(c));
+});
+caso('passado já carregado com os mesmos filtros não recarrega', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-03' }, '2026-10-05');
+  assert.strictEqual(precisaRecarregarPeriodo(f, chaveFiltros(f), local('2026-10-05T14:00:00')), false);
+});
+caso('passado com filtros mudados recarrega', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-03' }, '2026-10-05');
+  const g = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-03', placa: 'ABC' }, '2026-10-05');
+  assert.strictEqual(precisaRecarregarPeriodo(g, chaveFiltros(f), local('2026-10-05T14:00:00')), true);
+});
+caso('nada carregado ainda (chave nula) recarrega', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-03' }, '2026-10-05');
+  assert.strictEqual(precisaRecarregarPeriodo(f, null, local('2026-10-05T14:00:00')), true);
+});
+caso('período que inclui agora sempre recarrega', () => {
+  const f = filtrosPadrao('2026-10-05');
+  assert.strictEqual(precisaRecarregarPeriodo(f, chaveFiltros(f), local('2026-10-05T14:00:00')), true);
+});
+
+// ---- hojeLocal / virarDia (relógio injetado)
+caso('hojeLocal usa a data do relógio local, não a UTC', () => {
+  assert.strictEqual(hojeLocal(local('2026-10-05T22:30:00')), '2026-10-05'); // já é 06/10 em UTC
+});
+caso('padrão "hoje" vira o dia à meia-noite (23:59 → 00:01)', () => {
+  const f = filtrosPadrao('2026-10-05');
+  assert.strictEqual(virarDia(f, '2026-10-05', local('2026-10-05T23:59:00')), f);
+  const g = virarDia(f, '2026-10-05', local('2026-10-06T00:01:00'));
+  assert.deepStrictEqual(g, filtrosPadrao('2026-10-06'));
+});
+caso('filtro personalizado não vira o dia', () => {
+  const f = montarFiltros({ soAlertas: true }, '2026-10-05');
+  assert.strictEqual(virarDia(f, '2026-10-05', local('2026-10-06T00:01:00')), f);
+  const g = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-05' }, '2026-10-05');
+  assert.strictEqual(virarDia(g, '2026-10-05', local('2026-10-06T00:01:00')), g);
+});
+
+console.log(`\n${passou} casos passaram`);
