@@ -180,6 +180,34 @@
     .pager { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; }
     .pager-info { font-size: 0.8125rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
     .pager .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .ap-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .ap-kpi { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+    .ap-kpi .n { font-size: 1.375rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ap-kpi .l { font-size: 0.75rem; color: var(--text-secondary); }
+    .ap-barra { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .ap-barra > div { height: 100%; transform-origin: left; background: var(--accent); }
+    .ap-barra > div.estourou { background: var(--red); }
+    .ap-config { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 16px; margin-bottom: 20px; }
+    .ap-config fieldset, .ap-acoes { grid-column: 1 / -1; }
+    .ap-config fieldset { border: 0; padding: 0; min-width: 0; }
+    .ap-config legend { color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; padding: 0; }
+    .ap-switch { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 600; grid-column: 1 / -1; }
+    .ap-emails { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; padding: 0; }
+    .ap-emails li { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 0.8125rem; max-width: 100%; overflow-wrap: anywhere; }
+    .ap-email-add, .ap-reconsulta, .ap-acoes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .ap-email-add input, .ap-reconsulta input { flex: 1 1 200px; max-width: 320px; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.875rem; }
+    .ap-reconsulta label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+    .ap-reconsulta { margin-bottom: 16px; }
+    .ap-resultado { grid-column: 1 / -1; font-size: 0.875rem; color: var(--text-secondary); margin: 0; }
+    .ap-resultado:empty { display: none; }
+    .ap-config input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
+    @media (max-width: 600px) {
+      .ap-config .btn, .ap-reconsulta .btn, .ap-email-add .btn, .ap-emails .btn, .ap-pager-wrap .btn, #ap-pager .btn { min-height: 44px; min-width: 44px; }
+      .ap-config input:not([type="checkbox"]), .ap-reconsulta input, .ap-email-add input { min-height: 44px; }
+      .ap-switch { min-height: 44px; }
+      .ap-emails li { padding-top: 0; padding-bottom: 0; }
+    }
+    .ap-tabela { overflow-x: auto; max-width: 100%; border-radius: var(--radius); }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
     .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--red); }
@@ -673,6 +701,10 @@
           Direitos LGPD
           <span id="direitos-badge" style="display:none;background:#DC2626;color:#fff;font-size:0.625rem;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">0</span>
         </button>
+        <button type="button" class="nav-item" data-page="apiplacas" onclick="showPage('apiplacas')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
+          Consulta de placas
+        </button>
         <div class="nav-section">Documentação</div>
         <a class="nav-item" href="/admin/manual-tecnico.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;text-align:left" aria-label="Manual Técnico (abre em nova aba)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -1009,6 +1041,43 @@
           </table>
         </div>
 
+        <!-- PAGE: Consulta de placas (APIPLACAS) -->
+        <div class="page" id="page-apiplacas">
+          <div class="page-title" tabindex="-1">Consulta de placas</div>
+          <div class="ap-resumo" id="ap-resumo" aria-live="polite">Carregando…</div>
+
+          <form class="ap-config" id="ap-config" onsubmit="salvarApiplacas(event)" novalidate>
+            <label class="ap-switch" for="ap-ativo"><input type="checkbox" id="ap-ativo"> Consultas ligadas</label>
+            <div class="form-group"><label for="ap-teto">Teto mensal (R$)</label><input id="ap-teto" inputmode="decimal"><div class="field-error" data-for="ap-teto"></div></div>
+            <div class="form-group"><label for="ap-aviso">Avisar em (% do teto)</label><input id="ap-aviso" inputmode="numeric"><div class="field-error" data-for="ap-aviso"></div></div>
+            <div class="form-group"><label for="ap-saldo-min">Avisar com saldo abaixo de (consultas)</label><input id="ap-saldo-min" inputmode="numeric"><div class="field-error" data-for="ap-saldo-min"></div></div>
+            <div class="form-group"><label for="ap-preco">Preço por consulta (R$)</label><input id="ap-preco" inputmode="decimal"><div class="field-error" data-for="ap-preco"></div></div>
+            <fieldset class="form-group">
+              <legend>E-mails dos avisos</legend>
+              <ul id="ap-emails" class="ap-emails"></ul>
+              <div class="ap-email-add"><input type="email" id="ap-email-novo" placeholder="novo@empresa.com.br" aria-label="Novo e-mail"><button type="button" class="btn btn-ghost btn-sm" onclick="adicionarEmailAviso()">Adicionar</button></div>
+              <div class="field-error" data-for="ap-emails"></div>
+            </fieldset>
+            <div class="ap-acoes">
+              <button type="submit" class="btn btn-primary" id="ap-salvar">Salvar</button>
+              <button type="button" class="btn btn-ghost" id="ap-validar" onclick="validarPlacasHoje()">Validar placas de hoje</button>
+            </div>
+            <p class="ap-resultado" id="ap-resultado" role="status"></p>
+          </form>
+
+          <div class="ap-reconsulta">
+            <label for="ap-placa">Consultar de novo (pago)</label>
+            <input id="ap-placa" maxlength="8" placeholder="ABC1D23"><button type="button" class="btn btn-ghost btn-sm" id="ap-reconsultar" onclick="reconsultarPlaca()">Consultar</button>
+          </div>
+
+          <div class="ap-tabela" role="region" aria-label="Extrato de consultas" tabindex="0">
+          <table class="data-table"><thead><tr><th>Data/Hora</th><th>Placa</th><th>Resultado</th><th>Origem</th><th>Tempo</th><th>Custo</th></tr></thead>
+            <tbody id="ap-extrato"><tr><td colspan="6" class="table-empty">Carregando…</td></tr></tbody>
+          </table>
+          </div>
+          <nav class="pager" id="ap-pager" aria-label="Páginas do extrato" hidden></nav>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1273,14 +1342,14 @@ async function api(endpoint, method = 'GET', body = null) {
 
   const resp = await fetch(API + endpoint, opts);
   const data = await resp.json();
-  if (!resp.ok) throw new Error(data.error || 'Erro na requisição');
+  if (!resp.ok) { const e = new Error(data.error || 'Erro na requisição'); e.status = resp.status; e.data = data; e.campos = data.campos; throw e; }
   return data;
 }
 
 // ============================================
 // NAVIGATION
 // ============================================
-const PAGINAS = ['dashboard', 'clientes', 'usuarios', 'audit', 'direitos'];
+const PAGINAS = ['dashboard', 'clientes', 'usuarios', 'audit', 'direitos', 'apiplacas'];
 
 /**
  * Troca de página. Marca o item da sidebar (o detalhe do cliente fica sob
@@ -1314,6 +1383,7 @@ function showPage(page, opts = {}) {
   if (page === 'usuarios') loadUsuariosGlobal();
   if (page === 'audit') loadAudit();
   if (page === 'direitos') loadDireitos();
+  if (page === 'apiplacas') loadApiplacas();
 }
 
 // Escopo no detalhe do cliente: sem isso, trocar de aba apagava o filtro
@@ -2141,7 +2211,8 @@ function limparErrosCampo() {
     const e = g.querySelector('.field-error');
     if (e) e.textContent = '';
   });
-  document.querySelectorAll('#modal-body [aria-invalid]').forEach(i => i.removeAttribute('aria-invalid'));
+  document.querySelectorAll('#modal-body [aria-invalid], #page-apiplacas [aria-invalid]').forEach(i => i.removeAttribute('aria-invalid'));
+  document.querySelectorAll('#page-apiplacas [aria-describedby$="-erro"]').forEach(i => i.removeAttribute('aria-describedby'));
   document.querySelectorAll('#modal-body .form-error').forEach(e => { e.textContent = ''; });
 }
 
@@ -2919,6 +2990,229 @@ function renderPagerAudit(pagina, total) {
     <button type="button" class="btn btn-ghost btn-sm" onclick="loadAudit(${pagina - 1})" ${pagina === 0 ? 'disabled' : ''}>‹ Anterior</button>
     <span class="pager-info" aria-live="polite">Página ${pagina + 1} de ${paginas} · ${total.toLocaleString('pt-BR')} registros</span>
     <button type="button" class="btn btn-ghost btn-sm" onclick="loadAudit(${pagina + 1})" ${pagina >= paginas - 1 ? 'disabled' : ''}>Próxima ›</button>`;
+}
+
+// ============================================
+// CONSULTA DE PLACAS (APIPLACAS)
+// ============================================
+const AP_POR_PAGINA = 50;
+const AP_MAX_EMAILS = 10;
+let apEmails = [];
+let apPreco = 0;
+// Número seguro para HTML; null/undefined vira '—' (o esc() global apaga o 0)
+const num = (v) => (v == null ? '—' : String(Number(v) || 0));
+const brl = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+async function loadApiplacas() {
+  try {
+    const r = await api('/admin/apiplacas');
+    const c = r.config;
+    const pct = c.teto_mensal > 0 ? Math.min(1, r.gasto / c.teto_mensal) : 0;
+    const estourou = c.teto_mensal > 0 && r.gasto >= c.teto_mensal;
+    document.getElementById('ap-resumo').innerHTML = `
+      <div class="ap-kpi"><div class="n">${esc(brl(r.gasto))}</div><div class="l">gasto no mês · teto ${esc(brl(c.teto_mensal))}</div>
+        <div class="ap-barra"><div class="${estourou ? 'estourou' : ''}" style="transform:scaleX(${pct.toFixed(3)})"></div></div></div>
+      <div class="ap-kpi"><div class="n">${num(r.consultasMes)}</div><div class="l">consultas no mês</div></div>
+      <div class="ap-kpi"><div class="n">${num(c.saldo_atual)}</div><div class="l">saldo do pacote${c.saldo_em ? ' · ' + esc(fmtDateTime(c.saldo_em)) : ''}</div></div>
+      <div class="ap-kpi"><div class="n">${num(r.fila)}</div><div class="l">placas na fila</div></div>
+      <div class="ap-kpi"><div class="n">${num(r.suspeitas)}</div><div class="l">barradas pelo validador</div></div>
+      <div class="ap-kpi"><div class="n">${c.ativo ? 'Ligadas' : 'Desligadas'}</div><div class="l">consultas</div></div>`;
+    document.getElementById('ap-ativo').checked = !!c.ativo;
+    document.getElementById('ap-teto').value = String(c.teto_mensal).replace('.', ',');
+    document.getElementById('ap-aviso').value = c.aviso_percentual;
+    document.getElementById('ap-saldo-min').value = c.saldo_minimo;
+    document.getElementById('ap-preco').value = String(c.preco_consulta).replace('.', ',');
+    apPreco = c.preco_consulta;
+    apEmails = [...c.emails_aviso];
+    renderEmailsAviso();
+    loadExtratoApiplacas(0);
+  } catch (err) { console.error(err); erroNoBloco('ap-resumo', 'loadApiplacas()'); }
+}
+
+function renderEmailsAviso() {
+  document.getElementById('ap-emails').innerHTML = apEmails.map((e, i) => `
+    <li>${esc(e)} <button type="button" class="btn btn-ghost btn-sm" aria-label="Remover ${esc(e)}" onclick="removerEmailAviso(${i})">×</button></li>`).join('');
+}
+function erroEmailAviso(msg) {
+  mostrarErroCampo('ap-emails', msg);
+  const novo = document.getElementById('ap-email-novo');
+  novo.setAttribute('aria-invalid', 'true');
+  novo.setAttribute('aria-describedby', 'ap-emails-erro');
+  document.getElementById('ap-emails').removeAttribute('aria-invalid');
+  document.getElementById('ap-emails').removeAttribute('aria-describedby');
+  return false;
+}
+function adicionarEmailAviso() {
+  const input = document.getElementById('ap-email-novo');
+  const e = input.value.trim().toLowerCase();
+  limparErrosCampo();
+  if (!EMAIL_RE.test(e)) return erroEmailAviso('E-mail inválido');
+  if (apEmails.includes(e)) return erroEmailAviso('E-mail já está na lista');
+  if (apEmails.length >= AP_MAX_EMAILS) return erroEmailAviso('Máximo de 10 e-mails');
+  apEmails = [...apEmails, e];
+  input.value = '';
+  renderEmailsAviso();
+}
+function removerEmailAviso(i) {
+  limparErrosCampo();
+  if (apEmails.length <= 1) return erroEmailAviso('Mantenha ao menos um e-mail');
+  apEmails = apEmails.filter((_, j) => j !== i);
+  renderEmailsAviso();
+}
+
+/** Trava o botão (disabled + aria-busy + texto) enquanto `fn` roda; restaura no fim. */
+async function apOcupado(btn, textoBusy, fn) {
+  if (btn.disabled) return;
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  btn.textContent = textoBusy;
+  try { return await fn(); } finally {
+    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+    btn.textContent = original;
+  }
+}
+
+const AP_DICA = {
+  teto_mensal: 'Informe um valor em reais, de 0 a 100.000',
+  aviso_percentual: 'Informe um número inteiro de 1 a 100',
+  saldo_minimo: 'Informe um número inteiro maior ou igual a 0',
+  preco_consulta: 'Informe um valor em reais maior que 0 (mínimo 0,001) e até 10',
+  emails_aviso: 'Informe de 1 a 10 e-mails válidos',
+};
+
+/** Corpo do PUT: números vão como o texto digitado (vazio = '') para o servidor acusar o campo. */
+function corpoConfigApiplacas(v) {
+  return {
+    ativo: v.ativo,
+    teto_mensal: v.teto,
+    aviso_percentual: v.aviso,
+    saldo_minimo: v.saldoMin,
+    preco_consulta: v.preco,
+    emails_aviso: v.emails,
+  };
+}
+
+async function salvarApiplacas(ev) {
+  ev.preventDefault();
+  limparErrosCampo();
+  const valor = (id) => document.getElementById(id).value.trim();
+  const body = corpoConfigApiplacas({
+    ativo: document.getElementById('ap-ativo').checked,
+    teto: valor('ap-teto'),
+    aviso: valor('ap-aviso'),
+    saldoMin: valor('ap-saldo-min'),
+    preco: valor('ap-preco'),
+    emails: apEmails,
+  });
+  const CAMPO = { teto_mensal: 'ap-teto', aviso_percentual: 'ap-aviso', saldo_minimo: 'ap-saldo-min', preco_consulta: 'ap-preco', emails_aviso: 'ap-emails' };
+  await apOcupado(document.getElementById('ap-salvar'), 'Salvando…', async () => {
+    try {
+      await api('/admin/apiplacas', 'PUT', body);
+      toast('Configuração salva');
+      loadApiplacas();
+    } catch (err) {
+      (err.campos || []).forEach((c) => {
+        if (!CAMPO[c]) return;
+        if (c === 'emails_aviso') erroEmailAviso(AP_DICA[c]);
+        else mostrarErroCampo(CAMPO[c], AP_DICA[c]);
+      });
+      focarPrimeiroErro();
+      toast(err.message, true);
+    }
+  });
+}
+
+/** Frase de leigo para o resultado do "validar placas de hoje". */
+function resumoValidacao(r) {
+  const nPlacas = (n) => `${n} ${n === 1 ? 'placa' : 'placas'}`;
+  let t = `${nPlacas(r.consultadas)} ${r.consultadas === 1 ? 'consultada' : 'consultadas'}`;
+  if (r.puladas) t += `, ${r.puladas} já ${r.puladas === 1 ? 'estava' : 'estavam'} na base ou em andamento`;
+  if (r.falhas) t += `, ${r.falhas} com falha`;
+  t += '.';
+  const PARADA = {
+    tempo: ' Parou por falta de tempo — clique de novo para continuar (nada é cobrado duas vezes).',
+    teto: ' Parou porque o teto do mês foi atingido.',
+    sem_saldo: ' Parou porque o pacote de consultas acabou.',
+    desligado: ' Parou porque as consultas estão desligadas.',
+    falhas: ' Parou após várias falhas seguidas; tente de novo em alguns minutos.',
+    limite_hora: ' Limite de consultas por hora atingido; continua sozinho na próxima hora.',
+    inexistente: ' Parou porque a placa não foi encontrada na base.',
+  };
+  return t + (r.parou ? (PARADA[r.parou] || ' Parou antes de terminar.') : ' Concluído.');
+}
+
+async function validarPlacasHoje() {
+  const ok = await confirmarAcao({
+    titulo: 'Validar placas de hoje?',
+    mensagem: `Vamos consultar as placas lidas hoje, em todos os condomínios, que ainda não estão na base. Cada placa nova gasta uma consulta do pacote (${esc(brl(apPreco))} cada).`,
+    textoOk: 'Consultar', textoCancel: 'Cancelar', perigo: false,
+  });
+  if (!ok) return;
+  await apOcupado(document.getElementById('ap-validar'), 'Consultando…', async () => {
+    const resultado = document.getElementById('ap-resultado');
+    try {
+      const r = await api('/admin/apiplacas', 'POST', { acao: 'validar_hoje' });
+      resultado.textContent = resumoValidacao(r);
+      toast(`${r.consultadas} de ${r.placas} consultadas · ${r.puladas} puladas${r.parou === 'tempo' ? ' · clique de novo para continuar' : ''}`);
+      loadApiplacas();
+    } catch (err) { toast(err.message, true); }
+  });
+}
+
+const AP_MOTIVO_409 = {
+  em_andamento: 'Já há uma consulta desta placa em andamento. Aguarde alguns minutos.',
+  desligado: 'As consultas estão desligadas.',
+  teto: 'O teto do mês foi atingido.',
+  sem_saldo: 'O pacote de consultas acabou.',
+  limite_hora: 'Limite de consultas por hora atingido; continua sozinho na próxima hora.',
+  inexistente: 'Placa não encontrada na base.',
+};
+const AP_STATUS_RECONSULTA = {
+  consultado: 'Dados do veículo atualizados.',
+  sem_resultado: 'A APIPLACAS não encontrou dados para esta placa.',
+  erro: 'A consulta falhou agora; ela será tentada de novo automaticamente.',
+  pendente: 'A consulta não pôde ser feita agora (token ou limite do pacote). Veja os avisos por e-mail.',
+};
+
+async function reconsultarPlaca() {
+  const placa = document.getElementById('ap-placa').value.trim().toUpperCase();
+  if (!PLACA_RE.test(placa)) return toast('Informe uma placa válida (ex.: ABC1D23)', true);
+  const ok = await confirmarAcao({
+    titulo: `Consultar ${placa} de novo?`,
+    mensagem: 'A consulta é paga e substitui os dados guardados desta placa.',
+    textoOk: 'Consultar', textoCancel: 'Cancelar', perigo: false,
+  });
+  if (!ok) return;
+  await apOcupado(document.getElementById('ap-reconsultar'), 'Consultando…', async () => {
+    try {
+      const r = await api('/admin/apiplacas', 'POST', { acao: 'reconsultar', placa });
+      toast(AP_STATUS_RECONSULTA[r.linha?.status] || 'Consulta enviada; confira o extrato.');
+      loadApiplacas();
+    } catch (err) {
+      if (err.status === 409) toast(AP_MOTIVO_409[err.data?.motivo] || 'Não foi possível consultar agora.', true);
+      else toast(err.message, true);
+    }
+  });
+}
+
+async function loadExtratoApiplacas(pagina = 0) {
+  try {
+    const r = await api(`/admin/apiplacas?extrato=1&pagina=${pagina}`);
+    const tbody = document.getElementById('ap-extrato');
+    tbody.innerHTML = r.itens.length ? r.itens.map((c) => `<tr>
+      <td>${esc(fmtDateTime(c.criado_em))}</td><td>${c.placa ? `<strong>${esc(c.placa)}</strong>` : '—'}</td><td>${esc(c.resultado)}</td>
+      <td>${esc(c.origem)}</td><td>${c.duracao_ms == null ? '—' : num(c.duracao_ms) + ' ms'}</td><td>${esc(brl(c.custo))}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="table-empty">Nenhuma consulta</td></tr>';
+    const pager = document.getElementById('ap-pager');
+    const paginas = Math.max(1, Math.ceil(r.total / AP_POR_PAGINA));
+    pager.hidden = paginas <= 1;
+    pager.innerHTML = pager.hidden ? '' : `
+      <button type="button" class="btn btn-ghost btn-sm" onclick="loadExtratoApiplacas(${pagina - 1})" ${pagina === 0 ? 'disabled' : ''}>‹ Anterior</button>
+      <span class="pager-info" aria-live="polite">Página ${pagina + 1} de ${paginas} · ${esc(r.total.toLocaleString('pt-BR'))} consultas</span>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="loadExtratoApiplacas(${pagina + 1})" ${pagina >= paginas - 1 ? 'disabled' : ''}>Próxima ›</button>`;
+  } catch (err) { console.error(err); erroNaTabela('ap-extrato', 6, `loadExtratoApiplacas(${pagina})`); }
 }
 
 // ============================================

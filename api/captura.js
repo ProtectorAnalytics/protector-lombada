@@ -16,6 +16,25 @@ const { gerarPDF } = require('../lib/pdf-generator');
 const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
 const { checkRateLimit } = require('../lib/rate-limiter');
 const { isValidToken, parseTimestamp, parseVehicleId } = require('../lib/validators');
+const { criarClienteApiplacas } = require('../lib/apiplacas');
+const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
+const { criarValidador } = require('../lib/validador-placa');
+const { criarVeiculosBase } = require('../lib/veiculos-base');
+
+// Base de veículos (APIPLACAS). Sem token configurado, a captura segue sem
+// consultar — nunca quebra por isso.
+let veiculosBase = null;
+try {
+  const repoVB = criarRepoSupabase();
+  veiculosBase = criarVeiculosBase({
+    repo: repoVB,
+    api: criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }),
+    validador: criarValidador({ contarPassagens: repoVB.contarPassagens }),
+  });
+} catch (e) {
+  // Sem token = silêncio esperado; com token, avisa (e.message nunca traz o token).
+  if (process.env.APIPLACAS_TOKEN) console.warn('base de veículos desligada:', e.message);
+}
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -387,6 +406,10 @@ async function processarAposResposta({
     }
   } catch { /* não-crítico */ }
 
+  // 2b. Base de veículos (APIPLACAS). Antes da notificação para o PDF já sair
+  //     com modelo e cor. aoPassar() nunca lança; o limite de 3 s é só da chamada HTTP à APIPLACAS.
+  const veiculoBase = veiculosBase ? await veiculosBase.aoPassar({ placa, clienteId: cliente.id }) : null;
+
   // 3. Notificação de excesso de velocidade (PDF + e-mail).
   if (velocidade > cliente.limite_velocidade) {
     try {
@@ -397,6 +420,7 @@ async function processarAposResposta({
         cliente,
         captura,
         veiculo,
+        veiculoBase,
         fotoBuffer,
         historico,
         cameraNome: camera.nome || '',

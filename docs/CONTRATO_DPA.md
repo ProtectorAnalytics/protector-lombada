@@ -159,8 +159,11 @@ O CONTROLADOR obriga-se a:
 | **Supabase** (Supabase Inc.) | Banco de dados PostgreSQL e Storage de fotos | Região `sa-east-1` (São Paulo, Brasil) |
 | **Vercel** (Vercel Inc.) | Hospedagem serverless da aplicação | Multi-região; compute pode ocorrer fora do Brasil |
 | **Provedor SMTP** (cPanel, Gmail ou equivalente, conforme configuração) | Envio de e-mails transacionais de notificação | Conforme provedor escolhido |
+| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira; local de processamento não declarado |
 
-7.2. A OPERADORA garante que todos os subprocessadores possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e aderência à LGPD/GDPR.
+7.2. A OPERADORA garante que os subprocessadores de infraestrutura (Supabase, Vercel e provedor SMTP) possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e aderência à LGPD/GDPR. A APIPLACAS não declarou certificações, e o tratamento por ela se limita à placa do veículo, conforme a cláusula 7.2.1.
+
+7.2.1. A **APIPLACAS** recebe a placa dos veículos que passam pelos pontos de medição e devolve dados técnicos do veículo (marca, modelo, versão, cor, ano, município/UF de registro, tipo e situação), com a finalidade de identificar o veículo nas notificações orientativas e no painel e de conferir a leitura automática da placa. Não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE. Os dados do veículo ficam numa base técnica interna, compartilhada entre os condomínios atendidos, que contém apenas dados do veículo; morador, unidade e passagens permanecem isolados por condomínio. Esses dados são apagados após 6 meses sem nova passagem em qualquer condomínio e, quando houver pedido de eliminação atendido pelo encarregado (DPO), a placa é apagada também da base técnica. O extrato de consultas guarda data, resultado e custo para fins de cobrança; a placa é removida do extrato após 6 meses ou quando a eliminação é atendida.
 
 7.3. A inclusão de novo subprocessador será comunicada ao CONTROLADOR com antecedência razoável. O CONTROLADOR poderá se opor por razões fundamentadas de proteção de dados.
 
@@ -182,6 +185,7 @@ O CONTROLADOR obriga-se a:
 - Rotinas automatizadas de retenção (pg_cron):
   - Fotos: 15 dias
   - Metadados: 6 meses
+  - Dados técnicos do veículo (base interna): 6 meses após a última passagem
   - Log de depuração: 24 horas
 
 **Administrativas:**
@@ -229,7 +233,7 @@ f) Medidas adotadas ou recomendadas para reverter ou mitigar os efeitos.
 
 11.1. O CONTROLADOR poderá, mediante aviso prévio razoável (mínimo de 15 dias corridos) e no máximo **uma vez ao ano**, solicitar informações sobre as medidas de segurança adotadas pela OPERADORA, para fins de demonstração de conformidade.
 
-11.2. A OPERADORA disponibilizará resumo das medidas técnicas e administrativas e, quando aplicável, certificações ou relatórios de auditoria de seus subprocessadores.
+11.2. A OPERADORA disponibilizará resumo das medidas técnicas e administrativas e, quando aplicável, certificações ou relatórios de auditoria de seus subprocessadores que os declararem.
 
 11.3. Auditorias presenciais são permitidas apenas em caso de suspeita fundamentada de descumprimento do DPA e mediante acordo prévio entre as PARTES quanto a escopo, duração e custos.
 

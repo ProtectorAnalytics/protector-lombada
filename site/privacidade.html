@@ -364,7 +364,7 @@
   <header class="header">
     <div class="header-label">LGPD · Lei 13.709/2018</div>
     <h1 class="header-title">Política de Privacidade</h1>
-    <p class="header-meta">Versão 1.0 · Vigente a partir de abril de 2026</p>
+    <p class="header-meta">Versão 1.0 · Vigente a partir de abril de 2026 · Atualizada em 05/10/2026</p>
   </header>
 
   <!-- ===== CONTENT ===== -->
@@ -528,10 +528,26 @@
           <tr><td>Foto da passagem</td><td>15 dias corridos</td></tr>
           <tr><td>Metadados (placa, velocidade, data/hora)</td><td>6 meses corridos</td></tr>
           <tr><td>Cadastros de veículo e destinatários</td><td>Enquanto o contrato com o cliente estiver ativo</td></tr>
+          <tr><td>Dados técnicos do veículo (base interna)</td><td>6 meses após a última passagem, em qualquer condomínio atendido</td></tr>
         </tbody>
       </table>
     </div>
     <p>Prazos são executados por rotinas automatizadas no banco de dados.</p>
+
+    <h3>Consulta técnica do veículo (base interna)</h3>
+    <p>
+      Para identificar o veículo nas notificações orientativas e no painel, e para conferir a leitura
+      automática da placa, a Protector Sistemas envia a <strong>placa</strong> dos veículos que passam
+      pelos pontos de medição à suboperadora <strong>APIPLACAS</strong> (AETHERIA, CNPJ 67.877.417/0001-08),
+      que devolve dados técnicos do veículo: marca, modelo, versão, cor, ano, município/UF de registro,
+      tipo e situação.
+    </p>
+    <ul>
+      <li><strong>Minimização:</strong> não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE.</li>
+      <li><strong>Base técnica interna:</strong> os dados do veículo ficam numa base compartilhada entre os condomínios atendidos, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio.</li>
+      <li><strong>Retenção:</strong> os dados técnicos do veículo são apagados após 6 meses sem nova passagem em qualquer condomínio.</li>
+      <li><strong>Eliminação:</strong> a exclusão feita pelo condomínio no painel atinge os cadastros do condomínio (morador e unidade), não a base técnica. A eliminação na base técnica compartilhada é feita pela Protector Sistemas, por pedido ao encarregado (DPO): o pedido de eliminação atendido no painel do encarregado apaga também a placa da base técnica. O extrato de consultas guarda data, resultado e custo para fins de cobrança; a placa é removida do extrato após 6 meses ou quando a eliminação é atendida.</li>
+    </ul>
 
     <!-- 5. Base legal -->
     <h2 id="base-legal">5. Base legal</h2>
@@ -573,6 +589,11 @@
             <td><strong>Provedor SMTP</strong></td>
             <td>Envio de e-mails transacionais</td>
             <td>Conforme provedor contratado</td>
+          </tr>
+          <tr>
+            <td><strong>APIPLACAS</strong> (AETHERIA, CNPJ 67.877.417/0001-08)</td>
+            <td>Consulta de dados técnicos do veículo a partir da placa</td>
+            <td>Empresa brasileira; local de processamento não declarado</td>
           </tr>
         </tbody>
       </table>

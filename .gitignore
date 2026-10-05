@@ -7,3 +7,5 @@ output/
 tmp/
 docs/apresentacoes/*
 !docs/apresentacoes/.gitkeep
+.superpowers/
+.claude/worktrees/

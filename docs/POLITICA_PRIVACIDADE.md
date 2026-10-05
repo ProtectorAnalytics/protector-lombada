@@ -1,6 +1,6 @@
 # Política de Privacidade — Protector Sistemas
 
-**Versão 1.0** · Vigente a partir de abril de 2026
+**Versão 1.0** · Vigente a partir de abril de 2026 · Atualizada em 05/10/2026 (consulta técnica de veículos)
 
 ---
 
@@ -77,8 +77,18 @@ A finalidade desses dados é **definida exclusivamente pelo cliente contratante*
 - **Foto da passagem:** 15 dias corridos, após os quais é eliminada automaticamente do armazenamento
 - **Metadados da passagem** (placa, velocidade, data/hora): 6 meses corridos, após os quais são eliminados automaticamente
 - **Cadastros de veículo e destinatários:** enquanto o contrato com o cliente contratante estiver ativo
+- **Dados técnicos do veículo (base interna):** 6 meses após a última passagem, em qualquer condomínio atendido
 
 Prazos são executados por rotinas automatizadas no banco de dados.
+
+### Consulta técnica do veículo (base interna)
+
+Para identificar o veículo nas notificações orientativas e no painel, e para conferir a leitura automática da placa, a Protector Sistemas envia a **placa** dos veículos que passam pelos pontos de medição à suboperadora **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08), que devolve dados técnicos do veículo: marca, modelo, versão, cor, ano, município/UF de registro, tipo e situação.
+
+- **Minimização:** não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE.
+- **Base técnica interna:** os dados do veículo ficam numa base compartilhada entre os condomínios atendidos, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio.
+- **Retenção:** os dados técnicos do veículo são apagados após 6 meses sem nova passagem em qualquer condomínio.
+- **Eliminação:** a exclusão feita pelo condomínio no painel atinge os cadastros do condomínio (morador e unidade), não a base técnica. A eliminação na base técnica compartilhada é feita pela Protector Sistemas, por pedido ao encarregado (DPO): o pedido de eliminação atendido no painel do encarregado apaga também a placa da base técnica. O extrato de consultas guarda data, resultado e custo para fins de cobrança; a placa é removida do extrato após 6 meses ou quando a eliminação é atendida.
 
 ---
 
@@ -103,6 +113,7 @@ Os dados tratados pela Protector Sistemas são compartilhados apenas com os **su
 | **Supabase** (Supabase Inc.) | Banco de dados e armazenamento de arquivos | Região `sa-east-1` (São Paulo, Brasil) |
 | **Vercel** (Vercel Inc.) | Hospedagem da aplicação (serverless) | Multi-região, com compute podendo ocorrer fora do Brasil |
 | **Provedor SMTP** | Envio de e-mails transacionais | Conforme provedor contratado |
+| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira; local de processamento não declarado |
 
 A Protector Sistemas **não vende, não cede e não comercializa** dados pessoais a terceiros. Compartilhamentos adicionais ocorrem apenas quando houver obrigação legal ou ordem judicial.
 
