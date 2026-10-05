@@ -3421,7 +3421,7 @@
     // tela já desenhada. Respostas em voo são invalidadas (sessão e seqs).
     function esquecerDadosDoCliente() {
       sessaoSeq++;
-      capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recargaSeq++;
+      capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recargaSeq++; renderSeq++;
       camerasList = [];
       camerasMap = {};
       camerasMapFull = {};
@@ -4242,9 +4242,15 @@
     let limiteAtingido = false;
     let currentPage = 1;
     let allThumbUrls = {};
+    let renderSeq = 0;
 
     async function renderPage() {
-      const sessao = marcaDaSessao(); // conferida depois de cada espera, antes de gravar
+      // Sessão e número da chamada conferidos depois de cada espera, antes de
+      // gravar: uma renderPage mais antiga (outro filtro, outra página) não
+      // escreve por cima da mais nova
+      const sessao = marcaDaSessao();
+      const minha = ++renderSeq;
+      const atual = () => minha === renderSeq && sessaoValida(sessao);
       const data = capturasVisiveis();
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
@@ -4267,13 +4273,13 @@
       const needThumb = pageData.filter(c => c.foto_path && !(c.foto_path in allThumbUrls));
       if (needThumb.length > 0) {
         const results = await Promise.all(needThumb.map(c => getPhotoUrl(c.foto_path)));
-        if (!sessaoValida(sessao)) return;
+        if (!atual()) return;
         needThumb.forEach((c, i) => { allThumbUrls[c.foto_path] = results[i]; });
       }
 
       await loadVeiculosBase(pageData.map(c => c.placa));
       await carregarSuspeitas(pageData.map(c => c.placa));
-      if (!sessaoValida(sessao)) return; // saiu/trocou de condomínio durante as esperas
+      if (!atual()) return; // chamada mais nova, saída ou troca de condomínio durante as esperas
 
       tabelaPaginaData = pageData;
       tbody.innerHTML = pageData.map((c, pi) => {
@@ -4371,6 +4377,7 @@
     const MOVIMENTO_REDUZIDO_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
     let barraMontada = false;
     let recargaSeq = 0;
+    const REGIOES_RECARGA = '.tabela-topo, .table-container, .sidebar';
 
     function atualizarTitulosPeriodo() {
       document.getElementById('titulo-tabela').textContent = `Passagens · ${getActiveFilters().label}`;
@@ -4404,7 +4411,7 @@
     // e o resultado anunciado ("36 passagens") quando termina
     async function recarregarComEsmaecer() {
       const seq = ++recargaSeq;
-      const regioes = [...document.querySelectorAll('.tabela-topo, .table-container, .sidebar')];
+      const regioes = [...document.querySelectorAll(REGIOES_RECARGA)];
       const tbody = document.getElementById('table-body');
       tbody.style.minHeight = `${tbody.offsetHeight}px`;
       regioes.forEach((r) => { r.classList.add('recarregando'); r.setAttribute('aria-busy', 'true'); });
@@ -4421,7 +4428,8 @@
 
     // Tira opacidade, aria-busy e a altura reservada da recarga
     function desfazerEsmaecer() {
-      document.querySelectorAll('.recarregando, [aria-busy]').forEach((r) => {
+      // Só as regiões da recarga (o Exportar em uso tem o próprio aria-busy)
+      document.querySelectorAll(REGIOES_RECARGA).forEach((r) => {
         r.classList.remove('recarregando');
         r.removeAttribute('aria-busy');
       });
