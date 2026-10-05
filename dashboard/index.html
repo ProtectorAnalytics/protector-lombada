@@ -91,12 +91,13 @@
       --accent-light: rgba(59,130,246,0.1);
       --text-primary: #F1F5F9;
       --text-secondary: #94A3B8;
-      --text-muted: #475569;
+      --text-muted: #8A93A6;                    /* ≥4,5:1 nos fundos do escuro (#1A2235: 5,1; #111827: 5,8; #080C14: 6,3) */
       --border: rgba(255,255,255,0.07);
       --green: #22C55E;
       --orange: #F97316;
       --red: #EF4444;
       --red-dark: #DC2626;
+      --red-texto: #F87171;                     /* número vermelho sobre campo (#1A2235 + tinta): ≥4,5:1 */
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
       --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
       --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
@@ -162,6 +163,7 @@
       --orange: #C2410C;
       --red: #B91C1C;
       --red-dark: #B91C1C;
+      --red-texto: #B91C1C;
       --shadow-sm: 0 1px 2px rgba(15,23,42,0.05), 0 1px 3px rgba(15,23,42,0.07);
       --shadow-md: 0 4px 16px rgba(15,23,42,0.10);
       --shadow-lg: 0 10px 30px rgba(15,23,42,0.12);
@@ -650,7 +652,6 @@
     }
 
     .recent-card .rc-vel.green { color: #22C55E; }
-    .recent-card .rc-vel.orange { color: #F97316; }
     /* Alerta: fundo vermelho opaco + texto branco (não depende só de cor do número) */
     .recent-card .rc-vel.red { color: #FFFFFF; background: var(--red-dark); }
     .recent-card .rc-vel.unknown { color: #94A3B8; opacity: 0.7; }
@@ -716,7 +717,7 @@
     }
     /* text-secondary: o text-muted do tema escuro fica abaixo de 4.5:1 */
     .morador-sub, .morador-nc {
-      font-size: 0.625rem; color: var(--text-secondary);
+      font-size: 0.6875rem; color: var(--text-secondary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     /* Base de veículos (APIPLACAS): quadro, cadastro e suspeita */
@@ -724,16 +725,16 @@
       margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--border);
       border-radius: 8px; background: var(--bg-input); min-width: 0;
     }
+    /* Títulos do detalhe em sentence case (sem caixa alta forçada) */
     .vb-quadro h4 {
-      margin: 0 0 8px; color: var(--accent); font-size: 0.75rem;
-      text-transform: uppercase; letter-spacing: 0.06em;
+      margin: 0 0 8px; color: var(--accent); font-size: 0.8125rem;
     }
     .vb-quadro.vb-suspeita { border-color: var(--orange); }
     .vb-quadro.vb-suspeita h4 { color: var(--orange); }
     .vb-quadro p { margin: 0 0 10px; font-size: 0.8125rem; color: var(--text-primary); line-height: 1.45; }
     .vb-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 0.8125rem; }
     .vb-grid span {
-      display: block; color: var(--text-muted); font-size: 0.6875rem; font-weight: 600;
+      display: block; color: var(--text-secondary); font-size: 0.6875rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.02em;
     }
     .vb-grid strong { color: var(--text-primary); overflow-wrap: anywhere; }
@@ -757,33 +758,29 @@
       .vb-form input, .vb-form button { flex-basis: 100%; }
     }
 
+    /* Selo OK/ALERTA: fundo opaco (o mesmo da velocidade) colado no canto
+       superior esquerdo, cobrindo a faixa onde a câmera escreve a tag ("R03").
+       Cores fixas: o fundo é escuro nos dois temas (texto ≥ 5:1 no pior pixel) */
     .recent-card .rc-badge {
       position: absolute;
-      top: 6px;
-      left: 6px;
-      font-size: 0.625rem;
-      padding: 3px 8px;
-      border-radius: 4px;
+      top: 0;
+      left: 0;
+      font-size: 0.6875rem;
+      line-height: 1.3;
+      padding: 4px 9px 4px 8px;
+      border-radius: 0 0 6px 0; /* arredonda só o lado de dentro da foto */
       font-weight: 700;
       text-transform: uppercase;
       z-index: 3;
-      border: 1px solid;
+      border: none;
+      background: rgba(13,22,38,0.92);
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
 
-    .recent-card .rc-badge.ok-badge {
-      background: rgba(34,197,94,0.2);
-      color: #22C55E;
-      border-color: rgba(34,197,94,0.35);
-    }
-
-    .recent-card .rc-badge.noradar-badge {
-      background: rgba(148,163,184,0.18);
-      color: #94a3b8;
-      border-color: rgba(148,163,184,0.35);
-    }
+    .recent-card .rc-badge.ok-badge { color: #4ADE80; }
+    .recent-card .rc-badge.noradar-badge { color: #CBD5E1; }
 
     /* Tabela: ocupa o espaço restante da left-panel */
     .left-panel > .table-container {
@@ -1037,7 +1034,7 @@
     .dd:hover, .dd:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
     .recent-card .dd.rc-placa, .recent-card .dd.rc-badge { margin: 0; }
     .recent-card .dd.rc-placa { padding: 4px 9px; }
-    .recent-card .dd.rc-badge { padding: 3px 8px; }
+    .recent-card .dd.rc-badge { padding: 4px 9px 4px 8px; }
     .ranking-btn {
       display: flex; justify-content: space-between; align-items: center; width: 100%;
       padding: 7px 10px; border: none; background: none; color: inherit; font: inherit;
@@ -1052,7 +1049,13 @@
       .visoes::-webkit-scrollbar { display: none; }
       .filtros-topo { flex-wrap: wrap; }
       .filtros-topo .visoes { order: 3; flex-basis: 100%; }
-      .agora-cabecalho .cameras-status { order: 3; flex-basis: 100%; }
+      /* Câmeras numa linha só, rolando na horizontal (como as perguntas prontas) */
+      .agora-cabecalho .cameras-status {
+        order: 3; flex: 1 1 100%; min-width: 0; flex-wrap: nowrap;
+        overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 0 2px;
+      }
+      .agora-cabecalho .cameras-status::-webkit-scrollbar { display: none; }
+      .cam-pill { flex-shrink: 0; }
       .visao { min-height: 36px; flex-shrink: 0; }
       .barra-filtros { flex-wrap: nowrap; padding: 6px; gap: 6px; }
       .barra-btn, .busca-wrap input { min-height: 44px; }
@@ -1274,6 +1277,11 @@
       color: white;
       border-color: var(--accent);
     }
+    /* Toque e celular: botões da paginação com alvo de 44 px */
+    @media (pointer: coarse), (max-width: 600px) {
+      .table-pagination .pg-btn { min-width: 44px; min-height: 44px; padding: 4px 8px; }
+      .table-pagination .pg-controls { flex-wrap: wrap; justify-content: center; }
+    }
     .table-pagination .pg-current {
       font-weight: 600;
       color: var(--text-primary);
@@ -1330,9 +1338,22 @@
     }
 
     .table-row .vel.green { color: var(--green); }
-    .table-row .vel.orange { color: var(--orange); }
     .table-row .vel.red { color: var(--red); font-weight: 800; }
     .table-row .vel.unknown { color: var(--text-muted); opacity: 0.7; }
+
+    /* Radar: uma linha com reticências (nome completo no title). A célula
+       ocupa a altura da linha para o alvo do botão não ser cortado */
+    .table-row .celula-radar {
+      align-self: stretch; display: flex; align-items: center;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 0.6875rem; color: var(--text-secondary); font-weight: 500;
+    }
+    .table-row .celula-radar .dd {
+      margin: 0; padding: 4px 2px; min-width: 0; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .table-row .celula-radar .dd:focus-visible { outline-offset: -2px; }
+    @media (pointer: coarse) { .table-row .celula-radar .dd { padding: 12px 2px; } }
 
     .table-row .datetime {
       color: var(--text-secondary);
@@ -1347,9 +1368,11 @@
     .table-empty {
       padding: 30px;
       text-align: center;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-size: 0.9375rem;
     }
+    .table-empty p { margin: 0; }
+    .table-empty .btn-secundario { margin-top: 12px; }
 
     /* Sidebar unificada: altura total, scroll próprio */
     .sidebar {
@@ -1418,7 +1441,7 @@
     }
     .sidebar-kpi-label {
       font-size: 0.6875rem;
-      color: var(--text-muted);
+      color: var(--text-secondary); /* muted no claro ficava em 4,31:1 sobre o fundo do KPI */
       text-transform: uppercase;
       letter-spacing: 0.04em;
       font-weight: 700;
@@ -1432,7 +1455,7 @@
     }
     .sidebar-kpi-unit {
       font-size: 0.6875rem;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       margin-top: 2px;
     }
 
@@ -1669,7 +1692,7 @@
 
     .modal-field .label {
       font-size: 0.6875rem;
-      color: var(--text-muted);
+      color: var(--text-secondary); /* muted no claro: 4,31:1 sobre o campo */
       text-transform: uppercase;
       font-weight: 600;
       letter-spacing: 0.04em;
@@ -1681,7 +1704,7 @@
       margin-top: 2px;
     }
 
-    .modal-field .value.red { color: var(--red); }
+    .modal-field .value.red { color: var(--red-texto); }
     .modal-field .value.green { color: var(--green); }
     .modal-field .value.accent { color: var(--accent); }
 
@@ -1696,9 +1719,7 @@
 
     .modal-morador h4 {
       color: var(--accent);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-size: 0.8125rem;
       margin-bottom: 6px;
     }
 
@@ -1710,7 +1731,7 @@
     }
 
     .modal-morador .morador-grid span {
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-size: 0.6875rem;
       text-transform: uppercase;
       display: block;
@@ -1729,9 +1750,7 @@
 
     .modal-historico h4 {
       color: var(--accent);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-size: 0.8125rem;
       margin-bottom: 8px;
     }
 
@@ -1746,13 +1765,20 @@
       border-radius: 4px;
       padding: 4px 6px;
       text-align: center;
-      min-width: 56px;
+      min-width: 60px;
       font-size: 0.6875rem;
+      line-height: 1.3;
+    }
+    /* Acima do limite: ▲ + fundo tingido, não só a cor do número */
+    .historico-cell.acima {
+      background: linear-gradient(var(--tint-red), var(--tint-red)), var(--bg-input);
+      box-shadow: inset 0 0 0 1px rgba(239,68,68,0.4);
     }
 
     .historico-cell .h-date {
-      color: var(--text-muted);
-      font-size: 0.5625rem;
+      color: var(--text-secondary);
+      font-size: 0.6875rem;
+      font-variant-numeric: tabular-nums;
     }
 
     .historico-cell .h-vel {
@@ -1760,8 +1786,9 @@
       font-size: 1rem;
     }
 
-    .historico-cell .h-vel.red { color: var(--red); }
+    .historico-cell .h-vel.red { color: var(--red-texto); }
     .historico-cell .h-vel.green { color: var(--text-primary); }
+    .historico-cell .h-vel.unknown { color: var(--text-secondary); }
 
     /* Modal actions */
     .modal-actions {
@@ -1821,11 +1848,7 @@
       50% { opacity: 1; }
     }
 
-    .recent-card .rc-badge.alert-badge {
-      background: rgba(239,68,68,0.2);
-      color: #EF4444;
-      border-color: rgba(239,68,68,0.35);
-    }
+    .recent-card .rc-badge.alert-badge { color: #F87171; }
 
     /* veiculos-section removed - managed via modal */
 
@@ -2192,12 +2215,12 @@
       .recent-card .rc-thumb,
       .recent-card .rc-no-photo { height: 108px; }
       .sidebar-card { padding: 8px 10px; }
-      .sidebar-card h3 { font-size: 0.625rem; margin-bottom: 6px; letter-spacing: 0.05em; }
+      .sidebar-card h3 { font-size: 0.6875rem; margin-bottom: 6px; letter-spacing: 0.05em; }
       .chart-container { height: 100px; }
       .sidebar-kpis { gap: 4px; }
       .sidebar-kpi { padding: 6px 8px; }
       .sidebar-kpi-value { font-size: 1rem; }
-      .sidebar-kpi-label { font-size: 0.5625rem; }
+      .sidebar-kpi-label { font-size: 0.6875rem; } /* nenhum texto abaixo de 11 px */
     }
     @media (max-width: 900px) {
       .main-layout { height: auto; overflow: auto; }
@@ -2208,8 +2231,23 @@
       .modal-details { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 600px) {
-      .recent-cards { grid-template-columns: 1fr; }
-      .stats-row { grid-template-columns: 1fr; }
+      /* Primeira passagem perto do topo: KPIs 2×2 e cartões em 2 colunas com
+         foto baixa (mesmo desenho da faixa compacta do desktop) */
+      .recent-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .recent-card { --rc-info-h: 2.5rem; }
+      .recent-card .rc-thumb,
+      .recent-card .rc-no-photo { height: 96px; }
+      .recent-card::before { height: 46px; }
+      .recent-card .rc-info { padding: 0 8px; gap: 1px; }
+      .recent-card .rc-placa { font-size: 0.8125rem; padding: 3px 7px; bottom: calc(var(--rc-info-h) + 4px); left: 6px; }
+      .recent-card .dd.rc-placa { padding: 3px 7px; }
+      .recent-card .rc-vel { font-size: 0.875rem; padding: 3px 5px; top: 0; right: 0; border-radius: 0 0 0 6px; }
+      .recent-card .rc-vel > span { font-size: 0.6875rem !important; }
+      .recent-card .rc-badge, .recent-card .dd.rc-badge { padding: 3px 6px 3px 5px; }
+      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+      .stat-card { padding: 8px 12px; gap: 2px; }
+      .stat-card .value, .stat-card.destaque .value { font-size: 1.375rem; }
+      .stat-card .label, .stat-card .unit { font-size: 0.75rem; }
       /* Topo em duas linhas: identidade em cima, ações embaixo (sem amontoar) */
       .topbar { grid-template-columns: 1fr; gap: 8px; padding: 8px 12px; }
       .topbar-acoes { justify-content: space-between; flex-wrap: wrap; row-gap: 6px; }
@@ -2268,7 +2306,7 @@
       .recent-card .dd.rc-placa { padding: 3px 7px; }
       .recent-card .rc-vel { font-size: 0.875rem; padding: 3px 5px; top: 6px; right: 5px; }
       .recent-card .rc-vel > span { font-size: 0.6875rem !important; } /* "km/h" (estilo inline) */
-      .recent-card .rc-badge, .recent-card .dd.rc-badge { font-size: 0.5625rem; padding: 2px 4px; top: 6px; left: 5px; }
+      .recent-card .rc-badge, .recent-card .dd.rc-badge { font-size: 0.6875rem; padding: 3px 6px 3px 5px; top: 0; left: 0; }
       /* 4 números do topo mais baixos; Passagens e Alertas seguem maiores */
       .stats-row { gap: 6px; }
       .stat-card { padding: 5px 12px 6px; gap: 0; border-radius: 10px; }
@@ -2283,11 +2321,11 @@
       .filtros-topo .btn-secundario { min-height: 30px; padding: 3px 12px; }
       .table-pagination .btn-link, .btn-recolher { min-height: 24px; }
     }
-    /* Largura média: com 6 colunas o selo e a velocidade se sobrepõem abaixo
-       de ~1360 px (medido: -8 px em 1280); a partir de 1360 sobram ~9 px
-       mesmo com "▲ 105 km/h". Abaixo disso ficam os 3 mais recentes, com a
-       mesma foto baixa */
-    @media (min-width: 901px) and (max-width: 1359px) and (max-height: 1100px) {
+    /* Largura média: com 6 colunas o rodapé do cartão (nome/radar) mostra
+       menos de 18 caracteres abaixo de 1720 px (medido: 15 em 1600, 17 em
+       1680, 18 em 1720) e o selo encosta na velocidade. Abaixo disso ficam
+       os 3 mais recentes, com a mesma foto baixa */
+    @media (min-width: 901px) and (max-width: 1719px) and (max-height: 1100px) {
       .recent-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .recent-cards > .recent-card:nth-child(n+4) { display: none; }
     }
@@ -2407,7 +2445,6 @@
       font-size: 0.8125rem;
     }
     .vel-tag.red { background: rgba(239,68,68,0.15); color: var(--red); }
-    .vel-tag.orange { background: rgba(249,115,22,0.15); color: var(--orange); }
     .vel-tag.green { background: rgba(34,197,94,0.15); color: var(--green); }
 
     /* Linha de tabela: left-border indicator sem layout shift */
@@ -2697,6 +2734,7 @@
   <script src="/js/estado-filtros.js"></script>
   <script src="/js/barra-filtros.js"></script>
   <script src="/js/lista-dinamica.js"></script>
+  <script src="/js/severidade-velocidade.js"></script>
 </head>
 <body>
 
@@ -3106,7 +3144,7 @@
   <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-header">
-        <h3 id="modal-title">Detalhes da Captura</h3>
+        <h3 id="modal-title">Detalhes da passagem</h3>
         <button type="button" class="modal-close" onclick="closeModal()" aria-label="Fechar">&times;</button>
       </div>
       <div id="modal-body"></div>
@@ -3158,7 +3196,7 @@
       corExibicao, corHex, coletarPaginado, LIMITE_PLACAS_FILTRO, termoModelo,
     } = filtroVeiculoLib;
     const {
-      montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo,
+      montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo, temFiltroAtivo,
       hojeLocal, virarDia, periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro,
       contarMaisFiltros, VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString,
       validarPeriodo,
@@ -3167,7 +3205,9 @@
       rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
       conjuntoCadastradas, filtrarNaoCadastradas,
     } = barraFiltrosLib;
-    const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina } = listaDinamicaLib;
+    const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra } = listaDinamicaLib;
+    // Escala única: até o limite = ok (verde); acima = alerta (vermelho), em todo o painel
+    const { velocidadeMedida, acimaDoLimite, classeVelocidade } = severidadeVelocidadeLib;
 
     // ============================================
     // CONFIG
@@ -3916,6 +3956,7 @@
     // placas nas duas grafias para `.in('placa', …)` nas capturas. Tabela e
     // gráfico pedem ao mesmo tempo: uma consulta em voo/recente é reaproveitada.
     const MSG_FILTRO_VEICULO_VAZIO = 'Nenhum veículo com esses dados no período.';
+    const MSG_LISTA_VAZIA = 'Nenhuma passagem encontrada';
     const FILTRO_VEICULO_TTL_MS = 20000;
     let filtroVeiculoMemo = null; // { chave, em, promessa }
     let opcoesVeiculoDoCliente = null;
@@ -4115,12 +4156,9 @@
 
       recentCardsData = data;
       container.innerHTML = data.map((c, i) => {
-        const velMedida = c.velocidade > 0;
-        const isAlert = velMedida && c.velocidade > limite;
-        // velClass: se não tem velocidade medida, usa "unknown" (cinza)
-        const velClass = !velMedida ? 'unknown'
-          : c.velocidade <= limite ? 'green'
-          : c.velocidade <= limite + 20 ? 'orange' : 'red';
+        const velMedida = velocidadeMedida(c.velocidade);
+        const isAlert = acimaDoLimite(c.velocidade, limite);
+        const velClass = classeVelocidade(c.velocidade, limite); // unknown | green | red
         const ts = new Date(c.timestamp);
         const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const data_str = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
@@ -4128,7 +4166,7 @@
         const morador = veiculo ? veiculo.nome_morador || veiculo.unidade || '' : '';
 
         const photoHtml = photoUrls[i]
-          ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="Foto" loading="lazy">`
+          ? `<img class="rc-thumb" src="${photoUrls[i]}" alt="${esc(`Passagem da placa ${c.placa} às ${hora}`)}" loading="lazy">`
           : `<span class="rc-no-photo">&#128663;</span>`;
 
         // Badge: ícone redundante + texto (não depende só de cor — daltonismo).
@@ -4183,14 +4221,14 @@
       if (error || !data || !sessaoValida(sessao)) return;
 
       const total = data.length;
-      const alertas = data.filter(c => c.velocidade > currentCliente.limite_velocidade).length;
+      const alertas = data.filter(c => acimaDoLimite(c.velocidade, currentCliente.limite_velocidade)).length;
       const maxVel = data.length > 0 ? Math.max(...data.map(c => c.velocidade)) : 0;
 
       document.getElementById('stat-total').textContent = total;
       document.getElementById('stat-alertas').textContent = alertas;
       const maxEl = document.getElementById('stat-maxvel');
       maxEl.textContent = maxVel;
-      maxEl.classList.toggle('red', maxVel > currentCliente.limite_velocidade);
+      maxEl.classList.toggle('red', acimaDoLimite(maxVel, currentCliente.limite_velocidade));
 
       // Realce do card "Alertas Hoje": crítico (vermelho + ⚠) quando > 0,
       // tranquilo (verde + ✓) quando zero — diferencia estado vazio de crítico.
@@ -4279,7 +4317,7 @@
           : !fv.placas.length ? MSG_FILTRO_VEICULO_VAZIO : '';
         if (motivo) {
           avisoFiltroVeiculo(fv.placas ? '' : motivo);
-          tbody.innerHTML = `<div class="table-empty"${fv.erro ? ' role="alert"' : ''}>${esc(motivo)}</div>`;
+          tbody.innerHTML = fv.erro ? `<div class="table-empty" role="alert">${esc(motivo)}</div>` : htmlListaVazia(motivo);
           tabelaEmErro = false; // lista vazia: nada velho para redesenhar
           lastCapturas = []; // export não pode sair sem o filtro de veículo
           limiteAtingido = false;
@@ -4313,8 +4351,7 @@
         return false;
       }
       if (!data || data.length === 0) {
-        const vazio = fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : 'Nenhuma captura encontrada';
-        tbody.innerHTML = `<div class="table-empty">${vazio}</div>`;
+        tbody.innerHTML = htmlListaVazia(fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : MSG_LISTA_VAZIA);
         tabelaEmErro = false;
         lastCapturas = [];
         limiteAtingido = false;
@@ -4354,6 +4391,9 @@
     const DEBOUNCE_LINHAS_MS = 150;
     const ESTREITO_MQ = window.matchMedia('(max-width: 900px)');
     let linhasPorPagina = 14;
+    // Diferença entre o cálculo e o que coube de fato na tela (ver conferirSobraDaLista)
+    let correcaoLinhas = 0;
+    let ultimoCalculo = 14;
     let alturaPaginacao = ALTURA_PAGINACAO_PADRAO;
     let timerLinhas = null;
     // Tabela mostrando "Não foi possível carregar…": o ajuste só recalcula o
@@ -4366,7 +4406,7 @@
     let allThumbUrls = {};
     let renderSeq = 0;
 
-    async function renderPage() {
+    async function renderPage({ conferida = false } = {}) {
       // Sessão e número da chamada conferidos depois de cada espera, antes de
       // gravar: uma renderPage mais antiga (outro filtro, outra página) não
       // escreve por cima da mais nova
@@ -4378,7 +4418,7 @@
       atualizarRodapeSemVel();
 
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
+        tbody.innerHTML = htmlListaVazia(MSG_LISTA_VAZIA);
         mostrarPaginas(false);
         return;
       }
@@ -4405,13 +4445,11 @@
 
       tabelaPaginaData = pageData;
       tbody.innerHTML = pageData.map((c, pi) => {
-        const velMedida = c.velocidade > 0;
-        const velClass = !velMedida ? 'unknown'
-          : c.velocidade <= limite ? 'green'
-          : c.velocidade <= limite + 20 ? 'orange' : 'red';
+        const velMedida = velocidadeMedida(c.velocidade);
+        const velClass = classeVelocidade(c.velocidade, limite); // unknown | green | red
         const ts = new Date(c.timestamp);
         const dt = ts.toLocaleDateString('pt-BR') + ' ' + ts.toLocaleTimeString('pt-BR');
-        const isAlert = velMedida && c.velocidade > limite;
+        const isAlert = acimaDoLimite(c.velocidade, limite);
         const velTexto = velMedida ? `${isAlert ? '▲ ' : ''}${c.velocidade} km/h` : '— km/h';
         // Status com ícone redundante (não depende só de cor — daltonismo)
         const statusTexto = isAlert ? '▲ ALERTA' : (!velMedida ? '⊘ SEM RADAR' : '✓ OK');
@@ -4421,7 +4459,7 @@
           ? `<img class="row-thumb" src="${allThumbUrls[c.foto_path]}" alt="" loading="lazy">`
           : `<div class="row-no-thumb">&#128663;</div>`;
 
-        const radarNome = camerasMap[c.camera_id] || '---';
+        const radarNome = camerasMap[c.camera_id] || '—';
         const radarHtml = camerasMap[c.camera_id]
           ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`) : esc(radarNome);
         const statusHtml = isAlert ? botaoFiltro('alerta', '1', statusTexto, `${statusTexto} — filtrar só acima do limite`) : statusTexto;
@@ -4431,7 +4469,7 @@
           <div>${thumbHtml}</div>
           <div class="placa">${botaoFiltro('placa', c.placa, esc(c.placa), `Filtrar pela placa ${c.placa}`)}</div>
           <div class="vel ${velClass}">${velTexto}</div>
-          <div class="celula-radar" style="font-size:0.6875rem;color:var(--text-secondary);font-weight:500">${radarHtml}</div>
+          <div class="celula-radar" title="${esc(radarNome)}">${radarHtml}</div>
           <div class="veiculo-info">${celulaVeiculoTabela(c.placa, c.timestamp)}</div>
           <div class="datetime"><button type="button" class="dd dd-detalhe" aria-label="${esc(`${dt} — ver detalhes da passagem ${c.placa}`)}">${dt}</button></div>
           <div class="morador-info">${celulaMorador(c.placa)}</div>
@@ -4472,9 +4510,32 @@
         btns += `<button class="pg-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>&raquo;</button>`;
 
         document.getElementById('pg-controls').innerHTML = btns;
+        // Página cheia desenhada: confere a sobra real (uma vez por desenho)
+        if (!conferida && pageData.length === linhasPorPagina && conferirSobraDaLista()) renderPage({ conferida: true });
       } else {
         mostrarPaginas(false);
       }
+    }
+
+    // Depois de desenhar: a altura real das linhas pode diferir da usada no
+    // cálculo (fonte, zoom, arredondamento) e deixar uma faixa vazia acima da
+    // paginação ou linhas cortadas. Mede o que ficou e corrige o tamanho da
+    // página (mantendo a primeira passagem visível). true = mudou.
+    function conferirSobraDaLista() {
+      if (ESTREITO_MQ.matches || document.querySelector('.main-layout.lista-rolante')) return false;
+      const tbody = document.getElementById('table-body');
+      const linhas = tbody.querySelectorAll('.table-row');
+      if (!linhas.length) return false;
+      const topo = linhas[0].getBoundingClientRect().top;
+      const fim = linhas[linhas.length - 1].getBoundingClientRect().bottom;
+      const sobra = tbody.clientHeight - (fim - topo);
+      const novo = Math.max(LINHAS_MIN, corrigirPelaSobra(linhasPorPagina, sobra, alturaLinhaAtual(), LINHAS_MIN, LINHAS_MAX));
+      if (novo === linhasPorPagina) return false;
+      correcaoLinhas = novo - ultimoCalculo;
+      const primeira = primeiroIndiceDaPagina(currentPage, linhasPorPagina);
+      linhasPorPagina = novo;
+      currentPage = paginaQueContem(primeira, novo);
+      return true;
     }
 
     function goToPage(page) {
@@ -4541,7 +4602,11 @@
 
     // Muda o tamanho da página mantendo a primeira passagem visível na tela
     function ajustarLinhasPorPagina(total) {
-      const novo = calcularLinhasPorPagina(total);
+      const calculado = calcularLinhasPorPagina(total);
+      ultimoCalculo = calculado;
+      // Correção medida na tela (conferirSobraDaLista) vale só com a lista travada
+      const travada = !ESTREITO_MQ.matches && !document.querySelector('.main-layout.lista-rolante');
+      const novo = travada ? Math.max(LINHAS_MIN, Math.min(LINHAS_MAX, calculado + correcaoLinhas)) : calculado;
       if (novo === linhasPorPagina) return false;
       const primeira = primeiroIndiceDaPagina(currentPage, linhasPorPagina);
       linhasPorPagina = novo;
@@ -4788,10 +4853,20 @@
         alvo.focus();
         return;
       }
-      if (e.target.closest('[data-limpar-tudo]')) {
-        aplicarEstado(filtrosPadrao(hoje));
-        document.getElementById('btn-periodo').focus();
-      }
+      if (e.target.closest('[data-limpar-tudo]')) limparTodosOsFiltros();
+    }
+
+    // "Limpar tudo" dos chips e "Limpar filtros" da lista vazia: volta ao padrão
+    function limparTodosOsFiltros() {
+      aplicarEstado(filtrosPadrao(todayLocalISO()));
+      document.getElementById('btn-periodo').focus();
+    }
+
+    // Lista vazia com orientação: com filtro ativo, oferece voltar ao padrão
+    function htmlListaVazia(msg) {
+      const comFiltro = temFiltroAtivo(filtrosAtivos, todayLocalISO());
+      return `<div class="table-empty"><p>${esc(msg)}</p>${comFiltro
+        ? '<button type="button" class="btn-secundario" data-limpar-filtros>Limpar filtros</button>' : ''}</div>`;
     }
 
     // ---------- Painéis "Período" e "Mais filtros": popover no desktop, sheet no celular
@@ -5118,6 +5193,9 @@
       document.getElementById('btn-mais-filtros').addEventListener('click', (e) =>
         abrirPainelFiltro(document.getElementById('painel-filtros'), e.currentTarget));
       document.getElementById('chips-filtros').addEventListener('click', aoClicarChips);
+      document.getElementById('table-body').addEventListener('click', (e) => {
+        if (e.target.closest('[data-limpar-filtros]')) limparTodosOsFiltros();
+      });
       ['painel-periodo', 'painel-filtros'].forEach((id) => document.getElementById(id).addEventListener('keydown', prenderFoco));
       ligarDrillDown('table-body', false);
       ['recent-cards', 'cameras-status', 'ranking-list'].forEach((id) => ligarDrillDown(id, true));
@@ -5893,8 +5971,8 @@
       const modal = document.getElementById('modal');
       const body = document.getElementById('modal-body');
       const limite = currentCliente.limite_velocidade;
-      const velMedidaModal = captura.velocidade > 0;
-      const isAlert = velMedidaModal && captura.velocidade > limite;
+      const velMedidaModal = velocidadeMedida(captura.velocidade);
+      const isAlert = acimaDoLimite(captura.velocidade, limite);
       const ts = new Date(captura.timestamp);
 
       // Show loading
@@ -5920,11 +5998,11 @@
         const safeUrl = photoUrl.replace(/"/g, '&quot;');
         html += `<img class="modal-photo" src="${safeUrl}" alt="Foto do veículo — clique para ampliar" tabindex="0" role="button" data-acao="ampliar-foto">`;
       } else {
-        html += `<div class="modal-no-photo">Sem foto disponivel</div>`;
+        html += `<div class="modal-no-photo">Sem foto disponível</div>`;
       }
 
       // Radar name
-      const radarNome = camerasMap[captura.camera_id] || '---';
+      const radarNome = camerasMap[captura.camera_id] || '—';
 
       // Main details (3 columns)
       html += `<div class="modal-details">
@@ -5934,11 +6012,11 @@
         </div>
         <div class="modal-field">
           <div class="label">Velocidade</div>
-          <div class="value ${!velMedidaModal ? '' : (isAlert ? 'red' : 'green')}" style="font-size:1.25rem;${!velMedidaModal ? 'color:var(--text-muted)' : ''}">${velMedidaModal ? captura.velocidade + ' km/h' : '— (sem radar)'}</div>
+          <div class="value ${!velMedidaModal ? '' : (isAlert ? 'red' : 'green')}" style="font-size:1.25rem;${!velMedidaModal ? 'color:var(--text-muted)' : ''}">${velMedidaModal ? `${isAlert ? '▲ ' : ''}${captura.velocidade} km/h` : '— (sem radar)'}</div>
         </div>
         <div class="modal-field">
           <div class="label">Radar</div>
-          <div class="value accent" style="font-size:0.875rem;font-weight:700">${esc(radarNome)}</div>
+          <div class="value" style="font-size:0.875rem;font-weight:700">${esc(radarNome)}</div>
         </div>
         <div class="modal-field">
           <div class="label">Data</div>
@@ -5950,7 +6028,7 @@
         </div>
         <div class="modal-field">
           <div class="label">Limite</div>
-          <div class="value accent">${limite} km/h</div>
+          <div class="value">${limite} km/h</div>
         </div>
       </div>`;
 
@@ -5961,16 +6039,21 @@
       // Historico de velocidades
       if (historico && historico.length > 1) {
         html += `<div class="modal-historico">
-          <h4>Últimas Passagens desta Placa (${historico.length})</h4>
-          <div class="historico-grid">
+          <h4>Últimas passagens desta placa (${historico.length})</h4>
+          <div class="historico-grid" role="list">
             ${historico.map(h => {
               const hts = new Date(h.timestamp);
               const hVel = h.velocidade;
-              const hAlert = hVel > limite;
-              return `<div class="historico-cell">
-                <div class="h-date">${hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'})}</div>
-                <div class="h-date">${hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>
-                <div class="h-vel ${hAlert ? 'red' : 'green'}">${hVel}</div>
+              const hAlert = acimaDoLimite(hVel, limite);
+              const hTexto = velocidadeMedida(hVel) ? `${hAlert ? '▲ ' : ''}${hVel}` : '—';
+              const hData = hts.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'});
+              const hHora = hts.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+              const hRotulo = velocidadeMedida(hVel)
+                ? `${hData} ${hHora}: ${hVel} km/h${hAlert ? ', acima do limite' : ''}` : `${hData} ${hHora}: sem velocidade`;
+              return `<div class="historico-cell${hAlert ? ' acima' : ''}" role="listitem" aria-label="${esc(hRotulo)}">
+                <div class="h-date" aria-hidden="true">${hData}</div>
+                <div class="h-date" aria-hidden="true">${hHora}</div>
+                <div class="h-vel ${classeVelocidade(hVel, limite)}" aria-hidden="true">${hTexto}</div>
               </div>`;
             }).join('')}
           </div>
@@ -5983,7 +6066,7 @@
         : '';
       html += `<div class="modal-actions">
         <button type="button" class="btn-pdf" data-acao="gerar-pdf">
-          Gerar Notificação PDF
+          Gerar notificação PDF
         </button>
         ${zoomBtn}
       </div>`;
@@ -6025,10 +6108,10 @@
     }
 
     function htmlVeiculoCadastrado(v) {
-      return `<div class="modal-morador"><h4>Veículo Cadastrado</h4><div class="morador-grid">
-          <div><span>Morador</span><strong>${esc(v.nome_morador) || '---'}</strong></div>
-          <div><span>Unidade</span><strong>${esc(v.unidade) || '---'}</strong></div>
-          <div><span>Veículo</span><strong>${esc(v.marca) || '---'} ${esc(v.cor)}</strong></div>
+      return `<div class="modal-morador"><h4>Veículo cadastrado</h4><div class="morador-grid">
+          <div><span>Morador</span><strong>${esc(v.nome_morador) || '—'}</strong></div>
+          <div><span>Unidade</span><strong>${esc(v.unidade) || '—'}</strong></div>
+          <div><span>Veículo</span><strong>${esc([v.marca, v.cor].filter(Boolean).join(' ')) || '—'}</strong></div>
         </div></div>`;
     }
 
@@ -7697,7 +7780,7 @@
         return `<li class="ranking-item"><button type="button" class="ranking-btn" data-filtro="placa" data-valor="${esc(item[0])}" aria-label="${esc(rotulo)}">
           <span class="pos">${i + 1}.</span>
           <span class="placa" style="${hasAlert ? 'color:var(--red)' : ''}">${esc(item[0])}</span>
-          <span class="count">${item[1]}x${hasAlert ? ` <span style="color:var(--red);font-size:0.5625rem">${alerts[item[0]]}⚠</span>` : ''}</span>
+          <span class="count">${item[1]}x${hasAlert ? ` <span style="color:var(--red);font-size:0.6875rem">${alerts[item[0]]}⚠</span>` : ''}</span>
         </button></li>`;
       }).join('');
     }
