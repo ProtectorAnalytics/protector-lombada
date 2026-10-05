@@ -2212,6 +2212,7 @@ function limparErrosCampo() {
     if (e) e.textContent = '';
   });
   document.querySelectorAll('#modal-body [aria-invalid], #page-apiplacas [aria-invalid]').forEach(i => i.removeAttribute('aria-invalid'));
+  document.querySelectorAll('#page-apiplacas [aria-describedby$="-erro"]').forEach(i => i.removeAttribute('aria-describedby'));
   document.querySelectorAll('#modal-body .form-error').forEach(e => { e.textContent = ''; });
 }
 
@@ -2996,7 +2997,6 @@ function renderPagerAudit(pagina, total) {
 // ============================================
 const AP_POR_PAGINA = 50;
 const AP_MAX_EMAILS = 10;
-const AP_PARADAS = { tempo: 'tempo', teto: 'teto mensal', sem_saldo: 'sem saldo', desligado: 'consultas desligadas', inexistente: 'placa inexistente' };
 let apEmails = [];
 let apPreco = 0;
 // Número seguro para HTML; null/undefined vira '—' (o esc() global apaga o 0)
@@ -3123,6 +3123,7 @@ function resumoValidacao(r) {
     teto: ' Parou porque o teto do mês foi atingido.',
     sem_saldo: ' Parou porque o pacote de consultas acabou.',
     desligado: ' Parou porque as consultas estão desligadas.',
+    falhas: ' Parou após várias falhas seguidas; tente de novo em alguns minutos.',
     inexistente: ' Parou porque a placa não foi encontrada na base.',
   };
   return t + (r.parou ? (PARADA[r.parou] || ' Parou antes de terminar.') : ' Concluído.');
@@ -3156,6 +3157,8 @@ const AP_MOTIVO_409 = {
 const AP_STATUS_RECONSULTA = {
   consultado: 'Dados do veículo atualizados.',
   sem_resultado: 'A APIPLACAS não encontrou dados para esta placa.',
+  erro: 'A consulta falhou agora; ela será tentada de novo automaticamente.',
+  pendente: 'A consulta não pôde ser feita agora (token ou limite do pacote). Veja os avisos por e-mail.',
 };
 
 async function reconsultarPlaca() {
@@ -3170,7 +3173,7 @@ async function reconsultarPlaca() {
   await apOcupado(document.getElementById('ap-reconsultar'), 'Consultando…', async () => {
     try {
       const r = await api('/admin/apiplacas', 'POST', { acao: 'reconsultar', placa });
-      toast(AP_STATUS_RECONSULTA[r.linha?.status] || 'Consulta concluída.');
+      toast(AP_STATUS_RECONSULTA[r.linha?.status] || 'Consulta enviada; confira o extrato.');
       loadApiplacas();
     } catch (err) {
       if (err.status === 409) toast(AP_MOTIVO_409[err.data?.motivo] || 'Não foi possível consultar agora.', true);
