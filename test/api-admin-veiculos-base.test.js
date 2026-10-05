@@ -51,6 +51,7 @@ stub('lib/veiculos-base-repo', {
   criarRepoSupabase: () => ({
     contarPassagens: async () => 0,
   }),
+  doCliente: (q, id) => (id == null ? q.is('suspeita_cliente_id', null) : q.eq('suspeita_cliente_id', id)),
 });
 stub('lib/apiplacas', { criarClienteApiplacas: () => { if (estado.semToken) throw new Error('APIPLACAS_TOKEN não configurado'); return {}; } });
 stub('lib/validador-placa', { criarValidador: () => ({}) });

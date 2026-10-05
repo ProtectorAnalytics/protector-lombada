@@ -38,4 +38,10 @@ caso('rejeita vazio, null, booleano e array em campos numéricos', () => {
   assert.deepStrictEqual(validarConfig({ aviso_percentual: [5] }).erros, ['aviso_percentual']);
 });
 
+caso('preco_consulta precisa ser > 0 (mínimo 0,001) (F12)', () => {
+  assert.deepStrictEqual(validarConfig({ preco_consulta: 0 }).erros, ['preco_consulta']);
+  assert.deepStrictEqual(validarConfig({ preco_consulta: '0,0009' }).erros, ['preco_consulta']);
+  assert.strictEqual(validarConfig({ preco_consulta: '0,001' }).config.preco_consulta, 0.001);
+});
+
 console.log(`\n${passou} casos passaram`);

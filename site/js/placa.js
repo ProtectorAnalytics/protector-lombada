@@ -22,7 +22,7 @@
   const RE_MERCOSUL = /^[A-Z]{3}\d[A-Z]\d{2}$/;
 
   function limpar(p) {
-    return String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return String(p || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   }
 
   function paraMercosul(p) {

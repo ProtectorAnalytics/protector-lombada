@@ -13,6 +13,15 @@ caso('limpar tira hífen, espaço e minúsculas', () => {
   assert.strictEqual(limpar(null), '');
 });
 
+caso('limpar descarta ß e ligaduras antes de maiusculizar (F9)', () => {
+  assert.strictEqual(limpar('ß'), '');
+  assert.strictEqual(limpar('ﬁ'), '');
+  // são descartados como hífen/espaço, não viram letras ('SS', 'FI')
+  assert.strictEqual(paraMercosul('ABßC1D23'), 'ABC1D23');
+  assert.strictEqual(paraMercosul('ABCﬁ1D23'), 'ABC1D23');
+  assert.strictEqual(limpar('abc-1d23'), 'ABC1D23');
+});
+
 caso('antiga vira Mercosul pela 5ª posição (0=A … 9=J)', () => {
   assert.strictEqual(paraMercosul('ABC1234'), 'ABC1C34');
   assert.strictEqual(paraMercosul('ABC1034'), 'ABC1A34');

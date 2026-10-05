@@ -41,5 +41,21 @@ caso('reconsulta 409 limite_hora tem frase própria (F2)', () => {
   assert.strictEqual(AP_MOTIVO_409.limite_hora, 'Limite de consultas por hora atingido; continua sozinho na próxima hora.');
 });
 
+caso('campos numéricos vazios vão como string vazia e o servidor acusa o campo (F12)', () => {
+  const { validarConfig } = require('../lib/apiplacas-config');
+  const corpoConfigApiplacas = carregar('function corpoConfigApiplacas(', 'corpoConfigApiplacas');
+  const body = corpoConfigApiplacas({ ativo: true, teto: '', aviso: '', saldoMin: '', preco: '', emails: ['a@x.com'] });
+  assert.strictEqual(body.aviso_percentual, '');
+  assert.strictEqual(body.saldo_minimo, '');
+  assert.deepStrictEqual(validarConfig(body).erros.sort(), ['aviso_percentual', 'preco_consulta', 'saldo_minimo', 'teto_mensal']);
+  const ok = corpoConfigApiplacas({ ativo: false, teto: '150', aviso: '80', saldoMin: '200', preco: '0,03', emails: ['a@x.com'] });
+  assert.deepStrictEqual(validarConfig(ok).erros, []);
+});
+
+caso('dica do preço fala em valor maior que zero (F12)', () => {
+  const AP_DICA = carregar('const AP_DICA = {', 'AP_DICA');
+  assert.ok(/maior que 0|acima de 0|0,001/.test(AP_DICA.preco_consulta), AP_DICA.preco_consulta);
+});
+
 console.log(`\n${passou} casos passaram${falhou ? `, ${falhou} falharam` : ''}`);
 if (falhou) process.exit(1);

@@ -31,6 +31,12 @@ stub('lib/veiculos-base-repo', {
   }),
 });
 
+// Espiona a comparação em tempo constante (mesmo objeto de 'crypto' e 'node:crypto').
+const crypto = require('node:crypto');
+const tseOriginal = crypto.timingSafeEqual;
+let comparacoesSeguras = 0;
+crypto.timingSafeEqual = (a, b) => { comparacoesSeguras++; return tseOriginal(a, b); };
+
 const SEGREDO = 'segredo-de-teste-do-cron-123';
 process.env.CRON_SECRET = SEGREDO;
 process.env.APIPLACAS_TOKEN = 'tok-falso';
@@ -60,6 +66,31 @@ async function caso(nome, fn) {
     assert.ok(estado.apagarAntes, 'retenção da base rodou');
     assert.strictEqual(estado.anonimizarAntes, estado.apagarAntes);
     assert.strictEqual(r.body.anonimizados, 5);
+  });
+
+  await caso('Bearer certo passa pela comparação em tempo constante (F10)', async () => {
+    comparacoesSeguras = 0;
+    const r = resp();
+    await handler(req(`Bearer ${SEGREDO}`), r);
+    assert.strictEqual(r.code, 200);
+    assert.ok(comparacoesSeguras >= 1, 'usou crypto.timingSafeEqual');
+  });
+
+  await caso('Bearer de mesmo tamanho e errado, de outro tamanho ou ausente = 401 (F10)', async () => {
+    for (const h of [`Bearer ${SEGREDO.slice(0, -1)}X`, `Bearer ${SEGREDO}a`, 'Bearer ', '', undefined, SEGREDO]) {
+      const r = resp();
+      await handler(req(h), r);
+      assert.strictEqual(r.code, 401, `header ${JSON.stringify(h)}`);
+    }
+    assert.strictEqual(estado.configs.length, 0, 'nada gravado sem autorização');
+  });
+
+  await caso('saldo fracionado é gravado com Math.floor (F10)', async () => {
+    estado.saldo = 995.7;
+    const r = resp();
+    await handler(req(`Bearer ${SEGREDO}`), r);
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(estado.configs[0].saldo_atual, 995);
   });
 
   console.log(`\n${passou} casos passaram${falhou ? `, ${falhou} falharam` : ''}`);

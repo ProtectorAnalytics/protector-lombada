@@ -3078,21 +3078,34 @@ const AP_DICA = {
   teto_mensal: 'Informe um valor em reais, de 0 a 100.000',
   aviso_percentual: 'Informe um número inteiro de 1 a 100',
   saldo_minimo: 'Informe um número inteiro maior ou igual a 0',
-  preco_consulta: 'Informe um valor em reais, de 0 a 10',
+  preco_consulta: 'Informe um valor em reais maior que 0 (mínimo 0,001) e até 10',
   emails_aviso: 'Informe de 1 a 10 e-mails válidos',
 };
+
+/** Corpo do PUT: números vão como o texto digitado (vazio = '') para o servidor acusar o campo. */
+function corpoConfigApiplacas(v) {
+  return {
+    ativo: v.ativo,
+    teto_mensal: v.teto,
+    aviso_percentual: v.aviso,
+    saldo_minimo: v.saldoMin,
+    preco_consulta: v.preco,
+    emails_aviso: v.emails,
+  };
+}
 
 async function salvarApiplacas(ev) {
   ev.preventDefault();
   limparErrosCampo();
-  const body = {
+  const valor = (id) => document.getElementById(id).value.trim();
+  const body = corpoConfigApiplacas({
     ativo: document.getElementById('ap-ativo').checked,
-    teto_mensal: document.getElementById('ap-teto').value,
-    aviso_percentual: Number(document.getElementById('ap-aviso').value),
-    saldo_minimo: Number(document.getElementById('ap-saldo-min').value),
-    preco_consulta: document.getElementById('ap-preco').value,
-    emails_aviso: apEmails,
-  };
+    teto: valor('ap-teto'),
+    aviso: valor('ap-aviso'),
+    saldoMin: valor('ap-saldo-min'),
+    preco: valor('ap-preco'),
+    emails: apEmails,
+  });
   const CAMPO = { teto_mensal: 'ap-teto', aviso_percentual: 'ap-aviso', saldo_minimo: 'ap-saldo-min', preco_consulta: 'ap-preco', emails_aviso: 'ap-emails' };
   await apOcupado(document.getElementById('ap-salvar'), 'Salvando…', async () => {
     try {

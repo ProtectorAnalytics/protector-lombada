@@ -10,6 +10,7 @@
  * Auth: SOMENTE `Authorization: Bearer ${CRON_SECRET}` (o Vercel Cron envia
  * esse header quando CRON_SECRET está definido). Sem segredo = recusa tudo.
  */
+const crypto = require('crypto');
 const { criarClienteApiplacas } = require('../lib/apiplacas');
 const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
@@ -25,9 +26,16 @@ function mesSP(d = new Date()) {
     .format(d).slice(0, 7);
 }
 
+// Comparação em tempo constante; tamanhos diferentes recusam sem comparar.
+function autorizado(header, segredo) {
+  if (!segredo || typeof header !== 'string') return false;
+  const recebido = Buffer.from(header);
+  const esperado = Buffer.from(`Bearer ${segredo}`);
+  return recebido.length === esperado.length && crypto.timingSafeEqual(recebido, esperado);
+}
+
 module.exports = async function handler(req, res) {
-  const segredo = process.env.CRON_SECRET;
-  if (!segredo || req.headers.authorization !== `Bearer ${segredo}`) {
+  if (!autorizado(req.headers.authorization, process.env.CRON_SECRET)) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
@@ -38,7 +46,8 @@ module.exports = async function handler(req, res) {
     try { api = criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }); } catch { /* sem token: só avisos/retenção */ }
 
     if (api) {
-      resumo.saldo = await api.saldo();
+      const saldo = await api.saldo();
+      resumo.saldo = saldo === null ? null : Math.floor(saldo);
       if (resumo.saldo !== null) await repo.atualizarConfig({ saldo_atual: resumo.saldo, saldo_em: new Date().toISOString() });
       const vb = criarVeiculosBase({ repo, api, validador: criarValidador({ contarPassagens: repo.contarPassagens }) });
       resumo.fila = await vb.processarFila({ limite: 50 });

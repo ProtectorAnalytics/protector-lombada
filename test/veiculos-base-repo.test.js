@@ -92,6 +92,20 @@ async function caso(nome, fn) {
     await assert.rejects(() => criarRepoSupabase(db).anonimizarExtratoAntesDe('2026-04-04T00:00:00.000Z'), /fora/);
   });
 
+  await caso('liberarSuspeita com cliente antigo null usa .is(null), não .eq (F11)', async () => {
+    const db = criarDbFalso(() => ({ data: [{ placa: 'ABC1D28' }], error: null }));
+    assert.strictEqual(await criarRepoSupabase(db).liberarSuspeita('ABC1D28', null, '2026-10-04T12:05:00.000Z'), true);
+    const c = db.chamadas[0];
+    assert.deepStrictEqual(metodo(c, 'is'), [['suspeita_cliente_id', null]]);
+    assert.ok(!metodo(c, 'eq').some(([col]) => col === 'suspeita_cliente_id'));
+  });
+
+  await caso('liberarSuspeita com cliente antigo preenchido usa .eq (F11)', async () => {
+    const db = criarDbFalso(() => ({ data: [], error: null }));
+    assert.strictEqual(await criarRepoSupabase(db).liberarSuspeita('ABC1D28', 'c2', 'x'), false);
+    assert.ok(metodo(db.chamadas[0], 'eq').some(([col, v]) => col === 'suspeita_cliente_id' && v === 'c2'));
+  });
+
   console.log(`\n${passou} casos passaram${falhou ? `, ${falhou} falharam` : ''}`);
   if (falhou) process.exit(1);
 })().catch((e) => { console.error(e); process.exit(1); });

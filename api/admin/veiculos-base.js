@@ -5,7 +5,7 @@
  * - POST outro_carro: libera a suspeita e consulta (pago, respeita travas)
  */
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
-const { criarRepoSupabase } = require('../../lib/veiculos-base-repo');
+const { criarRepoSupabase, doCliente } = require('../../lib/veiculos-base-repo');
 const { criarClienteApiplacas } = require('../../lib/apiplacas');
 const { criarValidador } = require('../../lib/validador-placa');
 const { criarVeiculosBase } = require('../../lib/veiculos-base');
@@ -101,9 +101,9 @@ async function outroCarro({ body, profile, ip, res }) {
   const t = await vb.travas();
   if (!t.ok) return res.status(409).json({ executou: false, motivo: t.motivo, error: 'Consultas indisponíveis agora' });
   // Liberação atômica: só uma chamada concorrente leva a linha; as outras 409 (sem pagar de novo).
-  const lib = await supabase.from('veiculos_base')
+  const lib = await doCliente(supabase.from('veiculos_base')
     .update({ status: 'pendente', suspeita_de: null, suspeita_cliente_id: null, tentativas: 0, proxima_tentativa_em: null })
-    .eq('placa', m).eq('status', 'suspeita').eq('suspeita_cliente_id', clienteId).select('placa');
+    .eq('placa', m).eq('status', 'suspeita'), clienteId).select('placa');
   if (lib.error) throw new Error(lib.error.message);
   if (!Array.isArray(lib.data) || lib.data.length !== 1) return res.status(409).json({ error: 'Placa não está em suspeita' });
   const r = await vb.consultarAgora(m, 'reconsulta');
