@@ -2341,6 +2341,7 @@
   <script src="/js/placa.js"></script>
   <script src="/js/texto-seguro.js"></script>
   <script src="/js/nome-veiculo.js"></script>
+  <script src="/js/selo-veiculo.js"></script>
 </head>
 <body>
 
@@ -2730,6 +2731,7 @@
     const esc = textoSeguro.esc;
     const escHtml = esc; // nome antigo, mesmo escape
     const { nomeVeiculo, linhaVeiculo } = nomeVeiculoLib;
+    const { estadoSelo } = seloVeiculoLib;
 
     // ============================================
     // CONFIG
@@ -3110,9 +3112,13 @@
     const COLUNAS_BASE = 'placa, status, marca, modelo, versao, cor, ano_fabricacao, ano_modelo, municipio, uf, tipo_veiculo, situacao, consultado_em';
     const STATUS_A_RECARREGAR = ['pendente', 'erro', 'suspeita'];
     let veiculosBaseCache = {};
-    // Mercosul → suspeita_de (string) ou null. Uma pergunta por placa por sessão.
+    // Mercosul → suspeita_de (string) ou null. Só respostas bem-sucedidas ficam
+    // guardadas (uma pergunta por placa por sessão); falha de rede permite no
+    // máximo 1 nova tentativa por placa a cada 5 minutos.
+    const SUSPEITA_RETENTAR_MS = 5 * 60 * 1000;
     const suspeitaCache = new Map();
     const suspeitaEmVoo = new Map();
+    const suspeitaFalhouEm = new Map();
 
     async function loadVeiculosBase(placas) {
       const chaves = [...new Set((placas || []).map((p) => placaLib.paraMercosul(p)).filter(Boolean))]
@@ -3138,10 +3144,17 @@
       if (!v || v.status !== 'suspeita') return Promise.resolve(null);
       if (suspeitaCache.has(m)) return Promise.resolve(suspeitaCache.get(m));
       if (suspeitaEmVoo.has(m)) return suspeitaEmVoo.get(m);
+      const falhou = suspeitaFalhouEm.get(m);
+      if (falhou && Date.now() - falhou < SUSPEITA_RETENTAR_MS) return Promise.resolve(null);
       const pedido = chamarApiPainel(`/api/admin/veiculos-base?placa=${encodeURIComponent(m)}&cliente_id=${encodeURIComponent(currentCliente.id)}`, 'GET')
-        .then((r) => (r && typeof r.suspeita_de === 'string' && r.suspeita_de ? r.suspeita_de : null))
-        .catch(() => null)
-        .then((s) => { suspeitaCache.set(m, s); suspeitaEmVoo.delete(m); return s; });
+        .then((r) => {
+          const s = r && typeof r.suspeita_de === 'string' && r.suspeita_de ? r.suspeita_de : null;
+          suspeitaCache.set(m, s);
+          suspeitaFalhouEm.delete(m);
+          return s;
+        })
+        .catch(() => { suspeitaFalhouEm.set(m, Date.now()); return null; })
+        .finally(() => { suspeitaEmVoo.delete(m); });
       suspeitaEmVoo.set(m, pedido);
       return pedido;
     }
@@ -3155,21 +3168,29 @@
       if (!m) return;
       delete veiculosBaseCache[m];
       suspeitaCache.delete(m);
+      suspeitaFalhouEm.delete(m);
     }
 
     function resumoVeiculo(v) {
       return [nomeVeiculo(v), v.cor, v.ano_modelo].filter(Boolean).join(' · ');
     }
 
-    function seloVeiculo(placa) {
+    // Estado do selo para a passagem exibida (R17: 'consultando' só em passagem recente)
+    function estadoSeloDe(v, capturaTs) {
+      if (!v) return null;
+      const sd = suspeitaCache.get(v.placa) || null;
+      return estadoSelo({ status: v.status, temSuspeitaPropria: !!sd, capturaTs, agora: Date.now() });
+    }
+
+    function seloVeiculo(placa, capturaTs) {
       const v = veiculoBaseDe(placa);
-      if (!v) return '';
-      if (v.status === 'pendente' || v.status === 'erro') return '<span class="vb-selo">consultando…</span>';
-      if (v.status === 'suspeita') {
+      const estado = estadoSeloDe(v, capturaTs);
+      if (estado === 'consultando') return '<span class="vb-selo">consultando…</span>';
+      if (estado === 'suspeita') {
         const sd = suspeitaCache.get(v.placa);
-        return sd ? `<span class="vb-selo vb-alerta" title="Pode ser ${esc(sd)}. Abra a passagem para conferir.">⚠ verificar leitura</span>` : '';
+        return `<span class="vb-selo vb-alerta" title="Pode ser ${esc(sd)}. Abra a passagem para conferir.">⚠ verificar leitura</span>`;
       }
-      if (v.status !== 'consultado') return '';
+      if (estado !== 'consultado') return '';
       const texto = resumoVeiculo(v);
       return texto ? `<span class="vb-selo" title="${esc(texto)}">${esc(texto)}</span>` : '';
     }
@@ -3324,7 +3345,7 @@
           : `<span class="vel-dash">—</span> <span style="font-size:0.8125rem">km/h</span>`;
 
         const radarNome = camerasMap[c.camera_id] || '';
-        const selo = seloVeiculo(c.placa);
+        const selo = seloVeiculo(c.placa, c.timestamp);
         return `<div class="recent-card ${isAlert ? 'alerta' : ''}" tabindex="0" role="button" aria-label="Abrir captura ${esc(c.placa)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="openModal(recentCardsData[${i}])">
           <div class="rc-badge ${badgeClass}">${badgeText}</div>
           ${photoHtml}
@@ -3547,7 +3568,7 @@
           : `<div style="font-size:0.625rem;font-weight:600;color:var(--orange)">VEÍCULO NÃO CADASTRADO</div>`;
         return `<div class="table-row" tabindex="0" role="button" aria-label="Abrir captura ${esc(c.placa)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" onclick="openModal(tabelaPaginaData[${pi}])">
           <div>${thumbHtml}</div>
-          <div class="placa">${esc(c.placa)}${seloVeiculo(c.placa)}</div>
+          <div class="placa">${esc(c.placa)}${seloVeiculo(c.placa, c.timestamp)}</div>
           <div class="vel ${velClass}">${velTexto}</div>
           <div style="font-size:0.6875rem;color:var(--text-secondary);font-weight:500">${esc(radarNome)}</div>
           <div class="datetime">${dt}</div>
@@ -4465,8 +4486,9 @@
 
     // ---- Quadros do modal (base de veículos, morador, cadastro, suspeita) ----
     function htmlBaseVeiculo(vb, suspeita, captura) {
-      if (vb && vb.status === 'consultado') return htmlQuadroVeiculo(vb);
-      if (vb && vb.status === 'suspeita' && suspeita) {
+      const estado = vb ? estadoSelo({ status: vb.status, temSuspeitaPropria: !!suspeita, capturaTs: captura.timestamp, agora: Date.now() }) : null;
+      if (estado === 'consultado') return htmlQuadroVeiculo(vb);
+      if (estado === 'suspeita') {
         return `<div class="vb-quadro vb-suspeita" role="group" aria-labelledby="vb-suspeita-titulo">
           <h4 id="vb-suspeita-titulo">⚠ Verificar leitura</h4>
           <p>A câmera leu <strong>${esc(captura.placa)}</strong>, mas parece ser <strong>${esc(suspeita)}</strong>, que passa com frequência aqui. Confira na foto.</p>
@@ -4477,7 +4499,7 @@
           <div class="vb-erro" role="alert"></div>
         </div>`;
       }
-      if (vb && (vb.status === 'pendente' || vb.status === 'erro')) {
+      if (estado === 'consultando') {
         return `<div class="vb-quadro"><h4>Veículo</h4><div class="vb-fonte">Consultando os dados do veículo…</div></div>`;
       }
       return '';

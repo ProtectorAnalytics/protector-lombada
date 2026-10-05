@@ -10,6 +10,7 @@ const { criarClienteApiplacas } = require('../../lib/apiplacas');
 const { criarValidador } = require('../../lib/validador-placa');
 const { criarVeiculosBase } = require('../../lib/veiculos-base');
 const { paraMercosul, paraAntiga } = require('../../site/js/placa');
+const { nomeVeiculo } = require('../../site/js/nome-veiculo');
 
 const PAPEIS = ['super_admin', 'admin_cliente', 'operador'];
 const JANELA_DIAS = 30;
@@ -53,13 +54,13 @@ async function buscarMarcaCor(req, res, profile) {
   if (!clienteId || !verificarAcessoCliente(profile, clienteId)) return res.status(403).json({ error: 'Sem acesso' });
   const m = paraMercosul(req.query.placa);
   if (!m || !(await placaVistaNoCliente(clienteId, m))) return res.status(200).json({});
-  const { data, error } = await supabase.from('veiculos_base').select('marca, modelo, cor, status, suspeita_de, suspeita_cliente_id').eq('placa', m).maybeSingle();
+  const { data, error } = await supabase.from('veiculos_base').select('marca, modelo, versao, cor, status, suspeita_de, suspeita_cliente_id').eq('placa', m).maybeSingle();
   if (error) throw new Error(error.message);
   if (data && data.status === 'suspeita' && data.suspeita_cliente_id === clienteId && data.suspeita_de) {
     return res.status(200).json({ suspeita_de: data.suspeita_de });
   }
   if (!data || data.status !== 'consultado') return res.status(200).json({});
-  return res.status(200).json({ marca: [data.marca, data.modelo].filter(Boolean).join(' '), cor: data.cor });
+  return res.status(200).json({ marca: nomeVeiculo(data), cor: data.cor }); // regra única do nome (R9)
 }
 
 async function mesmaPlaca({ body, profile, ip, res }) {

@@ -97,6 +97,14 @@ async function caso(nome, fn) {
     assert.deepStrictEqual(r.body, { marca: 'Marca Modelo', cor: 'Preto' });
   });
 
+  await caso('GET monta marca pela regra única do nome (versão sem repetir o modelo)', async () => {
+    estado.tabelas.capturas = [{ id: 1, cliente_id: 'c1', placa: 'ABC1D23', timestamp: recente() }];
+    estado.tabelas.veiculos_base = [{ placa: 'ABC1D23', status: 'consultado', marca: 'VW', modelo: 'GOL', versao: 'GOL 1.0', cor: 'Branca' }];
+    const r = resp();
+    await handler(req({ query: { placa: 'ABC1D23' } }), r);
+    assert.deepStrictEqual(r.body, { marca: 'VW GOL 1.0', cor: 'Branca' });
+  });
+
   await caso('GET sem acesso ao cliente pedido devolve 403', async () => {
     const r = resp();
     await handler(req({ query: { placa: 'ABC1D23', cliente_id: 'c2' } }), r);
