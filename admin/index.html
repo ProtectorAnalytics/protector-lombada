@@ -177,6 +177,9 @@
     .btn-primary:hover { background: var(--accent-hover); }
     @media (hover: hover) { .btn-primary:hover { transform: translateY(-1px); } }
     .btn-sm { padding: 6px 14px; font-size: 0.75rem; border-radius: 6px; min-height: 30px; }
+    .pager { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; }
+    .pager-info { font-size: 0.8125rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .pager .btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
     .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--red); }
@@ -592,6 +595,7 @@
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <script src="/js/camera-status.js"></script>
   <script src="/js/spring.js"></script>
+  <script src="/js/grafico-acessivel.js"></script>
 </head>
 <body>
 
@@ -962,6 +966,7 @@
           <table class="data-table"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Tabela</th><th>Detalhes</th></tr></thead>
             <tbody id="audit-body"><tr><td colspan="5" class="table-empty">Carregando...</td></tr></tbody>
           </table>
+          <nav class="pager" id="audit-pager" aria-label="Páginas do log de auditoria" hidden></nav>
         </div>
 
         <!-- PAGE: Direitos LGPD -->
@@ -1841,6 +1846,11 @@ function drawAdminChart7d(alertas7d) {
   const h = rect.height;
   const data = alertas7d.map(a => a.count);
   const labels = alertas7d.map(a => a.dia);
+  graficoAcessivel.descreverGrafico(canvas, {
+    titulo: 'Alertas nos últimos 7 dias', cabecalho: 'Dia', unidade: 'alertas',
+    rotulos: alertas7d.map(a => a.data ? `${a.dia} ${a.data.slice(8, 10)}/${a.data.slice(5, 7)}` : a.dia),
+    valores: data,
+  });
   const maxVal = Math.max(...data, 1);
   const pad = { top: 18, bottom: 18, left: 8, right: 8 };
   const chartW = w - pad.left - pad.right;
@@ -2874,15 +2884,19 @@ async function deleteUsuario(id, email) {
 // ============================================
 // AUDIT LOG
 // ============================================
-async function loadAudit() {
+const AUDIT_POR_PAGINA = 50;
+
+async function loadAudit(pagina = 0) {
   try {
-    const { data, error } = await sb.from('audit_log')
-      .select('*, usuarios(nome, email)')
+    const de = pagina * AUDIT_POR_PAGINA;
+    const { data, error, count } = await sb.from('audit_log')
+      .select('*, usuarios(nome, email)', { count: 'exact' })
       .order('criado_em', { ascending: false })
-      .limit(100);
+      .range(de, de + AUDIT_POR_PAGINA - 1);
     if (error) throw error;
 
     const tbody = document.getElementById('audit-body');
+    renderPagerAudit(pagina, count || 0);
     if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhum registro</td></tr>'; return; }
 
     tbody.innerHTML = data.map(a => `<tr>
@@ -2892,7 +2906,19 @@ async function loadAudit() {
       <td>${esc(a.tabela || '---')}</td>
       <td style="font-size:0.75rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(a.detalhes || {}))}</td>
     </tr>`).join('');
-  } catch (err) { console.error(err); erroNaTabela('audit-body', 5, 'loadAudit()'); }
+  } catch (err) { console.error(err); erroNaTabela('audit-body', 5, `loadAudit(${pagina})`); }
+}
+
+// Anterior / Próxima com "Página X de Y"; some quando tudo cabe numa página
+function renderPagerAudit(pagina, total) {
+  const pager = document.getElementById('audit-pager');
+  const paginas = Math.max(1, Math.ceil(total / AUDIT_POR_PAGINA));
+  pager.hidden = paginas <= 1;
+  if (pager.hidden) { pager.innerHTML = ''; return; }
+  pager.innerHTML = `
+    <button type="button" class="btn btn-ghost btn-sm" onclick="loadAudit(${pagina - 1})" ${pagina === 0 ? 'disabled' : ''}>‹ Anterior</button>
+    <span class="pager-info" aria-live="polite">Página ${pagina + 1} de ${paginas} · ${total.toLocaleString('pt-BR')} registros</span>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="loadAudit(${pagina + 1})" ${pagina >= paginas - 1 ? 'disabled' : ''}>Próxima ›</button>`;
 }
 
 // ============================================
