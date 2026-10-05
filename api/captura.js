@@ -20,6 +20,7 @@ const { criarClienteApiplacas } = require('../lib/apiplacas');
 const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarVeiculosBase } = require('../lib/veiculos-base');
+const { salvarMiniatura } = require('../lib/miniatura');
 
 // Base de veículos (APIPLACAS). Sem token configurado, a captura segue sem
 // consultar — nunca quebra por isso.
@@ -375,8 +376,10 @@ async function processarAposResposta({
   //    falha é preciso limpá-lo — senão a captura aponta para um arquivo que
   //    não existe e o dashboard mostra imagem quebrada.
   if (fotoBuffer && fotoPath) {
+    let originalGravado = false;
     try {
       await uploadPhoto(fotoPath, fotoBuffer);
+      originalGravado = true;
     } catch (uploadErr) {
       await logError(`Erro upload foto: ${uploadErr.message} | camera: ${camera.nome}`, {
         fotoPath, size: fotoBuffer.length, camera_id: camera.id, placa,
@@ -384,6 +387,19 @@ async function processarAposResposta({
       try {
         await supabase.from('capturas').update({ foto_path: null }).eq('id', captura.id);
       } catch { /* não-crítico: melhor path órfão que perder a captura */ }
+    }
+
+    // 1b. Miniatura leve para a tabela e os cartões do painel. Só depois do
+    //     original gravado; falha aqui nunca afeta a captura (o painel cai no
+    //     original quando a miniatura não existe).
+    if (originalGravado) {
+      try {
+        await salvarMiniatura({ fotoPath, fotoBuffer, upload: uploadPhoto });
+      } catch (miniErr) {
+        await logError(`Erro miniatura: ${miniErr.message} | camera: ${camera.nome}`, {
+          fotoPath, camera_id: camera.id, placa,
+        });
+      }
     }
   }
 
@@ -532,3 +548,6 @@ function parseBody(req) {
     }
   });
 }
+
+// Exposto para teste unitário do pós-resposta (Storage stubado).
+module.exports.processarAposResposta = processarAposResposta;
