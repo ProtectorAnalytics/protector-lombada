@@ -33,3 +33,13 @@ Sem build step. `npm run dev` usa `vercel dev` local.
 - Migrations SQL ficam em `sql/migration-*.sql` e são aplicadas via MCP do Supabase (`apply_migration`) — registre na descrição do PR.
 - Lógica compartilhada front/back em `site/js/` (UMD: `module.exports` no Node, `window.<lib>` no browser). Ex.: `site/js/camera-status.js`.
 - Nada de quebrar contrato dos endpoints `/api/placa` e `/api/heartbeat` (câmeras ALPHADIGI em produção dependem disso).
+---
+
+## Convenções de pastas (~/Developer)
+
+> Adicionado na consolidação do ambiente. Não altera as regras acima.
+
+- HTML de apresentação/demo → ./docs/apresentacoes/
+- Relatórios/gerados (PDF, xlsx, docx) → ./output/
+- Descartáveis → ./tmp/  (git-ignored)
+- Nunca criar arquivos em /tmp, /var/folders ou na home; criar a pasta-destino antes se não existir.
