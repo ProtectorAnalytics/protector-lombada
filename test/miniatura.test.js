@@ -6,7 +6,7 @@
  */
 const assert = require('node:assert');
 const {
-  caminhoMiniatura, comMiniaturas, escolherFoto, urlAindaVale, criarCacheUrlAssinada,
+  caminhoMiniatura, comMiniaturas, escolherFoto, urlAindaVale, criarCacheUrlAssinada, validadeDaFalha,
 } = require('../site/js/miniatura');
 
 let passou = 0;
@@ -183,6 +183,66 @@ caso('resposta fora de ordem é casada pelo path', async () => {
     agora: () => 0,
   });
   assert.deepStrictEqual(await cache.urls(['a', 'b']), { a: 'U-a', b: 'U-b' });
+});
+
+// ---- validadeDaFalha
+caso('passagem dos últimos 5 min: falha vale 2 min (a foto pode ainda estar subindo)', () => {
+  const agora = Date.parse('2026-10-05T12:00:00Z');
+  assert.strictEqual(validadeDaFalha('2026-10-05T11:59:00Z', agora), 120000);
+  assert.strictEqual(validadeDaFalha('2026-10-05T11:55:00Z', agora), 120000);
+});
+caso('passagem mais antiga: falha vale 10 min', () => {
+  const agora = Date.parse('2026-10-05T12:00:00Z');
+  assert.strictEqual(validadeDaFalha('2026-10-05T11:54:59Z', agora), 600000);
+  assert.strictEqual(validadeDaFalha('2026-09-25T12:00:00Z', agora), 600000);
+});
+caso('horário ausente ou inválido conta como antigo', () => {
+  assert.strictEqual(validadeDaFalha(null, Date.now()), 600000);
+  assert.strictEqual(validadeDaFalha('xx', Date.now()), 600000);
+});
+
+caso('falha por item fica no cache pela validade e não é reassinada', async () => {
+  const chamadas = [];
+  let agora = 0;
+  const cache = criarCacheUrlAssinada({
+    assinar: async (paths) => { chamadas.push([...paths]); return paths.map((p) => (p === 'm' ? { path: p, signedUrl: null, error: 'not found' } : { path: p, signedUrl: 'U-' + p, error: null })); },
+    agora: () => agora,
+  });
+  const opcoes = { validadeFalha: (p) => (p === 'm' ? 120000 : 0) };
+  assert.deepStrictEqual(await cache.urls(['m', 'o'], opcoes), { m: null, o: 'U-o' });
+  agora = 119999;
+  assert.deepStrictEqual(await cache.urls(['m', 'o'], opcoes), { m: null, o: 'U-o' });
+  assert.strictEqual(chamadas.length, 1);
+  agora = 120000;
+  await cache.urls(['m', 'o'], opcoes);
+  assert.strictEqual(chamadas.length, 2);
+  assert.deepStrictEqual(chamadas[1], ['m']);
+});
+caso('sem validadeFalha, a falha não fica guardada', async () => {
+  let n = 0;
+  const cache = criarCacheUrlAssinada({
+    assinar: async (paths) => { n++; return paths.map((p) => ({ path: p, signedUrl: null, error: 'x' })); },
+    agora: () => 0,
+  });
+  await cache.urls(['m']); await cache.urls(['m']);
+  assert.strictEqual(n, 2);
+});
+caso('falha da chamada inteira (rede) não vira falha guardada', async () => {
+  let n = 0;
+  const cache = criarCacheUrlAssinada({ assinar: async () => { n++; throw new Error('rede'); }, agora: () => 0 });
+  const op = { validadeFalha: () => 600000 };
+  await cache.urls(['m'], op); await cache.urls(['m'], op);
+  assert.strictEqual(n, 2);
+});
+caso('limpar() também esquece as falhas', async () => {
+  let n = 0;
+  const cache = criarCacheUrlAssinada({
+    assinar: async (paths) => { n++; return paths.map((p) => ({ path: p, signedUrl: null, error: 'x' })); },
+    agora: () => 0,
+  });
+  const op = { validadeFalha: () => 600000 };
+  await cache.urls(['m'], op); cache.limpar(); await cache.urls(['m'], op);
+  assert.strictEqual(n, 2);
 });
 
 (async () => {

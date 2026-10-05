@@ -26,6 +26,11 @@
   const EXTENSAO_JPEG = /\.jpe?g$/i;
   const TTL_PADRAO_S = 3600;
   const MARGEM_PADRAO_S = 300;
+  // Falha de assinatura guardada: passagem recente (foto talvez ainda subindo
+  // depois do ACK) volta a ser tentada logo; antiga (sem miniatura) demora
+  const JANELA_RECENTE_MS = 5 * 60000;
+  const FALHA_RECENTE_MS = 2 * 60000;
+  const FALHA_ANTIGA_MS = 10 * 60000;
 
   /** 'a/b/x.jpg' → 'a/b/x.mini.jpg'. Inválido → null. */
   function caminhoMiniatura(fotoPath) {
@@ -69,10 +74,20 @@
     return entrada.expiraEm - agoraMs > margemMs;
   }
 
+  /** Por quanto tempo guardar a falha de assinatura de uma passagem. */
+  function validadeDaFalha(timestampCaptura, agoraMs) {
+    const t = typeof timestampCaptura === 'string' || typeof timestampCaptura === 'number'
+      ? new Date(timestampCaptura).getTime() : NaN;
+    if (!Number.isFinite(t) || !Number.isFinite(agoraMs)) return FALHA_ANTIGA_MS;
+    return agoraMs - t <= JANELA_RECENTE_MS ? FALHA_RECENTE_MS : FALHA_ANTIGA_MS;
+  }
+
   /**
    * Cache de URL assinada por path.
    * assinar(paths, ttlSegundos) → Promise<[{ path, signedUrl, error }]>
    * (formato do createSignedUrls do supabase-js, já desembrulhado de `data`).
+   * Falha por item (objeto inexistente) só é guardada se urls() receber
+   * `validadeFalha(path) → ms`; falha da chamada inteira (rede) nunca é.
    */
   function criarCacheUrlAssinada({ assinar, agora, ttlSegundos = TTL_PADRAO_S, margemSegundos = MARGEM_PADRAO_S }) {
     let entradas = new Map();
@@ -89,31 +104,35 @@
       }
     }
 
-    function gravar(lista, assinadoEm) {
+    const vale = (e, agoraMs, margem) => (e && e.url === null ? e.falhaAte > agoraMs : urlAindaVale(e, agoraMs, margem));
+
+    function gravar(lista, assinadoEm, validadeFalha) {
       const novas = new Map();
-      for (const [p, e] of entradas) if (urlAindaVale(e, assinadoEm, 0)) novas.set(p, e);
+      for (const [p, e] of entradas) if (vale(e, assinadoEm, 0)) novas.set(p, e);
       const expiraEm = assinadoEm + ttlSegundos * 1000;
       for (const item of lista) {
-        if (!item || item.error || !item.signedUrl || typeof item.path !== 'string') continue;
-        novas.set(item.path, { url: item.signedUrl, expiraEm });
+        if (!item || typeof item.path !== 'string') continue;
+        if (!item.error && item.signedUrl) { novas.set(item.path, { url: item.signedUrl, expiraEm }); continue; }
+        const ms = validadeFalha ? validadeFalha(item.path) : 0;
+        if (ms > 0) novas.set(item.path, { url: null, falhaAte: assinadoEm + ms });
       }
       entradas = novas;
     }
 
     /** Mapa path → URL (null se não deu para assinar). Nunca lança. */
-    async function urls(paths) {
+    async function urls(paths, { validadeFalha } = {}) {
       const unicos = [...new Set((paths || []).filter((p) => typeof p === 'string' && p !== ''))];
       const agoraMs = relogio();
-      const faltam = unicos.filter((p) => !urlAindaVale(entradas.get(p), agoraMs, margemMs));
+      const faltam = unicos.filter((p) => !vale(entradas.get(p), agoraMs, margemMs));
       if (faltam.length > 0) {
         const minhaGeracao = geracao;
         const assinadoEm = relogio();
         const lista = await assinarFaltantes(faltam);
         // limpar() durante a espera (troca de sessão): nada volta ao cache
         if (minhaGeracao !== geracao) return Object.fromEntries(unicos.map((p) => [p, null]));
-        gravar(lista, assinadoEm);
+        gravar(lista, assinadoEm, validadeFalha);
       }
-      return Object.fromEntries(unicos.map((p) => [p, entradas.has(p) ? entradas.get(p).url : null]));
+      return Object.fromEntries(unicos.map((p) => [p, entradas.has(p) ? entradas.get(p).url || null : null]));
     }
 
     function limpar() { geracao++; entradas = new Map(); }
@@ -129,5 +148,6 @@
     escolherFoto,
     urlAindaVale,
     criarCacheUrlAssinada,
+    validadeDaFalha,
   };
 });
