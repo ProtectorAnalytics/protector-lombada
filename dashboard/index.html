@@ -3208,6 +3208,7 @@
       if (!resp.ok) {
         const e = new Error(json.error || 'Não foi possível concluir. Tente de novo.');
         e.status = resp.status;
+        e.data = json;
         throw e;
       }
       return json;
@@ -4599,8 +4600,10 @@
         loadRecentCards();
         renderPage();
       } catch (e) {
-        if (e.status === 409 || e.status === 404) esquecerPlacaBase(captura.placa);
-        erro.textContent = mensagemErroApi(e);
+        const motivo = e.data && e.data.motivo;
+        // Com motivo, a leitura continua aberta (só a consulta não pôde rodar agora).
+        if ((e.status === 409 && !motivo) || e.status === 404) esquecerPlacaBase(captura.placa);
+        erro.textContent = e.status === 409 ? seloVeiculoLib.mensagemOutroCarro(motivo) : mensagemErroApi(e);
         travarBotoes(quadro, false);
       }
     }

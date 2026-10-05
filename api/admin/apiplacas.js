@@ -117,6 +117,13 @@ async function reconsultar({ body, repo, vb, profile, ip, res }) {
 
 async function validarHoje({ repo, vb, validador, profile, ip, res }) {
   const placas = await placasDeHoje();
+  // Desligado/teto/sem saldo: não acumula fila nem grava linha nenhuma.
+  const t = await vb.travas();
+  if (!t.ok) {
+    const bloqueado = { placas: placas.size, consultadas: 0, puladas: 0, falhas: 0, parou: t.motivo };
+    await registrarAuditoria({ usuarioId: profile.id, acao: 'apiplacas_validar_hoje', tabela: 'veiculos_base', registroId: null, detalhes: bloqueado, ip });
+    return res.status(200).json(bloqueado);
+  }
   const inicio = relogio.agora();
   let consultadas = 0;
   let puladas = 0;

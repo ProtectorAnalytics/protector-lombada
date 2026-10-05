@@ -27,5 +27,19 @@
     return Math.abs(idade) < JANELA_CONSULTANDO_MS ? 'consultando' : null;
   }
 
-  return { estadoSelo, JANELA_CONSULTANDO_MS };
+  /** Frase para o 409 de "É outro carro", conforme o motivo devolvido pela API. */
+  function mensagemOutroCarro(motivo) {
+    if (motivo === 'desligado' || motivo === 'sem_token') {
+      return 'As consultas de veículo estão desligadas no momento. Se a placa estiver errada, use “É a mesma placa”; senão, tente mais tarde.';
+    }
+    if (motivo === 'teto' || motivo === 'sem_saldo' || motivo === 'limite_hora') {
+      return 'O limite de consultas foi atingido por agora. A placa será consultada automaticamente depois.';
+    }
+    if (motivo === 'em_andamento') {
+      return 'Esta placa já está sendo consultada. Feche e abra a passagem em alguns minutos.';
+    }
+    return 'Esta leitura já foi resolvida (talvez por outra pessoa). Feche e abra a passagem de novo.';
+  }
+
+  return { estadoSelo, mensagemOutroCarro, JANELA_CONSULTANDO_MS };
 });

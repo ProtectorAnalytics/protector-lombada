@@ -106,6 +106,18 @@ async function caso(nome, fn) {
     assert.ok(!JSON.stringify(r.body).includes('ABC1D'));
   });
 
+  await caso('validar_hoje com consultas desligadas não grava nem consulta nada', async () => {
+    estado.capturas = ['ABC1D23', 'ABC1D24'].map((placa) => ({ placa }));
+    estado.trava = { ok: false, motivo: 'desligado' };
+    const r = resp();
+    await handler(req({ body: { acao: 'validar_hoje' } }), r);
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(r.body, { placas: 2, consultadas: 0, puladas: 0, falhas: 0, parou: 'desligado' });
+    assert.strictEqual(estado.reservas.length, 0);
+    assert.strictEqual(estado.consultas.length, 0);
+    assert.strictEqual(estado.avaliacoes.length, 0);
+  });
+
   await caso('validar_hoje pagina capturas (2350 linhas em 3 páginas)', async () => {
     estado.capturas = Array.from({ length: 2350 }, (_, i) => ({ placa: `AAA${String(i).padStart(4, '0')}` }));
     estado.motivos = Array(2350).fill('ok');
