@@ -126,6 +126,7 @@
       --tint-red: rgba(239,68,68,0.09);
       --amber: #FACC15;
       --placeholder: #8A93A6;
+      --border-campo: #64748B;                  /* borda de campo ≥3:1 contra o card (#111827: 3,7:1) */
       --scrollbar: #1E293B;
       --scrollbar-hover: #334155;
       --skeleton-a: #111827;
@@ -180,7 +181,8 @@
       --tint-accent: rgba(37,99,235,0.05);
       --tint-red: rgba(220,38,38,0.06);
       --amber: #A16207;
-      --placeholder: #64748B;
+      --placeholder: #5F6B7E;                   /* ≥4,5:1 sobre o campo (#F1F4F8: 4,9:1) */
+      --border-campo: #8A94A6;                  /* borda de campo ≥3:1 contra o card branco (3,06:1) */
       --scrollbar: #CBD5E1;
       --scrollbar-hover: #94A3B8;
       --skeleton-a: #EEF2F6;
@@ -854,6 +856,15 @@
     }
 
 
+    /* Agora · hoje: KPIs e cards ao vivo não seguem os filtros */
+    .secao-titulo {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-secondary);
+    }
+
     /* Filters */
     .filter-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0; }
     .filters-row {
@@ -863,11 +874,12 @@
       padding: 12px 16px;
       display: flex;
       gap: 10px;
-      align-items: center;
+      align-items: flex-end;
       flex-wrap: wrap;
       box-shadow: var(--shadow-sm);
       transition: var(--transition);
     }
+    .filters-row .campo-filtro { display: flex; flex-direction: column; gap: 2px; }
 
     .filters-row label {
       color: var(--text-secondary);
@@ -875,23 +887,30 @@
       text-transform: uppercase;
     }
 
+    /* Borda ≥3:1 contra o card nos dois temas (--border-campo); alvo ≥36 px */
     .filters-row input, .filters-row select {
       background: var(--bg-input);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-campo);
       border-radius: 6px;
       color: var(--text-primary);
       padding: 6px 10px;
+      min-height: 36px;
+      box-sizing: border-box;
       font-family: var(--font-sans);
       font-size: 0.8125rem;
       outline: none;
     }
 
-    .filters-row input::placeholder { color: var(--placeholder); } /* ≥4.5:1, não confunde com valor */
-    .filters-row input:focus, .filters-row select:focus { border-color: var(--accent); }
-    .filters-row input[type="date"] { width: 120px; }
+    .filters-row input::placeholder { color: var(--placeholder); text-transform: none; } /* ≥4,5:1, não confunde com valor */
+    .filters-row input:focus, .filters-row select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    .filters-row input[type="date"] { width: 130px; }
     .filters-row input[type="text"] { width: 90px; }
-    .filters-row input[type="number"] { width: 60px; }
+    .filters-row input[type="number"] { width: 72px; }
     .filters-row select { width: 120px; }
+    .filters-row #filter-placa { width: 120px; text-transform: uppercase; }
 
     /* Linha "Veículo" dos filtros (dados da base de veículos) */
     .filtros-veiculo {
@@ -906,23 +925,30 @@
     .filters-row .filtros-veiculo input[type="text"] { width: 130px; }
     .filters-row .filtros-veiculo input[type="number"] { width: 72px; }
     .fv-aviso { flex-basis: 100%; font-size: 0.75rem; color: var(--text-secondary); margin: 0; }
-    .fv-nota { flex-basis: 100%; font-size: 0.6875rem; color: var(--text-secondary); margin: 0; }
     .fv-aviso:empty { display: none; }
 
-    .filters-row .filter-check {
-      display: flex;
+    /* Checkbox: o rótulo inteiro é o alvo (≥44 px de altura) */
+    .filters-row .filter-check label {
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
+      gap: 6px;
+      min-height: 44px;
+      padding: 0 6px;
+      font-size: 0.8125rem;
+      text-transform: none;
+      color: var(--text-primary);
+      cursor: pointer;
     }
-
     .filters-row .filter-check input[type="checkbox"] {
-      width: auto;
+      width: 18px;
+      height: 18px;
+      min-height: 0;
+      margin: 0;
       accent-color: var(--accent);
     }
 
-    .btn-filter, .btn-clear, .btn-export {
+    .btn-filter, .btn-clear {
+      min-height: 36px;
       padding: 6px 16px;
       border: none;
       border-radius: 6px;
@@ -946,7 +972,7 @@
 
     .btn-clear {
       background: transparent;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-campo);
       color: var(--text-secondary);
       transition: var(--transition);
     }
@@ -957,17 +983,73 @@
       background: var(--bg-input);
     }
 
-    .btn-export {
-      background: #16a34a;
-      color: white;
-      margin-left: auto;
-      transition: var(--transition);
+    .btn-filter:focus-visible, .btn-clear:focus-visible, .btn-secundario:focus-visible, .btn-link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
-    .btn-export:hover {
-      background: #15803d;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(22,163,74,0.25);
+    /* Topo da tabela: período ativo + Exportar (secundário, exporta a tabela) */
+    .tabela-topo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tabela-titulo {
+      margin: 0;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .export-wrap { position: relative; }
+    .btn-secundario {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 6px 14px;
+      border: 1px solid var(--border-campo);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-secundario:hover { background: var(--bg-input); border-color: var(--text-secondary); }
+
+    /* Rodapé da tabela: "N passagens sem velocidade ocultas · Mostrar" */
+    .rodape-sem-vel {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 4px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .rodape-sem-vel[hidden] { display: none; }
+    .btn-link {
+      min-height: 36px;
+      padding: 0 6px;
+      border: none;
+      border-radius: 6px;
+      background: none;
+      color: var(--accent);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-link:hover { text-decoration: underline; }
+
+    /* Celular e toque: alvos de 44 px nos filtros */
+    @media (max-width: 600px), (pointer: coarse) {
+      .filters-row input, .filters-row select,
+      .btn-filter, .btn-clear, .btn-secundario, .btn-link { min-height: 44px; }
     }
 
     /* Table */
@@ -1985,6 +2067,8 @@
       .recent-cards { grid-template-columns: repeat(2, 1fr); }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .filters-row { flex-direction: column; align-items: stretch; }
+      .filters-row .campo-filtro input, .filters-row .campo-filtro select,
+      .filters-row #filter-placa { width: 100%; }
       /* Filtros de veículo: grade fluida, campos ocupam a largura disponível */
       .filtros-veiculo { flex-basis: auto; align-items: stretch; }
       .filtros-veiculo .fv-titulo { flex-basis: 100%; }
@@ -2143,7 +2227,7 @@
 
     /* Toque não tem hover: sem isto o "levantar" fica preso depois do tap */
     @media (hover: none), (pointer: coarse) {
-      .recent-card:hover, .btn-filter:hover, .btn-export:hover,
+      .recent-card:hover, .btn-filter:hover, .btn-secundario:hover,
       .modal-photo:hover, .btn-zoom:hover, .btn-pdf:hover,
       .topbar .btn-veiculos:hover, .login-box button:hover,
       .vm-actions .vm-btn-primary:hover {
@@ -2364,7 +2448,7 @@
         transition: none !important;
       }
       /* Molas pulam direto ao estado final (spring.js); nada "levanta" */
-      .recent-card:hover, .btn-filter:hover, .btn-export:hover, .modal-photo:hover,
+      .recent-card:hover, .btn-filter:hover, .btn-secundario:hover, .modal-photo:hover,
       .btn-zoom:hover, .topbar .btn-veiculos:hover, .login-box button:hover,
       .vm-actions .vm-btn-primary:hover { transform: none; }
     }
@@ -2410,6 +2494,7 @@
   <script src="/js/nome-veiculo.js"></script>
   <script src="/js/selo-veiculo.js"></script>
   <script src="/js/filtro-veiculo.js"></script>
+  <script src="/js/estado-filtros.js"></script>
 </head>
 <body>
 
@@ -2492,6 +2577,7 @@
     <div class="main-layout">
       <!-- LEFT: stats → câmeras → cards → filtros → tabela (fluxo contínuo) -->
       <div class="left-panel">
+        <h2 class="secao-titulo" id="titulo-ao-vivo">Agora · hoje</h2>
         <div class="stats-row">
           <div class="stat-card destaque">
             <div class="label">Passagens hoje</div>
@@ -2519,64 +2605,48 @@
           <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>
         </div>
 
-        <!-- Filters -->
-          <form class="filters-row" onsubmit="event.preventDefault();applyFilters()">
-            <div>
-              <label>Data Inicial</label><br>
+        <!-- Filters: só valem depois de "Filtrar" (estado único filtrosAtivos) -->
+          <form class="filters-row" onsubmit="event.preventDefault();applyFilters()" aria-label="Filtros do período">
+            <div class="campo-filtro">
+              <label for="filter-date-start">Data inicial</label>
               <input type="date" id="filter-date-start">
             </div>
-            <div>
-              <label>Hora Inicial</label><br>
+            <div class="campo-filtro">
+              <label for="filter-time-start">Hora inicial</label>
               <input type="time" id="filter-time-start" value="00:00">
             </div>
-            <div>
-              <label>Data Final</label><br>
+            <div class="campo-filtro">
+              <label for="filter-date-end">Data final</label>
               <input type="date" id="filter-date-end">
             </div>
-            <div>
-              <label>Hora Final</label><br>
+            <div class="campo-filtro">
+              <label for="filter-time-end">Hora final</label>
               <input type="time" id="filter-time-end" value="23:59">
             </div>
-            <div>
-              <label>Placa</label><br>
-              <input type="text" id="filter-placa" placeholder="Buscar placa" title="Formato: ABC1D23" maxlength="7" style="text-transform:uppercase">
+            <div class="campo-filtro">
+              <label for="filter-placa">Placa</label>
+              <input type="text" id="filter-placa" placeholder="Placa" title="Ex.: ABC1D23 (aceita ABC-1D23)" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false">
             </div>
-            <div>
-              <label>Vel. Min</label><br>
-              <input type="number" id="filter-vel-min" placeholder="0" min="0">
+            <div class="campo-filtro">
+              <label for="filter-vel-min">Vel. mín.</label>
+              <input type="number" id="filter-vel-min" placeholder="mín." min="0" inputmode="numeric">
             </div>
-            <div>
-              <label>Vel. Max</label><br>
-              <input type="number" id="filter-vel-max" placeholder="999" min="0">
+            <div class="campo-filtro">
+              <label for="filter-vel-max">Vel. máx.</label>
+              <input type="number" id="filter-vel-max" placeholder="máx." min="0" inputmode="numeric">
             </div>
-            <div>
-              <label>Câmera</label><br>
+            <div class="campo-filtro">
+              <label for="filter-camera">Câmera</label>
               <select id="filter-camera">
                 <option value="">Todas</option>
               </select>
             </div>
             <div class="filter-check">
-              <input type="checkbox" id="filter-alertas-only" onchange="applyFilters()">
-              <label for="filter-alertas-only" style="text-transform:none;font-size:0.75rem;cursor:pointer">Só alertas</label>
-            </div>
-            <div class="filter-check">
-              <input type="checkbox" id="filter-sem-vel" onchange="toggleSemVel(this.checked)">
-              <label for="filter-sem-vel" style="text-transform:none;font-size:0.75rem;cursor:pointer" title="Por padrão, capturas sem velocidade (sem radar) ficam ocultas na tela. Os registros nunca são removidos — continuam nos filtros e relatórios.">Mostrar sem velocidade</label>
+              <label for="filter-alertas-only"><input type="checkbox" id="filter-alertas-only" onchange="applyFilters()"> Só alertas</label>
             </div>
             <div class="filter-actions">
-            <button type="submit" class="btn-filter">Filtrar</button>
-            <button type="button" class="btn-clear" onclick="clearFilters()">Limpar</button>
-            <div style="position:relative;margin-left:0">
-              <button type="button" class="btn-export" onclick="toggleExportMenu()" id="btn-exportar" style="margin-left:0" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">Exportar</button>
-              <div id="export-menu" class="export-menu">
-                <button type="button" onclick="exportExcel();closeExportMenu()">
-                  <span style="color:#16a34a;font-size:1rem">&#9638;</span> Excel (.xlsx)
-                </button>
-                <button type="button" onclick="exportPDF();closeExportMenu()">
-                  <span style="color:var(--red);font-size:1rem">&#9638;</span> PDF (.pdf)
-                </button>
-              </div>
-            </div>
+              <button type="submit" class="btn-filter">Filtrar</button>
+              <button type="button" class="btn-clear" onclick="clearFilters()">Limpar</button>
             </div>
             <div class="filtros-veiculo" role="group" aria-labelledby="fv-titulo">
               <span class="fv-titulo" id="fv-titulo">Veículo</span>
@@ -2601,9 +2671,27 @@
                 <input type="number" id="filter-ano-ate" inputmode="numeric" min="1950" step="1" placeholder="aaaa">
               </div>
               <p class="fv-aviso" id="fv-aviso" role="status" aria-live="polite"></p>
-              <p class="fv-nota">Filtros de veículo valem para a lista e o gráfico.</p>
             </div>
           </form>
+
+          <!-- Topo da tabela: período ativo + Exportar (exporta a tabela) -->
+          <div class="tabela-topo">
+            <h2 class="tabela-titulo" id="titulo-tabela">Passagens</h2>
+            <div class="export-wrap">
+              <button type="button" class="btn-secundario" onclick="toggleExportMenu()" id="btn-exportar" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                Exportar
+              </button>
+              <div id="export-menu" class="export-menu">
+                <button type="button" onclick="exportExcel();closeExportMenu()">
+                  <span style="color:#16a34a;font-size:1rem" aria-hidden="true">&#9638;</span> Excel (.xlsx)
+                </button>
+                <button type="button" onclick="exportPDF();closeExportMenu()">
+                  <span style="color:var(--red);font-size:1rem" aria-hidden="true">&#9638;</span> PDF (.pdf)
+                </button>
+              </div>
+            </div>
+          </div>
 
           <!-- Table -->
           <div class="table-container">
@@ -2623,6 +2711,10 @@
             <div class="table-pagination" id="table-pagination" style="display:none">
               <span class="pg-info" id="pg-info"></span>
               <div class="pg-controls" id="pg-controls"></div>
+            </div>
+            <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
+              <span id="sem-vel-texto"></span>
+              <button type="button" class="btn-link" id="btn-sem-vel" onclick="toggleSemVel(!mostrarSemVel())" title="Passagens sem velocidade (sem radar) ficam ocultas na tela por padrão. Nada é removido: continuam nos relatórios.">Mostrar</button>
             </div>
           </div>
       </div>
@@ -2830,6 +2922,9 @@
       temFiltroVeiculo, placasParaFiltro, montarFiltroVeiculo, opcoesDistintas,
       corExibicao, corHex, coletarPaginado, LIMITE_PLACAS_FILTRO,
     } = filtroVeiculoLib;
+    const {
+      montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo,
+    } = estadoFiltrosLib;
 
     // ============================================
     // CONFIG
@@ -2839,22 +2934,41 @@
     let currentCliente = null;
     let currentProfile = null;
     let pollingInterval = null;
+    let painelAtivo = false; // polling só com o painel aberto e a aba visível
+    // Filtros confirmados ("Filtrar"/"Limpar"): única fonte do período filtrado
+    let filtrosAtivos = null;
+    // Chave dos filtros cujo período já está na tela (null = recarregar)
+    let chavePeriodoCarregado = null;
     let camerasList = [];
 
     // Exibição de capturas sem velocidade (sem radar) na tela do operador.
     // Preferência por dispositivo (localStorage). Default: ocultar. Nada é
     // removido — os registros continuam nos filtros e nos relatórios/export.
     const SEM_VEL_KEY = 'lombada_mostrar_sem_vel';
-    function mostrarSemVel() { return localStorage.getItem(SEM_VEL_KEY) === '1'; }
+    function mostrarSemVel() {
+      try { return localStorage.getItem(SEM_VEL_KEY) === '1'; } catch { return false; }
+    }
     function capturasVisiveis() {
       if (mostrarSemVel()) return lastCapturas;
       return (lastCapturas || []).filter(c => c.velocidade > 0);
     }
     function toggleSemVel(checked) {
-      localStorage.setItem(SEM_VEL_KEY, checked ? '1' : '0');
+      try { localStorage.setItem(SEM_VEL_KEY, checked ? '1' : '0'); } catch { /* sem storage */ }
       currentPage = 1;
       renderPage();
       loadRecentCards();
+    }
+
+    // Rodapé da tabela: "N passagens sem velocidade ocultas · Mostrar" / "Ocultar"
+    function atualizarRodapeSemVel() {
+      const semVel = (lastCapturas || []).filter(c => !(c.velocidade > 0)).length;
+      const mostrando = mostrarSemVel();
+      const uma = semVel === 1;
+      document.getElementById('rodape-sem-vel').hidden = semVel === 0;
+      document.getElementById('sem-vel-texto').textContent = mostrando
+        ? `${semVel} ${uma ? 'passagem sem velocidade aparece' : 'passagens sem velocidade aparecem'} na lista ·`
+        : `${semVel} ${uma ? 'passagem sem velocidade oculta' : 'passagens sem velocidade ocultas'} ·`;
+      document.getElementById('btn-sem-vel').textContent = mostrando ? 'Ocultar' : 'Mostrar';
     }
     let camerasMap = {}; // camera_id -> nome_exibicao (curto, p/ dashboard)
     let camerasMapFull = {}; // camera_id -> nome (completo, p/ relatórios)
@@ -2968,8 +3082,8 @@
 
     function mostrarNovaSenha() {
       emRecuperacaoSenha = true;
-      clearInterval(pollingInterval);
-      pollingInterval = null;
+      painelAtivo = false;
+      pararPolling();
       document.getElementById('dashboard-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('reset-password-form').style.display = 'none';
@@ -3113,8 +3227,10 @@
 
     async function doLogout() {
       fecharContaMenu({ semFoco: true });
-      clearInterval(pollingInterval);
-      pollingInterval = null;
+      painelAtivo = false;
+      pararPolling();
+      filtrosAtivos = null;
+      chavePeriodoCarregado = null;
       await sb.auth.signOut();
       currentUser = null;
       currentCliente = null;
@@ -3136,51 +3252,93 @@
       sincronizarSeletores(); // o seletor do topo só tem tamanho depois de visível
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
-      const today = todayLocalISO();
-      document.getElementById('filter-date-start').value = today;
-      document.getElementById('filter-date-end').value = today;
-      document.getElementById('filter-sem-vel').checked = mostrarSemVel();
+      filtrosAtivos = filtrosPadrao(todayLocalISO());
+      chavePeriodoCarregado = null;
+      escreverFiltrosNoFormulario(filtrosAtivos);
       limparFiltrosVeiculo();
+      atualizarTitulosPeriodo();
 
       loadVeiculosCache();
       loadOpcoesVeiculo();
       loadCamerasList();
       loadVeiculos();
+      painelAtivo = true;
       loadAll();
-      // Polling mantém a página da tabela em que o usuário está e não
-      // consulta o banco com a aba escondida (volta a atualizar ao reabrir)
-      pollingInterval = setInterval(() => {
-        if (!document.hidden) loadAll({ resetPage: false });
-      }, POLLING_MS);
+      if (!document.hidden) iniciarPolling();
       mostrarBoasVindasSeNecessario();
     }
 
+    // Polling: mantém a página da tabela, não consulta com a aba escondida
+    // (o intervalo para) e volta com uma atualização imediata ao reabrir.
     const POLLING_MS = 30000;
+    function iniciarPolling() {
+      pararPolling();
+      pollingInterval = setInterval(() => loadAll({ resetPage: false, forcarPeriodo: false }), POLLING_MS);
+    }
+    function pararPolling() {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && pollingInterval) loadAll({ resetPage: false });
+      if (!painelAtivo) return;
+      if (document.hidden) { pararPolling(); return; }
+      loadAll({ resetPage: false, forcarPeriodo: false });
+      iniciarPolling();
     });
 
-    async function loadAll({ resetPage = true } = {}) {
-      const dot = document.getElementById('polling-dot');
+    function marcarAtualizacao(ok) {
       const rotulo = document.getElementById('ultima-atualizacao');
+      const hora = new Date().toLocaleTimeString('pt-BR');
+      rotulo.classList.toggle('falha', !ok);
+      rotulo.textContent = (ok ? 'Atualizado às ' : 'Falha ao atualizar às ') + hora;
+    }
+
+    // Período filtrado (tabela, gráfico, indicadores, alertas, Top 10), sempre
+    // a partir de filtrosAtivos. Só marca como carregado se tudo deu certo.
+    async function loadPeriodo({ resetPage = true } = {}) {
+      const chave = chaveFiltros(filtrosAtivos);
+      chavePeriodoCarregado = null;
+      const r = await Promise.allSettled([
+        loadCapturas({ resetPage }),
+        loadHourlyChart(),
+        loadRanking(),
+        loadIndicators(),
+        loadAlerts7d(),
+      ]);
+      const falha = r.find((x) => x.status === 'rejected' || x.value === false);
+      if (falha) throw (falha.reason || new Error('falha ao carregar as capturas'));
+      if (chave === chaveFiltros(filtrosAtivos)) chavePeriodoCarregado = chave;
+    }
+
+    // "Filtrar", "Limpar" e "Tentar de novo": recarrega só o período filtrado
+    async function recarregarPeriodo(opts) {
+      try {
+        await loadPeriodo(opts);
+        marcarAtualizacao(true);
+      } catch (err) {
+        console.error('Erro ao filtrar:', err);
+        marcarAtualizacao(false);
+      }
+    }
+
+    // KPIs, câmeras e cards ao vivo sempre; o período filtrado só se os filtros
+    // mudaram ou se ele inclui agora (período todo no passado não muda).
+    async function loadAll({ resetPage = true, forcarPeriodo = true } = {}) {
+      const dot = document.getElementById('polling-dot');
+      const comPeriodo = forcarPeriodo
+        || precisaRecarregarPeriodo(filtrosAtivos, chavePeriodoCarregado, new Date());
       dot.classList.add('ativo');
       try {
         await Promise.all([
           loadStats(),
           loadRecentCards(),
-          loadCapturas({ resetPage }),
-          loadHourlyChart(),
-          loadRanking(),
           loadCamerasStatus(),
-          loadIndicators(),
-          loadAlerts7d(),
+          comPeriodo ? loadPeriodo({ resetPage }) : null,
         ]);
-        rotulo.classList.remove('falha');
-        rotulo.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+        marcarAtualizacao(true);
       } catch (err) {
         console.error('Erro ao atualizar painel:', err);
-        rotulo.classList.add('falha');
-        rotulo.textContent = 'Falha ao atualizar às ' + new Date().toLocaleTimeString('pt-BR');
+        marcarAtualizacao(false);
       } finally {
         dot.classList.remove('ativo');
       }
@@ -3372,7 +3530,7 @@
 
     // { ativo:false } | { ativo:true, placas } | { ativo:true, excesso:true } | { ativo:true, erro:true }
     function placasDoFiltroVeiculo() {
-      const f = lerFiltroVeiculo();
+      const f = getActiveFilters().veiculo;
       if (!temFiltroVeiculo(f)) return Promise.resolve({ ativo: false });
       const chave = currentCliente.id + '|' + JSON.stringify(f);
       const memo = filtroVeiculoMemo;
@@ -3680,30 +3838,7 @@
     let capturasSeq = 0;
     async function loadCapturas({ resetPage = true } = {}) {
       const seq = ++capturasSeq;
-      const dateStart = document.getElementById('filter-date-start').value;
-      const dateEnd = document.getElementById('filter-date-end').value;
-      const placa = document.getElementById('filter-placa').value.toUpperCase().trim();
-      const velMin = parseInt(document.getElementById('filter-vel-min').value) || 0;
-      const velMax = parseInt(document.getElementById('filter-vel-max').value) || 999;
-      const cameraId = document.getElementById('filter-camera').value;
-      const alertasOnly = document.getElementById('filter-alertas-only').checked;
-
-      let query = sb.from('capturas')
-        .select('*')
-        .eq('cliente_id', currentCliente.id)
-        .order('timestamp', { ascending: false })
-        .limit(LIMITE_CAPTURAS);
-
-      const timeStart = document.getElementById('filter-time-start').value || '00:00';
-      const timeEnd = document.getElementById('filter-time-end').value || '23:59';
-      if (dateStart) query = query.gte('timestamp', dateStart + 'T' + timeStart + ':00');
-      if (dateEnd) query = query.lte('timestamp', dateEnd + 'T' + timeEnd + ':59');
-      if (placa) query = query.ilike('placa', `%${placa}%`);
-      if (velMin > 0) query = query.gte('velocidade', velMin);
-      if (velMax < 999) query = query.lte('velocidade', velMax);
-      if (cameraId) query = query.eq('camera_id', cameraId);
-      if (alertasOnly) query = query.gt('velocidade', currentCliente.limite_velocidade);
-
+      const f = getActiveFilters();
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
 
@@ -3720,28 +3855,36 @@
           lastCapturas = []; // export não pode sair sem o filtro de veículo
           limiteAtingido = false;
           pgEl.style.display = 'none';
-          return;
+          atualizarRodapeSemVel();
+          return !fv.erro;
         }
-        query = query.in('placa', fv.placas);
       }
       avisoFiltroVeiculo('');
 
+      const query = aplicarFiltros(sb.from('capturas')
+        .select('*')
+        .eq('cliente_id', currentCliente.id)
+        .gte('timestamp', f.tsStart)
+        .lte('timestamp', f.tsEnd), f, fv)
+        .order('timestamp', { ascending: false })
+        .limit(LIMITE_CAPTURAS);
       const { data, error } = await query;
       if (seq !== capturasSeq) return;
 
       if (error) {
         // Erro não é "nenhuma captura": o síndico leria que ninguém passou.
         // Mantém lastCapturas para o export não perder o último conjunto válido.
-        tbody.innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="loadCapturas({ resetPage: false })">Tentar de novo</button></div>';
+        tbody.innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></div>';
         pgEl.style.display = 'none';
-        return;
+        return false;
       }
       if (!data || data.length === 0) {
         const vazio = fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : 'Nenhuma captura encontrada';
         tbody.innerHTML = `<div class="table-empty">${vazio}</div>`;
         lastCapturas = [];
         pgEl.style.display = 'none';
-        return;
+        atualizarRodapeSemVel();
+        return true;
       }
 
       lastCapturas = data;  // sempre o conjunto completo (export usa isto)
@@ -3756,7 +3899,8 @@
       const thumbResults = await Promise.all(firstVis.map(c => getPhotoUrl(c.foto_path)));
       firstVis.forEach((c, i) => { allThumbUrls[c.foto_path] = thumbResults[i]; });
 
-      renderPage();
+      await renderPage();
+      return true;
     }
 
     const ROWS_PER_PAGE = 14;
@@ -3770,6 +3914,7 @@
       const data = capturasVisiveis();
       const tbody = document.getElementById('table-body');
       const pgEl = document.getElementById('table-pagination');
+      atualizarRodapeSemVel();
 
       if (!data || data.length === 0) {
         tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
@@ -3833,11 +3978,10 @@
         if (limiteAtingido) {
           // A consulta traz LIMITE_CAPTURAS; as sem velocidade podem estar
           // ocultas, então o total exibido pode ser menor que o limite.
-          const ocultas = (lastCapturas || []).length - data.length;
+          // As sem velocidade ocultas aparecem no rodapé (Mostrar/Ocultar)
           const aviso = document.createElement('span');
           aviso.className = 'pg-limite';
           aviso.textContent = ` · consulta limitada às ${LIMITE_CAPTURAS} passagens mais recentes`
-            + (ocultas > 0 ? ` (${ocultas} sem velocidade ocultas)` : '')
             + '; refine o período para ver mais';
           pgInfo.append(aviso);
         }
@@ -3871,25 +4015,47 @@
       renderPage();
     }
 
+    // Formulário → estado confirmado (só aqui o que foi digitado passa a valer)
+    function lerFiltrosDoFormulario() {
+      const val = (id) => document.getElementById(id).value;
+      return montarFiltros({
+        dataInicio: val('filter-date-start'), horaInicio: val('filter-time-start'),
+        dataFim: val('filter-date-end'), horaFim: val('filter-time-end'),
+        placa: val('filter-placa'), velMin: val('filter-vel-min'), velMax: val('filter-vel-max'),
+        cameraId: val('filter-camera'),
+        soAlertas: document.getElementById('filter-alertas-only').checked,
+        veiculo: lerFiltroVeiculo(),
+      }, todayLocalISO());
+    }
+
+    // Estado → formulário (Limpar e abertura do painel); veículo é limpo à parte
+    function escreverFiltrosNoFormulario(f) {
+      const definir = (id, v) => { document.getElementById(id).value = v; };
+      definir('filter-date-start', f.dataInicio);
+      definir('filter-time-start', f.horaInicio);
+      definir('filter-date-end', f.dataFim);
+      definir('filter-time-end', f.horaFim);
+      definir('filter-placa', f.placa);
+      definir('filter-vel-min', f.velMin > 0 ? f.velMin : '');
+      definir('filter-vel-max', f.velMax || '');
+      definir('filter-camera', f.cameraId);
+      document.getElementById('filter-alertas-only').checked = f.soAlertas;
+    }
+
+    function atualizarTitulosPeriodo() {
+      document.getElementById('titulo-tabela').textContent = `Passagens · ${getActiveFilters().label}`;
+    }
+
     function applyFilters() {
-      loadCapturas();
-      loadHourlyChart();
-      loadIndicators();
-      loadAlerts7d();
-      loadRanking();
+      filtrosAtivos = lerFiltrosDoFormulario();
+      // Mostra a placa como será buscada (ABC-1D23 → ABC1D23)
+      document.getElementById('filter-placa').value = filtrosAtivos.placa;
+      atualizarTitulosPeriodo();
+      recarregarPeriodo();
     }
 
     function clearFilters() {
-      const today = todayLocalISO();
-      document.getElementById('filter-date-start').value = today;
-      document.getElementById('filter-time-start').value = '00:00';
-      document.getElementById('filter-date-end').value = today;
-      document.getElementById('filter-time-end').value = '23:59';
-      document.getElementById('filter-placa').value = '';
-      document.getElementById('filter-vel-min').value = '';
-      document.getElementById('filter-vel-max').value = '';
-      document.getElementById('filter-camera').value = '';
-      document.getElementById('filter-alertas-only').checked = false;
+      escreverFiltrosNoFormulario(filtrosPadrao(todayLocalISO()));
       limparFiltrosVeiculo();
       applyFilters();
     }
@@ -4522,8 +4688,8 @@
       doc.text(`${currentCliente.local_via} | ${currentCliente.cidade_uf} | Limite: ${limite} km/h`, margin, y + 5);
 
       const dateStr = todayLocalISO();
-      const filterStart = document.getElementById('filter-date-start').value || dateStr;
-      const filterEnd = document.getElementById('filter-date-end').value || dateStr;
+      const filterStart = (filtrosAtivos && filtrosAtivos.dataInicio) || dateStr;
+      const filterEnd = (filtrosAtivos && filtrosAtivos.dataFim) || dateStr;
       doc.text(`Período: ${filterStart} a ${filterEnd} | Total de registros: ${lastCapturas.length}`, margin, y + 10);
 
       // --- Resumo ---
@@ -5862,27 +6028,55 @@
     }
 
     // ============================================
-    // HELPER: lê os filtros ativos do painel
+    // FILTROS CONFIRMADOS — fonte única de tabela, gráfico, indicadores,
+    // alertas e Top 10. O formulário só vale depois de "Filtrar".
     // ============================================
+    function rotuloPeriodo(f) {
+      const curto = (d, opts) => new Date(d + 'T12:00').toLocaleDateString('pt-BR', opts);
+      return f.dataInicio === f.dataFim
+        ? curto(f.dataInicio, { day: '2-digit', month: 'short' })
+        : `${curto(f.dataInicio, { day: '2-digit', month: '2-digit' })}–${curto(f.dataFim, { day: '2-digit', month: '2-digit' })}`;
+    }
+
     function getActiveFilters() {
-      const today = todayLocalISO();
-      const dateStart = document.getElementById('filter-date-start').value || today;
-      const dateEnd   = document.getElementById('filter-date-end').value   || today;
-      const timeStart = document.getElementById('filter-time-start').value || '00:00';
-      const timeEnd   = document.getElementById('filter-time-end').value   || '23:59';
-      const cameraId  = document.getElementById('filter-camera').value;
-      const placa     = document.getElementById('filter-placa').value.toUpperCase().trim();
-      const velMin    = parseInt(document.getElementById('filter-vel-min').value) || 0;
-      const velMax    = parseInt(document.getElementById('filter-vel-max').value) || 999;
-      const isSingleDay = dateStart === dateEnd;
-      const label = isSingleDay
-        ? new Date(dateStart + 'T12:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' })
-        : `${new Date(dateStart+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}–${new Date(dateEnd+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`;
-      return {
-        tsStart: dateStart + 'T' + timeStart + ':00',
-        tsEnd:   dateEnd   + 'T' + timeEnd   + ':59',
-        cameraId, placa, velMin, velMax, isSingleDay, label
-      };
+      const f = filtrosAtivos || filtrosPadrao(todayLocalISO());
+      const { tsInicio, tsFim, umDia } = intervaloDoPeriodo(f);
+      return { ...f, tsStart: tsInicio, tsEnd: tsFim, isSingleDay: umDia, label: rotuloPeriodo(f) };
+    }
+
+    // Aplica à consulta de capturas todos os filtros confirmados, menos o período
+    function aplicarFiltros(q, f, fv) {
+      let r = q;
+      if (f.cameraId) r = r.eq('camera_id', f.cameraId);
+      if (f.placa) r = r.ilike('placa', `%${f.placa}%`);
+      if (f.velMin > 0) r = r.gte('velocidade', f.velMin);
+      if (f.velMax) r = r.lte('velocidade', f.velMax);
+      if (f.soAlertas) r = r.gt('velocidade', currentCliente.limite_velocidade);
+      if (fv && fv.ativo && fv.placas && fv.placas.length) r = r.in('placa', fv.placas);
+      return r;
+    }
+
+    // Filtro de veículo sem placas (vazio, excesso, erro) = nenhum resultado
+    const semPlacasDoVeiculo = (fv) => fv.ativo && !(fv.placas && fv.placas.length);
+
+    // Consulta do período com todos os filtros; null quando o filtro de veículo zera tudo
+    async function consultaDoPeriodo(colunas) {
+      const f = getActiveFilters();
+      const fv = await placasDoFiltroVeiculo();
+      if (semPlacasDoVeiculo(fv)) return { f, q: null };
+      const q = sb.from('capturas').select(colunas)
+        .eq('cliente_id', currentCliente.id)
+        .gte('timestamp', f.tsStart)
+        .lte('timestamp', f.tsEnd);
+      return { f, q: aplicarFiltros(q, f, fv) };
+    }
+
+    // Erro de consulta sobe (o painel avisa "Falha ao atualizar"); não vira "sem dados"
+    async function linhasDe(q) {
+      if (!q) return [];
+      const { data, error } = await q;
+      if (error) throw new Error(error.message || 'falha na consulta');
+      return data || [];
     }
 
     // ============================================
@@ -5891,21 +6085,9 @@
     let graficoSeq = 0;
     async function loadHourlyChart() {
       const seq = ++graficoSeq;
-      const f = getActiveFilters();
-
-      let q = sb.from('capturas')
-        .select('timestamp')
-        .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd);
-      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
-      if (f.placa)    q = q.ilike('placa', `%${f.placa}%`);
-
-      // Mesmo filtro de veículo da tabela; lista vazia/erro/excesso = gráfico zerado
-      const fv = await placasDoFiltroVeiculo();
-      const semPlacas = fv.ativo && !(fv.placas && fv.placas.length);
-      if (fv.ativo && !semPlacas) q = q.in('placa', fv.placas);
-      const { data } = semPlacas ? { data: [] } : await q;
+      // Mesmos filtros da tabela; filtro de veículo sem placas = gráfico zerado
+      const { f, q } = await consultaDoPeriodo('timestamp');
+      const data = await linhasDe(q);
       if (seq !== graficoSeq) return; // resposta antiga não redesenha por cima
 
       if (f.isSingleDay) {
@@ -6134,20 +6316,9 @@
     // SIDEBAR INDICATORS — respeita filtros
     // ============================================
     async function loadIndicators() {
-      const f = getActiveFilters();
+      const { f, q } = await consultaDoPeriodo('placa, velocidade, timestamp, velocidade_invalida');
       document.getElementById('title-indicators').textContent = `Indicadores · ${f.label}`;
-
-      let q = sb.from('capturas')
-        .select('placa, velocidade, timestamp, velocidade_invalida')
-        .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd);
-      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
-      if (f.placa)    q = q.ilike('placa', `%${f.placa}%`);
-      if (f.velMin > 0)   q = q.gte('velocidade', f.velMin);
-      if (f.velMax < 999) q = q.lte('velocidade', f.velMax);
-
-      const { data } = await q;
+      const data = await linhasDe(q);
 
       if (!data || data.length === 0) {
         document.getElementById('ind-vel-media').textContent = '--';
@@ -6246,16 +6417,8 @@
         });
       }
 
-      let q = sb.from('capturas')
-        .select('velocidade, timestamp')
-        .eq('cliente_id', currentCliente.id)
-        .gt('velocidade', currentCliente.limite_velocidade)
-        .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd);
-      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
-      if (f.placa)    q = q.ilike('placa', `%${f.placa}%`);
-
-      const { data } = await q;
+      const { q } = await consultaDoPeriodo('velocidade, timestamp');
+      const data = await linhasDe(q && q.gt('velocidade', currentCliente.limite_velocidade));
       if (data) {
         data.forEach(c => {
           const ts = new Date(c.timestamp); ts.setHours(0,0,0,0);
@@ -6376,17 +6539,9 @@
     // RANKING — respeita filtros
     // ============================================
     async function loadRanking() {
-      const f = getActiveFilters();
+      const { f, q } = await consultaDoPeriodo('placa, velocidade');
       document.getElementById('title-ranking').textContent = `Top 10 Placas · ${f.label}`;
-
-      let q = sb.from('capturas')
-        .select('placa, velocidade')
-        .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd);
-      if (f.cameraId) q = q.eq('camera_id', f.cameraId);
-
-      const { data } = await q;
+      const data = await linhasDe(q);
 
       if (!data || data.length === 0) {
         document.getElementById('ranking-list').innerHTML =
