@@ -2777,7 +2777,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.5.2 &middot; 2026-10-05
+        v1.5.3 &middot; 2026-10-05
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2998,7 +2998,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.5.2
+      Protector Traffic Control &middot; v1.5.3
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -5845,7 +5845,7 @@
         return {
           'Placa': c.placa,
           'Velocidade (km/h)': c.velocidade,
-          'Radar': camerasMapFull[c.camera_id] || '---',
+          'Radar': camerasMapFull[c.camera_id] || '—',
           'Data': ts.toLocaleDateString('pt-BR'),
           'Hora': ts.toLocaleTimeString('pt-BR'),
           'Status': acimaDoLimite(c.velocidade, limite) ? 'ALERTA' : 'OK',
@@ -6003,14 +6003,14 @@
         const values = [
           c.placa,
           `${c.velocidade} km/h`,
-          camerasMapFull[c.camera_id] || '---',
+          camerasMapFull[c.camera_id] || '—',
           isAlert ? 'ALERTA' : 'OK',
           ts.toLocaleDateString('pt-BR'),
           ts.toLocaleTimeString('pt-BR'),
-          veiculo?.nome_morador || '---',
-          veiculo?.unidade || '---',
-          c.tipo_veiculo || '---',
-          c.cor_veiculo || '---',
+          veiculo?.nome_morador || '—',
+          veiculo?.unidade || '—',
+          c.tipo_veiculo || '—',
+          c.cor_veiculo || '—',
         ];
 
         let x = margin;
@@ -7042,8 +7042,8 @@
 
       doc.setFontSize(usaCorpoCustom ? 9 : 10);
       doc.setTextColor(0, 0, 0);
-      doc.text(veiculo?.nome_morador || '---', margin + col3 * 1.5, y, { align: 'center' });
-      doc.text(veiculo?.unidade || '---', margin + col3 * 2.5, y, { align: 'center' });
+      doc.text(veiculo?.nome_morador || '—', margin + col3 * 1.5, y, { align: 'center' });
+      doc.text(veiculo?.unidade || '—', margin + col3 * 2.5, y, { align: 'center' });
 
       // "Veículo: …" da base APIPLACAS (mesma regra do PDF do servidor),
       // só quando a placa foi consultada
