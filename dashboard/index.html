@@ -939,6 +939,16 @@
       color: var(--text-primary);
       cursor: pointer;
     }
+    .filters-row .filter-check input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .card-falha {
+      margin: 0 0 6px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .card-falha[hidden] { display: none; }
     .filters-row .filter-check input[type="checkbox"] {
       width: 18px;
       height: 18px;
@@ -2625,7 +2635,7 @@
             </div>
             <div class="campo-filtro">
               <label for="filter-placa">Placa</label>
-              <input type="text" id="filter-placa" placeholder="Placa" title="Ex.: ABC1D23 (aceita ABC-1D23)" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false">
+              <input type="text" id="filter-placa" placeholder="Placa" title="Ex.: ABC1D23 (aceita ABC-1D23)" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false">
             </div>
             <div class="campo-filtro">
               <label for="filter-vel-min">Vel. mín.</label>
@@ -2714,7 +2724,7 @@
             </div>
             <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
               <span id="sem-vel-texto"></span>
-              <button type="button" class="btn-link" id="btn-sem-vel" onclick="toggleSemVel(!mostrarSemVel())" title="Passagens sem velocidade (sem radar) ficam ocultas na tela por padrão. Nada é removido: continuam nos relatórios.">Mostrar</button>
+              <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="Passagens sem velocidade (sem radar) ficam ocultas na tela por padrão. Nada é removido: continuam nos relatórios.">Mostrar</button>
             </div>
           </div>
       </div>
@@ -2724,6 +2734,7 @@
         <!-- Indicadores Rapidos — 4 KPIs compactos em grid 2×2 -->
         <div class="sidebar-card" id="sidebar-indicators">
           <h3 id="title-indicators">Indicadores do Período</h3>
+          <p class="card-falha" id="falha-indicators" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
           <div class="sidebar-kpis">
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label">Vel. Média</div>
@@ -2759,6 +2770,7 @@
         <!-- Ranking Top 10 — ocupa todo o espaço restante -->
         <div class="sidebar-card sidebar-card-flex">
           <h3 id="title-ranking">Top 10 Placas</h3>
+          <p class="card-falha" id="falha-ranking" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
           <ul class="ranking-list" id="ranking-list">
             <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
           </ul>
@@ -2924,6 +2936,7 @@
     } = filtroVeiculoLib;
     const {
       montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo,
+      hojeLocal, virarDia,
     } = estadoFiltrosLib;
 
     // ============================================
@@ -2939,6 +2952,8 @@
     let filtrosAtivos = null;
     // Chave dos filtros cujo período já está na tela (null = recarregar)
     let chavePeriodoCarregado = null;
+    // Dia (local) em que os filtros foram confirmados: base da virada de meia-noite
+    let hojeDoPainel = null;
     let camerasList = [];
 
     // Exibição de capturas sem velocidade (sem radar) na tela do operador.
@@ -3253,6 +3268,7 @@
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
       filtrosAtivos = filtrosPadrao(todayLocalISO());
+      hojeDoPainel = todayLocalISO();
       chavePeriodoCarregado = null;
       escreverFiltrosNoFormulario(filtrosAtivos);
       limparFiltrosVeiculo();
@@ -3323,7 +3339,21 @@
 
     // KPIs, câmeras e cards ao vivo sempre; o período filtrado só se os filtros
     // mudaram ou se ele inclui agora (período todo no passado não muda).
+    // Meia-noite: o padrão "hoje" intocado (estado e formulário) passa ao novo dia
+    function virarDiaSeNecessario(agora) {
+      const hoje = hojeLocal(agora);
+      if (!filtrosAtivos || hoje === hojeDoPainel) return;
+      const novo = virarDia(filtrosAtivos, hojeDoPainel, agora);
+      const formIntocado = chaveFiltros(lerFiltrosDoFormulario()) === chaveFiltros(filtrosAtivos);
+      hojeDoPainel = hoje;
+      if (novo === filtrosAtivos || !formIntocado) return;
+      filtrosAtivos = novo;
+      escreverFiltrosNoFormulario(novo);
+      atualizarTitulosPeriodo();
+    }
+
     async function loadAll({ resetPage = true, forcarPeriodo = true } = {}) {
+      virarDiaSeNecessario(new Date());
       const dot = document.getElementById('polling-dot');
       const comPeriodo = forcarPeriodo
         || precisaRecarregarPeriodo(filtrosAtivos, chavePeriodoCarregado, new Date());
@@ -3876,6 +3906,8 @@
         // Mantém lastCapturas para o export não perder o último conjunto válido.
         tbody.innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></div>';
         pgEl.style.display = 'none';
+        // lastCapturas fica (export), mas o rodapé não pode oferecer "Mostrar" de uma tabela em erro
+        document.getElementById('rodape-sem-vel').hidden = true;
         return false;
       }
       if (!data || data.length === 0) {
@@ -4048,6 +4080,7 @@
 
     function applyFilters() {
       filtrosAtivos = lerFiltrosDoFormulario();
+      hojeDoPainel = todayLocalISO();
       // Mostra a placa como será buscada (ABC-1D23 → ABC1D23)
       document.getElementById('filter-placa').value = filtrosAtivos.placa;
       atualizarTitulosPeriodo();
@@ -4688,8 +4721,9 @@
       doc.text(`${currentCliente.local_via} | ${currentCliente.cidade_uf} | Limite: ${limite} km/h`, margin, y + 5);
 
       const dateStr = todayLocalISO();
-      const filterStart = (filtrosAtivos && filtrosAtivos.dataInicio) || dateStr;
-      const filterEnd = (filtrosAtivos && filtrosAtivos.dataFim) || dateStr;
+      const fp = getActiveFilters(); // mesmo período (e fuso) da tabela exportada
+      const filterStart = `${fp.dataInicio} ${fp.horaInicio}`;
+      const filterEnd = `${fp.dataFim} ${fp.horaFim}`;
       doc.text(`Período: ${filterStart} a ${filterEnd} | Total de registros: ${lastCapturas.length}`, margin, y + 10);
 
       // --- Resumo ---
@@ -6079,6 +6113,28 @@
       return data || [];
     }
 
+    async function consultaELinhas(colunas) {
+      const { f, q } = await consultaDoPeriodo(colunas);
+      return { f, data: await linhasDe(q) };
+    }
+
+    // Roda a consulta de um card. Erro: mostra "Não foi possível atualizar ·
+    // Tentar de novo" no próprio card e sobe o erro. Resposta antiga (ehAtual()
+    // falso) devolve null e não mexe na tela.
+    async function comFalhaNoCard(consultar, idFalha, ehAtual) {
+      let r;
+      try {
+        r = await consultar();
+      } catch (err) {
+        if (!ehAtual()) return null;
+        document.getElementById(idFalha).hidden = false;
+        throw err;
+      }
+      if (!ehAtual()) return null;
+      document.getElementById(idFalha).hidden = true;
+      return r;
+    }
+
     // ============================================
     // HOURLY CHART (Canvas) — respeita filtros
     // ============================================
@@ -6315,10 +6371,15 @@
     // ============================================
     // SIDEBAR INDICATORS — respeita filtros
     // ============================================
+    let indicadoresSeq = 0;
     async function loadIndicators() {
-      const { f, q } = await consultaDoPeriodo('placa, velocidade, timestamp, velocidade_invalida');
+      const seq = ++indicadoresSeq;
+      const r = await comFalhaNoCard(() => consultaELinhas('placa, velocidade, timestamp, velocidade_invalida'),
+        'falha-indicators', () => seq === indicadoresSeq);
+      if (!r) return; // resposta antiga: a mais nova desenha
+      const { f, data } = r;
+      // Título só muda com dados novos: em erro, dados velhos não ganham título novo
       document.getElementById('title-indicators').textContent = `Indicadores · ${f.label}`;
-      const data = await linhasDe(q);
 
       if (!data || data.length === 0) {
         document.getElementById('ind-vel-media').textContent = '--';
@@ -6393,7 +6454,9 @@
     // ============================================
     // ALERTS MINI CHART — respeita filtros
     // ============================================
+    let alertasSeq = 0;
     async function loadAlerts7d() {
+      const seq = ++alertasSeq;
       const f = getActiveFilters();
 
       const d0 = new Date(f.tsStart); d0.setHours(0,0,0,0);
@@ -6419,6 +6482,7 @@
 
       const { q } = await consultaDoPeriodo('velocidade, timestamp');
       const data = await linhasDe(q && q.gt('velocidade', currentCliente.limite_velocidade));
+      if (seq !== alertasSeq) return; // resposta antiga não redesenha por cima
       if (data) {
         data.forEach(c => {
           const ts = new Date(c.timestamp); ts.setHours(0,0,0,0);
@@ -6538,10 +6602,14 @@
     // ============================================
     // RANKING — respeita filtros
     // ============================================
+    let rankingSeq = 0;
     async function loadRanking() {
-      const { f, q } = await consultaDoPeriodo('placa, velocidade');
+      const seq = ++rankingSeq;
+      const r = await comFalhaNoCard(() => consultaELinhas('placa, velocidade'),
+        'falha-ranking', () => seq === rankingSeq);
+      if (!r) return; // resposta antiga: a mais nova desenha
+      const { f, data } = r;
       document.getElementById('title-ranking').textContent = `Top 10 Placas · ${f.label}`;
-      const data = await linhasDe(q);
 
       if (!data || data.length === 0) {
         document.getElementById('ranking-list').innerHTML =
