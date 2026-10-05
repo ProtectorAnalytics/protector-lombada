@@ -516,6 +516,7 @@
             <tr><td><strong>Limite Configurado</strong></td><td>Limite de velocidade configurado para o local</td></tr>
         </tbody>
     </table>
+    <p><strong>Importante:</strong> esses números ficam sob o título <strong>"Agora · hoje"</strong> e <strong>não mudam</strong> quando você usa os filtros. As fotos recentes também são sempre as de agora.</p>
 
     <hr>
 
@@ -551,6 +552,7 @@
         <li><strong>Câmera</strong> que registrou</li>
         <li><strong>Nome do morador</strong> (se o veículo estiver cadastrado)</li>
         <li><strong>Unidade</strong> (se cadastrado)</li>
+        <li><strong>Veículo</strong> (marca, modelo, cor e ano), consultado automaticamente pela placa</li>
     </ul>
 
     <h3>Cores da velocidade:</h3>
@@ -568,14 +570,60 @@
         <li>Com a aba do navegador em segundo plano, o painel pausa as consultas e atualiza assim que você volta.</li>
     </ul>
 
-    <h3>Filtros e tabela de capturas</h3>
+    <h3>Filtros: como escolher o que aparece</h3>
+    <p>Logo abaixo das últimas capturas fica a <strong>barra de filtros</strong>, toda em uma linha. Os filtros <strong>aplicam sozinhos</strong>, assim que você escolhe: não existe mais botão "Filtrar" nem "Limpar".</p>
     <ul>
-        <li>Preencha os filtros e aperte <strong>Enter</strong> ou clique em <strong>"Filtrar"</strong>.</li>
-        <li><strong>"Só alertas"</strong> aplica na hora, sem precisar clicar em "Filtrar".</li>
-        <li><strong>"Limpar"</strong> remove os filtros e atualiza tabela, gráfico, indicadores e ranking.</li>
-        <li>A tabela mostra até as <strong>300 capturas mais recentes</strong> do período. Quando esse limite é atingido, o rodapé avisa "exibindo as 300 mais recentes; refine o período".</li>
-        <li><strong>"Exportar"</strong> oferece Excel (.xlsx) ou PDF. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
+        <li><strong>Botão de período:</strong> mostra o período atual (começa em "Hoje"). Ao clicar, aparecem os atalhos <strong>Hoje</strong>, <strong>Ontem</strong> e <strong>Últimos 7 dias</strong>, e a opção <strong>Personalizado</strong>, onde você escolhe data e hora de início e de fim.</li>
+        <li><strong>Busca "Placa, modelo ou marca":</strong> um único campo. Ao digitar 2 letras ou mais, aparecem sugestões separadas por tipo (placas, modelos e marcas). Escolha uma sugestão ou aperte <strong>Enter</strong>.</li>
+        <li><strong>Seletor de câmera:</strong> mostra só as passagens de uma câmera ("Todas as câmeras" volta ao normal).</li>
+        <li><strong>"Todas | Acima do limite":</strong> escolha "Acima do limite" para ver só os veículos que passaram acima da velocidade permitida.</li>
+        <li><strong>"Mais filtros":</strong> abre um quadro com velocidade mínima e máxima, marca, cor, ano (de/até) e modelo. Quando há filtros escolhidos, aparece ao lado do botão um <strong>número</strong> com a quantidade de filtros ativos.</li>
     </ul>
+
+    <h3>Perguntas prontas</h3>
+    <p>Acima da barra ficam atalhos para as consultas mais comuns, com um toque: <strong>Hoje</strong>, <strong>Ontem</strong>, <strong>Acima do limite hoje</strong>, <strong>Últimos 7 dias</strong> e <strong>Não cadastrados</strong> (veículos que ainda não estão no cadastro de moradores). Aviso: "Não cadastrados" considera as passagens que estão carregadas na tela (até 300).</p>
+
+    <h3>Etiquetas dos filtros ativos</h3>
+    <ul>
+        <li>Cada filtro escolhido vira uma <strong>etiqueta</strong> abaixo da barra. Clique no <strong>✕</strong> da etiqueta para tirar só aquele filtro.</li>
+        <li>Para voltar ao padrão de uma vez, clique em <strong>"Limpar tudo"</strong>.</li>
+    </ul>
+
+    <h3>Clique para filtrar</h3>
+    <p>Você também pode filtrar clicando direto no que vê na tela: na <strong>placa</strong>, na <strong>câmera</strong>, no aviso <strong>"ALERTA"</strong> ou no <strong>veículo</strong> (marca e modelo). O painel aplica aquele filtro na hora.</p>
+
+    <h3>O que os filtros mudam (e o que não muda)</h3>
+    <ul>
+        <li>Os filtros valem para <strong>tudo junto</strong>: a lista de passagens, o gráfico, os indicadores e o Top 10 de placas.</li>
+        <li>Os números do topo e as fotos recentes ficam sob o título <strong>"Agora · hoje"</strong> e <strong>não mudam</strong> com os filtros: mostram sempre o movimento de hoje, ao vivo.</li>
+        <li>"Hoje" é o <strong>dia inteiro</strong>, da meia-noite até agora (no horário local).</li>
+    </ul>
+
+    <h3>Guardar ou enviar o filtro por link</h3>
+    <p>O filtro escolhido fica gravado no <strong>endereço da página</strong>. Por isso, se você recarregar a página, o mesmo filtro continua. E você pode <strong>copiar o endereço e enviar para a administração</strong>: quem abrir o link (com seu acesso) verá exatamente a mesma consulta.</p>
+
+    <h3>Filtros no celular</h3>
+    <p>No celular, o botão <strong>"Filtros"</strong> abre um painel que sobe da parte de baixo da tela, com a câmera, "Todas | Acima do limite" e os demais campos. Ao terminar, toque em <strong>"Ver N passagens"</strong> (o N é o número de resultados).</p>
+
+    <h3>Lista de passagens</h3>
+    <ul>
+        <li>A lista mostra até as <strong>300 passagens mais recentes</strong> do período. Quando esse limite é atingido, o rodapé avisa "exibindo as 300 mais recentes; refine o período".</li>
+        <li>Passagens <strong>sem velocidade</strong> (sem leitura do radar) ficam escondidas. No rodapé aparece o link <strong>"N passagens sem velocidade ocultas · Mostrar"</strong>; clique para vê-las (e em "Ocultar" para esconder de novo). Nada é apagado: elas continuam nos relatórios.</li>
+        <li><strong>"Exportar"</strong> fica junto da lista e oferece Excel (.xlsx) ou PDF. O Excel traz também Marca, Modelo, Cor (cadastro) e Ano. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
+    </ul>
+
+    <h3>Dados do veículo (marca, modelo, cor e ano)</h3>
+    <p>Cada placa nova que passa pela lombada é <strong>consultada automaticamente</strong>, e o painel mostra a marca, o modelo, a cor e o ano do carro:</p>
+    <ul>
+        <li>na lista, na coluna <strong>"Veículo"</strong>;</li>
+        <li>numa linha logo abaixo de cada foto;</li>
+        <li>no quadro <strong>"Veículo"</strong>, dentro do detalhe da passagem;</li>
+        <li>na notificação em PDF, na linha <strong>"Veículo: …"</strong>.</li>
+    </ul>
+    <p>Enquanto a consulta acontece, aparece <strong>"consultando…"</strong>. Quando os dados da placa lida não combinam bem com o carro da foto, aparece o aviso <strong>"verificar leitura"</strong>. Nesse caso, confira a foto e escolha: <strong>"É a mesma placa"</strong> (a leitura está certa) ou <strong>"É outro carro"</strong> (a placa foi lida errado).</p>
+
+    <h3>Cadastrar o morador direto da passagem</h3>
+    <p>Ao abrir os detalhes de uma passagem de um veículo ainda sem cadastro (marcado em cinza como <strong>"Não cadastrado"</strong>), você pode cadastrar o morador ali mesmo. O formulário já vem com a <strong>marca e a cor preenchidas</strong>; basta informar o nome e a unidade.</p>
 
     <h3>Detalhes da captura e foto ampliada</h3>
     <ul>
@@ -825,7 +873,7 @@
     <hr>
 
     <p style="text-align:center; color:var(--text-muted); font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.2.0 | Setembro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.4.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 
