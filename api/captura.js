@@ -31,7 +31,10 @@ try {
     api: criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }),
     validador: criarValidador({ contarPassagens: repoVB.contarPassagens }),
   });
-} catch { /* APIPLACAS_TOKEN ausente */ }
+} catch (e) {
+  // Sem token = silêncio esperado; com token, avisa (e.message nunca traz o token).
+  if (process.env.APIPLACAS_TOKEN) console.warn('base de veículos desligada:', e.message);
+}
 
 // Desabilitar body parser do Vercel para lidar com multipart
 module.exports.config = {
@@ -404,7 +407,7 @@ async function processarAposResposta({
   } catch { /* não-crítico */ }
 
   // 2b. Base de veículos (APIPLACAS). Antes da notificação para o PDF já sair
-  //     com modelo e cor. aoPassar() nunca lança e tem timeout de 3 s.
+  //     com modelo e cor. aoPassar() nunca lança; o limite de 3 s é só da chamada HTTP à APIPLACAS.
   const veiculoBase = veiculosBase ? await veiculosBase.aoPassar({ placa, clienteId: cliente.id }) : null;
 
   // 3. Notificação de excesso de velocidade (PDF + e-mail).
