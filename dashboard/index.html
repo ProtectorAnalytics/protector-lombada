@@ -1050,6 +1050,9 @@
     @media (max-width: 600px) {
       .visoes { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 0 2px; }
       .visoes::-webkit-scrollbar { display: none; }
+      .filtros-topo { flex-wrap: wrap; }
+      .filtros-topo .visoes { order: 3; flex-basis: 100%; }
+      .agora-cabecalho .cameras-status { order: 3; flex-basis: 100%; }
       .visao { min-height: 36px; flex-shrink: 0; }
       .barra-filtros { flex-wrap: nowrap; padding: 6px; gap: 6px; }
       .barra-btn, .busca-wrap input { min-height: 44px; }
@@ -1124,15 +1127,21 @@
       outline-offset: 2px;
     }
 
-    /* Topo da tabela: período ativo + Exportar (secundário, exporta a tabela) */
-    .tabela-topo {
+    /* Linha 1 dos filtros: título da lista (período ativo) · perguntas prontas · Exportar */
+    .filtros-topo {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px 12px;
+      min-width: 0;
     }
+    .filtros-topo .visoes { flex: 1 1 auto; min-width: 0; }
+    .filtros-topo .export-wrap { margin-left: auto; flex-shrink: 0; }
     .tabela-titulo {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       margin: 0;
       font-size: 0.875rem;
       font-weight: 600;
@@ -1157,17 +1166,19 @@
     }
     .btn-secundario:hover { background: var(--bg-input); border-color: var(--text-secondary); }
 
-    /* Rodapé da tabela: "N passagens sem velocidade ocultas · Mostrar" */
+    /* Na barra de baixo, depois de "1-7 de 111": "N passagens sem velocidade ocultas · Mostrar" */
     .rodape-sem-vel {
       display: flex;
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
-      padding: 4px 14px;
-      border-top: 1px solid var(--border);
       font-size: 0.75rem;
       color: var(--text-secondary);
     }
+    .table-pagination { gap: 6px 12px; flex-wrap: wrap; }
+    .table-pagination .pg-esq { display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; min-width: 0; }
+    .table-pagination.sem-paginas .pg-info,
+    .table-pagination.sem-paginas .pg-controls { display: none; }
     .rodape-sem-vel[hidden] { display: none; }
     .btn-link {
       min-height: 36px;
@@ -2233,6 +2244,75 @@
       .btn-pdf { width: 100%; }
     }
 
+    /* ===== Lista dinâmica: "Agora" adaptável e recolhível, linha baixa ===== */
+    .agora-cabecalho { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; }
+    .agora-cabecalho .secao-titulo { flex: none; }
+    .agora-cabecalho .cameras-status { flex: 1 1 auto; min-width: 0; }
+    .btn-recolher { font-size: 0.75rem; padding: 0 2px; margin-left: auto; }
+    .left-panel.agora-recolhido #recent-cards,
+    .left-panel.agora-recolhido #cameras-status { display: none; }
+
+    /* Pouca altura (monitor comum, zoom 100%): a grade 3×2 vira uma faixa de
+       6 cartões com foto baixa; placa e velocidade continuam legíveis.
+       Calibrado medindo: até 1100 px de altura a grade alta deixava a lista
+       com 0–6 linhas. */
+    @media (min-width: 901px) and (max-height: 1100px) {
+      /* altura do cartão já reservada no "Carregando…": a lista não muda de tamanho ao chegar a foto */
+      .recent-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; min-height: calc(76px + 2.5rem + 2px); }
+      .recent-card { --rc-info-h: 2.5rem; }
+      .recent-card .rc-thumb,
+      .recent-card .rc-no-photo { height: 76px; }
+      .recent-card::before { height: 46px; }
+      .recent-card .rc-info { padding: 0 8px; gap: 1px; }
+      .recent-card .rc-placa { font-size: 0.8125rem; padding: 3px 7px; bottom: calc(var(--rc-info-h) + 4px); left: 6px; }
+      .recent-card .dd.rc-placa { padding: 3px 7px; }
+      .recent-card .rc-vel { font-size: 0.875rem; padding: 3px 5px; top: 6px; right: 5px; }
+      .recent-card .rc-vel > span { font-size: 0.6875rem !important; } /* "km/h" (estilo inline) */
+      .recent-card .rc-badge, .recent-card .dd.rc-badge { font-size: 0.5625rem; padding: 2px 4px; top: 6px; left: 5px; }
+      /* 4 números do topo mais baixos; Passagens e Alertas seguem maiores */
+      .stats-row { gap: 6px; }
+      .stat-card { padding: 5px 12px 6px; gap: 0; border-radius: 10px; }
+      .stat-card .label, .stat-card .unit { font-size: 0.75rem; }
+      .stat-card .value { font-size: 1.25rem; }
+      .stat-card.destaque .value { font-size: 1.5rem; }
+      .table-header { padding-top: 7px; padding-bottom: 7px; }
+      .table-pagination { padding-top: 5px; padding-bottom: 5px; }
+    }
+    /* Mouse: Exportar e "Mostrar" na altura dos chips/paginação (toque segue com 44 px) */
+    @media (min-width: 601px) and (pointer: fine) {
+      .filtros-topo .btn-secundario { min-height: 30px; padding: 3px 12px; }
+      .table-pagination .btn-link, .btn-recolher { min-height: 24px; }
+    }
+    /* Largura média: com 6 colunas o selo e a velocidade se sobrepõem abaixo
+       de ~1360 px (medido: -8 px em 1280); a partir de 1360 sobram ~9 px
+       mesmo com "▲ 105 km/h". Abaixo disso ficam os 3 mais recentes, com a
+       mesma foto baixa */
+    @media (min-width: 901px) and (max-width: 1359px) and (max-height: 1100px) {
+      .recent-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .recent-cards > .recent-card:nth-child(n+4) { display: none; }
+    }
+
+    /* Desktop: linha de 38 px, veículo e morador numa linha só com reticências */
+    @media (min-width: 601px) {
+      .table-row { height: 38px; padding-top: 0; padding-bottom: 0; box-sizing: border-box; }
+      .table-row .row-thumb, .table-row .row-no-thumb { height: 26px; }
+      .table-row .veiculo-info, .table-row .morador-info {
+        display: flex; align-items: baseline; gap: 6px; overflow: hidden; white-space: nowrap;
+      }
+      .table-row .veiculo-info > *, .table-row .morador-info > * { min-width: 0; flex: 0 1 auto; }
+      .table-row .veiculo-info > .vb-linha:not(:first-child),
+      .table-row .morador-info > .morador-sub { flex: 1 1 0; }
+    }
+    /* Toque: a linha não fica abaixo de 44 px (alvos dos dados clicáveis) */
+    @media (pointer: coarse) {
+      .table-row { height: auto; min-height: 44px; }
+    }
+    /* Lista ficaria com menos de 5 linhas: a página rola e a lista garante 5 */
+    .main-layout.lista-rolante { height: auto; overflow: visible; }
+    .main-layout.lista-rolante .left-panel { overflow: visible; align-self: start; }
+    .main-layout.lista-rolante .sidebar { height: auto; overflow: visible; align-self: start; }
+    .main-layout.lista-rolante .table-body { flex: none; overflow: visible; min-height: calc(5 * 38px); }
+
     /* ===== UX / ACESSIBILIDADE ===== */
 
     /* Focus ring visível para navegação por teclado */
@@ -2616,6 +2696,7 @@
   <script src="/js/filtro-veiculo.js"></script>
   <script src="/js/estado-filtros.js"></script>
   <script src="/js/barra-filtros.js"></script>
+  <script src="/js/lista-dinamica.js"></script>
 </head>
 <body>
 
@@ -2657,7 +2738,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.4.0 &middot; 2026-10-05
+        v1.5.0 &middot; 2026-10-05
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2698,7 +2779,12 @@
     <div class="main-layout">
       <!-- LEFT: stats → câmeras → cards → filtros → tabela (fluxo contínuo) -->
       <div class="left-panel">
-        <h2 class="secao-titulo" id="titulo-ao-vivo">Agora · hoje</h2>
+        <div class="agora-cabecalho">
+          <h2 class="secao-titulo" id="titulo-ao-vivo">Agora · hoje</h2>
+          <!-- Status das câmeras: na linha do título, junto do "Agora" -->
+          <div id="cameras-status" class="cameras-status"></div>
+          <button type="button" class="btn-link btn-recolher" id="btn-recolher-agora" aria-expanded="true" aria-controls="recent-cards cameras-status" onclick="alternarAgora()">Recolher</button>
+        </div>
         <div class="stats-row">
           <div class="stat-card destaque">
             <div class="label">Passagens hoje</div>
@@ -2718,9 +2804,6 @@
           </div>
         </div>
 
-        <!-- Status das Cameras -->
-        <div id="cameras-status" class="cameras-status"></div>
-
         <!-- 6 Recent Cards -->
         <div class="recent-cards" id="recent-cards">
           <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>
@@ -2728,7 +2811,25 @@
 
         <!-- Filtros do período: tudo aplica sozinho e atualiza filtrosAtivos (estado único) -->
         <section class="filtros" id="filtros" aria-label="Filtros do período">
-          <div class="visoes" id="visoes" role="group" aria-label="Perguntas prontas"></div>
+          <!-- Linha 1: título da lista (período ativo) · perguntas prontas · Exportar (exporta a tabela) -->
+          <div class="filtros-topo">
+            <h2 class="tabela-titulo" id="titulo-tabela">Passagens</h2>
+            <div class="visoes" id="visoes" role="group" aria-label="Perguntas prontas"></div>
+            <div class="export-wrap">
+              <button type="button" class="btn-secundario" onclick="toggleExportMenu()" id="btn-exportar" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                Exportar
+              </button>
+              <div id="export-menu" class="export-menu">
+                <button type="button" onclick="exportExcel();closeExportMenu()">
+                  <span style="color:#16a34a;font-size:1rem" aria-hidden="true">&#9638;</span> Excel (.xlsx)
+                </button>
+                <button type="button" onclick="exportPDF();closeExportMenu()">
+                  <span style="color:var(--red);font-size:1rem" aria-hidden="true">&#9638;</span> PDF (.pdf)
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div class="barra-filtros" id="barra-filtros">
             <button type="button" class="barra-btn" id="btn-periodo" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-periodo">
@@ -2775,25 +2876,6 @@
           <p class="visualmente-oculto" id="anuncio-resultado" aria-live="polite"></p>
         </section>
 
-          <!-- Topo da tabela: período ativo + Exportar (exporta a tabela) -->
-          <div class="tabela-topo">
-            <h2 class="tabela-titulo" id="titulo-tabela">Passagens</h2>
-            <div class="export-wrap">
-              <button type="button" class="btn-secundario" onclick="toggleExportMenu()" id="btn-exportar" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-                Exportar
-              </button>
-              <div id="export-menu" class="export-menu">
-                <button type="button" onclick="exportExcel();closeExportMenu()">
-                  <span style="color:#16a34a;font-size:1rem" aria-hidden="true">&#9638;</span> Excel (.xlsx)
-                </button>
-                <button type="button" onclick="exportPDF();closeExportMenu()">
-                  <span style="color:var(--red);font-size:1rem" aria-hidden="true">&#9638;</span> PDF (.pdf)
-                </button>
-              </div>
-            </div>
-          </div>
-
           <!-- Table -->
           <div class="table-container">
             <div class="table-header">
@@ -2809,13 +2891,16 @@
             <div class="table-body" id="table-body">
               <div class="table-empty">Carregando...</div>
             </div>
-            <div class="table-pagination" id="table-pagination" style="display:none">
-              <span class="pg-info" id="pg-info"></span>
+            <!-- Barra de baixo: "1-7 de 111" · sem velocidade ocultas · páginas -->
+            <div class="table-pagination sem-paginas" id="table-pagination" style="display:none">
+              <div class="pg-esq">
+                <span class="pg-info" id="pg-info"></span>
+                <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
+                  <span id="sem-vel-texto"></span>
+                  <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="Passagens sem velocidade (sem radar) ficam ocultas na tela por padrão. Nada é removido: continuam nos relatórios.">Mostrar</button>
+                </div>
+              </div>
               <div class="pg-controls" id="pg-controls"></div>
-            </div>
-            <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
-              <span id="sem-vel-texto"></span>
-              <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="Passagens sem velocidade (sem radar) ficam ocultas na tela por padrão. Nada é removido: continuam nos relatórios.">Mostrar</button>
             </div>
           </div>
       </div>
@@ -2874,7 +2959,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.4.0
+      Protector Traffic Control &middot; v1.5.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3082,6 +3167,7 @@
       rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
       conjuntoCadastradas, filtrarNaoCadastradas,
     } = barraFiltrosLib;
+    const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina } = listaDinamicaLib;
 
     // ============================================
     // CONFIG
@@ -3128,6 +3214,17 @@
         ? `${semVel} ${uma ? 'passagem sem velocidade aparece' : 'passagens sem velocidade aparecem'} na lista ·`
         : `${semVel} ${uma ? 'passagem sem velocidade oculta' : 'passagens sem velocidade ocultas'} ·`;
       document.getElementById('btn-sem-vel').textContent = mostrando ? 'Ocultar' : 'Mostrar';
+      sincronizarBarraRodape();
+    }
+    // A barra de baixo aparece se houver páginas ou o aviso de sem velocidade
+    function mostrarPaginas(sim) {
+      document.getElementById('table-pagination').classList.toggle('sem-paginas', !sim);
+      sincronizarBarraRodape();
+    }
+    function sincronizarBarraRodape() {
+      const pg = document.getElementById('table-pagination');
+      const visivel = !pg.classList.contains('sem-paginas') || !document.getElementById('rodape-sem-vel').hidden;
+      pg.style.display = visivel ? 'flex' : 'none';
     }
     let camerasMap = {}; // camera_id -> nome_exibicao (curto, p/ dashboard)
     let camerasMapFull = {}; // camera_id -> nome (completo, p/ relatórios)
@@ -3138,6 +3235,8 @@
     let placasCadastradas = new Set();
     // Estado do cadastro de moradores: 'carregando' | 'ok' | 'erro'
     let cadastro = { estado: 'carregando' };
+    // Cartões "Agora" esperando dados (limpeza do painel e reabrir as fotos)
+    const CARREGANDO_CARTOES_HTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>';
     let recentCardsData = []; // capturas dos cards (o clique abre pelo índice, sem JSON no HTML)
     let tabelaPaginaData = [];  // idem para as linhas da tabela
     let lastCapturas = []; // store last filtered captures for export
@@ -3421,6 +3520,7 @@
     // tela já desenhada. Respostas em voo são invalidadas (sessão e seqs).
     function esquecerDadosDoCliente() {
       sessaoSeq++;
+      clearTimeout(timerLinhas); // ajuste de linhas pendente não desenha o condomínio anterior
       capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recargaSeq++; renderSeq++;
       camerasList = [];
       camerasMap = {};
@@ -3459,9 +3559,10 @@
       const texto = (id, v) => { document.getElementById(id).textContent = v; };
       fecharJanelasDoPainel();
       html('table-body', '<div class="table-empty">Carregando...</div>');
-      document.getElementById('table-pagination').style.display = 'none';
+      tabelaEmErro = false;
       document.getElementById('rodape-sem-vel').hidden = true;
-      html('recent-cards', '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>');
+      mostrarPaginas(false);
+      html('recent-cards', CARREGANDO_CARTOES_HTML);
       html('cameras-status', '');
       html('ranking-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
       ['stat-total', 'stat-alertas', 'stat-maxvel', 'ind-vel-media', 'ind-conformidade', 'ind-hora-pico', 'ind-reincidentes']
@@ -3952,6 +4053,7 @@
     // repetidas vezes quando passa várias vezes em sequência.
     // ============================================
     async function loadRecentCards() {
+      if (agoraRecolhido()) return; // recolhido: sem consulta nem fotos (volta ao mostrar)
       const sessao = marcaDaSessao();
       const { data: rawData, error } = await sb.from('capturas')
         .select('*')
@@ -4126,6 +4228,7 @@
     }
 
     async function loadCamerasStatus() {
+      if (agoraRecolhido()) return; // recolhido junto com os cartões
       const sessao = marcaDaSessao();
       try {
         const { data: cameras, error } = await sb.from('cameras')
@@ -4166,7 +4269,6 @@
       const seq = ++capturasSeq;
       const f = getActiveFilters();
       const tbody = document.getElementById('table-body');
-      const pgEl = document.getElementById('table-pagination');
 
       // Filtro por dados do veículo: vira lista de placas (sem lista, sem consulta)
       const fv = await placasDoFiltroVeiculo();
@@ -4178,9 +4280,10 @@
         if (motivo) {
           avisoFiltroVeiculo(fv.placas ? '' : motivo);
           tbody.innerHTML = `<div class="table-empty"${fv.erro ? ' role="alert"' : ''}>${esc(motivo)}</div>`;
+          tabelaEmErro = false; // lista vazia: nada velho para redesenhar
           lastCapturas = []; // export não pode sair sem o filtro de veículo
           limiteAtingido = false;
-          pgEl.style.display = 'none';
+          mostrarPaginas(false);
           atualizarRodapeSemVel();
           return !fv.erro;
         }
@@ -4203,22 +4306,25 @@
         // Erro não é "nenhuma captura": o síndico leria que ninguém passou.
         // Mantém lastCapturas para o export não perder o último conjunto válido.
         tbody.innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></div>';
-        pgEl.style.display = 'none';
+        tabelaEmErro = true; // o ajuste de linhas não troca este erro por dados velhos
         // lastCapturas fica (export), mas o rodapé não pode oferecer "Mostrar" de uma tabela em erro
         document.getElementById('rodape-sem-vel').hidden = true;
+        mostrarPaginas(false);
         return false;
       }
       if (!data || data.length === 0) {
         const vazio = fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : 'Nenhuma captura encontrada';
         tbody.innerHTML = `<div class="table-empty">${vazio}</div>`;
+        tabelaEmErro = false;
         lastCapturas = [];
         limiteAtingido = false;
-        pgEl.style.display = 'none';
+        mostrarPaginas(false);
         atualizarRodapeSemVel();
         return true;
       }
 
       lastCapturas = data;  // sempre o conjunto completo (export usa isto)
+      tabelaEmErro = false;
       limiteAtingido = brutos.length === LIMITE_CAPTURAS;
       allThumbUrls = {};
       // renderPage() faz o clamp caso o total de páginas tenha diminuído
@@ -4236,7 +4342,23 @@
       return true;
     }
 
-    const ROWS_PER_PAGE = 14;
+    // Linhas por página = o que cabe na altura útil da lista (5 a 50)
+    const LINHAS_MIN = 5;
+    const LINHAS_MAX = 50;
+    const ALTURA_LINHA_PADRAO = 38;       // desktop com mouse (CSS .table-row)
+    const ALTURA_LINHA_TOQUE = 44;        // toque: min-height da linha
+    const TOQUE_MQ = window.matchMedia('(pointer: coarse)');
+    const LINHAS_ESTREITO = 14;           // ≤ 900 px (página rola): como antes
+    const ALTURA_PAGINACAO_PADRAO = 37;
+    const FOLGA_ROLANTE_PX = 24;          // respiro abaixo da lista quando a página rola
+    const DEBOUNCE_LINHAS_MS = 150;
+    const ESTREITO_MQ = window.matchMedia('(max-width: 900px)');
+    let linhasPorPagina = 14;
+    let alturaPaginacao = ALTURA_PAGINACAO_PADRAO;
+    let timerLinhas = null;
+    // Tabela mostrando "Não foi possível carregar…": o ajuste só recalcula o
+    // número de linhas, sem redesenhar (senão o erro vira dados velhos)
+    let tabelaEmErro = false;
     // Consulta traz no máximo isto; ao bater o teto a tela avisa que não é o total
     const LIMITE_CAPTURAS = 300;
     let limiteAtingido = false;
@@ -4253,19 +4375,19 @@
       const atual = () => minha === renderSeq && sessaoValida(sessao);
       const data = capturasVisiveis();
       const tbody = document.getElementById('table-body');
-      const pgEl = document.getElementById('table-pagination');
       atualizarRodapeSemVel();
 
       if (!data || data.length === 0) {
         tbody.innerHTML = '<div class="table-empty">Nenhuma captura encontrada</div>';
-        pgEl.style.display = 'none';
+        mostrarPaginas(false);
         return;
       }
 
-      const totalPages = Math.ceil(data.length / ROWS_PER_PAGE);
+      ajustarLinhasPorPagina(data.length);
+      const totalPages = Math.ceil(data.length / linhasPorPagina);
       if (currentPage > totalPages) currentPage = totalPages;
-      const start = (currentPage - 1) * ROWS_PER_PAGE;
-      const end = Math.min(start + ROWS_PER_PAGE, data.length);
+      const start = (currentPage - 1) * linhasPorPagina;
+      const end = Math.min(start + linhasPorPagina, data.length);
       const pageData = data.slice(start, end);
       const limite = currentCliente.limite_velocidade;
 
@@ -4319,7 +4441,7 @@
 
       // Pagination controls
       if (totalPages > 1) {
-        pgEl.style.display = 'flex';
+        mostrarPaginas(true);
         const pgInfo = document.getElementById('pg-info');
         pgInfo.textContent = `${start + 1}-${end} de ${data.length} registros`;
         if (limiteAtingido) {
@@ -4351,16 +4473,120 @@
 
         document.getElementById('pg-controls').innerHTML = btns;
       } else {
-        pgEl.style.display = 'none';
+        mostrarPaginas(false);
       }
     }
 
     function goToPage(page) {
-      const totalPages = Math.ceil(capturasVisiveis().length / ROWS_PER_PAGE);
+      const totalPages = Math.ceil(capturasVisiveis().length / linhasPorPagina);
       if (page < 1 || page > totalPages) return;
       currentPage = page;
       renderPage();
     }
+
+    // Altura de uma linha da lista: a real (CSS muda com tela e toque) ou a padrão
+    function alturaLinhaAtual() {
+      const linha = document.querySelector('#table-body .table-row');
+      const h = linha ? linha.getBoundingClientRect().height : 0;
+      if (h > 0) return h;
+      return TOQUE_MQ.matches ? ALTURA_LINHA_TOQUE : ALTURA_LINHA_PADRAO;
+    }
+
+    // Altura disponível para as linhas SEM a barra de baixo. Com a altura
+    // travada é a do #table-body; na página que rola (lista mínima) é a da
+    // janela menos o que fica em volta da lista (cabeçalho e respiro).
+    function alturaUtilSemPaginacao(travada) {
+      const tbody = document.getElementById('table-body');
+      const pg = document.getElementById('table-pagination');
+      const pgVisivel = pg.style.display !== 'none';
+      if (pgVisivel) alturaPaginacao = pg.offsetHeight || alturaPaginacao;
+      const pgAtual = pgVisivel ? pg.offsetHeight : 0;
+      if (travada) return tbody.clientHeight + pgAtual;
+      const container = tbody.closest('.table-container');
+      const emVolta = container.offsetHeight - tbody.offsetHeight - pgAtual + FOLGA_ROLANTE_PX;
+      return window.innerHeight - emVolta;
+    }
+
+    // Quantas linhas cabem; liga/desliga a página rolante (mínimo de 5 linhas)
+    function calcularLinhasPorPagina(total) {
+      const layout = document.querySelector('.main-layout');
+      const linha = alturaLinhaAtual();
+      // O aviso de sem velocidade mantém a barra de baixo mesmo com uma página
+      const barraFixa = !document.getElementById('rodape-sem-vel').hidden;
+      const cabem = (altura) => {
+        const semPg = linhasQueCabem(altura, linha, 0, LINHAS_MAX);
+        if (!barraFixa && total <= semPg) return semPg; // uma página só: sem barra
+        return linhasQueCabem(altura - alturaPaginacao, linha, 0, LINHAS_MAX);
+      };
+      if (!ESTREITO_MQ.matches) {
+        // Mede como ficaria travada (sem pintar no meio: leitura síncrona),
+        // sem a altura que a recarga reserva no #table-body
+        const tbody = document.getElementById('table-body');
+        const reservada = tbody.style.minHeight;
+        tbody.style.minHeight = '';
+        try {
+          layout.classList.remove('lista-rolante');
+          const n = cabem(alturaUtilSemPaginacao(true));
+          if (n >= LINHAS_MIN) return n;
+          layout.classList.add('lista-rolante');
+          return Math.max(LINHAS_MIN, cabem(alturaUtilSemPaginacao(false)));
+        } finally {
+          tbody.style.minHeight = reservada;
+        }
+      }
+      // ≤ 900 px a página já rola com a lista inteira: tamanho fixo de antes
+      layout.classList.remove('lista-rolante');
+      return LINHAS_ESTREITO;
+    }
+
+    // Muda o tamanho da página mantendo a primeira passagem visível na tela
+    function ajustarLinhasPorPagina(total) {
+      const novo = calcularLinhasPorPagina(total);
+      if (novo === linhasPorPagina) return false;
+      const primeira = primeiroIndiceDaPagina(currentPage, linhasPorPagina);
+      linhasPorPagina = novo;
+      currentPage = paginaQueContem(primeira, novo);
+      return true;
+    }
+
+    function agendarAjusteLinhas() {
+      clearTimeout(timerLinhas);
+      timerLinhas = setTimeout(() => {
+        if (!painelAtivo) return;
+        const total = capturasVisiveis().length;
+        if (ajustarLinhasPorPagina(total) && total > 0 && !tabelaEmErro) renderPage();
+      }, DEBOUNCE_LINHAS_MS);
+    }
+    if (window.ResizeObserver) new ResizeObserver(agendarAjusteLinhas).observe(document.getElementById('table-body'));
+    window.addEventListener('resize', agendarAjusteLinhas);
+
+    // ---------- "Agora · hoje" recolhível (lembrado por computador)
+    // Fonte única em memória: lida do storage uma vez; sem storage funciona igual
+    const AGORA_RECOLHIDO_KEY = 'lombada_agora_recolhido';
+    let agoraRecolhidoMem = false;
+    try { agoraRecolhidoMem = localStorage.getItem(AGORA_RECOLHIDO_KEY) === '1'; } catch { /* sem storage */ }
+    function agoraRecolhido() {
+      return agoraRecolhidoMem;
+    }
+    function aplicarAgoraNaTela(recolhido) {
+      document.querySelector('.left-panel').classList.toggle('agora-recolhido', recolhido);
+      const btn = document.getElementById('btn-recolher-agora');
+      btn.setAttribute('aria-expanded', recolhido ? 'false' : 'true');
+      btn.textContent = recolhido ? 'Mostrar fotos' : 'Recolher';
+    }
+    function alternarAgora() {
+      const recolher = !agoraRecolhidoMem;
+      agoraRecolhidoMem = recolher;
+      try { localStorage.setItem(AGORA_RECOLHIDO_KEY, recolher ? '1' : '0'); } catch { /* sem storage */ }
+      aplicarAgoraNaTela(recolher);
+      if (recolher || !painelAtivo) return;
+      // Reabriu: o que estava na tela pode ser velho (fotos com link vencido)
+      document.getElementById('recent-cards').innerHTML = CARREGANDO_CARTOES_HTML;
+      document.getElementById('cameras-status').innerHTML = '';
+      loadRecentCards();
+      loadCamerasStatus();
+    }
+    aplicarAgoraNaTela(agoraRecolhido());
 
     // ============================================
     // BARRA DE FILTROS — tudo aplica sozinho e muda filtrosAtivos (estado único)
@@ -4377,7 +4603,7 @@
     const MOVIMENTO_REDUZIDO_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
     let barraMontada = false;
     let recargaSeq = 0;
-    const REGIOES_RECARGA = '.tabela-topo, .table-container, .sidebar';
+    const REGIOES_RECARGA = '#titulo-tabela, .filtros-topo .export-wrap, .table-container, .sidebar';
 
     function atualizarTitulosPeriodo() {
       document.getElementById('titulo-tabela').textContent = `Passagens · ${getActiveFilters().label}`;
