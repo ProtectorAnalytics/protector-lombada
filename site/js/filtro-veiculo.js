@@ -13,8 +13,12 @@
   else root.filtroVeiculoLib = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   const ANO_MINIMO = 1950;
-  // Acima disto a URL do `.in('placa', …)` fica grande demais: pedir refinamento
-  const LIMITE_PLACAS_FILTRO = 800;
+  // Acima disto a URL do `.in('placa', …)` (vírgulas viram %2C) passa de ~8 KB
+  // no gateway: pedir refinamento. Conta grafias (placa e placa_antiga).
+  const LIMITE_PLACAS_FILTRO = 400;
+  // Páginas de leitura (max-rows do PostgREST) e teto de páginas por segurança
+  const TAMANHO_PAGINA = 1000;
+  const MAX_PAGINAS = 50;
 
   const CORES_HEX = Object.freeze({
     branco: '#f5f5f5', prata: '#c0c4c8', cinza: '#8a8f96', preto: '#1f2328',
@@ -83,6 +87,23 @@
     return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }
 
+  /**
+   * Lê todas as linhas página a página. buscarPagina(de, ate) devolve
+   * { data, error } (ex.: query.range(de, ate)). Erro lança: lista parcial
+   * esconderia marcas/cores sem aviso.
+   */
+  async function coletarPaginado(buscarPagina, maxPaginas = MAX_PAGINAS) {
+    let linhas = [];
+    for (let p = 0; p < maxPaginas; p++) {
+      const de = p * TAMANHO_PAGINA;
+      const { data, error } = await buscarPagina(de, de + TAMANHO_PAGINA - 1);
+      if (error || !data) throw new Error('falha ao ler página ' + p);
+      linhas = linhas.concat(data);
+      if (data.length < TAMANHO_PAGINA) break;
+    }
+    return linhas;
+  }
+
   /** "BRANCA" → "Branca". */
   function corExibicao(cor) {
     const s = texto(cor).toLowerCase();
@@ -97,7 +118,7 @@
 
   return {
     temFiltroVeiculo, placasParaFiltro, normalizarAno, termoModelo,
-    montarFiltroVeiculo, opcoesDistintas, corExibicao, corHex,
-    LIMITE_PLACAS_FILTRO, ANO_MINIMO,
+    montarFiltroVeiculo, opcoesDistintas, corExibicao, corHex, coletarPaginado,
+    LIMITE_PLACAS_FILTRO, TAMANHO_PAGINA, ANO_MINIMO,
   };
 });

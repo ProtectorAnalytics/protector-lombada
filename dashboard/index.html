@@ -696,7 +696,7 @@
       font-size: 0.6875rem; line-height: 1.35; color: var(--text-secondary);
     }
     .vb-linha .vb-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .vb-linha.vb-vazio { color: var(--text-muted); }
+    .vb-linha.vb-vazio { color: var(--text-secondary); }
     .vb-linha.vb-estado { color: var(--text-secondary); font-style: italic; }
     .vb-linha.vb-alerta { color: var(--orange); font-weight: 600; }
     .vb-cor {
@@ -905,7 +905,8 @@
     .filtros-veiculo label { display: block; margin-bottom: 2px; }
     .filters-row .filtros-veiculo input[type="text"] { width: 130px; }
     .filters-row .filtros-veiculo input[type="number"] { width: 72px; }
-    .fv-aviso { flex-basis: 100%; font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+    .fv-aviso { flex-basis: 100%; font-size: 0.75rem; color: var(--text-secondary); margin: 0; }
+    .fv-nota { flex-basis: 100%; font-size: 0.6875rem; color: var(--text-secondary); margin: 0; }
     .fv-aviso:empty { display: none; }
 
     .filters-row .filter-check {
@@ -985,7 +986,7 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 48px 82px 78px minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
+      grid-template-columns: 48px 82px 5.75rem minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
       gap: 8px;
       padding: 10px 14px;
       /* Cabeçalho discreto: a faixa azul sólida competia com os dados (hierarquia) */
@@ -1053,7 +1054,7 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 48px 82px 78px minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
+      grid-template-columns: 48px 82px 5.75rem minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
       gap: 8px;
       padding: 6px 14px;
       border-bottom: 1px solid var(--border);
@@ -1097,6 +1098,7 @@
       font-weight: 700;
       font-size: 0.9375rem;
       font-family: var(--font-mono);
+      white-space: nowrap;
     }
 
     .table-row .vel.green { color: var(--green); }
@@ -2001,26 +2003,26 @@
       .topbar-status { order: 5; flex-basis: 100%; justify-content: flex-start; }
       .topbar-logo { height: 26px; }
       .topbar-titulos { padding-left: 10px; }
-      /* Tabela compacta: linha 1 = Placa · Velocidade (▲ já marca o alerta) · Data/Hora;
-         linha 2 = Veículo na largura toda. Foto, Radar, Morador e Status ficam no
-         detalhe (toque na linha). */
+      /* Tabela compacta (2 linhas por passagem):
+         linha 1 = Foto · Placa · Velocidade · Status;
+         linha 2 = Veículo · Data/Hora. Radar e Morador ficam no detalhe. */
       .table-header, .table-row {
-        grid-template-columns: 4.75rem minmax(0, 1fr) auto;
-        grid-template-areas: "placa vel data" "veic veic veic";
+        grid-template-columns: 40px 4.5rem minmax(0, 1fr) auto;
+        grid-template-areas: "foto placa vel status" "foto veic veic data";
         column-gap: 8px; row-gap: 2px; padding-left: 10px; padding-right: 10px;
       }
-      .table-header { grid-template-areas: "placa vel data"; }
-      .table-header > div:nth-child(1), .table-row > div:nth-child(1),
+      .table-header { grid-template-areas: "foto placa vel status"; }
       .table-header > div:nth-child(4), .table-row > div:nth-child(4),
-      .table-header > div:nth-child(5),
-      .table-header > div:nth-child(7), .table-row > div:nth-child(7),
-      .table-header > div:nth-child(8), .table-row > div:nth-child(8) {
+      .table-header > div:nth-child(5), .table-header > div:nth-child(6),
+      .table-header > div:nth-child(7), .table-row > div:nth-child(7) {
         display: none;
       }
+      .table-header > div:nth-child(1), .table-row > div:nth-child(1) { grid-area: foto; }
       .table-header > div:nth-child(2), .table-row > div:nth-child(2) { grid-area: placa; }
       .table-header > div:nth-child(3), .table-row > div:nth-child(3) { grid-area: vel; }
       .table-row > div:nth-child(5) { grid-area: veic; }
-      .table-header > div:nth-child(6), .table-row > div:nth-child(6) { grid-area: data; text-align: right; }
+      .table-row > div:nth-child(6) { grid-area: data; text-align: right; align-self: start; }
+      .table-header > div:nth-child(8), .table-row > div:nth-child(8) { grid-area: status; text-align: right !important; white-space: nowrap; }
       .table-row .datetime { font-size: 0.75rem; }
       /* Mobile: font mínimo legível */
       body { font-size: 1rem; }
@@ -2592,13 +2594,14 @@
               </div>
               <div>
                 <label for="filter-ano-de">Ano de</label>
-                <input type="number" id="filter-ano-de" inputmode="numeric" min="1950" step="1" placeholder="1950">
+                <input type="number" id="filter-ano-de" inputmode="numeric" min="1950" step="1" placeholder="aaaa">
               </div>
               <div>
-                <label for="filter-ano-ate">até</label>
-                <input type="number" id="filter-ano-ate" inputmode="numeric" min="1950" step="1" placeholder="2027">
+                <label for="filter-ano-ate">Ano até</label>
+                <input type="number" id="filter-ano-ate" inputmode="numeric" min="1950" step="1" placeholder="aaaa">
               </div>
               <p class="fv-aviso" id="fv-aviso" role="status" aria-live="polite"></p>
+              <p class="fv-nota">Filtros de veículo valem para a lista e o gráfico.</p>
             </div>
           </form>
 
@@ -2825,7 +2828,7 @@
     const { estadoSelo } = seloVeiculoLib;
     const {
       temFiltroVeiculo, placasParaFiltro, montarFiltroVeiculo, opcoesDistintas,
-      corExibicao, corHex, LIMITE_PLACAS_FILTRO,
+      corExibicao, corHex, coletarPaginado, LIMITE_PLACAS_FILTRO,
     } = filtroVeiculoLib;
 
     // ============================================
@@ -3286,7 +3289,6 @@
         estado,
         marca: v.marca || '',
         nome: nomeVeiculo(v),
-        modelo: nomeVeiculo({ ...v, marca: null }),
         cor: corExibicao(v.cor || v.cor_normalizada),
         hex: corHex(v.cor_normalizada),
         ano: v.ano_modelo ? String(v.ano_modelo) : '',
@@ -3360,6 +3362,7 @@
       if (f.cor) q = q.eq('cor_normalizada', f.cor);
       if (f.anoDe) q = q.gte('ano_modelo', f.anoDe);
       if (f.anoAte) q = q.lte('ano_modelo', f.anoAte);
+      // Cada veículo rende 1 ou 2 grafias: LIMITE+1 linhas bastam para detectar o excesso
       const { data, error } = await q.limit(LIMITE_PLACAS_FILTRO + 1);
       if (error) return { ativo: true, erro: true };
       const placas = placasParaFiltro(data);
@@ -3374,7 +3377,13 @@
       const chave = currentCliente.id + '|' + JSON.stringify(f);
       const memo = filtroVeiculoMemo;
       if (memo && memo.chave === chave && Date.now() - memo.em < FILTRO_VEICULO_TTL_MS) return memo.promessa;
-      const promessa = consultarPlacasDoFiltro(f).catch(() => ({ ativo: true, erro: true }));
+      const promessa = consultarPlacasDoFiltro(f)
+        .catch(() => ({ ativo: true, erro: true }))
+        .then((r) => {
+          // Erro não fica guardado: o próximo "Filtrar" consulta de novo
+          if (r.erro && filtroVeiculoMemo && filtroVeiculoMemo.promessa === promessa) filtroVeiculoMemo = null;
+          return r;
+        });
       filtroVeiculoMemo = { chave, em: Date.now(), promessa };
       return promessa;
     }
@@ -3388,11 +3397,11 @@
       if (!currentCliente || opcoesVeiculoDoCliente === currentCliente.id) return;
       const anoMax = String(new Date().getFullYear() + 1);
       ['filter-ano-de', 'filter-ano-ate'].forEach((id) => { document.getElementById(id).max = anoMax; });
-      document.getElementById('filter-ano-ate').placeholder = anoMax;
       try {
-        const { data, error } = await sb.from('veiculos_base')
-          .select('marca, cor_normalizada').eq('status', 'consultado');
-        if (error || !data) return;
+        // Paginado: o max-rows do PostgREST cortaria marcas/cores em silêncio
+        const data = await coletarPaginado((de, ate) => sb.from('veiculos_base')
+          .select('marca, cor_normalizada').eq('status', 'consultado')
+          .order('placa').range(de, ate));
         opcoesVeiculoDoCliente = currentCliente.id;
         const marcas = opcoesDistintas(data, 'marca');
         const cores = opcoesDistintas(data, 'cor_normalizada');
@@ -3703,12 +3712,13 @@
       if (seq !== capturasSeq) return;
       if (fv.ativo) {
         const motivo = fv.erro ? 'Não foi possível consultar os dados dos veículos. Tente de novo.'
-          : fv.excesso ? `Mais de ${LIMITE_PLACAS_FILTRO} veículos atendem a esse filtro. Refine marca, modelo, cor ou ano.`
+          : fv.excesso ? 'Veículos demais atendem a esse filtro para listar de uma vez. Refine marca, modelo, cor ou ano.'
           : !fv.placas.length ? MSG_FILTRO_VEICULO_VAZIO : '';
         if (motivo) {
           avisoFiltroVeiculo(fv.placas ? '' : motivo);
           tbody.innerHTML = `<div class="table-empty"${fv.erro ? ' role="alert"' : ''}>${esc(motivo)}</div>`;
           lastCapturas = []; // export não pode sair sem o filtro de veículo
+          limiteAtingido = false;
           pgEl.style.display = 'none';
           return;
         }
@@ -4444,11 +4454,11 @@
           'Status': c.velocidade > limite ? 'ALERTA' : 'OK',
           'Morador': veiculo?.nome_morador || '',
           'Unidade': veiculo?.unidade || '',
-          'Tipo Veículo': c.tipo_veiculo || '',
-          'Cor Veículo': c.cor_veiculo || '',
+          'Tipo (câmera)': c.tipo_veiculo || '',
+          'Cor (câmera)': c.cor_veiculo || '',
           'Marca': vb.marca,
           'Modelo': vb.modelo,
-          'Cor': vb.cor,
+          'Cor (cadastro)': vb.cor,
           'Ano': vb.ano,
         };
       });

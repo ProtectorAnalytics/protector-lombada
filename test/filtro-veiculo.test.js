@@ -6,7 +6,7 @@ const assert = require('node:assert');
 const {
   temFiltroVeiculo, placasParaFiltro, normalizarAno, termoModelo,
   montarFiltroVeiculo, opcoesDistintas, corExibicao, corHex,
-  LIMITE_PLACAS_FILTRO,
+  LIMITE_PLACAS_FILTRO, coletarPaginado, TAMANHO_PAGINA,
 } = require('../site/js/filtro-veiculo');
 
 let passou = 0;
@@ -39,8 +39,8 @@ caso('ignora linhas vazias e normaliza caixa e espaços', () => {
   assert.deepStrictEqual(placasParaFiltro([null, {}, { placa: ' abc1d23 ', placa_antiga: '' }]), ['ABC1D23']);
   assert.deepStrictEqual(placasParaFiltro(null), []);
 });
-caso('limite defensivo é 800 placas', () => {
-  assert.strictEqual(LIMITE_PLACAS_FILTRO, 800);
+caso('limite defensivo é 400 placas (o .in codificado não passa de ~8 KB)', () => {
+  assert.strictEqual(LIMITE_PLACAS_FILTRO, 400);
 });
 
 // ---- normalizarAno
@@ -127,4 +127,35 @@ caso('corHex: ignora caixa e espaços; desconhecida → null', () => {
   assert.strictEqual(corHex('toString'), null);
 });
 
-console.log(`\n${passou} casos ok`);
+// ---- coletarPaginado (opções de marca/cor sem o corte de max-rows)
+async function casoAsync(nome, fn) { await fn(); passou++; console.log(`ok - ${nome}`); }
+
+(async () => {
+  await casoAsync('pagina de 1000 em 1000 até vir página incompleta', async () => {
+    assert.strictEqual(TAMANHO_PAGINA, 1000);
+    const total = Array.from({ length: 2345 }, (_, i) => ({ i }));
+    const pedidos = [];
+    const r = await coletarPaginado(async (de, ate) => { pedidos.push([de, ate]); return { data: total.slice(de, ate + 1), error: null }; });
+    assert.strictEqual(r.length, 2345);
+    assert.deepStrictEqual(pedidos, [[0, 999], [1000, 1999], [2000, 2999]]);
+  });
+  await casoAsync('página cheia exata pede mais uma e para na vazia', async () => {
+    const total = Array.from({ length: 1000 }, (_, i) => i);
+    let n = 0;
+    const r = await coletarPaginado(async (de, ate) => { n++; return { data: total.slice(de, ate + 1), error: null }; });
+    assert.strictEqual(r.length, 1000);
+    assert.strictEqual(n, 2);
+  });
+  await casoAsync('erro em qualquer página lança (não devolve lista parcial)', async () => {
+    await assert.rejects(() => coletarPaginado(async (de) => (de === 0
+      ? { data: Array.from({ length: 1000 }, () => 1), error: null }
+      : { data: null, error: { message: 'x' } })));
+  });
+  await casoAsync('teto de páginas evita laço infinito', async () => {
+    let n = 0;
+    const r = await coletarPaginado(async () => { n++; return { data: Array.from({ length: 1000 }, () => 1), error: null }; }, 3);
+    assert.strictEqual(n, 3);
+    assert.strictEqual(r.length, 3000);
+  });
+  console.log(`\n${passou} casos ok`);
+})().catch((e) => { console.error(e); process.exit(1); });
