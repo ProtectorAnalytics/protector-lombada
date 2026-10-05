@@ -28,6 +28,10 @@
   const MARGEM_ATRASO_MS = 10 * 60 * 1000;
   const RE_DATA = /^\d{4}-\d{2}-\d{2}$/;
   const RE_HORA = /^\d{2}:\d{2}$/;
+  const ANO_MINIMO_PERIODO = 2000;
+  const MAX_DIAS_PERIODO = 31; // lista limitada a 300 passagens: período curto
+  const VEL_MAXIMA = 300;
+  const DIA_MS = 86400000;
 
   const texto = (v) => (v === null || v === undefined ? '' : String(v).trim());
 
@@ -41,6 +45,46 @@
     return Number.isFinite(n) && n > 0 ? n : null;
   }
 
+  // Velocidade de filtro: 1–300 (acima de 300 vira 300)
+  function velocidade(v) {
+    const n = inteiroPositivo(v);
+    return n ? Math.min(n, VEL_MAXIMA) : null;
+  }
+
+  /** 'AAAA-MM-DD' que existe no calendário (ida e volta) e é de 2000 em diante. */
+  function dataValida(v) {
+    const s = texto(v);
+    if (!RE_DATA.test(s)) return false;
+    const [a, m, d] = s.split('-').map(Number);
+    const dt = new Date(Date.UTC(a, m - 1, d));
+    return a >= ANO_MINIMO_PERIODO && dt.getUTCFullYear() === a
+      && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+  }
+
+  /** 'HH:MM' entre 00:00 e 23:59. */
+  function horaValida(v) {
+    const s = texto(v);
+    if (!RE_HORA.test(s)) return false;
+    const [h, m] = s.split(':').map(Number);
+    return h < 24 && m < 60;
+  }
+
+  // Dias de calendário entre duas datas válidas (sem fuso)
+  const diaDoCalendario = (data) => Date.UTC(...data.split('-').map((n, i) => Number(n) - (i === 1 ? 1 : 0)));
+
+  /**
+   * Período digitado: null se vale; senão o motivo para mostrar ao usuário.
+   * Datas/horas impossíveis ou antes de 2000 → inválido; mais de 31 dias → recusa.
+   */
+  function validarPeriodo(c) {
+    const p = c || {};
+    if (![p.dataInicio, p.dataFim].every(dataValida) || ![p.horaInicio, p.horaFim].every(horaValida)) {
+      return 'Data ou hora inválida';
+    }
+    const dias = Math.abs(diaDoCalendario(p.dataFim) - diaDoCalendario(p.dataInicio)) / DIA_MS + 1;
+    return dias > MAX_DIAS_PERIODO ? `Escolha até ${MAX_DIAS_PERIODO} dias` : null;
+  }
+
   function veiculoDe(v) {
     const c = v || {};
     return Object.freeze({
@@ -49,8 +93,8 @@
     });
   }
 
-  const dataOu = (v, padrao) => (RE_DATA.test(texto(v)) ? texto(v) : padrao);
-  const horaOu = (v, padrao) => (RE_HORA.test(texto(v)) ? texto(v) : padrao);
+  const dataOu = (v, padrao) => (dataValida(v) ? texto(v) : padrao);
+  const horaOu = (v, padrao) => (horaValida(v) ? texto(v) : padrao);
 
   /**
    * Campos crus do formulário → estado congelado (invertidos são trocados).
@@ -63,8 +107,12 @@
     let ini = [dataOu(c.dataInicio, hoje), horaOu(c.horaInicio, HORA_INICIO_PADRAO)];
     let fim = [dataOu(c.dataFim, hoje), horaOu(c.horaFim, HORA_FIM_PADRAO)];
     if (ini.join('T') > fim.join('T')) [ini, fim] = [fim, ini];
-    let velMin = inteiroPositivo(c.velMin) || 0;
-    let velMax = inteiroPositivo(c.velMax);
+    if (validarPeriodo({ dataInicio: ini[0], horaInicio: ini[1], dataFim: fim[0], horaFim: fim[1] })) {
+      ini = [hoje, HORA_INICIO_PADRAO]; // longo demais: volta ao dia de hoje
+      fim = [hoje, HORA_FIM_PADRAO];
+    }
+    let velMin = velocidade(c.velMin) || 0;
+    let velMax = velocidade(c.velMax);
     if (velMax && velMin > velMax) [velMin, velMax] = [velMax, velMin];
     return Object.freeze({
       dataInicio: ini[0],
@@ -87,8 +135,14 @@
 
   // 'AAAA-MM-DD' + 'HH:MM' locais → instante (ms); formato inválido → NaN
   function instante(data, hora, seg) {
-    if (!RE_DATA.test(data) || !RE_HORA.test(hora)) return NaN;
+    if (!dataValida(data) || !horaValida(hora)) return NaN;
     return new Date(`${data}T${hora}:${seg}`).getTime();
+  }
+
+  // Nunca lança: borda impossível cai no dia de hoje (00:00 ou 23:59)
+  function instanteOuHoje(data, hora, seg, horaPadrao) {
+    const t = instante(data, hora, seg);
+    return Number.isNaN(t) ? instante(hojeLocal(), horaPadrao, seg) : t;
   }
 
   /**
@@ -97,8 +151,8 @@
    */
   function intervaloDoPeriodo(f) {
     return {
-      tsInicio: new Date(instante(f.dataInicio, f.horaInicio, '00')).toISOString(),
-      tsFim: new Date(instante(f.dataFim, f.horaFim, '59.999')).toISOString(),
+      tsInicio: new Date(instanteOuHoje(f.dataInicio, f.horaInicio, '00', HORA_INICIO_PADRAO)).toISOString(),
+      tsFim: new Date(instanteOuHoje(f.dataFim, f.horaFim, '59.999', HORA_FIM_PADRAO)).toISOString(),
       umDia: f.dataInicio === f.dataFim,
     };
   }
@@ -110,15 +164,20 @@
     return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`;
   }
 
+  // Visões "do dia": à meia-noite passam ao dia novo (Ontem e 7 dias, não)
+  const VISOES_DO_DIA = ['hoje', 'acima-hoje', 'nao-cadastrados'];
+
   /**
-   * Meia-noite: se o estado é o padrão "hoje" do dia anterior (ninguém mexeu),
-   * passa ao padrão do novo dia. Filtro personalizado fica como está.
+   * Meia-noite: se o estado é exatamente uma visão do dia anterior (padrão,
+   * "Acima do limite hoje" ou "Não cadastrados"), passa à mesma visão do novo
+   * dia. Filtro personalizado fica como está.
    */
   function virarDia(f, hojeAnterior, agora) {
     const hoje = hojeLocal(agora);
     if (hoje === hojeAnterior) return f;
-    if (chaveFiltros(f) !== chaveFiltros(filtrosPadrao(hojeAnterior))) return f;
-    return filtrosPadrao(hoje);
+    const chave = chaveFiltros(f);
+    const id = VISOES_DO_DIA.find((v) => chaveFiltros(estadoDaVisao(v, hojeAnterior)) === chave);
+    return id ? estadoDaVisao(id, hoje) : f;
   }
 
   /** O período confirmado ainda pode ganhar passagens (inclui agora, com margem)? */
@@ -234,7 +293,6 @@
   // autenticada, nunca gere link público com isto.
   // ---------------------------------------------------------------------
   const TEXTO_URL_MAX = 40;
-  const VEL_MAX_URL = 300;
   const RE_CAMERA = /^[A-Za-z0-9-]{1,64}$/;
   const RE_COR = /^[a-zà-ú]{2,20}$/;
   const RE_DATA_HORA = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/;
@@ -275,12 +333,12 @@
     const de = RE_DATA_HORA.exec(texto(q.get('de')));
     const ate = RE_DATA_HORA.exec(texto(q.get('ate')));
     if (!de || !ate) return {};
-    return { dataInicio: de[1], horaInicio: de[2], dataFim: ate[1], horaFim: ate[2] };
+    const p = { dataInicio: de[1], horaInicio: de[2], dataFim: ate[1], horaFim: ate[2] };
+    return validarPeriodo(p) ? {} : p; // impossível ou longo demais: ignora
   }
 
   function velocidadeDaUrl(v) {
-    const n = /^\d{1,3}$/.test(texto(v)) ? Number(v) : 0;
-    return n > 0 && n <= VEL_MAX_URL ? n : null;
+    return /^\d{1,4}$/.test(texto(v)) ? velocidade(v) : null;
   }
 
   function veiculoDaUrl(q, anoAtual) {
@@ -314,7 +372,7 @@
     normalizarPlacaBusca, montarFiltros, filtrosPadrao, intervaloDoPeriodo,
     periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo, hojeLocal, virarDia,
     periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro, contarMaisFiltros,
-    VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString,
-    PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
+    VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString, validarPeriodo,
+    PLACA_BUSCA_MAX, MARGEM_ATRASO_MS, MAX_DIAS_PERIODO, VEL_MAXIMA,
   };
 });

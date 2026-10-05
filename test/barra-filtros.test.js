@@ -76,10 +76,15 @@ caso('Enter com dígito busca placa (normalizada)', () => {
   assert.deepStrictEqual(decidirEnter('abc-1d'), { tipo: 'placa', valor: 'ABC1D' });
   assert.deepStrictEqual(decidirEnter('1d23'), { tipo: 'placa', valor: '1D23' });
 });
-caso('Enter sem dígito busca modelo', () => {
+caso('Enter sem dígito busca modelo; com dígito no meio do texto, placa', () => {
   assert.deepStrictEqual(decidirEnter('  onix '), { tipo: 'modelo', valor: 'onix' });
   assert.deepStrictEqual(decidirEnter('gol (g5)'), { tipo: 'placa', valor: 'GOLG5' });
   assert.deepStrictEqual(decidirEnter('hb, s'), { tipo: 'modelo', valor: 'hb s' });
+});
+caso('Enter com menos de 2 caracteres não cria filtro', () => {
+  assert.strictEqual(decidirEnter('a'), null);
+  assert.strictEqual(decidirEnter(' 1 '), null);
+  assert.strictEqual(decidirEnter('-1-'), null);
 });
 caso('Enter vazio não faz nada', () => {
   assert.strictEqual(decidirEnter(''), null);
@@ -130,6 +135,10 @@ caso('anúncio do resultado em português', () => {
   assert.strictEqual(textoResultado(0), 'Nenhuma passagem');
   assert.strictEqual(textoResultado(1), '1 passagem');
   assert.strictEqual(textoResultado(36), '36 passagens');
+});
+caso('no limite da consulta o resultado vira "N+"', () => {
+  assert.strictEqual(textoResultado(300, true), '300+ passagens');
+  assert.strictEqual(textoResultado(36, false), '36 passagens');
 });
 
 // ---- não cadastrados

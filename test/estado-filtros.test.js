@@ -8,7 +8,7 @@ const {
   periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo,
   virarDia, hojeLocal, PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
   periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro, contarMaisFiltros,
-  estadoDaVisao, visaoAtiva, VISOES, paraQueryString, deQueryString,
+  estadoDaVisao, visaoAtiva, VISOES, paraQueryString, deQueryString, validarPeriodo,
 } = require('../site/js/estado-filtros');
 
 // Os casos de fuso supõem Brasília (-03, sem horário de verão): rode com
@@ -200,7 +200,7 @@ caso('padrão "hoje" vira o dia à meia-noite (23:59 → 00:01)', () => {
   assert.deepStrictEqual(g, filtrosPadrao('2026-10-06'));
 });
 caso('filtro personalizado não vira o dia', () => {
-  const f = montarFiltros({ soAlertas: true }, '2026-10-05');
+  const f = montarFiltros({ soAlertas: true, placa: 'ABC' }, '2026-10-05');
   assert.strictEqual(virarDia(f, '2026-10-05', local('2026-10-06T00:01:00')), f);
   const g = montarFiltros({ dataInicio: '2026-10-01', dataFim: '2026-10-05' }, '2026-10-05');
   assert.strictEqual(virarDia(g, '2026-10-05', local('2026-10-06T00:01:00')), g);
@@ -391,6 +391,68 @@ caso('textos longos demais na URL são cortados', () => {
 });
 caso('p=hoje explícito também vale', () => {
   assert.deepStrictEqual(deQueryString('p=hoje', HOJE, 2026), filtrosPadrao(HOJE));
+});
+
+// ---- datas e horas impossíveis (nunca lançar)
+caso('data e hora impossíveis caem no padrão (sem lançar)', () => {
+  const casos = [
+    { dataInicio: '2026-10-05', horaInicio: '24:30' }, { horaFim: '23:60' },
+    { dataInicio: '2026-13-01' }, { dataFim: '2026-10-32' }, { dataInicio: '2026-02-31' },
+  ];
+  casos.forEach((c) => {
+    const f = montarFiltros(c, HOJE);
+    assert.deepStrictEqual([f.dataInicio, f.horaInicio, f.dataFim, f.horaFim], [HOJE, '00:00', HOJE, '23:59'], JSON.stringify(c));
+    assert.doesNotThrow(() => intervaloDoPeriodo(f));
+  });
+});
+caso('intervaloDoPeriodo não lança nem com estado montado à mão inválido', () => {
+  const r = intervaloDoPeriodo({ dataInicio: '2026-10-05', horaInicio: '24:30', dataFim: '2026-10-05', horaFim: '23:59' });
+  assert.ok(!Number.isNaN(new Date(r.tsInicio).getTime()));
+});
+caso('URL com data/hora impossível é ignorada (padrão)', () => {
+  ['de=2026-10-05T08:00&ate=2026-10-05T24:30', 'de=2026-10-05T08:00&ate=2026-10-05T23:60',
+    'de=2026-13-01T08:00&ate=2026-13-02T08:00', 'de=2026-10-32T08:00&ate=2026-10-33T08:00',
+    'de=2026-02-31T00:00&ate=2026-03-01T23:59'].forEach((qs) => {
+    assert.deepStrictEqual(deQueryString(qs, HOJE, 2026), filtrosPadrao(HOJE), qs);
+  });
+});
+caso('ano anterior a 2000 é ignorado', () => {
+  assert.strictEqual(montarFiltros({ dataInicio: '1999-12-31', dataFim: '2000-01-01' }, HOJE).dataInicio, HOJE);
+  assert.deepStrictEqual(deQueryString('de=0202-10-05T00:00&ate=2026-10-05T23:59', HOJE, 2026), filtrosPadrao(HOJE));
+});
+caso('período maior que 31 dias é recusado (estado e URL)', () => {
+  assert.strictEqual(validarPeriodo({ dataInicio: '2026-09-01', horaInicio: '00:00', dataFim: '2026-10-05', horaFim: '23:59' }), 'Escolha até 31 dias');
+  assert.strictEqual(validarPeriodo({ dataInicio: '2026-09-05', horaInicio: '00:00', dataFim: '2026-10-05', horaFim: '23:59' }), null);
+  assert.strictEqual(validarPeriodo({ dataInicio: '2026-10-05', horaInicio: '24:00', dataFim: '2026-10-05', horaFim: '23:59' }), 'Data ou hora inválida');
+  assert.strictEqual(validarPeriodo({ dataInicio: '1999-10-05', horaInicio: '00:00', dataFim: '1999-10-05', horaFim: '23:59' }), 'Data ou hora inválida');
+  assert.strictEqual(montarFiltros({ dataInicio: '2026-01-01', dataFim: '2026-10-05' }, HOJE).dataInicio, HOJE);
+  assert.deepStrictEqual(deQueryString('de=2026-01-01T00:00&ate=2026-10-05T23:59', HOJE, 2026), filtrosPadrao(HOJE));
+});
+caso('período invertido também é validado pela distância', () => {
+  assert.strictEqual(validarPeriodo({ dataInicio: '2026-10-05', horaInicio: '00:00', dataFim: '2026-08-01', horaFim: '23:59' }), 'Escolha até 31 dias');
+});
+
+// ---- velocidade limitada a 0–300
+caso('velocidade acima de 300 vira 300 (estado e URL fecham a ida e volta)', () => {
+  assert.strictEqual(montarFiltros({ velMax: '999' }, HOJE).velMax, 300);
+  assert.strictEqual(montarFiltros({ velMin: 450 }, HOJE).velMin, 300);
+  const f = deQueryString('vmax=999', HOJE, 2026);
+  assert.strictEqual(f.velMax, 300);
+  assert.deepStrictEqual(deQueryString(paraQueryString(f, HOJE), HOJE, 2026), f);
+});
+
+// ---- visões do dia viram à meia-noite
+caso('"Acima do limite hoje" e "Não cadastrados" viram o dia à meia-noite', () => {
+  ['acima-hoje', 'nao-cadastrados', 'hoje'].forEach((id) => {
+    const g = virarDia(estadoDaVisao(id, '2026-10-05'), '2026-10-05', local('2026-10-06T00:01:00'));
+    assert.deepStrictEqual(g, estadoDaVisao(id, '2026-10-06'), id);
+  });
+});
+caso('visão "Ontem" e estado mexido não viram o dia', () => {
+  const o = estadoDaVisao('ontem', '2026-10-05');
+  assert.strictEqual(virarDia(o, '2026-10-05', local('2026-10-06T00:01:00')), o);
+  const m = comMudancas(estadoDaVisao('acima-hoje', '2026-10-05'), { placa: 'ABC' }, '2026-10-05');
+  assert.strictEqual(virarDia(m, '2026-10-05', local('2026-10-06T00:01:00')), m);
 });
 
 console.log(`\n${passou} casos passaram`);

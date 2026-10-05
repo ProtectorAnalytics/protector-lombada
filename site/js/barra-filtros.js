@@ -74,10 +74,10 @@
     if (!t) return null;
     if (/\d/.test(t)) {
       const placa = estado.normalizarPlacaBusca(t);
-      return placa ? { tipo: 'placa', valor: placa } : null;
+      return placa.length >= BUSCA_MIN ? { tipo: 'placa', valor: placa } : null;
     }
     const modelo = filtroVeiculo.termoModelo(t);
-    return modelo ? { tipo: 'modelo', valor: modelo } : null;
+    return modelo.length >= BUSCA_MIN ? { tipo: 'modelo', valor: modelo } : null;
   }
 
   // Quem começa com o termo vem antes de quem só o contém; sem duplicatas
@@ -116,8 +116,12 @@
     return grupos.filter((g) => g.itens.length);
   }
 
-  /** Anúncio do resultado: "Nenhuma passagem", "1 passagem", "36 passagens". */
-  function textoResultado(n) {
+  /**
+   * Anúncio do resultado: "Nenhuma passagem", "1 passagem", "36 passagens";
+   * no limite da consulta, "300+ passagens" (há mais do que o carregado).
+   */
+  function textoResultado(n, noLimite) {
+    if (noLimite) return `${n}+ passagens`;
     if (!n) return 'Nenhuma passagem';
     return n === 1 ? '1 passagem' : `${n} passagens`;
   }
