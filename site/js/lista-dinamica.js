@@ -39,5 +39,20 @@
     return (Math.floor(pagina) - 1) * porPagina;
   }
 
-  return Object.freeze({ linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina });
+  /**
+   * Conferência depois de desenhar uma página cheia: `sobra` é o espaço (px)
+   * entre a última linha e o fim da área útil. Sobra de uma linha inteira ou
+   * mais acrescenta linhas; linhas passando da área (sobra negativa) saem.
+   * A altura real da linha pode diferir da usada no cálculo (fonte, zoom,
+   * arredondamento): o que vale é o que ficou na tela.
+   */
+  function corrigirPelaSobra(linhas, sobra, alturaLinha, min, max) {
+    if (!numeroValido(linhas) || !numeroValido(sobra) || !numeroValido(alturaLinha) || alturaLinha <= 0) return linhas;
+    let novo = linhas;
+    if (sobra < -FOLGA_PX) novo = linhas - Math.ceil((-sobra - FOLGA_PX) / alturaLinha);
+    else novo = linhas + Math.floor((sobra + FOLGA_PX) / alturaLinha);
+    return Math.max(min, Math.min(max, novo));
+  }
+
+  return Object.freeze({ linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra });
 });

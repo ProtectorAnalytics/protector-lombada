@@ -9,6 +9,7 @@ const {
   virarDia, hojeLocal, PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
   periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro, contarMaisFiltros,
   estadoDaVisao, visaoAtiva, VISOES, paraQueryString, deQueryString, validarPeriodo,
+  temFiltroAtivo,
 } = require('../site/js/estado-filtros');
 
 // Os casos de fuso supõem Brasília (-03, sem horário de verão): rode com
@@ -453,6 +454,21 @@ caso('visão "Ontem" e estado mexido não viram o dia', () => {
   assert.strictEqual(virarDia(o, '2026-10-05', local('2026-10-06T00:01:00')), o);
   const m = comMudancas(estadoDaVisao('acima-hoje', '2026-10-05'), { placa: 'ABC' }, '2026-10-05');
   assert.strictEqual(virarDia(m, '2026-10-05', local('2026-10-06T00:01:00')), m);
+});
+
+// ---- temFiltroAtivo (vazio com "Limpar filtros")
+caso('estado padrão não tem filtro ativo', () => {
+  assert.strictEqual(temFiltroAtivo(filtrosPadrao('2026-10-05'), '2026-10-05'), false);
+});
+caso('placa, câmera, só alertas ou outro período contam como filtro ativo', () => {
+  const p = filtrosPadrao('2026-10-05');
+  assert.strictEqual(temFiltroAtivo(comMudancas(p, { placa: 'ABC' }, '2026-10-05'), '2026-10-05'), true);
+  assert.strictEqual(temFiltroAtivo(comMudancas(p, { cameraId: 'cam-1' }, '2026-10-05'), '2026-10-05'), true);
+  assert.strictEqual(temFiltroAtivo(comMudancas(p, { soAlertas: true }, '2026-10-05'), '2026-10-05'), true);
+  assert.strictEqual(temFiltroAtivo(estadoDaVisao('ontem', '2026-10-05'), '2026-10-05'), true);
+});
+caso('sem estado (null) não tem filtro ativo', () => {
+  assert.strictEqual(temFiltroAtivo(null, '2026-10-05'), false);
 });
 
 console.log(`\n${passou} casos passaram`);

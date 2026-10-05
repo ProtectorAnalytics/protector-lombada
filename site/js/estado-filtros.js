@@ -193,6 +193,12 @@
     return JSON.stringify(f);
   }
 
+  /** Há algum filtro diferente do padrão (período de hoje, sem filtros)? */
+  function temFiltroAtivo(f, hoje) {
+    if (!f) return false;
+    return chaveFiltros(f) !== chaveFiltros(filtrosPadrao(hoje));
+  }
+
   /** Polling: só reconsulta o período se os filtros mudaram ou se ele inclui agora. */
   function precisaRecarregarPeriodo(f, chaveCarregada, agora) {
     if (chaveCarregada !== chaveFiltros(f)) return true;
@@ -370,7 +376,7 @@
 
   return {
     normalizarPlacaBusca, montarFiltros, filtrosPadrao, intervaloDoPeriodo,
-    periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo, hojeLocal, virarDia,
+    periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo, temFiltroAtivo, hojeLocal, virarDia,
     periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro, contarMaisFiltros,
     VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString, validarPeriodo,
     PLACA_BUSCA_MAX, MARGEM_ATRASO_MS, MAX_DIAS_PERIODO, VEL_MAXIMA,
