@@ -159,8 +159,11 @@ O CONTROLADOR obriga-se a:
 | **Supabase** (Supabase Inc.) | Banco de dados PostgreSQL e Storage de fotos | Região `sa-east-1` (São Paulo, Brasil) |
 | **Vercel** (Vercel Inc.) | Hospedagem serverless da aplicação | Multi-região; compute pode ocorrer fora do Brasil |
 | **Provedor SMTP** (cPanel, Gmail ou equivalente, conforme configuração) | Envio de e-mails transacionais de notificação | Conforme provedor escolhido |
+| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira |
 
 7.2. A OPERADORA garante que todos os subprocessadores possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e aderência à LGPD/GDPR.
+
+7.2.1. A **APIPLACAS** recebe a placa dos veículos que passam pelos pontos de medição e devolve dados técnicos do veículo (marca, modelo, versão, cor, ano, município/UF de registro, tipo e situação), com a finalidade de identificar o veículo nas notificações orientativas e no painel e de conferir a leitura automática da placa. Não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE. Os dados do veículo ficam numa base técnica interna, compartilhada entre os condomínios atendidos, que contém apenas dados do veículo; morador, unidade e passagens permanecem isolados por condomínio. Esses dados são apagados após 6 meses sem nova passagem em qualquer condomínio e, quando houver pedido de eliminação atendido pelo encarregado (DPO), a placa é apagada também da base técnica.
 
 7.3. A inclusão de novo subprocessador será comunicada ao CONTROLADOR com antecedência razoável. O CONTROLADOR poderá se opor por razões fundamentadas de proteção de dados.
 
@@ -182,6 +185,7 @@ O CONTROLADOR obriga-se a:
 - Rotinas automatizadas de retenção (pg_cron):
   - Fotos: 15 dias
   - Metadados: 6 meses
+  - Dados técnicos do veículo (base interna): 6 meses após a última passagem
   - Log de depuração: 24 horas
 
 **Administrativas:**

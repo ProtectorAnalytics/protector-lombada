@@ -2,7 +2,7 @@
 
 > Este documento descreve o tratamento de dados pessoais realizado pelo **Protector Traffic Control** (sistema de Lombada Educativa Inteligente) em conformidade com a **Lei Geral de Proteção de Dados — Lei nº 13.709/2018 (LGPD)**.
 
-**Versão 2.0** · Abril 2026
+**Versão 2.1** · 05/10/2026
 
 ---
 
@@ -76,6 +76,7 @@ O texto padrão dos documentos gerados pelo sistema (PDF de notificação) traz 
 | Unidade/apartamento | Dado pessoal | Cadastro manual pelo Controlador | Identificação do responsável |
 | E-mail do destinatário de alerta | Dado pessoal | Cadastro manual pelo Controlador | Envio automatizado da notificação |
 | Marca/cor do veículo | Dado associado | Cadastro manual pelo Controlador | Identificação auxiliar |
+| Dados técnicos do veículo (marca, modelo, versão, cor, ano, município/UF de registro, tipo, situação) | Dado associado ao veículo | APIPLACAS, a partir da placa | Identificar o veículo nas notificações e no painel; conferir a leitura automática da placa |
 
 **Dados NÃO coletados pelo sistema:** CPF, RG, endereço residencial detalhado, dados financeiros, dados sensíveis (art. 5º, II LGPD), dados biométricos, reconhecimento facial.
 
@@ -129,6 +130,7 @@ A Operadora aplica a seguinte política técnica de retenção, **executada auto
 | **Log de auditoria** (`audit_log`) | Enquanto o contrato estiver ativo | Revisão periódica pelo DPO |
 | **Log de depuração técnica** (`debug_log`) | **24 horas** | pg_cron `cleanup_debug_log` — a cada 6 horas |
 | **Histórico arquivado** (`capturas_historico`) — metadados | **6 meses** | pg_cron `cleanup_old_capturas_historico` — diário às 04:05 UTC |
+| **Dados técnicos do veículo** (base interna `veiculos_base`) | **6 meses após a última passagem**, em qualquer condomínio | Rotina de limpeza da base; o pedido de eliminação atendido no painel do DPO apaga também a placa |
 
 **Nota técnica:** A limpeza de fotos usa Vercel Cron (não pg_cron) porque o Supabase aplica uma trigger de proteção (`storage.protect_objects_delete`) que bloqueia exclusão direta de objetos do Storage via SQL. O endpoint `api/cron-limpeza` usa a Storage API do SDK `@supabase/supabase-js`, que contorna a trigger de forma segura.
 
@@ -216,14 +218,21 @@ Para a prestação do serviço, a Protector Sistemas utiliza os seguintes subpro
 | **Supabase** (Supabase Inc.) | Banco de dados PostgreSQL + Storage de fotos | Região `sa-east-1` (São Paulo, Brasil) |
 | **Vercel** (Vercel Inc.) | Hospedagem serverless (Functions + Edge) | Multi-região; camada de compute pode rodar fora do Brasil |
 | **Provedor SMTP** (definido por contrato) | Envio de e-mails de notificação | Conforme provedor escolhido |
+| **APIPLACAS** (AETHERIA, CNPJ 67.877.417/0001-08) | Consulta de dados técnicos do veículo a partir da placa | Empresa brasileira |
 
-Todos os subprocessadores possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e termos de processamento de dados aderentes à LGPD e ao GDPR.
+### 9.1 APIPLACAS e a base técnica de veículos
+
+A APIPLACAS recebe a placa dos veículos que passam pelos pontos de medição e devolve dados técnicos do veículo. **Finalidade:** identificar o veículo nas notificações orientativas e no painel, e conferir a leitura automática da placa. **Minimização:** não são recebidos nem armazenados dados do proprietário (nome, CPF), chassi ou valor FIPE.
+
+Os dados do veículo ficam numa **base técnica interna, compartilhada entre os condomínios atendidos**, que contém apenas dados do veículo. Morador, unidade e passagens continuam isolados por condomínio. Os dados técnicos são apagados após 6 meses sem nova passagem em qualquer condomínio. O pedido de eliminação atendido no painel do encarregado (DPO) apaga também a placa da base técnica.
+
+Todos os demais subprocessadores possuem certificações de segurança reconhecidas (SOC 2, ISO 27001 ou equivalentes) e termos de processamento de dados aderentes à LGPD e ao GDPR.
 
 ---
 
 ## 10. Transferência Internacional de Dados
 
-Os dados de clientes brasileiros são armazenados na região **sa-east-1 (São Paulo)** do Supabase. Eventuais operações de compute pela Vercel podem ocorrer em outras regiões conforme a arquitetura do provedor, sem transferência persistente para fora do Brasil. Quando houver transferência internacional, a Operadora observa as garantias previstas no art. 33 da LGPD.
+A APIPLACAS é empresa brasileira e não há transferência internacional no tratamento por ela realizado. Os dados de clientes brasileiros são armazenados na região **sa-east-1 (São Paulo)** do Supabase. Eventuais operações de compute pela Vercel podem ocorrer em outras regiões conforme a arquitetura do provedor, sem transferência persistente para fora do Brasil. Quando houver transferência internacional, a Operadora observa as garantias previstas no art. 33 da LGPD.
 
 ---
 
@@ -282,8 +291,9 @@ Essas obrigações são formalizadas no Contrato de Processamento de Dados (DPA 
 | Versão | Data | Alterações |
 |---|---|---|
 | 1.0 | Abril 2026 | Versão inicial — finalidade restrita ao uso educativo |
-| **2.0** | **Abril 2026** | Identificação completa da Operadora e do DPO; filosofia neutra (finalidade definida pelo Controlador); retenção real alinhada ao banco (foto 15d, metadados 6m); inclusão da tabela `capturas_historico` como arquivo; referência ao RIPD e DPA como documentos complementares |
+| 2.0 | Abril 2026 | Identificação completa da Operadora e do DPO; filosofia neutra (finalidade definida pelo Controlador); retenção real alinhada ao banco (foto 15d, metadados 6m); inclusão da tabela `capturas_historico` como arquivo; referência ao RIPD e DPA como documentos complementares |
+| **2.1** | **05/10/2026** | APIPLACAS incluída como suboperadora (consulta técnica de veículo pela placa); base técnica interna compartilhada; retenção de 6 meses após a última passagem; eliminação atendida pelo DPO apaga também a placa da base |
 
 ---
 
-**Protector Sistemas** — Documento LGPD · v2.0 · Abril 2026
+**Protector Sistemas** — Documento LGPD · v2.1 · 05/10/2026
