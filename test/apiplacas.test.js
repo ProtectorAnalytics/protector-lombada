@@ -117,5 +117,27 @@ const RESPOSTA_OK = {
     assert.strictEqual(normalizarCor(''), null);
   });
 
+  await caso('saldo devolve null para qtdConsultas null, "" e ausente; 995 para 995', async () => {
+    assert.strictEqual(await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(200, { qtdConsultas: null }) }).saldo(), null);
+    assert.strictEqual(await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(200, { qtdConsultas: '' }) }).saldo(), null);
+    assert.strictEqual(await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(200, {}) }).saldo(), null);
+    assert.strictEqual(await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(200, { qtdConsultas: 995 }) }).saldo(), 995);
+  });
+
+  await caso('token com espaço/\\n nas pontas gera URL limpa; só espaços lança', async () => {
+    const f1 = fetchFalso(200, RESPOSTA_OK);
+    await criarClienteApiplacas({ token: '  tok_secreto_de_teste_0123456789ab\n', fetchImpl: f1 }).consultar('ABC1D23');
+    assert.strictEqual(f1.chamadas[0], `https://wdapi2.com.br/consulta/ABC1D23/tok_secreto_de_teste_0123456789ab`);
+    assert.throws(() => criarClienteApiplacas({ token: '   \n  ' }), /APIPLACAS_TOKEN/);
+  });
+
+  await caso('fetch 200 com json() que demora mais que timeout → timeout, consome false', async () => {
+    const api = criarClienteApiplacas({ token: TOKEN, timeoutMs: 50, fetchImpl: fetchFalso(200, RESPOSTA_OK, { atraso: 500 }) });
+    const r = await api.consultar('ABC1D23');
+    assert.strictEqual(r.resultado, 'timeout');
+    assert.strictEqual(r.consome, false);
+    assert.strictEqual(r.httpStatus, null);
+  });
+
   console.log(`\n${passou} casos passaram`);
 })().catch((e) => { console.error(e); process.exit(1); });
