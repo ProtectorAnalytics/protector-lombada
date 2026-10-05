@@ -452,6 +452,19 @@
       urlsMostradas.set(path, { url: urlNova, expiraEm: agora + TTL_URL_SERVIDOR_MS });
       return urlNova;
     }
+    // Poda a cada desenho: só fica o que está na tela e ainda vale
+    function podarUrlsMostradas(capturas) {
+      const naTela = new Set();
+      for (const c of capturas) {
+        if (!c.foto_path) continue;
+        naTela.add(c.foto_path);
+        naTela.add(miniaturaLib.caminhoMiniatura(c.foto_path));
+      }
+      const agora = Date.now();
+      for (const [path, e] of [...urlsMostradas]) {
+        if (!naTela.has(path) || !miniaturaLib.urlAindaVale(e, agora, MARGEM_URL_MS)) urlsMostradas.delete(path);
+      }
+    }
 
     // Miniatura da lista com recuo para o original; se nem o original
     // carregar, vira o marcador "sem foto" (listener, nada em onerror)
@@ -493,6 +506,7 @@
     function render(d) {
       const cam = d.camera, cli = d.cliente, st = d.status, vol = d.volumes;
       const ultimas = d.ultimas_capturas || [];
+      podarUrlsMostradas(ultimas);
       const sparkRaw = d.sparkline_30d || [];
       const maxSpark = Math.max(1, ...sparkRaw.map(x => x.count || 0));
 
