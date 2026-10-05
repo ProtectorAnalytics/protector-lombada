@@ -31,4 +31,11 @@ caso('ignora campos não editáveis', () => {
   assert.deepStrictEqual(Object.keys(r.config), ['teto_mensal']);
 });
 
+caso('rejeita vazio, null, booleano e array em campos numéricos', () => {
+  assert.deepStrictEqual(validarConfig({ teto_mensal: '' }).erros, ['teto_mensal']);
+  assert.deepStrictEqual(validarConfig({ preco_consulta: null }).erros, ['preco_consulta']);
+  assert.deepStrictEqual(validarConfig({ saldo_minimo: true }).erros, ['saldo_minimo']);
+  assert.deepStrictEqual(validarConfig({ aviso_percentual: [5] }).erros, ['aviso_percentual']);
+});
+
 console.log(`\n${passou} casos passaram`);
