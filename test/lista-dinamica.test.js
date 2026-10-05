@@ -4,7 +4,7 @@
  * Uso: node test/lista-dinamica.test.js
  */
 const assert = require('node:assert');
-const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina } = require('../site/js/lista-dinamica');
+const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra } = require('../site/js/lista-dinamica');
 
 let passou = 0;
 function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
@@ -60,6 +60,34 @@ caso('primeiro índice da página (1-based) e entrada inválida', () => {
   assert.strictEqual(primeiroIndiceDaPagina(2, 14), 14);
   assert.strictEqual(primeiroIndiceDaPagina(0, 14), 0);
   assert.strictEqual(primeiroIndiceDaPagina(NaN, 14), 0);
+});
+
+// ---- corrigirPelaSobra (conferência depois de desenhar a página cheia)
+caso('sobra de uma linha inteira ou mais acrescenta linhas', () => {
+  assert.strictEqual(corrigirPelaSobra(10, 38, 38, 5, 50), 11);
+  assert.strictEqual(corrigirPelaSobra(10, 80, 38, 5, 50), 12);
+});
+caso('sobra menor que uma linha mantém o número', () => {
+  assert.strictEqual(corrigirPelaSobra(10, 0, 38, 5, 50), 10);
+  assert.strictEqual(corrigirPelaSobra(10, 37, 38, 5, 50), 10);
+});
+caso('tolera subpixel (37,6 px com linha de 38 cabe mais uma)', () => {
+  assert.strictEqual(corrigirPelaSobra(10, 37.6, 38, 5, 50), 11);
+});
+caso('linhas passando da área (sobra negativa) tiram o excedente', () => {
+  assert.strictEqual(corrigirPelaSobra(10, -1, 38, 5, 50), 9);
+  assert.strictEqual(corrigirPelaSobra(10, -38, 38, 5, 50), 9);
+  assert.strictEqual(corrigirPelaSobra(10, -39, 38, 5, 50), 8);
+  assert.strictEqual(corrigirPelaSobra(10, -0.4, 38, 5, 50), 10);
+});
+caso('respeita mínimo e máximo', () => {
+  assert.strictEqual(corrigirPelaSobra(6, -200, 38, 5, 50), 5);
+  assert.strictEqual(corrigirPelaSobra(49, 500, 38, 5, 50), 50);
+});
+caso('entrada inválida mantém o número atual', () => {
+  assert.strictEqual(corrigirPelaSobra(10, NaN, 38, 5, 50), 10);
+  assert.strictEqual(corrigirPelaSobra(10, 50, 0, 5, 50), 10);
+  assert.strictEqual(corrigirPelaSobra(10, undefined, 38, 5, 50), 10);
 });
 
 console.log(`\n${passou} casos ok`);
