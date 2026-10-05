@@ -4,7 +4,7 @@
  * Uso: node test/veiculos-base.test.js
  */
 const assert = require('node:assert');
-const { criarVeiculosBase } = require('../lib/veiculos-base');
+const { criarVeiculosBase, MAX_TENTATIVAS, LIMITE_HORA } = require('../lib/veiculos-base');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarRepoMemoria } = require('./helpers/repo-memoria');
 
@@ -26,7 +26,7 @@ function apiFalsa(resultado = 'ok', { atraso = 5 } = {}) {
       await new Promise((r) => setTimeout(r, atraso));
       return {
         resultado, httpStatus: resultado === 'ok' ? 200 : 406, duracaoMs: atraso,
-        consome: ['ok', 'sem_resultado'].includes(resultado),
+        consome: ['ok', 'sem_resultado', 'timeout', 'erro'].includes(resultado),
         dados: resultado === 'ok' ? DADOS : null,
       };
     },
@@ -118,8 +118,24 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
     assert.strictEqual(api.chamadas.length, 1);
   });
 
+  await caso('consultas desligadas: placa nova não é reservada nem consultada (F3)', async () => {
+    const { repo, api, vb } = montar({ config: { ativo: false } });
+    const l = await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    assert.strictEqual(l, null);
+    assert.strictEqual(api.chamadas.length, 0);
+    assert.strictEqual(repo.linhas.size, 0);
+    assert.strictEqual(repo.consultas.length, 0);
+  });
+
+  await caso('consultas desligadas: quase gêmea ainda vira suspeita (validador é gratuito) (F3)', async () => {
+    const { repo, api, vb } = montar({ config: { ativo: false }, passagens: { c1: { ABC1D23: 10 } } });
+    const l = await vb.aoPassar({ placa: 'ABC1D28', clienteId: 'c1' });
+    assert.strictEqual(api.chamadas.length, 0);
+    assert.strictEqual(l.status, 'suspeita');
+    assert.strictEqual(repo.linhas.size, 1);
+  });
+
   for (const [nome, config, motivo] of [
-    ['consultas desligadas', { ativo: false }, 'desligado'],
     ['saldo zerado', { saldo_atual: 0 }, 'sem_saldo'],
   ]) {
     await caso(`trava "${nome}": fica pendente e não chama`, async () => {
@@ -139,6 +155,38 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
     assert.strictEqual(l.status, 'pendente');
   });
 
+  const recentes = (n, custo = 0.03) => Array.from({ length: n }, () => ({ custo, criado_em: new Date().toISOString() }));
+
+  await caso('trava limite_hora: 200 consultas pagas na última hora deixam pendente e não chamam (F2)', async () => {
+    const { repo, api, vb } = montar();
+    repo.consultas.push(...recentes(LIMITE_HORA));
+    const l = await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    assert.strictEqual(LIMITE_HORA, 200);
+    assert.strictEqual(api.chamadas.length, 0);
+    assert.strictEqual(l.status, 'pendente');
+    assert.strictEqual(repo.linhas.get('ABC1D23').ultimo_erro, 'limite_hora');
+  });
+
+  await caso('limite_hora ignora consultas sem custo e com mais de 1 h (F2)', async () => {
+    const { repo, api, vb } = montar();
+    const velha = new Date(Date.now() - 2 * 3600000).toISOString();
+    repo.consultas.push(...recentes(150, 0), ...Array.from({ length: 150 }, () => ({ custo: 0.03, criado_em: velha })), ...recentes(199));
+    assert.strictEqual(await repo.consultasUltimaHora(), 199);
+    await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    assert.strictEqual(api.chamadas.length, 1);
+  });
+
+  await caso('fila PARA com limite_hora (F2)', async () => {
+    const { repo, api, vb } = montar();
+    repo.consultas.push(...recentes(LIMITE_HORA - 1));
+    for (const p of ['AAA1A11', 'BBB2B22', 'CCC3C33']) {
+      await repo.reservar({ placa: p, status: 'pendente', visto_por_ultimo_em: 'x' });
+    }
+    const r = await vb.processarFila({ limite: 50 });
+    assert.strictEqual(api.chamadas.length, 1);
+    assert.strictEqual(r.parou, 'limite_hora');
+  });
+
   await caso('sem_resultado é final e conta custo', async () => {
     const { repo, vb } = montar({ api: apiFalsa('sem_resultado') });
     const l = await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
@@ -146,13 +194,34 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
     assert.strictEqual(repo.consultas[0].custo, 0.03);
   });
 
-  await caso('timeout vira erro com próxima tentativa em 5 min e custo 0', async () => {
+  await caso('timeout vira erro com próxima tentativa em 5 min e conta custo (F1)', async () => {
     const { repo, vb } = montar({ api: apiFalsa('timeout') });
     const l = await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
     assert.strictEqual(l.status, 'erro');
     assert.strictEqual(l.tentativas, 1);
     assert.strictEqual(l.proxima_tentativa_em, '2026-10-04T12:05:00.000Z');
-    assert.strictEqual(repo.consultas[0].custo, 0);
+    assert.strictEqual(repo.consultas[0].custo, 0.03);
+  });
+
+  await caso('4ª falha (erro/timeout) vira sem_resultado e sai da fila de vez (F1)', async () => {
+    const { repo, api, vb } = montar({ api: apiFalsa('erro') });
+    await repo.reservar({ placa: 'ABC1D23', status: 'erro', tentativas: 3, proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
+    const r = await vb.consultarAgora('ABC1D23', 'repescagem');
+    assert.strictEqual(api.chamadas.length, 1);
+    assert.strictEqual(r.linha.status, 'sem_resultado');
+    assert.strictEqual(r.linha.ultimo_erro, 'erro');
+    assert.strictEqual(r.linha.proxima_tentativa_em, null);
+    assert.strictEqual(repo.linhas.get('ABC1D23').status, 'sem_resultado');
+    assert.strictEqual(MAX_TENTATIVAS, 4);
+    assert.strictEqual((await repo.fila(50, '2099-01-01T00:00:00.000Z')).length, 0);
+  });
+
+  await caso('3ª falha ainda volta para a fila com backoff (F1)', async () => {
+    const { repo, vb } = montar({ api: apiFalsa('timeout') });
+    await repo.reservar({ placa: 'ABC1D23', status: 'erro', tentativas: 2, proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
+    const r = await vb.consultarAgora('ABC1D23', 'repescagem');
+    assert.strictEqual(r.linha.status, 'erro');
+    assert.strictEqual(r.linha.tentativas, 3);
   });
 
   await caso('token inválido desliga as consultas', async () => {
@@ -202,7 +271,7 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
   });
 
   await caso('linha reservada nasce com posse de 5 min', async () => {
-    const { repo, vb } = montar({ config: { ativo: false } });
+    const { repo, vb } = montar({ config: { saldo_atual: 0 } });
     await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
     const l = repo.linhas.get('ABC1D23');
     assert.strictEqual(l.status, 'pendente');

@@ -92,18 +92,22 @@ async function outroCarro({ body, profile, ip, res }) {
   if (!linha || linha.status !== 'suspeita' || linha.suspeita_cliente_id !== clienteId) {
     return res.status(404).json({ error: 'Placa não encontrada' });
   }
+  // Sem token ou com trava ativa, a suspeita continua: liberar sem poder consultar
+  // deixaria a placa na fila sem o juízo do validador.
+  let api;
+  try { api = criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }); } catch (_) {
+    return res.status(409).json({ executou: false, motivo: 'sem_token', error: 'Consultas indisponíveis agora' });
+  }
+  const repo = criarRepoSupabase();
+  const vb = criarVeiculosBase({ repo, api, validador: criarValidador({ contarPassagens: repo.contarPassagens }) });
+  const t = await vb.travas();
+  if (!t.ok) return res.status(409).json({ executou: false, motivo: t.motivo, error: 'Consultas indisponíveis agora' });
   // Liberação atômica: só uma chamada concorrente leva a linha; as outras 409 (sem pagar de novo).
   const lib = await supabase.from('veiculos_base')
     .update({ status: 'pendente', suspeita_de: null, suspeita_cliente_id: null, tentativas: 0, proxima_tentativa_em: null })
     .eq('placa', m).eq('status', 'suspeita').eq('suspeita_cliente_id', clienteId).select('placa');
   if (lib.error) throw new Error(lib.error.message);
   if (!Array.isArray(lib.data) || lib.data.length !== 1) return res.status(409).json({ error: 'Placa não está em suspeita' });
-  const repo = criarRepoSupabase();
-  const vb = criarVeiculosBase({
-    repo,
-    api: criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }),
-    validador: criarValidador({ contarPassagens: repo.contarPassagens }),
-  });
   const r = await vb.consultarAgora(m, 'reconsulta');
   await registrarAuditoria({ usuarioId: profile.id, acao: 'liberar_suspeita_placa', tabela: 'veiculos_base', registroId: null, detalhes: { placa: m, executou: r.executou, motivo: r.motivo || null }, ip });
   return res.status(200).json(r.executou ? r.linha : { placa: m, status: 'pendente', motivo: r.motivo });

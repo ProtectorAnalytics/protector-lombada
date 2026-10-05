@@ -5,7 +5,7 @@
 const assert = require('node:assert');
 const path = require('node:path');
 
-const estado = { profile: null, tabelas: {}, updates: [], consultas: [], resultadoConsulta: null };
+const estado = { trava: { ok: true }, semToken: false, profile: null, tabelas: {}, updates: [], consultas: [], resultadoConsulta: null };
 
 function stub(rel, exports) {
   const id = require.resolve(path.join('..', rel));
@@ -52,10 +52,11 @@ stub('lib/veiculos-base-repo', {
     contarPassagens: async () => 0,
   }),
 });
-stub('lib/apiplacas', { criarClienteApiplacas: () => ({}) });
+stub('lib/apiplacas', { criarClienteApiplacas: () => { if (estado.semToken) throw new Error('APIPLACAS_TOKEN não configurado'); return {}; } });
 stub('lib/validador-placa', { criarValidador: () => ({}) });
 stub('lib/veiculos-base', {
   criarVeiculosBase: () => ({
+    travas: async () => estado.trava,
     consultarAgora: async (placa, origem) => { estado.consultas.push({ placa, origem }); return estado.resultadoConsulta; },
   }),
 });
@@ -74,7 +75,7 @@ const recente = () => new Date(Date.now() - 86400000).toISOString();
 let passou = 0;
 async function caso(nome, fn) {
   estado.profile = { id: 'u1', role: 'operador', cliente_id: 'c1' };
-  estado.tabelas = {}; estado.updates = []; estado.consultas = [];
+  estado.trava = { ok: true }; estado.semToken = false; estado.tabelas = {}; estado.updates = []; estado.consultas = [];
   estado.resultadoConsulta = { executou: true, linha: { placa: 'ABC1D23', status: 'consultado' } };
   await fn(); passou++; console.log(`ok - ${nome}`);
 }
@@ -225,6 +226,32 @@ async function caso(nome, fn) {
     const r = resp();
     await handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), r);
     assert.deepStrictEqual(r.body, { placa: 'ABC1D28', status: 'pendente', motivo: 'teto' });
+  });
+
+  await caso('outro_carro bloqueado por trava devolve 409 sem liberar a suspeita (F5)', async () => {
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    estado.trava = { ok: false, motivo: 'sem_saldo' };
+    const r = resp();
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), r);
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(r.body.executou, false);
+    assert.strictEqual(r.body.motivo, 'sem_saldo');
+    assert.strictEqual(estado.updates.length, 0);
+    assert.strictEqual(estado.consultas.length, 0);
+    assert.strictEqual(estado.tabelas.veiculos_base[0].status, 'suspeita');
+  });
+
+  await caso('outro_carro sem token da APIPLACAS devolve 409 sem liberar a suspeita (F5)', async () => {
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    estado.semToken = true;
+    const r = resp();
+    await handler(post({ acao: 'outro_carro', placa: 'ABC1D28' }), r);
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(r.body.motivo, 'sem_token');
+    assert.strictEqual(estado.updates.length, 0);
+    assert.ok(!JSON.stringify(r.body).includes('APIPLACAS_TOKEN'));
   });
 
   await caso('outro_carro com body.cliente_id de outro cliente devolve 403', async () => {

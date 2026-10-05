@@ -82,8 +82,8 @@ const RESPOSTA_OK = {
     assert.strictEqual(r.consome, false);
   });
 
-  await caso('401, 402, 429 e 500 classificados sem consumo', async () => {
-    const esperado = { 401: 'placa_invalida', 402: 'token_invalido', 429: 'limite', 500: 'erro' };
+  await caso('401, 402 e 429 classificados sem consumo', async () => {
+    const esperado = { 401: 'placa_invalida', 402: 'token_invalido', 429: 'limite' };
     for (const [st, res] of Object.entries(esperado)) {
       const r = await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(Number(st), { message: 'x' }) }).consultar('ABC1D23');
       assert.strictEqual(r.resultado, res, `HTTP ${st}`);
@@ -91,11 +91,32 @@ const RESPOSTA_OK = {
     }
   });
 
+  await caso('500 vira erro e conta custo por precaução (F1)', async () => {
+    const r = await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(500, { message: 'x' }) }).consultar('ABC1D23');
+    assert.strictEqual(r.resultado, 'erro');
+    assert.strictEqual(r.consome, true);
+  });
+
+  await caso('200 sem MARCA vira sem_resultado e consome (F1)', async () => {
+    const r = await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(200, { MODELO: 'X' }) }).consultar('ABC1D23');
+    assert.strictEqual(r.resultado, 'sem_resultado');
+    assert.strictEqual(r.consome, true);
+    assert.strictEqual(r.dados, null);
+  });
+
+  await caso('200 com corpo não-JSON vira sem_resultado e consome (F1)', async () => {
+    const jsonFn = async () => { throw new SyntaxError('invalid json'); };
+    const r = await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchComJson(200, jsonFn) }).consultar('ABC1D23');
+    assert.strictEqual(r.resultado, 'sem_resultado');
+    assert.strictEqual(r.consome, true);
+    assert.strictEqual(r.httpStatus, 200);
+  });
+
   await caso('estoura em 3 s e vira timeout', async () => {
     const api = criarClienteApiplacas({ token: TOKEN, timeoutMs: 50, fetchImpl: fetchFalso(200, RESPOSTA_OK, { atraso: 500 }) });
     const r = await api.consultar('ABC1D23');
     assert.strictEqual(r.resultado, 'timeout');
-    assert.strictEqual(r.consome, false);
+    assert.strictEqual(r.consome, true); // F1: timeout conta custo por precaução
     assert.strictEqual(r.httpStatus, null);
   });
 
@@ -141,12 +162,12 @@ const RESPOSTA_OK = {
     assert.throws(() => criarClienteApiplacas({ token: '   \n  ' }), /APIPLACAS_TOKEN/);
   });
 
-  await caso('200 cujo json() rejeita com TimeoutError → timeout, consome false, httpStatus null', async () => {
+  await caso('200 cujo json() rejeita com TimeoutError → timeout, consome true, httpStatus null', async () => {
     const jsonFn = async () => { throw Object.assign(new Error('timeout'), { name: 'TimeoutError' }); };
     const api = criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchComJson(200, jsonFn) });
     const r = await api.consultar('ABC1D23');
     assert.strictEqual(r.resultado, 'timeout');
-    assert.strictEqual(r.consome, false);
+    assert.strictEqual(r.consome, true);
     assert.strictEqual(r.httpStatus, null);
   });
 

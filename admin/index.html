@@ -3124,6 +3124,7 @@ function resumoValidacao(r) {
     sem_saldo: ' Parou porque o pacote de consultas acabou.',
     desligado: ' Parou porque as consultas estão desligadas.',
     falhas: ' Parou após várias falhas seguidas; tente de novo em alguns minutos.',
+    limite_hora: ' Limite de consultas por hora atingido; continua sozinho na próxima hora.',
     inexistente: ' Parou porque a placa não foi encontrada na base.',
   };
   return t + (r.parou ? (PARADA[r.parou] || ' Parou antes de terminar.') : ' Concluído.');
@@ -3152,6 +3153,7 @@ const AP_MOTIVO_409 = {
   desligado: 'As consultas estão desligadas.',
   teto: 'O teto do mês foi atingido.',
   sem_saldo: 'O pacote de consultas acabou.',
+  limite_hora: 'Limite de consultas por hora atingido; continua sozinho na próxima hora.',
   inexistente: 'Placa não encontrada na base.',
 };
 const AP_STATUS_RECONSULTA = {

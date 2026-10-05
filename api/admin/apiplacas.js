@@ -34,16 +34,30 @@ function inicioDoMesSP(agora = new Date()) {
   return new Date(`${d.slice(0, 7)}-01T00:00:00-03:00`).toISOString();
 }
 
+// Placa Mercosul → cliente da primeira captura do dia (para o validador).
 async function placasDeHoje() {
   const desde = inicioDoDiaSP();
-  const placas = new Set();
+  const placas = new Map();
   for (let i = 0; ; i += PAGINA_CAPTURAS) {
-    const data = ok(await supabase.from('capturas').select('placa').gte('timestamp', desde)
+    const data = ok(await supabase.from('capturas').select('placa, cliente_id').gte('timestamp', desde)
       .order('timestamp', { ascending: true }).range(i, i + PAGINA_CAPTURAS - 1));
-    data.forEach((c) => { const m = paraMercosul(c.placa); if (m) placas.add(m); });
+    data.forEach((c) => { const m = paraMercosul(c.placa); if (m && !placas.has(m)) placas.set(m, c.cliente_id); });
     if (data.length < PAGINA_CAPTURAS) break;
   }
-  return [...placas];
+  return placas;
+}
+
+// Linha nova passa pelo validador gratuito; suspeita é gravada e não paga.
+// true = virou suspeita (não consultar).
+async function reservarNova({ repo, validador, m, clienteId }) {
+  const base = { placa: m, placa_antiga: paraAntiga(m), visto_por_ultimo_em: new Date().toISOString() };
+  const v = await validador.avaliar({ placa: m, clienteId });
+  if (v.suspeita) {
+    await repo.reservar({ ...base, status: 'suspeita', suspeita_de: v.de, suspeita_cliente_id: clienteId });
+    return true;
+  }
+  await repo.reservar({ ...base, status: 'pendente' });
+  return false;
 }
 
 function contar({ count, error }) {
@@ -83,17 +97,25 @@ async function resumo(repo, res) {
 async function reconsultar({ body, repo, vb, profile, ip, res }) {
   const m = paraMercosul(body.placa);
   if (!m) return res.status(400).json({ error: 'Placa inválida' });
+  // Travas antes de mexer na linha: bloqueado não grava nada.
+  const t = await vb.travas();
+  if (!t.ok) {
+    const r = { executou: false, motivo: t.motivo };
+    await registrarAuditoria({ usuarioId: profile.id, acao: 'apiplacas_reconsulta', tabela: 'veiculos_base', registroId: null, detalhes: { placa: m, ...r }, ip });
+    return res.status(409).json(r);
+  }
   if (!(await repo.buscar(m))) {
     await repo.reservar({ placa: m, placa_antiga: paraAntiga(m), status: 'pendente', visto_por_ultimo_em: new Date().toISOString() });
   } else {
-    await repo.atualizar(m, { status: 'pendente', tentativas: 0, proxima_tentativa_em: null });
+    // Sem zerar proxima_tentativa_em: se outra chamada está com a posse, reivindicar() devolve em_andamento.
+    await repo.atualizar(m, { status: 'pendente', tentativas: 0 });
   }
   const r = await vb.consultarAgora(m, 'reconsulta');
   await registrarAuditoria({ usuarioId: profile.id, acao: 'apiplacas_reconsulta', tabela: 'veiculos_base', registroId: null, detalhes: { placa: m, executou: r.executou, motivo: r.motivo || null }, ip });
   return res.status(r.executou ? 200 : 409).json(r);
 }
 
-async function validarHoje({ repo, vb, profile, ip, res }) {
+async function validarHoje({ repo, vb, validador, profile, ip, res }) {
   const placas = await placasDeHoje();
   const inicio = relogio.agora();
   let consultadas = 0;
@@ -101,15 +123,13 @@ async function validarHoje({ repo, vb, profile, ip, res }) {
   let falhas = 0;
   let seguidas = 0;
   let parou = null;
-  for (const m of placas) {
+  for (const [m, clienteId] of placas) {
     if (relogio.agora() - inicio > ORCAMENTO_MS) { parou = 'tempo'; break; }
     try {
       const existe = await repo.buscar(m);
       if (existe && existe.status !== 'pendente' && existe.status !== 'erro') { seguidas = 0; continue; }
       // Não mexe na posse: consultarAgora reivindica de forma atômica.
-      if (!existe) {
-        await repo.reservar({ placa: m, placa_antiga: paraAntiga(m), status: 'pendente', visto_por_ultimo_em: new Date().toISOString() });
-      }
+      if (!existe && (await reservarNova({ repo, validador, m, clienteId }))) { seguidas = 0; puladas++; continue; }
       const r = await vb.consultarAgora(m, 'validacao');
       seguidas = 0;
       if (r.executou) { consultadas++; continue; }
@@ -122,8 +142,8 @@ async function validarHoje({ repo, vb, profile, ip, res }) {
       if (seguidas >= MAX_FALHAS_SEGUIDAS) { parou = 'falhas'; break; }
     }
   }
-  await registrarAuditoria({ usuarioId: profile.id, acao: 'apiplacas_validar_hoje', tabela: 'veiculos_base', registroId: null, detalhes: { placas: placas.length, consultadas, puladas, falhas, parou }, ip });
-  return res.status(200).json({ placas: placas.length, consultadas, puladas, falhas, parou });
+  await registrarAuditoria({ usuarioId: profile.id, acao: 'apiplacas_validar_hoje', tabela: 'veiculos_base', registroId: null, detalhes: { placas: placas.size, consultadas, puladas, falhas, parou }, ip });
+  return res.status(200).json({ placas: placas.size, consultadas, puladas, falhas, parou });
 }
 
 async function handler(req, res) {
@@ -146,8 +166,9 @@ async function handler(req, res) {
     if (req.method === 'POST') {
       const body = await lerCorpo(req);
       const api = criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN });
-      const vb = criarVeiculosBase({ repo, api, validador: criarValidador({ contarPassagens: repo.contarPassagens }) });
-      const ctx = { body, repo, vb, profile, ip, res };
+      const validador = criarValidador({ contarPassagens: repo.contarPassagens });
+      const vb = criarVeiculosBase({ repo, api, validador });
+      const ctx = { body, repo, vb, validador, profile, ip, res };
       if (body.acao === 'reconsultar') return await reconsultar(ctx);
       if (body.acao === 'validar_hoje') return await validarHoje(ctx);
       return res.status(400).json({ error: 'Ação desconhecida' });

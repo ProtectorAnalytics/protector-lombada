@@ -38,7 +38,12 @@ function criarRepoMemoria({ config = {}, passagens = {} } = {}) {
       Object.assign(l, { status: 'pendente', suspeita_de: null, suspeita_cliente_id: null, tentativas: 0, proxima_tentativa_em: posseIso });
       return true;
     },
-    async registrarConsulta(c) { await ceder(); consultas.push(c); },
+    async registrarConsulta(c) { await ceder(); consultas.push({ criado_em: new Date().toISOString(), ...c }); },
+    async consultasUltimaHora() {
+      await ceder();
+      const desde = new Date(Date.now() - 3600000).toISOString();
+      return consultas.filter((c) => c.custo > 0 && c.criado_em && c.criado_em >= desde).length;
+    },
     async ultimoResultado() {
       await ceder();
       return consultas.length ? consultas[consultas.length - 1].resultado : null;
