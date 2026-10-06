@@ -290,6 +290,8 @@ module.exports = async function handler(req, res) {
       if (decidirRepeticao(anterior, { velocidade, velocidadeInvalida }) === 'descartar') {
         await logError(`repeticao descartada ${placa} ${velocidade}km/h | camera ${camera.nome}`, {
           camera_id: camera.id, captura_anterior: anterior.id, velocidade_anterior: anterior.velocidade,
+          // Para auditar se a regra algum dia esconde um alerta real
+          acima_limite: velocidade > cliente.limite_velocidade,
         });
         return res.status(200).json({ ok: true, id: anterior.id, duplicado: true });
       }
