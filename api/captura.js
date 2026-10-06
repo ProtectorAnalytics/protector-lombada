@@ -4,6 +4,7 @@ const {
   findCameraByToken,
   findCameraBySerial,
   findCapturaRecentePorVehicleId,
+  findPassagemRecenteMesmaPlaca,
   saveCaptura,
   uploadPhoto,
   findVeiculo,
@@ -21,6 +22,8 @@ const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarVeiculosBase } = require('../lib/veiculos-base');
 const { salvarMiniatura } = require('../lib/miniatura');
+const { decidirRepeticao, placaParaRepeticao, JANELA_SEGUNDOS } = require('../lib/repeticao-placa');
+const { paraAntiga } = require('../site/js/placa');
 
 // Base de veículos (APIPLACAS). Sem token configurado, a captura segue sem
 // consultar — nunca quebra por isso.
@@ -273,6 +276,24 @@ module.exports = async function handler(req, res) {
         // 200 explícito: a câmera precisa entender como recebido, senão
         // continua retransmitindo até estourar o tempo total.
         return res.status(200).json({ ok: true, id: jaGravada.id, duplicado: true });
+      }
+    }
+
+    // ── Repetição da mesma placa ─────────────────────────────────────────────
+    // Carro parado ou lento na lombada cruza a linha de disparo duas vezes e a
+    // câmera manda dois eventos com vehicleId diferentes. Vale a primeira
+    // medida; ver lib/repeticao-placa.js.
+    const placaComparavel = placaParaRepeticao(placa);
+    if (placaComparavel) {
+      const grafias = [placaComparavel, paraAntiga(placaComparavel)].filter(Boolean);
+      const anterior = await findPassagemRecenteMesmaPlaca(camera.id, grafias, timestamp, JANELA_SEGUNDOS);
+      if (decidirRepeticao(anterior, { velocidade, velocidadeInvalida }) === 'descartar') {
+        await logError(`repeticao descartada ${placa} ${velocidade}km/h | camera ${camera.nome}`, {
+          camera_id: camera.id, captura_anterior: anterior.id, velocidade_anterior: anterior.velocidade,
+          // Para auditar se a regra algum dia esconde um alerta real
+          acima_limite: velocidade > cliente.limite_velocidade,
+        });
+        return res.status(200).json({ ok: true, id: anterior.id, duplicado: true });
       }
     }
 
