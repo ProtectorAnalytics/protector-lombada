@@ -1,0 +1,23 @@
+# Roda a suíte em todo PR e push no master. Inclui a regra de versão:
+# test/versao-novidades.test.js falha se a atualização não tiver novidade e aviso.
+name: Testes
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test

@@ -2556,6 +2556,7 @@
 
     /* Aviso único de "visual novo": tarefa modal curta (scrim + materializar) */
     .boas-vindas { width: 460px; }
+    .bv-versao { font-size: 0.75rem; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
     .boas-vindas .modal-header h3 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; color: var(--text-primary); }
     .bv-lista {
       margin: 4px 0 18px;
@@ -2727,6 +2728,7 @@
   <script src="/js/spring.js"></script>
   <script src="/js/grafico-acessivel.js"></script>
   <script src="/js/placa.js"></script>
+  <script src="/js/novidades-atual.js"></script>
   <script src="/js/texto-seguro.js"></script>
   <script src="/js/nome-veiculo.js"></script>
   <script src="/js/selo-veiculo.js"></script>
@@ -2777,7 +2779,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.5.4 &middot; 2026-10-06
+        v1.6.0 &middot; 2026-10-10
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2827,7 +2829,7 @@
         <div class="stats-row">
           <div class="stat-card destaque">
             <div class="label">Passagens hoje</div>
-            <div class="valor-linha"><span class="value" id="stat-total">0</span><span class="unit">veículos</span></div>
+            <div class="valor-linha"><span class="value" id="stat-total">0</span><span class="unit" id="stat-total-unit" title="Passagens contam cada leitura; o mesmo veículo pode passar várias vezes">passagens</span></div>
           </div>
           <div class="stat-card destaque" id="card-alertas">
             <div class="label" id="label-alertas">Alertas hoje</div>
@@ -2936,7 +2938,7 @@
                 <span class="pg-info" id="pg-info"></span>
                 <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
                   <span id="sem-vel-texto"></span>
-                  <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="Passagens sem velocidade (sem radar) ficam ocultas na tela por padrão. Nada é removido: continuam nos relatórios.">Mostrar</button>
+                  <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="O radar só mede a partir de 10 km/h. Passagens mais lentas chegam sem velocidade e ficam ocultas na lista por padrão. Nada é removido: continuam nos indicadores e nos relatórios.">Mostrar</button>
                 </div>
               </div>
               <div class="pg-controls" id="pg-controls"></div>
@@ -2954,12 +2956,12 @@
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label">Vel. Média</div>
               <div class="sidebar-kpi-value" id="ind-vel-media">--</div>
-              <div class="sidebar-kpi-unit">km/h</div>
+              <div class="sidebar-kpi-unit" id="ind-vel-media-base">km/h</div>
             </div>
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label">Conformidade</div>
               <div class="sidebar-kpi-value" id="ind-conformidade" style="color:var(--green)">--</div>
-              <div class="sidebar-kpi-unit">no limite</div>
+              <div class="sidebar-kpi-unit" id="ind-conformidade-base">no limite</div>
             </div>
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label" id="lbl-hora-pico">Hora Pico</div>
@@ -2998,7 +3000,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.5.4
+      Protector Traffic Control &middot; v1.6.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3152,24 +3154,19 @@
     </div>
   </div>
 
-  <!-- ===== AVISO ÚNICO: VISUAL NOVO ===== -->
+  <!-- ===== O QUE HÁ DE NOVO: abre uma vez por versão (site/js/novidades-atual.js) ===== -->
   <div class="modal-overlay" id="boas-vindas" onclick="if(event.target===this)fecharBoasVindas()">
     <div class="modal-content boas-vindas" role="dialog" aria-modal="true" aria-labelledby="bv-titulo" aria-describedby="bv-lista">
       <div class="modal-header">
-        <h3 id="bv-titulo">Seu painel tem um visual novo</h3>
+        <div>
+          <div class="bv-versao" id="bv-versao"></div>
+          <h3 id="bv-titulo">Novidades no seu painel</h3>
+        </div>
         <button type="button" class="modal-close" onclick="fecharBoasVindas()" aria-label="Fechar">&times;</button>
       </div>
-      <ul class="bv-lista" id="bv-lista">
-        <li>Mais leve e rápido de ler.</li>
-        <li>Avisos claros quando algo falha, com o horário da última atualização.</li>
-        <li>No celular, os detalhes abrem como um painel que você arrasta para fechar.</li>
-      </ul>
-      <div class="bv-tema">
-        <span id="bv-tema-rotulo">Tema do painel</span>
-        <div data-seletor-tema data-com-rotulo aria-labelledby="bv-tema-rotulo"></div>
-      </div>
+      <ul class="bv-lista" id="bv-lista"></ul>
       <div class="bv-acoes">
-        <a class="bv-link" href="/dashboard/novidades" onclick="marcarBoasVindasVista()">Ver novidades</a>
+        <a class="bv-link" href="/dashboard/novidades" onclick="marcarBoasVindasVista()">Ver todas as novidades</a>
         <button type="button" class="bv-entendi" data-foco-inicial onclick="fecharBoasVindas()">Entendi</button>
       </div>
     </div>
@@ -3200,7 +3197,7 @@
       montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo, temFiltroAtivo,
       hojeLocal, virarDia, periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro,
       contarMaisFiltros, VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString,
-      validarPeriodo,
+      validarPeriodo, buscaPorVeiculo,
     } = estadoFiltrosLib;
     const {
       rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
@@ -3235,7 +3232,8 @@
       try { return localStorage.getItem(SEM_VEL_KEY) === '1'; } catch { return false; }
     }
     function capturasVisiveis() {
-      if (mostrarSemVel()) return lastCapturas;
+      // Busca por placa/veículo mostra tudo: quem procura um carro quer todas as passagens dele
+      if (mostrarSemVel() || buscaPorVeiculo(filtrosAtivos)) return lastCapturas;
       return (lastCapturas || []).filter(c => c.velocidade > 0);
     }
     function toggleSemVel(checked) {
@@ -3248,12 +3246,17 @@
     // Rodapé da tabela: "N passagens sem velocidade ocultas · Mostrar" / "Ocultar"
     function atualizarRodapeSemVel() {
       const semVel = (lastCapturas || []).filter(c => !(c.velocidade > 0)).length;
-      const mostrando = mostrarSemVel();
+      const naBusca = buscaPorVeiculo(filtrosAtivos);
+      const mostrando = mostrarSemVel() || naBusca;
       const uma = semVel === 1;
       document.getElementById('rodape-sem-vel').hidden = semVel === 0;
-      document.getElementById('sem-vel-texto').textContent = mostrando
-        ? `${semVel} ${uma ? 'passagem sem velocidade aparece' : 'passagens sem velocidade aparecem'} na lista ·`
-        : `${semVel} ${uma ? 'passagem sem velocidade oculta' : 'passagens sem velocidade ocultas'} ·`;
+      // Na busca por veículo elas sempre aparecem: sem botão de ocultar
+      document.getElementById('btn-sem-vel').hidden = naBusca;
+      document.getElementById('sem-vel-texto').textContent = naBusca
+        ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h incluída' : 'passagens abaixo de 10 km/h incluídas'} na busca`
+        : mostrando
+        ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h aparece' : 'passagens abaixo de 10 km/h aparecem'} na lista ·`
+        : `${semVel} ${uma ? 'passagem abaixo de 10 km/h oculta' : 'passagens abaixo de 10 km/h ocultas'} ·`;
       document.getElementById('btn-sem-vel').textContent = mostrando ? 'Ocultar' : 'Mostrar';
       sincronizarBarraRodape();
     }
@@ -4278,23 +4281,37 @@
     // ============================================
     // STATS
     // ============================================
+    function textoPassagensVeiculos(capturas) {
+      const veiculos = new Set(capturas.filter(c => placaLib.ehPlaca(c.placa)).map(c => c.placa)).size;
+      return veiculos ? `de ${veiculos} ${veiculos === 1 ? 'veículo' : 'veículos'}` : 'passagens';
+    }
+
     async function loadStats() {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
       const sessao = marcaDaSessao();
-      const { data, error } = await sb.from('capturas')
-        .select('velocidade')
-        .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', todayStart.toISOString());
+      // Paginado: dia movimentado passa de 1.000 passagens (limite por consulta)
+      let data;
+      try {
+        data = await coletarPaginado((de, ate) => sb.from('capturas')
+          .select('placa, velocidade')
+          .eq('cliente_id', currentCliente.id)
+          .gte('timestamp', todayStart.toISOString())
+          .order('timestamp', { ascending: false }).order('id').range(de, ate));
+      } catch { return; }
 
-      if (error || !data || !sessaoValida(sessao)) return;
+      if (!sessaoValida(sessao)) return;
 
       const total = data.length;
       const alertas = data.filter(c => acimaDoLimite(c.velocidade, currentCliente.limite_velocidade)).length;
       const maxVel = data.length > 0 ? Math.max(...data.map(c => c.velocidade)) : 0;
 
       document.getElementById('stat-total').textContent = total;
+      // Passagem ≠ veículo: o mesmo carro passa várias vezes (ou fica parado
+      // no quadro). O card mostra as duas contagens para não confundir com a
+      // lista, que conta passagens.
+      document.getElementById('stat-total-unit').textContent = textoPassagensVeiculos(data);
       document.getElementById('stat-alertas').textContent = alertas;
       const maxEl = document.getElementById('stat-maxvel');
       maxEl.textContent = maxVel;
@@ -4555,7 +4572,7 @@
       if (totalPages > 1) {
         mostrarPaginas(true);
         const pgInfo = document.getElementById('pg-info');
-        pgInfo.textContent = `${start + 1}-${end} de ${data.length} registros`;
+        pgInfo.textContent = `${start + 1}-${end} de ${data.length} ${data.length === 1 ? 'passagem' : 'passagens'}`;
         if (limiteAtingido) {
           // A consulta traz LIMITE_CAPTURAS; as sem velocidade podem estar
           // ocultas, então o total exibido pode ser menor que o limite.
@@ -5828,17 +5845,25 @@
       };
     }
 
+    // Todas as passagens do período com os filtros da tela (paginado)
+    async function capturasParaExportar() {
+      const { f, montar } = await consultaDoPeriodo('placa, velocidade, camera_id, timestamp, tipo_veiculo, cor_veiculo');
+      return soNaoCadastradasSeAtivo(f, await linhasDe(montar));
+    }
+
     async function gerarExcel() {
-      if (!lastCapturas || lastCapturas.length === 0) {
+      // Exporta o período inteiro do filtro, não só as 300 passagens da lista
+      const capturas = await capturasParaExportar();
+      if (capturas.length === 0) {
         alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
         return;
       }
       await lazyLoadExportLibs();
       // Dados da base de veículos de todas as passagens exportadas (não só da página)
-      await loadVeiculosBase(lastCapturas.map(c => c.placa));
+      await loadVeiculosBase(capturas.map(c => c.placa));
 
       const limite = currentCliente.limite_velocidade;
-      const rows = lastCapturas.map(c => {
+      const rows = capturas.map(c => {
         const ts = new Date(c.timestamp);
         const veiculo = veiculosCache[c.placa];
         const vb = dadosVeiculoExport(c.placa);
@@ -5882,7 +5907,9 @@
     }
 
     async function gerarPDF() {
-      if (!lastCapturas || lastCapturas.length === 0) {
+      // Exporta o período inteiro do filtro, não só as 300 passagens da lista
+      const capturas = await capturasParaExportar();
+      if (capturas.length === 0) {
         alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
         return;
       }
@@ -5922,16 +5949,18 @@
       const fp = getActiveFilters(); // mesmo período (e fuso) da tabela exportada
       const filterStart = `${fp.dataInicio} ${fp.horaInicio}`;
       const filterEnd = `${fp.dataFim} ${fp.horaFim}`;
-      doc.text(`Período: ${filterStart} a ${filterEnd} | Total de registros: ${lastCapturas.length}`, margin, y + 10);
+      doc.text(`Período: ${filterStart} a ${filterEnd} | Total de passagens: ${capturas.length}`, margin, y + 10);
 
       // --- Resumo ---
       y += 18;
-      const totalAlertas = lastCapturas.filter(c => acimaDoLimite(c.velocidade, limite)).length;
-      const velMedia = lastCapturas.length > 0
-        ? Math.round(lastCapturas.reduce((s, c) => s + c.velocidade, 0) / lastCapturas.length)
+      const totalAlertas = capturas.filter(c => acimaDoLimite(c.velocidade, limite)).length;
+      // Média só das medidas (como no indicador): passagem abaixo de 10 km/h chega com 0
+      const medidas = capturas.filter(c => velocidadeMedida(c.velocidade));
+      const velMedia = medidas.length > 0
+        ? Math.round(medidas.reduce((s, c) => s + c.velocidade, 0) / medidas.length)
         : 0;
-      const velMax = lastCapturas.length > 0
-        ? Math.max(...lastCapturas.map(c => c.velocidade))
+      const velMax = capturas.length > 0
+        ? Math.max(...capturas.map(c => c.velocidade))
         : 0;
 
       doc.setFillColor(240, 245, 250);
@@ -5941,7 +5970,7 @@
       doc.setFont(undefined, 'bold');
       const summaryY = y + 6.5;
       const col4 = usableW / 4;
-      doc.text(`Total: ${lastCapturas.length}`, margin + col4 * 0.5, summaryY, { align: 'center' });
+      doc.text(`Total: ${capturas.length}`, margin + col4 * 0.5, summaryY, { align: 'center' });
       doc.setTextColor(220, 38, 38);
       doc.text(`Alertas: ${totalAlertas}`, margin + col4 * 1.5, summaryY, { align: 'center' });
       doc.setTextColor(4, 107, 210);
@@ -5984,7 +6013,7 @@
       // Rows
       doc.setFont(undefined, 'normal');
       doc.setFontSize(7);
-      lastCapturas.forEach((c, idx) => {
+      capturas.forEach((c, idx) => {
         if (y + rowH > pageH - 15) {
           // Footer
           drawFooter(doc, pageW, pageH, margin);
@@ -6860,12 +6889,25 @@
     });
 
     // ============================================
-    // AVISO ÚNICO: "Seu painel tem um visual novo"
+    // O QUE HÁ DE NOVO: abre uma vez por versão para todos os usuários
     // ============================================
-    const CHAVE_BOAS_VINDAS = 'lombada-aviso-visual-2026-09';
+    // Conteúdo e versão vêm de site/js/novidades-atual.js. Versão nova = chave
+    // nova: o aviso volta para todo mundo, inclusive quem fechou o anterior.
+    const CHAVE_BOAS_VINDAS = `lombada-novidades-${novidadesAtual.versao}`;
     function boasVindasJaVista() {
-      // Sem storage (modo privado, bloqueado) não mostra: não daria para lembrar
+      // Sem storage (modo privado, bloqueado) não mostra: abriria a cada recarga
       try { return localStorage.getItem(CHAVE_BOAS_VINDAS) !== null; } catch { return true; }
+    }
+    function preencherBoasVindas() {
+      const [ano, mes, dia] = novidadesAtual.data.split('-');
+      document.getElementById('bv-versao').textContent = `Versão ${novidadesAtual.versao} · ${dia}/${mes}/${ano}`;
+      document.getElementById('bv-titulo').textContent = novidadesAtual.titulo;
+      const lista = document.getElementById('bv-lista');
+      lista.replaceChildren(...novidadesAtual.itens.map((t) => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        return li;
+      }));
     }
     function marcarBoasVindasVista() {
       try { localStorage.setItem(CHAVE_BOAS_VINDAS, new Date().toISOString()); } catch { /* sem storage */ }
@@ -6873,8 +6915,8 @@
     function mostrarBoasVindasSeNecessario() {
       if (emRecuperacaoSenha || boasVindasJaVista()) return;
       if (document.querySelector('.modal-overlay.active, .vm-overlay.active, .lightbox-overlay.active')) return;
+      preencherBoasVindas();
       abrirOverlay(document.getElementById('boas-vindas'));
-      requestAnimationFrame(sincronizarSeletores); // o seletor do aviso acabou de aparecer
     }
     function fecharBoasVindas() {
       marcarBoasVindasVista();
@@ -7306,7 +7348,13 @@
     function aplicarFiltros(q, f, fv) {
       let r = q;
       if (f.cameraId) r = r.eq('camera_id', f.cameraId);
-      if (f.placa) r = r.ilike('placa', `%${f.placa}%`);
+      if (f.placa) {
+        // Placa completa: procura nas duas grafias (antiga e Mercosul). Só A-Z0-9 chega aqui.
+        const grafias = [...new Set([f.placa, placaLib.paraMercosul(f.placa), placaLib.paraAntiga(f.placa)].filter(Boolean))];
+        r = grafias.length > 1
+          ? r.or(grafias.map(g => `placa.ilike.*${g}*`).join(','))
+          : r.ilike('placa', `%${f.placa}%`);
+      }
       if (f.velMin > 0) r = r.gte('velocidade', f.velMin);
       if (f.velMax) r = r.lte('velocidade', f.velMax);
       if (f.soAlertas) r = r.gt('velocidade', currentCliente.limite_velocidade);
@@ -7317,24 +7365,27 @@
     // Filtro de veículo sem placas (vazio, excesso, erro) = nenhum resultado
     const semPlacasDoVeiculo = (fv) => fv.ativo && !(fv.placas && fv.placas.length);
 
-    // Consulta do período com todos os filtros; null quando o filtro de veículo zera tudo
-    async function consultaDoPeriodo(colunas) {
+    // Consulta do período com todos os filtros. Devolve `montar` (nova consulta a
+    // cada chamada, para paginar) ou null quando o filtro de veículo zera tudo.
+    async function consultaDoPeriodo(colunas, ajustar = (q) => q) {
       const f = getActiveFilters();
       const fv = await placasDoFiltroVeiculo();
-      if (semPlacasDoVeiculo(fv)) return { f, q: null };
-      const q = sb.from('capturas').select(colunas)
+      if (semPlacasDoVeiculo(fv)) return { f, montar: null };
+      const montar = () => ajustar(aplicarFiltros(sb.from('capturas').select(colunas)
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd);
-      return { f, q: aplicarFiltros(q, f, fv) };
+        .lte('timestamp', f.tsEnd), f, fv));
+      return { f, montar };
     }
 
-    // Erro de consulta sobe (o painel avisa "Falha ao atualizar"); não vira "sem dados"
-    async function linhasDe(q) {
-      if (!q) return [];
-      const { data, error } = await q;
-      if (error) throw new Error(error.message || 'falha na consulta');
-      return data || [];
+    // Todas as linhas do período, em páginas: o servidor devolve no máximo 1.000
+    // por consulta, e indicadores/Top 10/gráficos calculados com 1.000 de 3.000+
+    // passagens ficavam errados sem aviso. Erro sobe (o painel avisa "Falha ao
+    // atualizar"); não vira "sem dados".
+    async function linhasDe(montar) {
+      if (!montar) return [];
+      return coletarPaginado((de, ate) => montar()
+        .order('timestamp', { ascending: false }).order('id').range(de, ate));
     }
 
     // "Não cadastrados": placa fora do cadastro de moradores (as duas grafias)
@@ -7345,8 +7396,8 @@
     }
 
     async function consultaELinhas(colunas) {
-      const { f, q } = await consultaDoPeriodo(colunas);
-      return { f, data: soNaoCadastradasSeAtivo(f, await linhasDe(q)) };
+      const { f, montar } = await consultaDoPeriodo(colunas);
+      return { f, data: soNaoCadastradasSeAtivo(f, await linhasDe(montar)) };
     }
 
     // Roda a consulta de um card. Erro: mostra "Não foi possível atualizar ·
@@ -7373,8 +7424,8 @@
     async function loadHourlyChart() {
       const seq = ++graficoSeq;
       // Mesmos filtros da tabela; filtro de veículo sem placas = gráfico zerado
-      const { f, q } = await consultaDoPeriodo('timestamp, placa');
-      const data = soNaoCadastradasSeAtivo(f, await linhasDe(q));
+      const { f, montar } = await consultaDoPeriodo('timestamp, placa');
+      const data = soNaoCadastradasSeAtivo(f, await linhasDe(montar));
       if (seq !== graficoSeq) return; // resposta antiga não redesenha por cima
 
       if (f.isSingleDay) {
@@ -7614,7 +7665,9 @@
 
       if (!data || data.length === 0) {
         document.getElementById('ind-vel-media').textContent = '--';
+        document.getElementById('ind-vel-media-base').textContent = 'km/h';
         document.getElementById('ind-conformidade').textContent = '--';
+        document.getElementById('ind-conformidade-base').textContent = 'no limite';
         document.getElementById('ind-hora-pico').textContent = '--';
         document.getElementById('ind-reincidentes').textContent = '0';
         return;
@@ -7644,6 +7697,9 @@
         ? Math.round(medidas.reduce((s, c) => s + c.velocidade, 0) / medidas.length)
         : 0;
       avgEl.textContent = medidas.length ? avg : '--';
+      // A base da média fica explícita: só entram as passagens que o radar mediu
+      document.getElementById('ind-vel-media-base').textContent =
+        `km/h · ${medidas.length} ${medidas.length === 1 ? 'medição' : 'medições'}`;
       avgEl.style.color = acimaDoLimite(avg, limite) ? 'var(--red)' : 'var(--accent)';
 
       // Conformidade — passagens abaixo de 10 km/h contam como conformes
@@ -7653,6 +7709,8 @@
       const pct = validas.length ? Math.round((dentro / validas.length) * 100) : 100;
       const confEl = document.getElementById('ind-conformidade');
       confEl.textContent = pct + '%';
+      document.getElementById('ind-conformidade-base').textContent =
+        `de ${validas.length} ${validas.length === 1 ? 'passagem' : 'passagens'}`;
       confEl.style.color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
 
       // Hora/Dia pico
@@ -7675,7 +7733,7 @@
 
       // Reincidentes (placas com 2+ alertas no período)
       const alertsByPlaca = {};
-      data.filter(c => acimaDoLimite(c.velocidade, limite)).forEach(c => {
+      data.filter(c => acimaDoLimite(c.velocidade, limite) && placaLib.ehPlaca(c.placa)).forEach(c => {
         alertsByPlaca[c.placa] = (alertsByPlaca[c.placa] || 0) + 1;
       });
       const reincidentes = Object.values(alertsByPlaca).filter(c => c >= 2).length;
@@ -7711,8 +7769,9 @@
         });
       }
 
-      const { q } = await consultaDoPeriodo('velocidade, timestamp, placa');
-      const data = soNaoCadastradasSeAtivo(f, await linhasDe(q && q.gt('velocidade', currentCliente.limite_velocidade)));
+      const { montar } = await consultaDoPeriodo('velocidade, timestamp, placa',
+        (q) => q.gt('velocidade', currentCliente.limite_velocidade));
+      const data = soNaoCadastradasSeAtivo(f, await linhasDe(montar));
       if (seq !== alertasSeq) return; // resposta antiga não redesenha por cima
       if (data) {
         data.forEach(c => {
@@ -7851,7 +7910,8 @@
       const counts = {};
       const alerts = {};
       const limite = currentCliente.limite_velocidade;
-      data.forEach(c => {
+      // "SEM PLACA" não é veículo: fica fora do ranking (as passagens seguem na lista)
+      data.filter(c => placaLib.ehPlaca(c.placa)).forEach(c => {
         counts[c.placa] = (counts[c.placa] || 0) + 1;
         if (acimaDoLimite(c.velocidade, limite)) alerts[c.placa] = (alerts[c.placa] || 0) + 1;
       });
@@ -7859,6 +7919,12 @@
       const sorted = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
+
+      if (sorted.length === 0) {
+        document.getElementById('ranking-list').innerHTML =
+          '<li class="ranking-item" style="color:var(--text-muted)">Nenhuma placa lida no período</li>';
+        return;
+      }
 
       document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => {
         const hasAlert = (alerts[item[0]] || 0) > 0;

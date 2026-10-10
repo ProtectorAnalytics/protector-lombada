@@ -23,6 +23,7 @@ const { criarValidador } = require('../lib/validador-placa');
 const { criarVeiculosBase } = require('../lib/veiculos-base');
 const { salvarMiniatura } = require('../lib/miniatura');
 const { decidirRepeticao, placaParaRepeticao, JANELA_SEGUNDOS } = require('../lib/repeticao-placa');
+const { decidirMesmoEvento, JANELA_PARADO_MINUTOS } = require('../lib/veiculo-parado');
 const { paraAntiga } = require('../site/js/placa');
 const { resumirCorpoInvalido } = require('../lib/diagnostico-json');
 const { respostaPlaca } = require('../lib/resposta-camera');
@@ -266,18 +267,25 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Placa não fornecida' });
     }
 
-    // ── Dedupe de retransmissão ──────────────────────────────────────────────
-    // A câmera reenvia o mesmo evento quando não recebe resposta dentro do seu
-    // timeout de 10s. O vehicleId é igual em todos os reenvios, então basta
-    // consultar se já gravamos este evento há pouco. Ver
-    // sql/migration-vehicle-id-dedupe.sql para por que a janela é curta.
+    // ── Mesmo evento: retransmissão ou veículo parado no quadro ──────────────
+    // O vehicleId é igual nos reenvios da câmera (timeout de 10s) e também
+    // quando um carro fica parado no campo dela: a câmera reenvia o evento a
+    // cada ~10 min enquanto ele não sai. Regra e janelas em
+    // lib/veiculo-parado.js; índice em sql/migration-vehicle-id-dedupe.sql.
     const vehicleId = parseVehicleId(normalized.vehicle_id);
     if (vehicleId !== null) {
-      const jaGravada = await findCapturaRecentePorVehicleId(camera.id, vehicleId);
-      if (jaGravada) {
+      const anteriorMesmoEvento = await findCapturaRecentePorVehicleId(camera.id, vehicleId, JANELA_PARADO_MINUTOS);
+      const decisao = decidirMesmoEvento(anteriorMesmoEvento, { placa, velocidade, velocidadeInvalida }, Date.now());
+      if (decisao !== 'gravar') {
+        if (decisao === 'parado') {
+          await logError(`veiculo parado descartado ${placa} ${velocidade}km/h | camera ${camera.nome}`, {
+            camera_id: camera.id, captura_anterior: anteriorMesmoEvento.id, vehicle_id: vehicleId,
+            acima_limite: velocidade > cliente.limite_velocidade,
+          });
+        }
         // 200 explícito: a câmera precisa entender como recebido, senão
         // continua retransmitindo até estourar o tempo total.
-        return res.status(200).json(respostaPlaca({ id: jaGravada.id, duplicado: true }));
+        return res.status(200).json(respostaPlaca({ id: anteriorMesmoEvento.id, duplicado: true }));
       }
     }
 

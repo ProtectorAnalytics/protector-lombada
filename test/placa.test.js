@@ -3,7 +3,7 @@
  * Uso: node test/placa.test.js
  */
 const assert = require('node:assert');
-const { limpar, paraMercosul, paraAntiga, difereEmUm, variantes } = require('../site/js/placa');
+const { limpar, paraMercosul, paraAntiga, difereEmUm, variantes, ehPlaca } = require('../site/js/placa');
 
 let passou = 0;
 function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
@@ -65,6 +65,18 @@ caso('variantes cobrem troca de letra, de dígito e da 5ª posição, nas duas g
 
 caso('variantes de placa inválida é lista vazia', () => {
   assert.deepStrictEqual(variantes('???'), []);
+});
+
+caso('ehPlaca: placa antiga e Mercosul são placas', () => {
+  assert.strictEqual(ehPlaca('SJW0G75'), true);
+  assert.strictEqual(ehPlaca('ABC1234'), true);
+});
+
+caso('ehPlaca: "SEM PLACA", vazio e leitura parcial não são placas', () => {
+  assert.strictEqual(ehPlaca('SEM PLACA'), false);
+  assert.strictEqual(ehPlaca(''), false);
+  assert.strictEqual(ehPlaca(null), false);
+  assert.strictEqual(ehPlaca('AB12'), false);
 });
 
 console.log(`\n${passou} casos passaram`);
