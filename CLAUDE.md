@@ -9,13 +9,23 @@ Guia rápido para sessões do Claude Code neste repositório.
 Sempre que um PR meu atender TODAS estas condições, posso mergear direto em `master` sem perguntar:
 
 - `mergeable_state: clean` (sem conflitos)
-- CI do Vercel Preview verde (`conclusion: success`)
+- CI do Vercel Preview verde (`conclusion: success`) e check "Testes" (GitHub Actions) verde
 - Sem reviews humanos pendentes ou comentários não resolvidos
 - Sem migrations destrutivas pendentes de aprovação
 
 Padrão de merge: **squash** (mantém histórico linear; PRs anteriores #13–#22 seguem esse formato).
 
 Merge em `master` dispara deploy de produção automático no Vercel (alias: `lombada.appps.com.br`).
+
+## Regra de atualização (versão + novidades + aviso)
+
+Toda atualização que muda o que o usuário vê ou o que o sistema conta sobe a versão (SemVer) e publica a novidade:
+
+1. `site/js/novidades-atual.js`: `versao`, `data`, `titulo` e `itens` (linguagem de síndico, sem jargão). O painel abre esse aviso **uma vez por versão para todos os usuários**.
+2. `package.json` (`npm version X.Y.Z --no-git-tag-version`), rodapés de `dashboard/index.html` e os manuais (`dashboard/manual.html`, `admin/manual-usuario.html`).
+3. Card novo no topo de `dashboard/novidades.html`.
+
+`test/versao-novidades.test.js` confere tudo isso e roda no GitHub Actions (`.github/workflows/testes.yml`). PR com o check "Testes" vermelho não entra.
 
 ## Stack
 
