@@ -67,5 +67,13 @@
     return [...out];
   }
 
-  return { limpar, paraMercosul, paraAntiga, difereEmUm, variantes };
+  /**
+   * É uma placa de verdade? "SEM PLACA" (a câmera não leu) e leituras
+   * parciais não identificam veículo: ficam fora de ranking e contagens.
+   */
+  function ehPlaca(placa) {
+    return paraMercosul(placa || '') !== null;
+  }
+
+  return { limpar, paraMercosul, paraAntiga, difereEmUm, variantes, ehPlaca };
 });
