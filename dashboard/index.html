@@ -4285,7 +4285,7 @@
     // STATS
     // ============================================
     function textoPassagensVeiculos(capturas) {
-      const veiculos = new Set(capturas.map(c => c.placa)).size;
+      const veiculos = new Set(capturas.filter(c => placaLib.ehPlaca(c.placa)).map(c => c.placa)).size;
       return veiculos ? `de ${veiculos} ${veiculos === 1 ? 'veículo' : 'veículos'}` : 'passagens';
     }
 
@@ -7697,7 +7697,7 @@
 
       // Reincidentes (placas com 2+ alertas no período)
       const alertsByPlaca = {};
-      data.filter(c => acimaDoLimite(c.velocidade, limite)).forEach(c => {
+      data.filter(c => acimaDoLimite(c.velocidade, limite) && placaLib.ehPlaca(c.placa)).forEach(c => {
         alertsByPlaca[c.placa] = (alertsByPlaca[c.placa] || 0) + 1;
       });
       const reincidentes = Object.values(alertsByPlaca).filter(c => c >= 2).length;
@@ -7873,7 +7873,8 @@
       const counts = {};
       const alerts = {};
       const limite = currentCliente.limite_velocidade;
-      data.forEach(c => {
+      // "SEM PLACA" não é veículo: fica fora do ranking (as passagens seguem na lista)
+      data.filter(c => placaLib.ehPlaca(c.placa)).forEach(c => {
         counts[c.placa] = (counts[c.placa] || 0) + 1;
         if (acimaDoLimite(c.velocidade, limite)) alerts[c.placa] = (alerts[c.placa] || 0) + 1;
       });
@@ -7881,6 +7882,12 @@
       const sorted = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
+
+      if (sorted.length === 0) {
+        document.getElementById('ranking-list').innerHTML =
+          '<li class="ranking-item" style="color:var(--text-muted)">Nenhuma placa lida no período</li>';
+        return;
+      }
 
       document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => {
         const hasAlert = (alerts[item[0]] || 0) > 0;
