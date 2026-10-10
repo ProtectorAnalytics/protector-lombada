@@ -4,13 +4,15 @@ const {
   findCameraByToken,
   findCameraBySerial,
   findCapturaRecentePorVehicleId,
-  findPassagemRecenteMesmaPlaca,
+  findPassagensRecentes,
   saveCaptura,
   uploadPhoto,
   findVeiculo,
   getPassagensByPlaca,
   updateCameraLastSeen,
   markNotificado,
+  deleteCapturas,
+  deletePhotos,
   supabase,
 } = require('../lib/supabase');
 const { gerarPDF } = require('../lib/pdf-generator');
@@ -22,9 +24,8 @@ const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarVeiculosBase } = require('../lib/veiculos-base');
 const { salvarMiniatura } = require('../lib/miniatura');
-const { decidirRepeticao, placaParaRepeticao, JANELA_SEGUNDOS } = require('../lib/repeticao-placa');
+const { decidirRepeticao, placaParaRepeticao, acharRepeticao, JANELA_SEGUNDOS } = require('../lib/repeticao-placa');
 const { decidirMesmoEvento, JANELA_PARADO_MINUTOS } = require('../lib/veiculo-parado');
-const { paraAntiga } = require('../site/js/placa');
 const { resumirCorpoInvalido, urlSemSegredos } = require('../lib/diagnostico-json');
 const { respostaPlaca } = require('../lib/resposta-camera');
 
@@ -291,20 +292,25 @@ module.exports = async function handler(req, res) {
 
     // ── Repetição da mesma placa ─────────────────────────────────────────────
     // Carro parado ou lento na lombada cruza a linha de disparo duas vezes e a
-    // câmera manda dois eventos com vehicleId diferentes. Vale a primeira
-    // medida; ver lib/repeticao-placa.js.
-    const placaComparavel = placaParaRepeticao(placa);
-    if (placaComparavel) {
-      const grafias = [placaComparavel, paraAntiga(placaComparavel)].filter(Boolean);
-      const anterior = await findPassagemRecenteMesmaPlaca(camera.id, grafias, timestamp, JANELA_SEGUNDOS);
-      if (decidirRepeticao(anterior, { velocidade, velocidadeInvalida }) === 'descartar') {
+    // câmera manda dois eventos com vehicleId diferentes, às vezes com 1 ou 2
+    // caracteres da placa trocados. Vale a primeira medida; se ela veio sem
+    // velocidade e esta trouxe, esta substitui a primeira (removida depois do
+    // ACK). Ver lib/repeticao-placa.js.
+    let substituida = null;
+    if (placaParaRepeticao(placa)) {
+      const recentes = await findPassagensRecentes(camera.id, timestamp, JANELA_SEGUNDOS);
+      const anterior = acharRepeticao(recentes, placa);
+      const decisao = decidirRepeticao(anterior, { velocidade, velocidadeInvalida });
+      if (decisao === 'descartar') {
         await logError(`repeticao descartada ${placa} ${velocidade}km/h | camera ${camera.nome}`, {
-          camera_id: camera.id, captura_anterior: anterior.id, velocidade_anterior: anterior.velocidade,
+          camera_id: camera.id, captura_anterior: anterior.id, placa_anterior: anterior.placa,
+          velocidade_anterior: anterior.velocidade,
           // Para auditar se a regra algum dia esconde um alerta real
           acima_limite: velocidade > cliente.limite_velocidade,
         });
         return res.status(200).json(respostaPlaca({ id: anterior.id, duplicado: true }));
       }
+      if (decisao === 'substituir') substituida = anterior;
     }
 
     // Foto: preservar a imagem original que chega da câmera (sem resize,
@@ -371,7 +377,7 @@ module.exports = async function handler(req, res) {
     waitUntil(
       processarAposResposta({
         req, camera, cliente, captura, alarm, camIp, camMac,
-        placa, velocidade, timestamp, fotoBuffer, fotoPath,
+        placa, velocidade, timestamp, fotoBuffer, fotoPath, substituida,
       }).catch(async (err) => {
         await logError(`Pós-resposta falhou: ${err.message} | camera: ${camera.nome}`, {
           captura_id: captura.id, placa, stack: err.stack?.slice(0, 500),
@@ -405,7 +411,7 @@ module.exports = async function handler(req, res) {
  */
 async function processarAposResposta({
   req, camera, cliente, captura, alarm, camIp, camMac,
-  placa, velocidade, timestamp, fotoBuffer, fotoPath,
+  placa, velocidade, timestamp, fotoBuffer, fotoPath, substituida,
 }) {
   // 1. Upload da foto. O caminho já foi gravado na captura, então em caso de
   //    falha é preciso limpá-lo — senão a captura aponta para um arquivo que
@@ -457,6 +463,11 @@ async function processarAposResposta({
     }
   } catch { /* não-crítico */ }
 
+  // 2a. Repetição que esta captura substituiu (a primeira leitura veio sem
+  //     velocidade). Só depois do passo 2: cameras.last_capture_id pode estar
+  //     apontando para ela e a FK barraria o delete.
+  if (substituida) await removerSubstituida({ camera, captura, substituida });
+
   // 2b. Base de veículos (APIPLACAS). Antes da notificação para o PDF já sair
   //     com modelo e cor. aoPassar() nunca lança; o limite de 3 s é só da chamada HTTP à APIPLACAS.
   const veiculoBase = veiculosBase ? await veiculosBase.aoPassar({ placa, clienteId: cliente.id }) : null;
@@ -499,6 +510,21 @@ async function processarAposResposta({
       await logError(`Erro notificação: ${notifErr.message}`, { placa, velocidade });
       console.error('Erro na notificação:', notifErr.message);
     }
+  }
+}
+
+/** Remove a leitura sem velocidade que a captura nova substituiu. Nunca lança. */
+async function removerSubstituida({ camera, captura, substituida }) {
+  try {
+    await deleteCapturas([substituida.id]);
+    if (substituida.foto_path) await deletePhotos([substituida.foto_path]);
+    await logError(`repeticao substituida ${substituida.placa} -> ${captura.placa} ${captura.velocidade}km/h | camera ${camera.nome}`, {
+      camera_id: camera.id, captura_removida: substituida.id, captura_nova: captura.id,
+    });
+  } catch (err) {
+    await logError(`Erro ao remover repeticao substituida: ${err.message} | camera: ${camera.nome}`, {
+      camera_id: camera.id, captura_removida: substituida.id, captura_nova: captura.id,
+    });
   }
 }
 
