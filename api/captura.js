@@ -25,6 +25,8 @@ const { salvarMiniatura } = require('../lib/miniatura');
 const { decidirRepeticao, placaParaRepeticao, JANELA_SEGUNDOS } = require('../lib/repeticao-placa');
 const { decidirMesmoEvento, JANELA_PARADO_MINUTOS } = require('../lib/veiculo-parado');
 const { paraAntiga } = require('../site/js/placa');
+const { resumirCorpoInvalido, urlSemSegredos } = require('../lib/diagnostico-json');
+const { respostaPlaca } = require('../lib/resposta-camera');
 
 // Base de veículos (APIPLACAS). Sem token configurado, a captura segue sem
 // consultar — nunca quebra por isso.
@@ -104,7 +106,7 @@ module.exports = async function handler(req, res) {
         const logIp = dados.AlarmInfoPlate?.ipaddr || dados.AlarmInfoPlate?.ip || req.headers['x-forwarded-for'] || '';
         const logMac = dados.AlarmInfoPlate?.macaddr || dados.AlarmInfoPlate?.mac || '';
         await logError(`Câmera não encontrada | token: ${token || 'none'} | type: ${dataType}`, {
-          token, dataType, url,
+          token, dataType, url: urlSemSegredos(url),
           serialno: serialno || 'none',
           ip: logIp || 'none',
           mac: logMac || 'none',
@@ -283,7 +285,7 @@ module.exports = async function handler(req, res) {
         }
         // 200 explícito: a câmera precisa entender como recebido, senão
         // continua retransmitindo até estourar o tempo total.
-        return res.status(200).json({ ok: true, id: anteriorMesmoEvento.id, duplicado: true });
+        return res.status(200).json(respostaPlaca({ id: anteriorMesmoEvento.id, duplicado: true }));
       }
     }
 
@@ -301,7 +303,7 @@ module.exports = async function handler(req, res) {
           // Para auditar se a regra algum dia esconde um alerta real
           acima_limite: velocidade > cliente.limite_velocidade,
         });
-        return res.status(200).json({ ok: true, id: anterior.id, duplicado: true });
+        return res.status(200).json(respostaPlaca({ id: anterior.id, duplicado: true }));
       }
     }
 
@@ -360,7 +362,7 @@ module.exports = async function handler(req, res) {
     // campo 5) e retransmite o evento inteiro, foto e tudo. Upload ao Storage,
     // telemetria, PDF e e-mail levam segundos e não interessam à câmera: ela só
     // precisa saber que recebemos. Todo o resto vai para depois da resposta.
-    res.status(200).json({ ok: true, id: captura.id });
+    res.status(200).json(respostaPlaca({ id: captura.id }));
 
     // ── Pós-resposta ─────────────────────────────────────────────────────────
     // waitUntil mantém a função viva depois do ACK (Fluid compute). O trabalho
@@ -379,7 +381,10 @@ module.exports = async function handler(req, res) {
 
     return;
   } catch (err) {
-    await logError(`Erro geral: ${err.message}`, { stack: err.stack?.slice(0, 500) });
+    await logError(`Erro geral: ${err.message}`, {
+      stack: err.stack?.slice(0, 500),
+      ...(err.diagnostico ? { diagnostico: err.diagnostico } : {}),
+    });
     console.error('Erro no endpoint /api/captura:', err.message);
     // Depois do ACK a resposta já saiu; responder de novo lançaria
     // ERR_HTTP_HEADERS_SENT e mascararia o erro real.
@@ -515,8 +520,17 @@ function parseBody(req) {
       req.on('end', () => {
         try {
           resolve(JSON.parse(body));
-        } catch {
-          reject(new Error('JSON inválido'));
+        } catch (parseErr) {
+          const err = new Error('JSON inválido');
+          // Sem isto o log só diz "JSON inválido" e não há como saber o que
+          // a câmera mandou (ver lib/diagnostico-json.js).
+          err.diagnostico = {
+            ...resumirCorpoInvalido(body, parseErr),
+            content_length: req.headers['content-length'] || null,
+            content_type: contentType,
+            url: urlSemSegredos(req.url),
+          };
+          reject(err);
         }
       });
       req.on('error', reject);
