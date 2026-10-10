@@ -3200,7 +3200,7 @@
       montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo, temFiltroAtivo,
       hojeLocal, virarDia, periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro,
       contarMaisFiltros, VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString,
-      validarPeriodo,
+      validarPeriodo, buscaPorVeiculo,
     } = estadoFiltrosLib;
     const {
       rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
@@ -3235,7 +3235,8 @@
       try { return localStorage.getItem(SEM_VEL_KEY) === '1'; } catch { return false; }
     }
     function capturasVisiveis() {
-      if (mostrarSemVel()) return lastCapturas;
+      // Busca por placa/veículo mostra tudo: quem procura um carro quer todas as passagens dele
+      if (mostrarSemVel() || buscaPorVeiculo(filtrosAtivos)) return lastCapturas;
       return (lastCapturas || []).filter(c => c.velocidade > 0);
     }
     function toggleSemVel(checked) {
@@ -3248,10 +3249,15 @@
     // Rodapé da tabela: "N passagens sem velocidade ocultas · Mostrar" / "Ocultar"
     function atualizarRodapeSemVel() {
       const semVel = (lastCapturas || []).filter(c => !(c.velocidade > 0)).length;
-      const mostrando = mostrarSemVel();
+      const naBusca = buscaPorVeiculo(filtrosAtivos);
+      const mostrando = mostrarSemVel() || naBusca;
       const uma = semVel === 1;
       document.getElementById('rodape-sem-vel').hidden = semVel === 0;
-      document.getElementById('sem-vel-texto').textContent = mostrando
+      // Na busca por veículo elas sempre aparecem: sem botão de ocultar
+      document.getElementById('btn-sem-vel').hidden = naBusca;
+      document.getElementById('sem-vel-texto').textContent = naBusca
+        ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h incluída' : 'passagens abaixo de 10 km/h incluídas'} na busca`
+        : mostrando
         ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h aparece' : 'passagens abaixo de 10 km/h aparecem'} na lista ·`
         : `${semVel} ${uma ? 'passagem abaixo de 10 km/h oculta' : 'passagens abaixo de 10 km/h ocultas'} ·`;
       document.getElementById('btn-sem-vel').textContent = mostrando ? 'Ocultar' : 'Mostrar';
