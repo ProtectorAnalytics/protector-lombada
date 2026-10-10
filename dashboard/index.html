@@ -2827,7 +2827,7 @@
         <div class="stats-row">
           <div class="stat-card destaque">
             <div class="label">Passagens hoje</div>
-            <div class="valor-linha"><span class="value" id="stat-total">0</span><span class="unit">veículos</span></div>
+            <div class="valor-linha"><span class="value" id="stat-total">0</span><span class="unit" id="stat-total-unit" title="Passagens contam cada leitura; o mesmo veículo pode passar várias vezes">passagens</span></div>
           </div>
           <div class="stat-card destaque" id="card-alertas">
             <div class="label" id="label-alertas">Alertas hoje</div>
@@ -2936,7 +2936,7 @@
                 <span class="pg-info" id="pg-info"></span>
                 <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
                   <span id="sem-vel-texto"></span>
-                  <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="Passagens sem velocidade (sem radar) ficam ocultas na tela por padrão. Nada é removido: continuam nos relatórios.">Mostrar</button>
+                  <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="O radar só mede a partir de 10 km/h. Passagens mais lentas chegam sem velocidade e ficam ocultas na lista por padrão. Nada é removido: continuam nos indicadores e nos relatórios.">Mostrar</button>
                 </div>
               </div>
               <div class="pg-controls" id="pg-controls"></div>
@@ -2954,12 +2954,12 @@
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label">Vel. Média</div>
               <div class="sidebar-kpi-value" id="ind-vel-media">--</div>
-              <div class="sidebar-kpi-unit">km/h</div>
+              <div class="sidebar-kpi-unit" id="ind-vel-media-base">km/h</div>
             </div>
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label">Conformidade</div>
               <div class="sidebar-kpi-value" id="ind-conformidade" style="color:var(--green)">--</div>
-              <div class="sidebar-kpi-unit">no limite</div>
+              <div class="sidebar-kpi-unit" id="ind-conformidade-base">no limite</div>
             </div>
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label" id="lbl-hora-pico">Hora Pico</div>
@@ -3252,8 +3252,8 @@
       const uma = semVel === 1;
       document.getElementById('rodape-sem-vel').hidden = semVel === 0;
       document.getElementById('sem-vel-texto').textContent = mostrando
-        ? `${semVel} ${uma ? 'passagem sem velocidade aparece' : 'passagens sem velocidade aparecem'} na lista ·`
-        : `${semVel} ${uma ? 'passagem sem velocidade oculta' : 'passagens sem velocidade ocultas'} ·`;
+        ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h aparece' : 'passagens abaixo de 10 km/h aparecem'} na lista ·`
+        : `${semVel} ${uma ? 'passagem abaixo de 10 km/h oculta' : 'passagens abaixo de 10 km/h ocultas'} ·`;
       document.getElementById('btn-sem-vel').textContent = mostrando ? 'Ocultar' : 'Mostrar';
       sincronizarBarraRodape();
     }
@@ -4278,13 +4278,18 @@
     // ============================================
     // STATS
     // ============================================
+    function textoPassagensVeiculos(capturas) {
+      const veiculos = new Set(capturas.map(c => c.placa)).size;
+      return veiculos ? `de ${veiculos} ${veiculos === 1 ? 'veículo' : 'veículos'}` : 'passagens';
+    }
+
     async function loadStats() {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
       const sessao = marcaDaSessao();
       const { data, error } = await sb.from('capturas')
-        .select('velocidade')
+        .select('placa, velocidade')
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', todayStart.toISOString());
 
@@ -4295,6 +4300,10 @@
       const maxVel = data.length > 0 ? Math.max(...data.map(c => c.velocidade)) : 0;
 
       document.getElementById('stat-total').textContent = total;
+      // Passagem ≠ veículo: o mesmo carro passa várias vezes (ou fica parado
+      // no quadro). O card mostra as duas contagens para não confundir com a
+      // lista, que conta passagens.
+      document.getElementById('stat-total-unit').textContent = textoPassagensVeiculos(data);
       document.getElementById('stat-alertas').textContent = alertas;
       const maxEl = document.getElementById('stat-maxvel');
       maxEl.textContent = maxVel;
@@ -4555,7 +4564,7 @@
       if (totalPages > 1) {
         mostrarPaginas(true);
         const pgInfo = document.getElementById('pg-info');
-        pgInfo.textContent = `${start + 1}-${end} de ${data.length} registros`;
+        pgInfo.textContent = `${start + 1}-${end} de ${data.length} ${data.length === 1 ? 'passagem' : 'passagens'}`;
         if (limiteAtingido) {
           // A consulta traz LIMITE_CAPTURAS; as sem velocidade podem estar
           // ocultas, então o total exibido pode ser menor que o limite.
@@ -7614,7 +7623,9 @@
 
       if (!data || data.length === 0) {
         document.getElementById('ind-vel-media').textContent = '--';
+        document.getElementById('ind-vel-media-base').textContent = 'km/h';
         document.getElementById('ind-conformidade').textContent = '--';
+        document.getElementById('ind-conformidade-base').textContent = 'no limite';
         document.getElementById('ind-hora-pico').textContent = '--';
         document.getElementById('ind-reincidentes').textContent = '0';
         return;
@@ -7644,6 +7655,9 @@
         ? Math.round(medidas.reduce((s, c) => s + c.velocidade, 0) / medidas.length)
         : 0;
       avgEl.textContent = medidas.length ? avg : '--';
+      // A base da média fica explícita: só entram as passagens que o radar mediu
+      document.getElementById('ind-vel-media-base').textContent =
+        `km/h · ${medidas.length} ${medidas.length === 1 ? 'medição' : 'medições'}`;
       avgEl.style.color = acimaDoLimite(avg, limite) ? 'var(--red)' : 'var(--accent)';
 
       // Conformidade — passagens abaixo de 10 km/h contam como conformes
@@ -7653,6 +7667,8 @@
       const pct = validas.length ? Math.round((dentro / validas.length) * 100) : 100;
       const confEl = document.getElementById('ind-conformidade');
       confEl.textContent = pct + '%';
+      document.getElementById('ind-conformidade-base').textContent =
+        `de ${validas.length} ${validas.length === 1 ? 'passagem' : 'passagens'}`;
       confEl.style.color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
 
       // Hora/Dia pico
