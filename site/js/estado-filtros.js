@@ -199,6 +199,16 @@
     return chaveFiltros(f) !== chaveFiltros(filtrosPadrao(hoje));
   }
 
+  /**
+   * Busca por um veículo (placa, marca, modelo, cor ou ano)? Quem procura um
+   * carro quer todas as passagens dele, inclusive as abaixo de 10 km/h que o
+   * radar não mede e que a lista oculta por padrão.
+   */
+  function buscaPorVeiculo(f) {
+    if (!f) return false;
+    return Boolean(f.placa) || filtroVeiculo.temFiltroVeiculo(f.veiculo);
+  }
+
   /** Polling: só reconsulta o período se os filtros mudaram ou se ele inclui agora. */
   function precisaRecarregarPeriodo(f, chaveCarregada, agora) {
     if (chaveCarregada !== chaveFiltros(f)) return true;
@@ -376,7 +386,7 @@
 
   return {
     normalizarPlacaBusca, montarFiltros, filtrosPadrao, intervaloDoPeriodo,
-    periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo, temFiltroAtivo, hojeLocal, virarDia,
+    periodoIncluiAgora, chaveFiltros, precisaRecarregarPeriodo, temFiltroAtivo, buscaPorVeiculo, hojeLocal, virarDia,
     periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro, contarMaisFiltros,
     VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString, validarPeriodo,
     PLACA_BUSCA_MAX, MARGEM_ATRASO_MS, MAX_DIAS_PERIODO, VEL_MAXIMA,

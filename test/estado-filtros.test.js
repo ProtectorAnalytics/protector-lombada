@@ -9,7 +9,7 @@ const {
   virarDia, hojeLocal, PLACA_BUSCA_MAX, MARGEM_ATRASO_MS,
   periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro, contarMaisFiltros,
   estadoDaVisao, visaoAtiva, VISOES, paraQueryString, deQueryString, validarPeriodo,
-  temFiltroAtivo,
+  temFiltroAtivo, buscaPorVeiculo,
 } = require('../site/js/estado-filtros');
 
 // Os casos de fuso supõem Brasília (-03, sem horário de verão): rode com
@@ -469,6 +469,21 @@ caso('placa, câmera, só alertas ou outro período contam como filtro ativo', (
 });
 caso('sem estado (null) não tem filtro ativo', () => {
   assert.strictEqual(temFiltroAtivo(null, '2026-10-05'), false);
+});
+
+// ---- buscaPorVeiculo: busca de placa ou veículo mostra todas as passagens
+caso('busca por placa conta como busca por veículo', () => {
+  assert.strictEqual(buscaPorVeiculo(montarFiltros({ placa: 'TFZ8J36' }, '2026-10-10')), true);
+});
+caso('filtro de modelo conta como busca por veículo', () => {
+  assert.strictEqual(buscaPorVeiculo(montarFiltros({ veiculo: { modelo: 'ECLIPSE CR' } }, '2026-10-10')), true);
+});
+caso('só período, câmera ou alertas não é busca por veículo', () => {
+  const f = montarFiltros({ dataInicio: '2026-10-04', cameraId: 'x', soAlertas: true }, '2026-10-10');
+  assert.strictEqual(buscaPorVeiculo(f), false);
+});
+caso('sem estado (null) não é busca por veículo', () => {
+  assert.strictEqual(buscaPorVeiculo(null), false);
 });
 
 console.log(`\n${passou} casos passaram`);
