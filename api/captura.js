@@ -25,7 +25,7 @@ const { salvarMiniatura } = require('../lib/miniatura');
 const { decidirRepeticao, placaParaRepeticao, JANELA_SEGUNDOS } = require('../lib/repeticao-placa');
 const { decidirMesmoEvento, JANELA_PARADO_MINUTOS } = require('../lib/veiculo-parado');
 const { paraAntiga } = require('../site/js/placa');
-const { resumirCorpoInvalido } = require('../lib/diagnostico-json');
+const { resumirCorpoInvalido, urlSemSegredos } = require('../lib/diagnostico-json');
 const { respostaPlaca } = require('../lib/resposta-camera');
 
 // Base de veículos (APIPLACAS). Sem token configurado, a captura segue sem
@@ -106,7 +106,7 @@ module.exports = async function handler(req, res) {
         const logIp = dados.AlarmInfoPlate?.ipaddr || dados.AlarmInfoPlate?.ip || req.headers['x-forwarded-for'] || '';
         const logMac = dados.AlarmInfoPlate?.macaddr || dados.AlarmInfoPlate?.mac || '';
         await logError(`Câmera não encontrada | token: ${token || 'none'} | type: ${dataType}`, {
-          token, dataType, url,
+          token, dataType, url: urlSemSegredos(url),
           serialno: serialno || 'none',
           ip: logIp || 'none',
           mac: logMac || 'none',
@@ -528,7 +528,7 @@ function parseBody(req) {
             ...resumirCorpoInvalido(body, parseErr),
             content_length: req.headers['content-length'] || null,
             content_type: contentType,
-            url: req.url,
+            url: urlSemSegredos(req.url),
           };
           reject(err);
         }

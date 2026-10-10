@@ -14,15 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.6.0',
+    versao: '1.6.1',
     data: '2026-10-10',
-    titulo: 'Números mais claros, busca completa e relatórios do período inteiro',
+    titulo: 'Câmeras novas sem leituras repetidas',
     itens: Object.freeze([
-      'O painel mostra passagens e veículos separados (ex.: 171 passagens de 87 veículos).',
-      'Buscar uma placa ou um modelo mostra todas as passagens, inclusive as abaixo de 10 km/h.',
-      'Indicadores, Top 10 e gráficos agora contam todas as passagens do período.',
-      'Exportar em Excel ou PDF leva o período inteiro, não só as passagens mais recentes.',
-      'Carro parado em frente à câmera conta uma passagem só, e "sem placa" sai do Top 10.',
+      'As câmeras de modelo mais novo deixam de reenviar a mesma leitura várias vezes.',
+      'Passagens, Top 10 e relatórios ficam livres dessas repetições.',
+      'Ainda nesta semana: números mais claros, busca completa e exportação do período inteiro (versão 1.6.0).',
     ]),
   });
 });

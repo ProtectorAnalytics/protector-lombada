@@ -3,7 +3,7 @@
  * Uso: node test/diagnostico-json.test.js
  */
 const assert = require('node:assert');
-const { resumirCorpoInvalido } = require('../lib/diagnostico-json');
+const { resumirCorpoInvalido, urlSemSegredos } = require('../lib/diagnostico-json');
 
 let passou = 0;
 function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
@@ -41,6 +41,17 @@ caso('limita o tamanho dos trechos', () => {
   assert.ok(r.inicio.length <= 600);
   assert.ok(r.fim.length <= 400);
   assert.ok(r.trecho_erro.length <= 600);
+});
+
+caso('URL do log não leva o token da câmera', () => {
+  assert.strictEqual(urlSemSegredos('/api/captura?token=abc123secreto'), '/api/captura?token=<redigido>');
+  assert.strictEqual(urlSemSegredos('/api/captura?x=1&Token=abc&key=k'), '/api/captura?x=1&Token=<redigido>&key=<redigido>');
+});
+
+caso('URL sem parâmetros sensíveis fica igual', () => {
+  assert.strictEqual(urlSemSegredos('/api/captura'), '/api/captura');
+  assert.strictEqual(urlSemSegredos('/api/captura?tipo=placa'), '/api/captura?tipo=placa');
+  assert.strictEqual(urlSemSegredos(undefined), '');
 });
 
 console.log(`\n${passou} casos passaram`);
