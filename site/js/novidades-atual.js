@@ -14,13 +14,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.6.1',
+    versao: '1.6.2',
     data: '2026-10-10',
-    titulo: 'Câmeras novas sem leituras repetidas',
+    titulo: 'Mesmo carro não vira duas passagens',
     itens: Object.freeze([
-      'As câmeras de modelo mais novo deixam de reenviar a mesma leitura várias vezes.',
-      'Passagens, Top 10 e relatórios ficam livres dessas repetições.',
-      'Ainda nesta semana: números mais claros, busca completa e exportação do período inteiro (versão 1.6.0).',
+      'Quando a câmera lê a mesma placa duas ou três vezes em poucos segundos, trocando uma ou duas letras, agora conta uma passagem só.',
+      'Fica a leitura que trouxe a velocidade medida.',
     ]),
   });
 });
