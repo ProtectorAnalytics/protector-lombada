@@ -1,7 +1,9 @@
 /**
  * CRON DA APIPLACAS — a cada 5 min (vercel.json).
  *
- * 1. Lê o saldo (não consome) e guarda em apiplacas_config.
+ * 1. Lê o saldo (não consome) e guarda em apiplacas_config. Se as consultas
+ *    foram desligadas pelo sistema por recusa (crédito zerado) e o saldo
+ *    voltou, religa (recarga).
  * 2. Consulta a fila (pendente/erro vencidos), respeitando teto e saldo.
  * 3. Manda os avisos por e-mail (1x por período) e grava avisos_enviados.
  * 4. Retenção: apaga veículos sem passagem há 6 meses e tira a placa do
@@ -16,6 +18,7 @@ const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarVeiculosBase } = require('../lib/veiculos-base');
 const { enviarAvisos } = require('../lib/apiplacas-avisos');
+const { deveReligar } = require('../lib/religar-apiplacas');
 const { enviarEmailSimples } = require('../lib/email-sender');
 const { supabase } = require('../lib/supabase');
 
@@ -40,7 +43,7 @@ module.exports = async function handler(req, res) {
   }
 
   const repo = criarRepoSupabase();
-  const resumo = { saldo: null, fila: null, avisos: [], avisosFalhos: [], apagados: 0, anonimizados: 0 };
+  const resumo = { saldo: null, religou: false, fila: null, avisos: [], avisosFalhos: [], apagados: 0, anonimizados: 0 };
   try {
     let api = null;
     try { api = criarClienteApiplacas({ token: process.env.APIPLACAS_TOKEN }); } catch { /* sem token: só avisos/retenção */ }
@@ -49,6 +52,10 @@ module.exports = async function handler(req, res) {
       const saldo = await api.saldo();
       resumo.saldo = saldo === null ? null : Math.floor(saldo);
       if (resumo.saldo !== null) await repo.atualizarConfig({ saldo_atual: resumo.saldo, saldo_em: new Date().toISOString() });
+      if (deveReligar({ cfg: await repo.lerConfig(), saldo: resumo.saldo, ultimoResultado: await repo.ultimoResultado() })) {
+        await repo.atualizarConfig({ ativo: true });
+        resumo.religou = true;
+      }
       const vb = criarVeiculosBase({ repo, api, validador: criarValidador({ contarPassagens: repo.contarPassagens }) });
       resumo.fila = await vb.processarFila({ limite: 50 });
     }
