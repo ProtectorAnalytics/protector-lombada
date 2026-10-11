@@ -6,7 +6,7 @@
 const assert = require('node:assert');
 const path = require('node:path');
 
-const estado = { saldo: 900, configs: [], apagarAntes: null, anonimizarAntes: null };
+const estado = { saldo: 900, configs: [], apagarAntes: null, anonimizarAntes: null, cfg: null, ultimo: null };
 
 function stub(rel, exports) {
   const id = require.resolve(path.join('..', rel));
@@ -22,10 +22,10 @@ stub('lib/email-sender', { enviarEmailSimples: async () => { throw new Error('e-
 stub('lib/veiculos-base-repo', {
   criarRepoSupabase: () => ({
     atualizarConfig: async (c) => { estado.configs.push(c); },
-    lerConfig: async () => ({ ativo: true, emails_aviso: [], saldo_atual: estado.saldo }),
+    lerConfig: async () => ({ ativo: true, emails_aviso: [], saldo_atual: estado.saldo, ...estado.cfg }),
     gastoDoMes: async () => 0,
     tamanhoFila: async () => 0,
-    ultimoResultado: async () => null,
+    ultimoResultado: async () => estado.ultimo,
     apagarVistosAntesDe: async (iso) => { estado.apagarAntes = iso; return 2; },
     anonimizarExtratoAntesDe: async (iso) => { estado.anonimizarAntes = iso; return 5; },
   }),
@@ -54,11 +54,41 @@ let passou = 0;
 let falhou = 0;
 async function caso(nome, fn) {
   estado.saldo = 900; estado.configs = []; estado.apagarAntes = null; estado.anonimizarAntes = null;
+  estado.cfg = null; estado.ultimo = null;
   try { await fn(); passou++; console.log(`ok - ${nome}`); }
   catch (e) { falhou++; console.log(`FALHOU - ${nome}\n  ${e.message.split('\n').join('\n  ')}`); }
 }
 
 (async () => {
+  await caso('religa sozinho quando o saldo volta depois de desligar por recusa (recarga)', async () => {
+    estado.cfg = { ativo: false, atualizado_por: null };
+    estado.ultimo = 'token_invalido';
+    estado.saldo = 1000;
+    const r = resp();
+    await handler(req(`Bearer ${SEGREDO}`), r);
+    assert.strictEqual(r.code, 200);
+    assert.ok(estado.configs.some((c) => c.ativo === true), 'gravou ativo = true');
+    assert.strictEqual(r.body.religou, true);
+  });
+
+  await caso('não religa enquanto a recarga não aparece no saldo', async () => {
+    estado.cfg = { ativo: false, atualizado_por: null };
+    estado.ultimo = 'token_invalido';
+    estado.saldo = null;
+    const r = resp();
+    await handler(req(`Bearer ${SEGREDO}`), r);
+    assert.ok(!estado.configs.some((c) => c.ativo === true));
+    assert.strictEqual(r.body.religou, false);
+  });
+
+  await caso('não religa o que o administrador desligou', async () => {
+    estado.cfg = { ativo: false, atualizado_por: 'uuid-do-admin' };
+    estado.ultimo = 'token_invalido';
+    const r = resp();
+    await handler(req(`Bearer ${SEGREDO}`), r);
+    assert.ok(!estado.configs.some((c) => c.ativo === true));
+  });
+
   await caso('anonimiza o extrato com a mesma data de corte da retenção da base (F7)', async () => {
     const r = resp();
     await handler(req(`Bearer ${SEGREDO}`), r);

@@ -231,6 +231,13 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
     assert.strictEqual(repo.linhas.get('ABC1D23').status, 'pendente');
   });
 
+  await caso('token inválido marca o desligamento como do sistema (atualizado_por null)', async () => {
+    const { repo, vb } = montar({ api: apiFalsa('token_invalido') });
+    await repo.atualizarConfig({ atualizado_por: 'uuid-do-admin' });
+    await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    assert.strictEqual((await repo.lerConfig()).atualizado_por, null);
+  });
+
   await caso('ultimoResultado devolve o resultado da consulta mais recente (null se nenhuma)', async () => {
     const { repo, vb } = montar({ api: apiFalsa('token_invalido') });
     assert.strictEqual(await repo.ultimoResultado(), null);
