@@ -22,6 +22,7 @@
  */
 
 const { createClient } = require('@supabase/supabase-js');
+const { exigirCron } = require('../lib/cron-auth');
 const { comMiniaturas } = require('../site/js/miniatura');
 
 const supabase = createClient(
@@ -98,14 +99,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const authHeader = req.headers['authorization'] || '';
-  const vercelCronHeader = req.headers['x-vercel-cron-signature'];
-  const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
-
-  // Aceita Vercel Cron nativo (x-vercel-cron-signature) ou Bearer manual
-  if (!vercelCronHeader && authHeader !== expectedSecret) {
-    return res.status(401).json({ error: 'Não autorizado' });
-  }
+  if (!exigirCron(req, res)) return;
 
   try {
     const cutoff = new Date(Date.now() - RETENTION_DAYS * 86400000).toISOString();

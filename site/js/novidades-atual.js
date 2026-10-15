@@ -14,13 +14,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.7.0',
-    data: '2026-10-14',
-    titulo: 'Maiores velocidades dos últimos 6 meses',
+    versao: '1.7.1',
+    data: '2026-10-15',
+    titulo: 'Passagens antigas apagadas no prazo',
     itens: Object.freeze([
-      'Novo quadro abaixo do Top 10 Placas: os 10 veículos mais rápidos dos últimos 6 meses, com a velocidade e o dia de cada um.',
-      'Clique em uma placa do quadro para ver as passagens dela naquele dia.',
-      'A equipe Protector pode abrir o seu painel para ajudar no cadastro de veículos. Cada acesso fica registrado.',
+      'As passagens com mais de 6 meses voltam a ser apagadas todo dia, como manda a política de privacidade (LGPD).',
+      'A equipe Protector passa a receber por e-mail o aviso de câmera sem sinal.',
     ]),
   });
 });
