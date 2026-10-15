@@ -624,6 +624,7 @@
   <script src="/js/camera-status.js"></script>
   <script src="/js/spring.js"></script>
   <script src="/js/grafico-acessivel.js"></script>
+  <script src="/js/acesso-painel.js"></script>
 </head>
 <body>
 
@@ -809,6 +810,7 @@
           <div class="detail-header">
             <div class="page-title" id="detail-nome" tabindex="-1" style="margin-bottom:0"></div>
             <button class="btn btn-ghost btn-sm" onclick="openClienteModal(currentDetailCliente)">Editar</button>
+            <a class="btn btn-primary btn-sm" style="text-decoration:none" id="detail-abrir-painel" target="_blank" rel="noopener" hidden>Abrir painel do cliente</a>
           </div>
           <div class="detail-info" id="detail-info"></div>
 
@@ -1159,12 +1161,27 @@ async function initApp() {
     if (session?.user) {
       authToken = session.access_token;
       await loadProfile();
+      avisarRetornoDoPainel();
     }
   } catch (err) {
     document.getElementById('login-error').textContent = 'Erro ao conectar ao servidor.';
   }
 }
 initApp();
+
+// Voltou do painel do condomínio sem conseguir abrir (dashboard grava o motivo)
+const AVISOS_DO_PAINEL = {
+  'cliente-invalido': 'Condomínio não encontrado ou inativo. Escolha outro na lista.',
+  'falha-registro': 'Não foi possível registrar o acesso ao painel. Tente de novo.',
+};
+function avisarRetornoDoPainel() {
+  let motivo = null;
+  try {
+    motivo = sessionStorage.getItem('lombada.avisoAdmin');
+    sessionStorage.removeItem('lombada.avisoAdmin');
+  } catch { /* sem storage */ }
+  if (motivo && AVISOS_DO_PAINEL[motivo]) toast(AVISOS_DO_PAINEL[motivo], true);
+}
 
 // ============================================
 // AUTH
@@ -2034,6 +2051,7 @@ function renderClientes() {
     <td>${c.cameras?.[0]?.count || 0}</td>
     <td>${c.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
     <td class="actions-cell">
+      ${c.ativo ? `<a class="btn btn-ghost btn-sm" style="text-decoration:none" href="${esc(acessoPainel.urlDoPainel(c.id))}" target="_blank" rel="noopener" aria-label="${esc(`Abrir painel de ${c.nome}`)}">Abrir painel</a>` : ''}
       <button class="btn btn-ghost btn-sm" onclick="openClienteModal(clientesData.find(x=>x.id==='${c.id}'))">Editar</button>
       ${c.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleCliente('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCliente('${c.id}',true)">Ativar</button>`}
       <button class="btn btn-danger-solid btn-sm" onclick="deleteCliente('${c.id}','${esc(c.nome)}')">Excluir</button>
@@ -2276,6 +2294,10 @@ async function openClienteDetail(id, opts = {}) {
 
   currentDetailCliente = cliente;
   document.getElementById('detail-nome').textContent = cliente.nome;
+  // Painel do condomínio em aba nova (só ativo: inativo não abre o painel)
+  const abrir = document.getElementById('detail-abrir-painel');
+  abrir.hidden = !cliente.ativo;
+  abrir.href = acessoPainel.urlDoPainel(cliente.id);
   const bc = document.getElementById('detail-breadcrumb-nome');
   if (bc) bc.textContent = cliente.nome;
   document.getElementById('detail-info').innerHTML = `

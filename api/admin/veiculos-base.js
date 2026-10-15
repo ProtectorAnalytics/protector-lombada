@@ -75,7 +75,7 @@ async function mesmaPlaca({ body, profile, ip, res }) {
   if (!placa) return res.status(409).json({ error: 'Placa não está em suspeita' });
   const upd = await supabase.from('capturas').update({ placa }).eq('id', cap.id);
   if (upd.error) throw new Error(upd.error.message);
-  await registrarAuditoria({ usuarioId: profile.id, acao: 'corrigir_leitura_placa', tabela: 'capturas', registroId: cap.id, detalhes: { de: cap.placa, para: placa }, ip });
+  await registrarAuditoria({ usuarioId: profile.id, acao: 'corrigir_leitura_placa', tabela: 'capturas', registroId: cap.id, detalhes: { cliente_id: cap.cliente_id, de: cap.placa, para: placa }, ip });
   return res.status(200).json({ placa });
 }
 
@@ -107,7 +107,7 @@ async function outroCarro({ body, profile, ip, res }) {
   if (lib.error) throw new Error(lib.error.message);
   if (!Array.isArray(lib.data) || lib.data.length !== 1) return res.status(409).json({ error: 'Placa não está em suspeita' });
   const r = await vb.consultarAgora(m, 'reconsulta');
-  await registrarAuditoria({ usuarioId: profile.id, acao: 'liberar_suspeita_placa', tabela: 'veiculos_base', registroId: null, detalhes: { placa: m, executou: r.executou, motivo: r.motivo || null }, ip });
+  await registrarAuditoria({ usuarioId: profile.id, acao: 'liberar_suspeita_placa', tabela: 'veiculos_base', registroId: null, detalhes: { cliente_id: clienteId, placa: m, executou: r.executou, motivo: r.motivo || null }, ip });
   return res.status(200).json(r.executou ? r.linha : { placa: m, status: 'pendente', motivo: r.motivo });
 }
 
