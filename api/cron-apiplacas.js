@@ -12,7 +12,6 @@
  * Auth: SOMENTE `Authorization: Bearer ${CRON_SECRET}` (o Vercel Cron envia
  * esse header quando CRON_SECRET está definido). Sem segredo = recusa tudo.
  */
-const crypto = require('crypto');
 const { criarClienteApiplacas } = require('../lib/apiplacas');
 const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
@@ -21,20 +20,13 @@ const { enviarAvisos } = require('../lib/apiplacas-avisos');
 const { deveReligar } = require('../lib/religar-apiplacas');
 const { enviarEmailSimples } = require('../lib/email-sender');
 const { supabase } = require('../lib/supabase');
+const { autorizado } = require('../lib/cron-auth');
 
 const RETENCAO_MESES = 6;
 
 function mesSP(d = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit' })
     .format(d).slice(0, 7);
-}
-
-// Comparação em tempo constante; tamanhos diferentes recusam sem comparar.
-function autorizado(header, segredo) {
-  if (!segredo || typeof header !== 'string') return false;
-  const recebido = Buffer.from(header);
-  const esperado = Buffer.from(`Bearer ${segredo}`);
-  return recebido.length === esperado.length && crypto.timingSafeEqual(recebido, esperado);
 }
 
 module.exports = async function handler(req, res) {

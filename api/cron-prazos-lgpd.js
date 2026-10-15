@@ -10,6 +10,7 @@
  */
 
 const nodemailer = require('nodemailer');
+const { exigirCron } = require('../lib/cron-auth');
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
@@ -130,14 +131,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  // Autorização: Vercel Cron nativo ou Bearer secret
-  const vercelHeader = req.headers['x-vercel-cron-signature'];
-  const authHeader = req.headers['authorization'] || '';
-  const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
-
-  if (!vercelHeader && authHeader !== expectedSecret) {
-    return res.status(401).json({ error: 'Não autorizado' });
-  }
+  if (!exigirCron(req, res)) return;
 
   try {
     // Idempotência: se já enviou hoje, pular

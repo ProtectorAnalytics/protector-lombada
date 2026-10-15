@@ -22,6 +22,7 @@
  */
 
 const crypto = require('crypto');
+const { exigirCron } = require('../lib/cron-auth');
 const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
 const {
@@ -184,12 +185,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const authHeader = req.headers['authorization'] || '';
-  const vercelCronHeader = req.headers['x-vercel-cron-signature'];
-  const expectedSecret = `Bearer ${process.env.CRON_SECRET}`;
-  if (!vercelCronHeader && authHeader !== expectedSecret) {
-    return res.status(401).json({ error: 'Não autorizado' });
-  }
+  if (!exigirCron(req, res)) return;
 
   try {
     const agora = agoraLocal();
