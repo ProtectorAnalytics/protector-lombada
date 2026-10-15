@@ -48,8 +48,8 @@ module.exports = async function handler(req, res) {
     if (method === 'POST') {
       const { profile } = await autenticar(req, ['super_admin']);
 
-      const base = process.env.PUBLIC_BASE_URL
-        || (req.headers.host ? `https://${req.headers.host}` : 'https://lombada.appps.com.br');
+      // Nunca do header Host: o CRON_SECRET iria para o host que o chamador quisesse.
+      const base = process.env.PUBLIC_BASE_URL || 'https://lombada.appps.com.br';
 
       // Chama o próprio cron com ?forcar=<cliente_id>, autenticando com o
       // CRON_SECRET. Assim o teste percorre exatamente o mesmo código do envio

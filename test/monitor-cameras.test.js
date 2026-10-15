@@ -46,4 +46,9 @@ caso('e-mail traz nome, cliente e hora de Brasília', () => {
   assert.match(email.texto, /Voltaram a enviar:\n- CLUBE \(Cond X\)/);
 });
 
+caso('quebra de linha no nome da câmera não vira linha nova no e-mail', () => {
+  const email = montarEmail(classificarCameras([cam('A\nFALSO', min(60))], AGORA));
+  assert.match(email.texto, /- A FALSO \(Cond X\)/);
+});
+
 console.log(`\n${passou} casos passaram`);
