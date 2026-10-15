@@ -44,14 +44,20 @@
     return d.toISOString().slice(0, 10) === dia;
   }
 
-  /** data-valor → mudanças de filtro; valor fora do formato → null */
+  /**
+   * data-valor → mudanças de filtro; valor fora do formato → null.
+   * Limpa tudo que esconderia a passagem do recorde (câmera, só alertas,
+   * não cadastrados, faixa de velocidade, dados do veículo).
+   */
   function mudancaDoRecorde(valor) {
     const partes = typeof valor === 'string' ? valor.split('|') : [];
     if (partes.length !== 2) return null;
     const [placa, dia] = partes;
     if (!RE_PLACA.test(placa) || !diaValido(dia)) return null;
     return {
-      placa, cameraId: '', soAlertas: false,
+      placa, cameraId: '', soAlertas: false, naoCadastrados: false,
+      velMin: 0, velMax: null,
+      veiculo: { marca: '', modelo: '', cor: '', anoDe: null, anoAte: null },
       dataInicio: dia, horaInicio: '00:00', dataFim: dia, horaFim: '23:59',
     };
   }

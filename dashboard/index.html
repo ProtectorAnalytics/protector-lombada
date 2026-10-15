@@ -3692,6 +3692,7 @@
       sessaoSeq++;
       clearTimeout(timerLinhas); // ajuste de linhas pendente não desenha o condomínio anterior
       capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recordesSeq++; recargaSeq++; renderSeq++;
+      recordesEm = 0; // condomínio novo: o ranking recarrega já
       camerasList = [];
       camerasMap = {};
       camerasMapFull = {};
@@ -3898,7 +3899,7 @@
           loadStats(),
           loadRecentCards(),
           loadCamerasStatus(),
-          loadMaioresVelocidades(),
+          recordesVencidos() ? loadMaioresVelocidades().catch(() => {}) : null, // falha fica no card
           comPeriodo ? loadPeriodo({ resetPage }) : null,
         ]);
         marcarAtualizacao(true);
@@ -8084,6 +8085,12 @@
     // segue o período). O banco já tira "SEM PLACA", radar inválido e leitura
     // suspeita. Clicar filtra a placa no dia do recorde.
     let recordesSeq = 0;
+    // Fixo em 6 meses: não precisa refazer a cada polling de 30 s
+    const RECORDES_TTL_MS = 5 * 60 * 1000;
+    let recordesEm = 0;
+    function recordesVencidos() {
+      return Date.now() - recordesEm > RECORDES_TTL_MS;
+    }
     async function loadMaioresVelocidades() {
       const seq = ++recordesSeq;
       const sessao = marcaDaSessao();
@@ -8097,6 +8104,7 @@
         return data || [];
       }, 'falha-recordes', () => seq === recordesSeq && sessaoValida(sessao));
       if (!r) return; // resposta antiga ou de outro condomínio
+      recordesEm = Date.now();
       const lista = document.getElementById('recordes-list');
       if (r.length === 0) {
         lista.innerHTML = '<li class="ranking-item" style="color:var(--text-muted)">Sem velocidades medidas nos últimos 6 meses</li>';

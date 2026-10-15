@@ -28,11 +28,28 @@ caso('clique leva placa e o dia LOCAL do recorde', () => {
   assert.strictEqual(valorDoClique('ABC1D23', '2026-10-15T01:30:00Z'), 'ABC1D23|2026-10-14');
 });
 
-caso('valor do clique vira filtro da placa no dia do recorde, sem câmera nem só-alertas', () => {
+caso('valor do clique vira filtro da placa no dia do recorde e limpa o que esconderia a passagem', () => {
   assert.deepStrictEqual(mudancaDoRecorde('ABC1D23|2026-10-14'), {
-    placa: 'ABC1D23', cameraId: '', soAlertas: false,
+    placa: 'ABC1D23', cameraId: '', soAlertas: false, naoCadastrados: false,
+    velMin: 0, velMax: null,
+    veiculo: { marca: '', modelo: '', cor: '', anoDe: null, anoAte: null },
     dataInicio: '2026-10-14', horaInicio: '00:00', dataFim: '2026-10-14', horaFim: '23:59',
   });
+});
+
+caso('com filtros que escondiam o recorde ativos, o clique mostra a passagem', () => {
+  const { comMudancas, filtrosPadrao } = require('../site/js/estado-filtros');
+  const hoje = '2026-10-14';
+  const antes = comMudancas(filtrosPadrao(hoje), {
+    velMax: 40, naoCadastrados: true, veiculo: { marca: 'FIAT', cor: 'branca' },
+  }, hoje);
+  const depois = comMudancas(antes, mudancaDoRecorde('ABC1D23|2026-10-01'), hoje);
+  assert.strictEqual(depois.placa, 'ABC1D23');
+  assert.strictEqual(depois.velMax, null);
+  assert.strictEqual(depois.naoCadastrados, false);
+  assert.strictEqual(depois.veiculo.marca, '');
+  assert.strictEqual(depois.veiculo.cor, '');
+  assert.strictEqual(depois.dataInicio, '2026-10-01');
 });
 
 caso('valor adulterado no HTML não vira filtro', () => {
