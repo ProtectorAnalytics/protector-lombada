@@ -72,7 +72,7 @@ module.exports = async function handler(req, res) {
         acao: 'criar',
         tabela: 'veiculos',
         registroId: data.id,
-        detalhes: { placa: placa.toUpperCase(), nome_morador },
+        detalhes: { cliente_id: targetCliente, placa: placa.toUpperCase(), nome_morador },
         ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       });
 
@@ -117,7 +117,7 @@ module.exports = async function handler(req, res) {
         acao: 'atualizar',
         tabela: 'veiculos',
         registroId: id,
-        detalhes: campos,
+        detalhes: { cliente_id: existing.cliente_id, ...campos },
         ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       });
 
@@ -152,7 +152,7 @@ module.exports = async function handler(req, res) {
           acao: 'excluir',
           tabela: 'veiculos',
           registroId: veiculoId,
-          detalhes: { placa: existing.placa },
+          detalhes: { cliente_id: existing.cliente_id, placa: existing.placa },
           ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
         });
         return res.status(200).json({ ok: true, message: 'Veículo excluído permanentemente' });
@@ -170,7 +170,7 @@ module.exports = async function handler(req, res) {
         acao: 'desativar',
         tabela: 'veiculos',
         registroId: veiculoId,
-        detalhes: { placa: existing.placa },
+        detalhes: { cliente_id: existing.cliente_id, placa: existing.placa },
         ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       });
 

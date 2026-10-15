@@ -14,12 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.6.2',
-    data: '2026-10-10',
-    titulo: 'Mesmo carro não vira duas passagens',
+    versao: '1.7.0',
+    data: '2026-10-14',
+    titulo: 'Maiores velocidades dos últimos 6 meses',
     itens: Object.freeze([
-      'Quando a câmera lê a mesma placa duas ou três vezes em poucos segundos, trocando uma ou duas letras, agora conta uma passagem só.',
-      'Fica a leitura que trouxe a velocidade medida.',
+      'Novo quadro abaixo do Top 10 Placas: os 10 veículos mais rápidos dos últimos 6 meses, com a velocidade e o dia de cada um.',
+      'Clique em uma placa do quadro para ver as passagens dela naquele dia.',
+      'A equipe Protector pode abrir o seu painel para ajudar no cadastro de veículos. Cada acesso fica registrado.',
     ]),
   });
 });

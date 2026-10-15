@@ -1508,6 +1508,41 @@
       border-radius: 10px;
       font-weight: 600;
     }
+    /* Recordes: velocidade em destaque, dia do recorde discreto ao lado */
+    .ranking-item .recorde-dia {
+      color: var(--text-muted);
+      font-size: 0.6875rem;
+      margin-right: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+    .ranking-item .count.acima { color: var(--red); }
+
+    /* Faixa da equipe Protector no painel de um condomínio */
+    .faixa-admin {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 16px;
+      padding: 8px 16px;
+      background: var(--accent-light);
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 0.8125rem;
+    }
+    .faixa-admin[hidden] { display: none; }
+    .faixa-admin-texto { flex: 1 1 auto; min-width: 0; }
+    .faixa-admin-troca { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+    .faixa-admin-troca select {
+      max-width: 240px;
+      min-height: 32px;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      font: inherit;
+    }
+    .faixa-admin-voltar { white-space: nowrap; }
 
     /* ===== MODAL ===== */
     .modal-overlay {
@@ -2734,6 +2769,8 @@
   <script src="/js/selo-veiculo.js"></script>
   <script src="/js/filtro-veiculo.js"></script>
   <script src="/js/estado-filtros.js"></script>
+  <script src="/js/acesso-painel.js"></script>
+  <script src="/js/maiores-velocidades.js"></script>
   <script src="/js/barra-filtros.js"></script>
   <script src="/js/lista-dinamica.js"></script>
   <script src="/js/severidade-velocidade.js"></script>
@@ -2779,7 +2816,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.6.2 &middot; 2026-10-10
+        v1.7.0 &middot; 2026-10-14
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2811,11 +2848,21 @@
           </button>
           <div class="conta-menu" id="conta-menu">
             <div class="conta-email" id="topbar-email"></div>
-            <button type="button" class="conta-sair" onclick="doLogout()">Sair</button>
+            <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
           </div>
         </div>
       </div>
     </header>
+
+    <!-- Equipe Protector no painel do condomínio (só super_admin, aberto pelo /admin) -->
+    <div class="faixa-admin" id="faixa-admin" role="status" hidden>
+      <span class="faixa-admin-texto">Você está como admin no painel de <strong id="faixa-admin-cliente"></strong></span>
+      <label class="faixa-admin-troca">
+        <span>Trocar</span>
+        <select id="seletor-cliente" aria-label="Trocar de condomínio" onchange="trocarDeCliente(this.value)"></select>
+      </label>
+      <a class="btn-link faixa-admin-voltar" href="/admin">Voltar ao admin</a>
+    </div>
 
     <div class="main-layout">
       <!-- LEFT: stats → câmeras → cards → filtros → tabela (fluxo contínuo) -->
@@ -2993,6 +3040,15 @@
           </ul>
         </div>
 
+        <!-- Recordes: maior velocidade de cada veículo nos últimos 6 meses (não segue o período) -->
+        <div class="sidebar-card sidebar-card-flex">
+          <h3 id="title-recordes">Maiores velocidades · últimos 6 meses</h3>
+          <p class="card-falha" id="falha-recordes" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="loadMaioresVelocidades()">Tentar de novo</button></p>
+          <ul class="ranking-list" id="recordes-list">
+            <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
+          </ul>
+        </div>
+
         <!-- Alertas 7 dias escondido (removido da vista para dar espaço ao Top 10) -->
         <canvas id="chart-alerts-7d" style="display:none"></canvas>
         <span id="title-alerts7d" style="display:none"></span>
@@ -3000,7 +3056,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.6.2
+      Protector Traffic Control &middot; v1.7.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3492,10 +3548,13 @@
       if (profile) {
         currentProfile = profile;
 
-        if (profile.role === 'super_admin') {
-          window.location.href = '/admin';
-          return;
-        }
+        // Equipe Protector: só com ?cliente=<uuid> (aberto pelo /admin). Síndico
+        // e operador: o parâmetro é ignorado e vale o próprio condomínio.
+        const acesso = acessoPainel.resolverAcesso({
+          role: profile.role, parametro: acessoPainel.clienteDaUrl(window.location.search),
+        });
+        if (acesso.modo === 'ir-admin') { irParaAdmin(acesso.motivo); return; }
+        if (acesso.modo === 'admin') { await abrirComoAdmin(acesso.clienteId); return; }
 
         if (profile.cliente_id) {
           const { data: cliente } = await sb.from('clientes')
@@ -3513,6 +3572,72 @@
       }
 
       await loadClienteLegado();
+    }
+
+    // ---------- Equipe Protector no painel de um condomínio
+    // Nunca desloga: a sessão é a mesma do /admin aberto em outra aba.
+    let modoAdmin = false;
+    const AVISO_ADMIN_KEY = 'lombada.avisoAdmin';
+    const TITULO_PAGINA = document.title;
+
+    function irParaAdmin(motivo) {
+      if (motivo && motivo !== 'sem-cliente') {
+        try { sessionStorage.setItem(AVISO_ADMIN_KEY, motivo); } catch { /* sem storage: só não avisa */ }
+      }
+      window.location.replace('/admin');
+    }
+
+    // A visita vai para a auditoria antes de o painel aparecer (fail-closed)
+    async function abrirComoAdmin(clienteId) {
+      try {
+        const token = (await sb.auth.getSession()).data.session?.access_token;
+        const resp = await fetch('/api/admin/acesso-painel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ cliente_id: clienteId }),
+        });
+        if (resp.status === 400 || resp.status === 404) { irParaAdmin('cliente-invalido'); return; }
+        if (!resp.ok) { irParaAdmin('falha-registro'); return; }
+      } catch {
+        irParaAdmin('falha-registro');
+        return;
+      }
+      const { data: cliente, error } = await sb.from('clientes')
+        .select('*').eq('id', clienteId).eq('ativo', true).maybeSingle();
+      if (error || !cliente) { irParaAdmin('cliente-invalido'); return; }
+      modoAdmin = true;
+      currentCliente = cliente;
+      showDashboard();
+    }
+
+    function aplicarModoAdmin() {
+      document.getElementById('faixa-admin').hidden = !modoAdmin;
+      document.getElementById('conta-sair').textContent = modoAdmin ? 'Voltar ao admin' : 'Sair';
+      document.title = modoAdmin ? `${currentCliente.nome} · Admin · Lombada Educativa` : TITULO_PAGINA;
+      if (!modoAdmin) return;
+      document.getElementById('faixa-admin-cliente').textContent = currentCliente.nome;
+      preencherSeletorClientes();
+    }
+
+    async function preencherSeletorClientes() {
+      const sel = document.getElementById('seletor-cliente');
+      const opcao = (id, nome) => {
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = nome; // nome vem do banco: texto, nunca HTML
+        o.selected = id === currentCliente.id;
+        return o;
+      };
+      sel.replaceChildren(opcao(currentCliente.id, currentCliente.nome));
+      const { data, error } = await sb.from('clientes').select('id, nome').eq('ativo', true).order('nome');
+      if (error || !Array.isArray(data)) return; // fica só o atual: trocar continua pelo /admin
+      sel.replaceChildren(...data.map((c) => opcao(c.id, c.nome)));
+    }
+
+    // Trocar de condomínio é navegação completa: nada do anterior fica em memória
+    function trocarDeCliente(id) {
+      if (!currentCliente || id === currentCliente.id) return;
+      window.location.assign(acessoPainel.urlDoPainel(id));
     }
 
     async function loadClienteLegado() {
@@ -3534,6 +3659,7 @@
 
     async function doLogout() {
       fecharContaMenu({ semFoco: true });
+      if (modoAdmin) { window.location.assign('/admin'); return; } // não derruba a sessão do /admin
       painelAtivo = false;
       pararPolling();
       filtrosAtivos = null;
@@ -3565,7 +3691,7 @@
     function esquecerDadosDoCliente() {
       sessaoSeq++;
       clearTimeout(timerLinhas); // ajuste de linhas pendente não desenha o condomínio anterior
-      capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recargaSeq++; renderSeq++;
+      capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recordesSeq++; recargaSeq++; renderSeq++;
       camerasList = [];
       camerasMap = {};
       camerasMapFull = {};
@@ -3611,6 +3737,7 @@
       html('recent-cards', CARREGANDO_CARTOES_HTML);
       html('cameras-status', '');
       html('ranking-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
+      html('recordes-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
       ['stat-total', 'stat-alertas', 'stat-maxvel', 'ind-vel-media', 'ind-conformidade', 'ind-hora-pico', 'ind-reincidentes']
         .forEach((id) => texto(id, '--'));
       texto('titulo-tabela', 'Passagens');
@@ -3659,6 +3786,7 @@
       document.getElementById('conta-inicial').textContent = (currentUser.email || '·').charAt(0);
       document.getElementById('conta-btn').setAttribute('aria-label', 'Conta: ' + currentUser.email);
       document.getElementById('btn-topbar-veiculos').style.display = '';
+      aplicarModoAdmin();
       sincronizarSeletores(); // o seletor do topo só tem tamanho depois de visível
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
@@ -3770,6 +3898,7 @@
           loadStats(),
           loadRecentCards(),
           loadCamerasStatus(),
+          loadMaioresVelocidades(),
           comPeriodo ? loadPeriodo({ resetPage }) : null,
         ]);
         marcarAtualizacao(true);
@@ -3969,8 +4098,14 @@
     // Sugestões da busca tipada: modelos e marcas da base visível ao condomínio
     let opcoesBusca = { modelos: [], marcas: [] };
 
+    // Base de veículos que passaram NESTE condomínio. Para o síndico a RLS já
+    // restringia; para a equipe Protector a RLS libera a base inteira.
+    function baseDoCondominio(clienteId) {
+      return sb.rpc('veiculos_base_do_cliente', { p_cliente: clienteId });
+    }
+
     async function consultarPlacasDoFiltro(f) {
-      let q = sb.from('veiculos_base').select('placa, placa_antiga').eq('status', 'consultado');
+      let q = baseDoCondominio(currentCliente.id).select('placa, placa_antiga').eq('status', 'consultado');
       if (f.marca) q = q.eq('marca', f.marca);
       if (f.modelo) q = q.or(`modelo.ilike.*${f.modelo}*,versao.ilike.*${f.modelo}*`);
       if (f.cor) q = q.eq('cor_normalizada', f.cor);
@@ -4014,8 +4149,8 @@
       const sessao = marcaDaSessao();
       try {
         // Paginado: o max-rows do PostgREST cortaria marcas/cores em silêncio
-        const data = await coletarPaginado((de, ate) => sb.from('veiculos_base')
-          .select('marca, modelo, cor_normalizada').eq('status', 'consultado')
+        const data = await coletarPaginado((de, ate) => baseDoCondominio(sessao.clienteId)
+          .select('placa, marca, modelo, cor_normalizada').eq('status', 'consultado')
           .order('placa').range(de, ate));
         if (!sessaoValida(sessao)) return; // trocou de condomínio no meio
         opcoesVeiculoDoCliente = currentCliente.id;
@@ -4852,15 +4987,20 @@
     }
 
     // ---------- URL (a placa vai junto: página autenticada, sem link público)
+    // Equipe Protector: o ?cliente fica na URL (F5 e link copiado abrem o mesmo condomínio)
+    function clienteDaUrlAtual() {
+      return modoAdmin && currentCliente ? currentCliente.id : null;
+    }
     function salvarFiltrosNaUrl(f) {
       try {
-        const qs = paraQueryString(f, todayLocalISO());
+        const qs = acessoPainel.comCliente(paraQueryString(f, todayLocalISO()), clienteDaUrlAtual());
         history.replaceState(history.state, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash);
       } catch { /* sem history: o filtro só não sobrevive ao recarregar */ }
     }
     function limparFiltrosDaUrl() {
       try {
-        history.replaceState(history.state, '', window.location.pathname + window.location.hash);
+        const qs = acessoPainel.comCliente('', clienteDaUrlAtual());
+        history.replaceState(history.state, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash);
       } catch { /* sem history */ }
     }
 
@@ -5210,6 +5350,7 @@
       camera: (v) => ({ cameraId: v }),
       alerta: () => ({ soAlertas: true }),
       modelo: (v) => ({ veiculo: { modelo: termoModelo(v) } }),
+      recorde: (v) => maioresVelocidades.mudancaDoRecorde(v), // placa no dia do recorde
     };
 
     // Captura: o botão filtra sem chegar ao clique do card/linha (que abre o detalhe)
@@ -5220,7 +5361,8 @@
         if (!b || !el.contains(b) || !MUDANCA_DO_DADO[b.dataset.filtro]) return;
         e.stopPropagation();
         e.preventDefault();
-        mudarFiltros(MUDANCA_DO_DADO[b.dataset.filtro](b.dataset.valor), { rolar });
+        const mudancas = MUDANCA_DO_DADO[b.dataset.filtro](b.dataset.valor);
+        if (mudancas) mudarFiltros(mudancas, { rolar });
       }, true);
     }
 
@@ -5301,7 +5443,7 @@
       });
       ['painel-periodo', 'painel-filtros'].forEach((id) => document.getElementById(id).addEventListener('keydown', prenderFoco));
       ligarDrillDown('table-body', false);
-      ['recent-cards', 'cameras-status', 'ranking-list'].forEach((id) => ligarDrillDown(id, true));
+      ['recent-cards', 'cameras-status', 'ranking-list', 'recordes-list'].forEach((id) => ligarDrillDown(id, true));
       CELULAR_MQ.addEventListener('change', posicionarControlesCelular);
       posicionarControlesCelular();
     }
@@ -6913,7 +7055,8 @@
       try { localStorage.setItem(CHAVE_BOAS_VINDAS, new Date().toISOString()); } catch { /* sem storage */ }
     }
     function mostrarBoasVindasSeNecessario() {
-      if (emRecuperacaoSenha || boasVindasJaVista()) return;
+      // A equipe Protector não vê o aviso de novidades do síndico
+      if (modoAdmin || emRecuperacaoSenha || boasVindasJaVista()) return;
       if (document.querySelector('.modal-overlay.active, .vm-overlay.active, .lightbox-overlay.active')) return;
       preencherBoasVindas();
       abrirOverlay(document.getElementById('boas-vindas'));
@@ -7933,6 +8076,43 @@
           <span class="pos">${i + 1}.</span>
           <span class="placa" style="${hasAlert ? 'color:var(--red)' : ''}">${esc(item[0])}</span>
           <span class="count">${item[1]}x${hasAlert ? ` <span style="color:var(--red);font-size:0.6875rem">${alerts[item[0]]}⚠</span>` : ''}</span>
+        </button></li>`;
+      }).join('');
+    }
+
+    // Maiores velocidades · últimos 6 meses: um veículo por linha, fixo (não
+    // segue o período). O banco já tira "SEM PLACA", radar inválido e leitura
+    // suspeita. Clicar filtra a placa no dia do recorde.
+    let recordesSeq = 0;
+    async function loadMaioresVelocidades() {
+      const seq = ++recordesSeq;
+      const sessao = marcaDaSessao();
+      const r = await comFalhaNoCard(async () => {
+        const { data, error } = await sb.rpc('maiores_velocidades', {
+          p_cliente: sessao.clienteId,
+          p_desde: maioresVelocidades.desdeIso(),
+          p_limite: maioresVelocidades.LIMITE,
+        });
+        if (error) throw error;
+        return data || [];
+      }, 'falha-recordes', () => seq === recordesSeq && sessaoValida(sessao));
+      if (!r) return; // resposta antiga ou de outro condomínio
+      const lista = document.getElementById('recordes-list');
+      if (r.length === 0) {
+        lista.innerHTML = '<li class="ranking-item" style="color:var(--text-muted)">Sem velocidades medidas nos últimos 6 meses</li>';
+        return;
+      }
+      const limite = currentCliente.limite_velocidade;
+      lista.innerHTML = r.map((c, i) => {
+        const acima = acimaDoLimite(c.velocidade, limite);
+        const dia = new Date(c.passou_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        const rotulo = `Ver ${c.placa} em ${dia}: ${c.velocidade} km/h${acima ? ', acima do limite' : ''}`;
+        return `<li class="ranking-item"><button type="button" class="ranking-btn" data-filtro="recorde"`
+          + ` data-valor="${esc(maioresVelocidades.valorDoClique(c.placa, c.passou_em))}" aria-label="${esc(rotulo)}">
+          <span class="pos">${i + 1}.</span>
+          <span class="placa">${esc(c.placa)}</span>
+          <span class="recorde-dia">${esc(dia)}</span>
+          <span class="count${acima ? ' acima' : ''}">${Number(c.velocidade)} km/h</span>
         </button></li>`;
       }).join('');
     }
