@@ -172,9 +172,32 @@ interfone ou Condfy). Tocar numa abre o mesmo cadastro com a placa já
 preenchida. Placa marcada como leitura duvidosa (`suspeita`, base de veículos)
 não deve poluir a lista — o builder decide como.
 
-### 5.3 Ao builder
+### 5.3 Leitura da placa (decidido, testado em 22/10/2026)
 
-OCR (no aparelho ou no servidor), formato (página instalável no celular é o
+- **Gratuita e no próprio celular** (CEO: "quero uma solução free"): leitor
+  `fast-plate-ocr`, modelo `cct-s-v2-global` (MIT, ~5 MB, ONNX), rodando no
+  navegador com `onnxruntime-web` (WASM). A imagem não sai do aparelho: sem
+  custo por leitura e sem novo suboperador na LGPD.
+- **Câmera ao vivo com máscara** (pedido do CEO): tudo escurecido menos uma
+  moldura no formato da placa; lê só o que está na moldura, várias vezes por
+  segundo; captura sozinho com 3 leituras iguais seguidas, vibra e mostra para
+  conferir/corrigir. Botões "Digitar" e "Lanterna" (Android).
+- **Sem detector de placa**: a moldura faz o enquadramento. Evita a dúvida de
+  licença do detector YOLOv9 (GPL no original) e economiza 7 MB.
+- Correção por posição (3 letras, número, letra-ou-número, 2 números).
+- Rede de segurança: se a lombada ler a mesma placa com 1 caractere diferente
+  logo depois do cadastro, o sistema avisa e corrige.
+- **Medido** em 160 fotos reais das 4 lombadas (placa recortada como foto de
+  perto): 88% de leitura exata, 95% com no máximo 1 caractere; descontando os
+  erros da própria câmera da lombada, ~91%. Enquadramento justo é essencial
+  (folga grande na moldura: 55%). ~60 ms por leitura em JS no Mac.
+- **Protótipo** (`tmp/prototipo-ocr`, https://prototipo-ocr.vercel.app, projeto
+  Vercel separado `prototipo-ocr`) aprovado pelo CEO no celular ("deu certo").
+  É descartável; o módulo real reaproveita a abordagem, não o código.
+
+### 5.4 Ao builder
+
+Formato (página instalável no celular é o
 caminho natural, o painel já é web e responsivo), lista de passagens recentes,
 uso de marca/modelo/cor da APIPLACAS para ajudar a conferir.
 
