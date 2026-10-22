@@ -19,6 +19,7 @@
     titulo: 'Dados do veículo mesmo com a consulta lenta',
     itens: Object.freeze([
       'Quando o serviço que informa marca, modelo e cor está lento, o sistema espera mais pela resposta. Menos veículos ficam como "Não cadastrado".',
+      'Manual do usuário atualizado: quadros da lateral, Maiores velocidades, cores da velocidade e como pedir a inclusão de quem recebe os e-mails.',
     ]),
   });
 });
