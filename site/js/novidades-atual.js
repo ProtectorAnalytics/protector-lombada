@@ -14,12 +14,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.7.1',
-    data: '2026-10-15',
-    titulo: 'Passagens antigas apagadas no prazo',
+    versao: '1.7.2',
+    data: '2026-10-22',
+    titulo: 'Dados do veículo mesmo com a consulta lenta',
     itens: Object.freeze([
-      'As passagens com mais de 6 meses voltam a ser apagadas todo dia, como manda a política de privacidade (LGPD).',
-      'A equipe Protector passa a receber por e-mail o aviso de câmera sem sinal.',
+      'Quando o serviço que informa marca, modelo e cor está lento, o sistema espera mais pela resposta. Menos veículos ficam como "Não cadastrado".',
     ]),
   });
 });

@@ -12,7 +12,7 @@
  * Auth: SOMENTE `Authorization: Bearer ${CRON_SECRET}` (o Vercel Cron envia
  * esse header quando CRON_SECRET está definido). Sem segredo = recusa tudo.
  */
-const { criarClienteApiplacas } = require('../lib/apiplacas');
+const { criarClienteApiplacas, TIMEOUT_MS } = require('../lib/apiplacas');
 const { criarRepoSupabase } = require('../lib/veiculos-base-repo');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarVeiculosBase } = require('../lib/veiculos-base');
@@ -23,6 +23,8 @@ const { supabase } = require('../lib/supabase');
 const { autorizado } = require('../lib/cron-auth');
 
 const RETENCAO_MESES = 6;
+const LOTE_FILA = 25;
+const ORCAMENTO_FILA_MS = 120000;
 
 function mesSP(d = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit' })
@@ -34,6 +36,7 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
+  const inicio = Date.now();
   const repo = criarRepoSupabase();
   const resumo = { saldo: null, religou: false, fila: null, avisos: [], avisosFalhos: [], apagados: 0, anonimizados: 0 };
   try {
@@ -49,7 +52,10 @@ module.exports = async function handler(req, res) {
         resumo.religou = true;
       }
       const vb = criarVeiculosBase({ repo, api, validador: criarValidador({ contarPassagens: repo.contarPassagens }) });
-      resumo.fila = await vb.processarFila({ limite: 50 });
+      // Para de iniciar consultas a tempo de a última (até 8 s) terminar e
+      // de sobrar tempo para avisos e retenção, abaixo do que já rodava (50 × 3 s).
+      const prazo = new Date(inicio + ORCAMENTO_FILA_MS - TIMEOUT_MS);
+      resumo.fila = await vb.processarFila({ limite: LOTE_FILA, prazo });
     }
 
     const cfg = await repo.lerConfig();
