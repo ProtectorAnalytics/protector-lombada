@@ -1,6 +1,6 @@
 {
   "name": "protector-lombada",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "Plataforma web para gerenciamento de Lombadas Educativas ALPHADIGI",
   "private": true,
   "scripts": {

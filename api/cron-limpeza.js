@@ -56,6 +56,10 @@ async function limparFotosCapturas(cutoff) {
     .select('id, foto_path')
     .lt('timestamp', cutoff)
     .not('foto_path', 'is', null)
+    // Ordenar faz o banco usar idx_capturas_foto_timestamp. Sem isso, a
+    // última busca (sem nada a apagar) varria a tabela toda e estourava o
+    // statement_timeout: a limpeza parava no 1º lote todo dia.
+    .order('timestamp', { ascending: true })
     .limit(BATCH_SIZE);
 
   if (error) throw new Error(`capturas select: ${error.message}`);
@@ -65,7 +69,8 @@ async function limparFotosCapturas(cutoff) {
   if (fotoPaths.length > 0) await removerFotos(fotoPaths, 'capturas');
 
   const ids = data.map((c) => c.id);
-  await supabase.from('capturas').update({ foto_path: null }).in('id', ids);
+  const { error: errUpd } = await supabase.from('capturas').update({ foto_path: null }).in('id', ids);
+  if (errUpd) throw new Error(`capturas update: ${errUpd.message}`);
 
   return { fotos: fotoPaths.length, registros: ids.length };
 }
@@ -77,6 +82,7 @@ async function limparFotosHistorico(cutoff) {
     .lt('timestamp', cutoff)
     .eq('foto_disponivel', true)
     .not('foto_path', 'is', null)
+    .order('timestamp', { ascending: true })
     .limit(BATCH_SIZE);
 
   if (error) throw new Error(`capturas_historico select: ${error.message}`);
@@ -86,10 +92,11 @@ async function limparFotosHistorico(cutoff) {
   if (fotoPaths.length > 0) await removerFotos(fotoPaths, 'historico');
 
   const ids = data.map((c) => c.id);
-  await supabase
+  const { error: errUpd } = await supabase
     .from('capturas_historico')
     .update({ foto_path: null, foto_disponivel: false })
     .in('id', ids);
+  if (errUpd) throw new Error(`capturas_historico update: ${errUpd.message}`);
 
   return { fotos: fotoPaths.length, registros: ids.length };
 }
