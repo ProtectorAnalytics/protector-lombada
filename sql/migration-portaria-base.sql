@@ -243,6 +243,13 @@ begin
     raise exception 'vincular_placa: unidade não pertence ao cliente' using errcode = '22023';
   end if;
 
+  -- Serializa as gravações da mesma placa no mesmo cliente. Sem isto, em READ
+  -- COMMITTED, quem espera o FOR UPDATE reavalia a linha já encerrada pelo
+  -- outro, não enxerga o vínculo novo (fora do snapshot do comando), conclui
+  -- "não existe" e o cadastro dele se perde no unique_violation. Com a trava,
+  -- o segundo só lê depois do commit do primeiro e cai no ramo "difere".
+  perform pg_advisory_xact_lock(hashtextextended(p_cliente_id::text || ':' || v_chave, 0));
+
   select * into v_atual
     from public.veiculos
    where cliente_id = p_cliente_id
@@ -277,7 +284,8 @@ begin
     )
     returning * into v_novo;
   exception when unique_violation then
-    -- Corrida: outra chamada gravou o vigente primeiro; devolve o dela.
+    -- Rede de segurança (não deveria ocorrer com a trava acima, ex.: insert
+    -- direto fora desta função): devolve o vigente gravado pelo outro.
     select * into v_novo
       from public.veiculos
      where cliente_id = p_cliente_id

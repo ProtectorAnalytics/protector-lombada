@@ -85,6 +85,39 @@ begin
   exception when unique_violation then null;
   end;
 
+  -- 4b) Estado "concorrente" simulado: outro processo já gravou um vigente
+  --     direto (fora da função). Duas chamadas seguidas com pessoas
+  --     diferentes passam pelo ramo "difere": nada se perde, 1 vigente no fim.
+  --     Concorrência real não roda numa transação só; a trava por chave é
+  --     conferida abaixo via pg_get_functiondef.
+  insert into veiculos (cliente_id, placa, nome_morador, unidade)
+  values ('00000000-0000-0000-0000-00000000aaaa', 'ZZZ6F66', 'Concorrente', 'Casa 10');
+  v1 := public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ6566', 'morador', 'Porteiro A grava',
+         'Casa 10', null, null, null, 'portaria', 'Porteiro A', null);
+  v2 := public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ6F66', 'prestador', 'Porteiro B grava',
+         'Casa 10', null, null, null, 'portaria', 'Porteiro B', null);
+  if v1.nome_morador is distinct from 'Porteiro A grava' or v1.vigente_desde is null then
+    raise exception 'FALHOU: 1ª chamada após estado concorrente não abriu vínculo novo';
+  end if;
+  if v2.nome_morador is distinct from 'Porteiro B grava' or v2.id = v1.id then
+    raise exception 'FALHOU: 2ª chamada após estado concorrente perdeu o cadastro';
+  end if;
+  select count(*) into n from veiculos
+   where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and placa_mercosul(placa) = 'ZZZ6F66';
+  if n <> 3 then raise exception 'FALHOU: histórico da placa concorrente com % linhas (esperado 3)', n; end if;
+  select count(*) into n from veiculos
+   where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and placa_mercosul(placa) = 'ZZZ6F66'
+     and encerrado_em is null;
+  if n <> 1 then raise exception 'FALHOU: % vigentes na placa concorrente', n; end if;
+  if (select vigente_desde from veiculos where id = v2.id) is distinct from
+     (select encerrado_em from veiculos where id = v1.id) then
+    raise exception 'FALHOU: vigência da placa concorrente não encadeia';
+  end if;
+  if pg_get_functiondef('public.vincular_placa(uuid, text, text, text, text, uuid, text, text, text, text, uuid)'::regprocedure)
+       not ilike '%pg_advisory_xact_lock%' then
+    raise exception 'FALHOU: vincular_placa sem trava por chave (pg_advisory_xact_lock)';
+  end if;
+
   -- 5) unidade_id de outro cliente é recusada.
   begin
     perform public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ2B22', 'morador', 'Cicrano',
@@ -141,7 +174,7 @@ begin
   select count(*) into n from porteiros;
   if n <> 1 then raise exception 'FALHOU: portaria lê % porteiros', n; end if;
   select count(*) into n from veiculos;
-  if n <> 2 then raise exception 'FALHOU: portaria lê % veiculos (esperado 2)', n; end if;
+  if n <> 5 then raise exception 'FALHOU: portaria lê % veiculos (esperado 5)', n; end if;
 
   select count(*) into n from email_destinatarios;
   if n <> 0 then raise exception 'FALHOU: portaria lê email_destinatarios (% linhas)', n; end if;
