@@ -3,7 +3,7 @@
  * Uso: node test/apiplacas.test.js
  */
 const assert = require('node:assert');
-const { criarClienteApiplacas, normalizarCor } = require('../lib/apiplacas');
+const { TIMEOUT_MS, criarClienteApiplacas, normalizarCor } = require('../lib/apiplacas');
 
 const TOKEN = 'tok_secreto_de_teste_0123456789ab';
 let passou = 0;
@@ -112,7 +112,20 @@ const RESPOSTA_OK = {
     assert.strictEqual(r.httpStatus, 200);
   });
 
-  await caso('estoura em 3 s e vira timeout', async () => {
+  await caso('espera padrão é de 8 s (APIPLACAS lenta desde 15/10/2026)', async () => {
+    assert.strictEqual(TIMEOUT_MS, 8000);
+    const original = AbortSignal.timeout;
+    let pedido = null;
+    AbortSignal.timeout = (ms) => { pedido = ms; return original.call(AbortSignal, ms); };
+    try {
+      await criarClienteApiplacas({ token: TOKEN, fetchImpl: fetchFalso(200, RESPOSTA_OK) }).consultar('ABC1D23');
+    } finally {
+      AbortSignal.timeout = original;
+    }
+    assert.strictEqual(pedido, 8000);
+  });
+
+  await caso('estoura o tempo e vira timeout', async () => {
     const api = criarClienteApiplacas({ token: TOKEN, timeoutMs: 50, fetchImpl: fetchFalso(200, RESPOSTA_OK, { atraso: 500 }) });
     const r = await api.consultar('ABC1D23');
     assert.strictEqual(r.resultado, 'timeout');

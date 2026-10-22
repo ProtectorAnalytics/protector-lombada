@@ -459,7 +459,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 2.0.0 | Build 8b34a0f | Março 2026</p>
+    <p class="version">Versão 1.7.2 | Outubro 2026</p>
 
     <hr>
 
@@ -510,38 +510,44 @@
             <tr><th>Card</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><strong>Passagens Hoje</strong></td><td>Total de veículos registrados no dia</td></tr>
-            <tr><td><strong>Alertas Hoje</strong></td><td>Quantidade de veículos acima do limite de velocidade</td></tr>
+            <tr><td><strong>Passagens Hoje</strong></td><td>Total de passagens do dia e de quantos veículos diferentes (ex.: "171 de 87 veículos": o mesmo carro pode passar várias vezes)</td></tr>
+            <tr><td><strong>Alertas Hoje</strong></td><td>Quantidade de passagens acima do limite de velocidade</td></tr>
             <tr><td><strong>Vel. Máxima Hoje</strong></td><td>Maior velocidade registrada no dia</td></tr>
             <tr><td><strong>Limite Configurado</strong></td><td>Limite de velocidade configurado para o local</td></tr>
         </tbody>
     </table>
     <p><strong>Importante:</strong> esses números ficam sob o título <strong>"Agora · hoje"</strong> e <strong>não mudam</strong> quando você usa os filtros. As fotos recentes também são sempre as de agora.</p>
+    <p>O botão <strong>"Recolher"</strong>, ao lado do título, esconde as fotos e o status das câmeras para dar mais espaço à lista; <strong>"Mostrar fotos"</strong> traz de volta. O painel lembra a escolha neste navegador.</p>
 
     <hr>
 
     <!-- Section 3 -->
     <h2 id="indicadores-de-velocidade">3. Indicadores de Velocidade</h2>
 
-    <h3>Gráfico de Velocidade</h3>
-    <p>Na lateral direita do dashboard, um gráfico mostra a distribuição de velocidades das últimas capturas:</p>
+    <p>Na lateral direita do painel ficam os quadros abaixo. Todos, exceto "Maiores velocidades", seguem o período e os filtros escolhidos e contam <strong>todas</strong> as passagens do período.</p>
+
+    <h3>Indicadores do Período</h3>
     <ul>
-        <li><span class="color-dot" style="background:#22c55e"></span> <strong>Verde (0-20 km/h):</strong> Velocidade adequada</li>
-        <li><span class="color-dot" style="background:#f59e0b"></span> <strong>Amarelo (21-30 km/h):</strong> Atenção</li>
-        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Vermelho (acima de 30 km/h):</strong> Acima do limite</li>
+        <li><strong>Vel. Média:</strong> média das passagens medidas pelo radar, com quantas medições entraram na conta</li>
+        <li><strong>Conformidade:</strong> percentual de passagens dentro do limite, com de quantas passagens</li>
+        <li><strong>Hora Pico:</strong> hora do dia com mais passagens</li>
+        <li><strong>Reincidentes:</strong> placas com 2 ou mais alertas no período</li>
     </ul>
 
-    <h3>Velocidade Máxima e Média</h3>
-    <ul>
-        <li>A velocidade máxima registrada no dia é destacada</li>
-        <li>A média geral é exibida nos cards de estatística</li>
-    </ul>
+    <h3>Passagens por Hora</h3>
+    <p>Gráfico com a quantidade de passagens em cada hora do período.</p>
+
+    <h3>Top 10 Placas</h3>
+    <p>As placas que mais passaram no período. Clique numa placa para filtrar as passagens dela.</p>
+
+    <h3>Maiores velocidades · últimos 6 meses</h3>
+    <p>Os 10 veículos mais rápidos dos últimos 6 meses, cada um uma vez, com a maior velocidade medida e o dia. Esse quadro <strong>não muda</strong> com o período escolhido. Leituras com defeito do radar e placas não lidas ficam de fora. Clique numa placa para ver as passagens dela no dia do recorde, com foto.</p>
 
     <hr>
 
     <!-- Section 4 -->
     <h2 id="ultimas-capturas">4. Últimas Capturas</h2>
-    <p>A seção principal do dashboard mostra as <strong>10 últimas capturas</strong> em formato de cards:</p>
+    <p>A seção principal do dashboard mostra, em "Agora · hoje", as fotos das <strong>últimas passagens</strong> (até 6, uma por placa):</p>
 
     <h3>Informações de cada captura:</h3>
     <ul>
@@ -557,9 +563,9 @@
 
     <h3>Cores da velocidade:</h3>
     <ul>
-        <li><span class="color-dot" style="background:#22c55e"></span> <strong>Verde:</strong> Abaixo do limite - veículo trafegando normalmente</li>
-        <li><span class="color-dot" style="background:#f59e0b"></span> <strong>Laranja:</strong> Próximo do limite - atenção</li>
-        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Vermelho:</strong> Acima do limite - excesso de velocidade</li>
+        <li><span class="color-dot" style="background:#22c55e"></span> <strong>Verde:</strong> Até o limite - veículo trafegando normalmente</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Vermelho:</strong> Acima do limite - alerta de excesso de velocidade</li>
+        <li><span class="color-dot" style="background:#9ca3af"></span> <strong>Cinza "—":</strong> Sem velocidade - o radar só mede a partir de 10 km/h</li>
     </ul>
 
     <h3>Atualização automática</h3>
@@ -609,7 +615,7 @@
     <ul>
         <li>A lista mostra até as <strong>300 passagens mais recentes</strong> do período. Quando esse limite é atingido, o rodapé avisa "exibindo as 300 mais recentes; refine o período".</li>
         <li>Passagens <strong>sem velocidade</strong> (sem leitura do radar) ficam escondidas. No rodapé aparece o link <strong>"N passagens sem velocidade ocultas · Mostrar"</strong>; clique para vê-las (e em "Ocultar" para esconder de novo). Nada é apagado: elas continuam nos relatórios.</li>
-        <li><strong>"Exportar"</strong> fica junto da lista e oferece Excel (.xlsx) ou PDF. O Excel traz também Marca, Modelo, Cor (cadastro) e Ano. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
+        <li><strong>"Exportar"</strong> fica junto da lista e oferece Excel (.xlsx) ou PDF com <strong>todas as passagens do período filtrado</strong>, não só as que aparecem na lista. O Excel traz também Marca, Modelo, Cor (cadastro) e Ano. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
     </ul>
 
     <h3>Dados do veículo (marca, modelo, cor e ano)</h3>
@@ -752,19 +758,13 @@
     <h3>O que são</h3>
     <p>Quando um veículo é detectado acima do limite de velocidade, o sistema envia automaticamente um email de alerta para os destinatários cadastrados.</p>
 
-    <h3>Gerenciar destinatários</h3>
-    <p>Na seção <strong>"Emails de Alerta"</strong> do dashboard:</p>
-    <ol>
-        <li><strong>Adicionar:</strong> Clique em "Adicionar", preencha nome, email e tipo</li>
-        <li><strong>Tipos de notificação:</strong>
-            <ul>
-                <li><strong>Alerta:</strong> Recebe avisos de excesso de velocidade</li>
-                <li><strong>Relatório:</strong> Recebe relatórios periódicos</li>
-                <li><strong>Todos:</strong> Recebe tudo</li>
-            </ul>
-        </li>
-        <li><strong>Remover:</strong> Clique no botão de remover ao lado do destinatário</li>
-    </ol>
+    <h3>Quem recebe</h3>
+    <p>A lista de quem recebe os e-mails é cadastrada pela <strong>equipe Protector</strong>. Para incluir, trocar ou remover um destinatário, fale com o suporte informando nome, e-mail e o que a pessoa deve receber:</p>
+    <ul>
+        <li><strong>Alerta:</strong> avisos de excesso de velocidade</li>
+        <li><strong>Relatório:</strong> relatórios periódicos</li>
+        <li><strong>Todos:</strong> tudo</li>
+    </ul>
 
     <h3>Conteúdo do email de alerta</h3>
     <p>Cada email de alerta inclui um <strong>PDF anexo</strong> com:</p>
@@ -773,6 +773,7 @@
         <li>Placa e velocidade registrada</li>
         <li>Data e hora</li>
         <li>Nome do morador e unidade (se cadastrado)</li>
+        <li>Veículo (marca, modelo e cor), quando a placa já foi consultada</li>
         <li>Histórico de passagens dos últimos 30 dias</li>
     </ul>
 
@@ -845,7 +846,7 @@
     <p>Sim. O dashboard é responsivo e funciona em qualquer dispositivo com navegador: computador, tablet ou celular.</p>
 
     <h3>Quantos emails de alerta posso cadastrar?</h3>
-    <p>Não há limite. Você pode cadastrar quantos destinatários desejar.</p>
+    <p>Não há limite. Peça à equipe Protector para incluir os destinatários.</p>
 
     <h3>Como alterar o limite de velocidade?</h3>
     <p>O limite de velocidade é configurado pelo administrador do sistema. Entre em contato com a Protector Sistemas para solicitar alterações.</p>
@@ -858,6 +859,7 @@
         <li><strong>Banco de dados isolado</strong> por cliente (cada condomínio só vê seus próprios dados)</li>
         <li><strong>Políticas de acesso (RLS)</strong> no banco de dados</li>
     </ul>
+    <p>A equipe Protector pode abrir o seu painel para ajudar, por exemplo no cadastro de veículos. Nesse caso aparece no topo a faixa "Você está como admin", e cada acesso fica registrado, com quem abriu e quando.</p>
 
     <hr>
 
@@ -873,7 +875,7 @@
     <hr>
 
     <p style="text-align:center; color:var(--text-muted); font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.7.1 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.7.2 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 

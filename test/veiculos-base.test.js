@@ -4,7 +4,7 @@
  * Uso: node test/veiculos-base.test.js
  */
 const assert = require('node:assert');
-const { criarVeiculosBase, MAX_TENTATIVAS, LIMITE_HORA } = require('../lib/veiculos-base');
+const { criarVeiculosBase, MAX_TENTATIVAS, MAX_TENTATIVAS_TIMEOUT, LIMITE_HORA } = require('../lib/veiculos-base');
 const { criarValidador } = require('../lib/validador-placa');
 const { criarRepoMemoria } = require('./helpers/repo-memoria');
 
@@ -217,11 +217,60 @@ function montar({ config, passagens, api = apiFalsa() } = {}) {
   });
 
   await caso('3ª falha ainda volta para a fila com backoff (F1)', async () => {
-    const { repo, vb } = montar({ api: apiFalsa('timeout') });
+    const { repo, vb } = montar({ api: apiFalsa('erro') });
     await repo.reservar({ placa: 'ABC1D23', status: 'erro', tentativas: 2, proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
     const r = await vb.consultarAgora('ABC1D23', 'repescagem');
     assert.strictEqual(r.linha.status, 'erro');
     assert.strictEqual(r.linha.tentativas, 3);
+  });
+
+  await caso('timeout só é repescado uma vez: 2º timeout tira a placa da fila', async () => {
+    const { repo, api, vb } = montar({ api: apiFalsa('timeout') });
+    await repo.reservar({ placa: 'ABC1D23', status: 'erro', tentativas: 1, ultimo_erro: 'timeout', proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
+    const r = await vb.consultarAgora('ABC1D23', 'repescagem');
+    assert.strictEqual(api.chamadas.length, 1);
+    assert.strictEqual(MAX_TENTATIVAS_TIMEOUT, 2);
+    assert.strictEqual(r.linha.status, 'sem_resultado');
+    assert.strictEqual(r.linha.ultimo_erro, 'timeout');
+    assert.strictEqual(r.linha.tentativas, 2);
+    assert.strictEqual((await repo.fila(50, '2099-01-01T00:00:00.000Z')).length, 0);
+  });
+
+  await caso('1º timeout ainda volta para a fila (uma repescagem)', async () => {
+    const { vb } = montar({ api: apiFalsa('timeout') });
+    const l = await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    assert.strictEqual(l.status, 'erro');
+    assert.strictEqual(l.tentativas, 1);
+  });
+
+  await caso('timeout depois de um erro também tira a placa da fila (ambos custam)', async () => {
+    const { repo, vb } = montar({ api: apiFalsa('timeout') });
+    await repo.reservar({ placa: 'ABC1D23', status: 'erro', tentativas: 1, ultimo_erro: 'erro', proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
+    const r = await vb.consultarAgora('ABC1D23', 'repescagem');
+    assert.strictEqual(r.linha.status, 'sem_resultado');
+  });
+
+  await caso('erro (sem timeout) segue com 4 tentativas: 1ª falha volta para a fila', async () => {
+    const { vb } = montar({ api: apiFalsa('erro') });
+    const l = await vb.aoPassar({ placa: 'ABC1D23', clienteId: 'c1' });
+    assert.strictEqual(l.status, 'erro');
+    assert.strictEqual(l.tentativas, 1);
+  });
+
+  await caso('fila não inicia consulta depois do prazo', async () => {
+    const { repo, api, vb } = montar({ api: apiFalsa('ok') });
+    await repo.reservar({ placa: 'ABC1D23', status: 'pendente', tentativas: 0, proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
+    const r = await vb.processarFila({ limite: 50, prazo: new Date('2026-10-04T11:59:00Z') });
+    assert.deepStrictEqual(r, { consultadas: 0, parou: 'prazo' });
+    assert.strictEqual(api.chamadas.length, 0);
+  });
+
+  await caso('fila consulta normalmente antes do prazo', async () => {
+    const { repo, api, vb } = montar({ api: apiFalsa('ok') });
+    await repo.reservar({ placa: 'ABC1D23', status: 'pendente', tentativas: 0, proxima_tentativa_em: null, visto_por_ultimo_em: 'x' });
+    const r = await vb.processarFila({ limite: 50, prazo: new Date('2026-10-04T12:05:00Z') });
+    assert.strictEqual(r.consultadas, 1);
+    assert.strictEqual(api.chamadas.length, 1);
   });
 
   await caso('token inválido desliga as consultas', async () => {

@@ -469,7 +469,7 @@ async function processarAposResposta({
   if (substituida) await removerSubstituida({ camera, captura, substituida });
 
   // 2b. Base de veículos (APIPLACAS). Antes da notificação para o PDF já sair
-  //     com modelo e cor. aoPassar() nunca lança; o limite de 3 s é só da chamada HTTP à APIPLACAS.
+  //     com modelo e cor. aoPassar() nunca lança; o limite de 8 s é só da chamada HTTP à APIPLACAS.
   const veiculoBase = veiculosBase ? await veiculosBase.aoPassar({ placa, clienteId: cliente.id }) : null;
 
   // 3. Notificação de excesso de velocidade (PDF + e-mail).
