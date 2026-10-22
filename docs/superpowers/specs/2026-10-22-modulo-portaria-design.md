@@ -1,8 +1,22 @@
 # Módulo Portaria — desenho
 
-Data: 22/10/2026 · Autor: conversa com o CEO (Glauber) · Piloto: Condomínio Praia Bella
+Data: 22/10/2026 · Autor: conversa com o CEO (Glauber) · Para **todos os condomínios** · Piloto: Praia Bella
 
 ## 1. Por que existe
+
+**A dor é de todos os clientes** (CEO, 22/10). O Praia Bella foi o caso que
+trouxe o assunto e será o piloto. Cadastro × placas distintas em 30 dias
+(medido 22/10/2026):
+
+| Condomínio | Veículos cadastrados | Placas distintas (30 d) |
+|---|---|---|
+| Praia do Castelo | 531 | 2.485 |
+| Praia Bella | 0 | 2.321 |
+| Paraíso do Mar | 10 | 614 |
+| Enseada do Castelo | 0 | 505 |
+
+Tudo no módulo é **por condomínio** (unidades, porteiros, aparelhos, PC,
+importação) e liga/desliga por cliente; nada é específico do Praia Bella.
 
 O Praia Bella tem portaria grande, fluxo alto e poucos porteiros. Não tem sala
 de monitoramento nem operador para cadastrar placas, e a portaria não acessa o
@@ -44,7 +58,8 @@ Cada passagem diz quem é, de que unidade e de que tipo.
 4. Importação do Condfy (opcional, com revisão).
 5. Manual do módulo.
 
-Cada parte é entregue e usada antes da seguinte. Cada uma sobe versão e
+Cada parte é entregue e usada antes da seguinte, primeiro no Praia Bella e
+depois liberada para os demais. Cada uma sobe versão e
 novidades conforme a regra do repositório (CLAUDE.md).
 
 ## 4. Parte 1 — Base
@@ -105,8 +120,8 @@ Comparação de placa segue as duas grafias (antiga e Mercosul), como em
 Lista de unidades por condomínio, cadastrada previamente. O cadastro rápido só
 deixa escolher unidade da lista.
 
-**Decisão minha:** no primeiro dia a Protector preenche a lista do Praia Bella
-pelo admin, colando a lista de unidades (uma por linha, com bloco). Puxar do
+**Decisão minha:** ao ligar o módulo num condomínio, a Protector preenche a
+lista de unidades pelo admin, colando a lista de unidades (uma por linha, com bloco). Puxar do
 Condfy vem com a Parte 4. Os cadastros atuais com unidade em texto livre migram
 como estão e aparecem como "unidade antiga" até alguém escolher a unidade da
 lista — não há casamento automático de textos.
@@ -175,8 +190,8 @@ Só no PC da portaria (Windows), só para olhar (decidido).
 - **Setas** para voltar/avançar nas passagens; voltar para a última retoma o
   ao vivo.
 - **Clique** abre o painel completo de hoje no navegador.
-- **Câmeras (decisão minha):** o Praia Bella tem 2 câmeras. O quadro mostra
-  todas, com o nome da câmera em cada passagem; cada PC pode escolher mostrar
+- **Câmeras (decisão minha):** o quadro mostra todas as câmeras do
+  condomínio (o Praia Bella tem 2), com o nome da câmera em cada passagem; cada PC pode escolher mostrar
   só uma câmera.
 - Acima do limite: vermelho, como no painel (minha sugestão).
 
@@ -195,6 +210,8 @@ tecnologia; deve ser pequeno, atualizar sozinho e não pesar no PC das câmeras.
 ## 7. Parte 4 — Importação do Condfy
 
 Opcional (o CEO não confia na qualidade do dado): **nunca grava direto**.
+Só para os condomínios que usam Condfy; quem não usa fica com o cadastro pela
+portaria e pelo painel.
 
 - Escolha do alcance: **uma unidade, várias, ou o condomínio inteiro**.
 - **Prévia antes de gravar**, em três grupos: novos, iguais (já existem),
@@ -222,7 +239,7 @@ quem instala o quadro no PC.
 
 ## 10. Em aberto
 
-- Na entrada do Praia Bella, todo visitante/prestador para e fala com o
+- Na entrada dos condomínios (a começar pelo Praia Bella), todo visitante/prestador para e fala com o
   porteiro, ou parte entra direto (TAG, controle, placa)? Se parte entra
   direto, a lista "Passaram sem cadastro" pesa mais.
 - Conta e caminho de rede do Condfy para a Parte 4.
