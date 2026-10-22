@@ -8,8 +8,8 @@
 const assert = require('node:assert');
 
 let estado;
-function zerar(tabelas, { erroRemove = null } = {}) {
-  estado = { tabelas, removidos: [], blocos: [], updates: [], erroRemove, erros: [] };
+function zerar(tabelas, { erroRemove = null, erroUpdate = null } = {}) {
+  estado = { tabelas, removidos: [], blocos: [], updates: [], ordens: [], erroRemove, erroUpdate, erros: [] };
 }
 
 function consulta(nome) {
@@ -17,10 +17,11 @@ function consulta(nome) {
   let patch = null;
   const q = {
     select: () => q, lt: () => q, not: () => q, eq: () => q, limit: () => q,
+    order: (coluna, opcoes) => { estado.ordens.push({ tabela: nome, coluna, opcoes }); return q; },
     in: (_c, ids) => { if (modo === 'update') estado.updates.push({ tabela: nome, patch, ids }); return q; },
     update: (p) => { modo = 'update'; patch = p; return q; },
     then(ok, ko) {
-      let res = { data: [], error: null };
+      let res = { data: [], error: modo === 'update' && estado.erroUpdate ? { message: estado.erroUpdate } : null };
       if (modo === 'select') { res = { data: estado.tabelas[nome] || [], error: null }; estado.tabelas[nome] = []; }
       return Promise.resolve(res).then(ok, ko);
     },
@@ -52,7 +53,7 @@ const handler = require('../api/cron-limpeza');
 
 async function rodar() {
   let corpo = null;
-  const res = { status() { return res; }, json(b) { corpo = b; return res; } };
+  const res = { status(c) { estado.status = c; return res; }, json(b) { corpo = b; return res; } };
   const errOriginal = console.error;
   console.error = (...a) => { estado.erros.push(a.join(' ')); };
   try {
@@ -103,6 +104,25 @@ caso('mais de 500 arquivos são removidos em blocos de até 500', async () => {
   assert.deepStrictEqual(estado.blocos, [500, 100]); // 300 fotos = 600 arquivos
   assert.strictEqual(new Set(estado.removidos).size, 600);
   assert.strictEqual(corpo.capturas.fotos, 300);
+});
+
+caso('busca as fotos vencidas em ordem de data (usa o índice parcial; sem ela varria a tabela e estourava o tempo)', async () => {
+  zerar({ capturas: [{ id: 1, foto_path: 'c/k/a.jpg' }], capturas_historico: [{ id: 9, foto_path: 'c/k/h.jpg' }] });
+  await rodar();
+  const porTabela = (t) => estado.ordens.filter((o) => o.tabela === t);
+  assert.ok(porTabela('capturas').length >= 1);
+  assert.ok(porTabela('capturas_historico').length >= 1);
+  for (const o of estado.ordens) {
+    assert.strictEqual(o.coluna, 'timestamp');
+    assert.deepStrictEqual(o.opcoes, { ascending: true });
+  }
+});
+
+caso('falha ao limpar o registro vira erro 500 (não passa em silêncio)', async () => {
+  zerar({ capturas: [{ id: 1, foto_path: 'c/k/a.jpg' }], capturas_historico: [] }, { erroUpdate: 'timeout' });
+  const corpo = await rodar();
+  assert.strictEqual(estado.status, 500);
+  assert.ok(/capturas update: timeout/.test(corpo.detalhes));
 });
 
 (async () => {
