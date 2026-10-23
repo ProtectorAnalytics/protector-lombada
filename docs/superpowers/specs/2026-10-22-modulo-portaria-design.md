@@ -284,3 +284,10 @@ quem instala o quadro no PC.
 - **Planilha** (.xlsx): baixar modelo, importar e exportar, colunas Bloco/Torre/Quadra (opcional), Unidade, Andar (opcional), Tipo. A importação carrega o editor para **conferir antes de salvar**.
 - Rótulo exibido: `Torre 1 · 101` (sem agrupador: só `101`).
 - **Decisão minha:** a Protector (admin) e o síndico (painel do condomínio) podem editar as unidades.
+
+## 12. Projeto 2.2 — e-mails pelo cadastro de usuários (decidido em 23/10/2026, fazer depois da 2.1)
+- Novo tipo de usuário **"Só recebe e-mail"**: nome e e-mail, sem senha e sem acesso ao painel (CEO).
+- Todo usuário com e-mail ganha duas opções: **recebe alertas de excesso** e **recebe relatório periódico** (proposta aceita pelo CEO).
+- A aba E-mails do admin deixa de existir. Migração automática: destinatário cujo e-mail já é de um usuário → marca as opções nele; senão → vira usuário "Só recebe e-mail". Ninguém deixa de receber.
+- Gerenciam: Protector (admin) e síndico (painel do condomínio).
+- Mexe no envio de alertas: exige teste de que cada alerta/relatório continua indo para exatamente quem recebia antes.
