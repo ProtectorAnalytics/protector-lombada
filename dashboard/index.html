@@ -1090,6 +1090,8 @@
     /* max-width compensa a margem negativa de 4 px de cada lado do .dd: sem isso
        o botão fica 8 px menor que o texto e "VW KOMBI" vira "VW KO…" */
     .dd.dd-veiculo { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% + 8px); }
+    /* Tipo de cadastro e unidade (coluna "Cadastro" e detalhes): mesma reticência */
+    .dd.dd-cadastro { overflow: hidden; text-overflow: ellipsis; max-width: calc(100% + 8px); vertical-align: middle; }
     .dd:hover, .dd:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
     .recent-card .dd.rc-placa, .recent-card .dd.rc-badge { margin: 0; }
     .recent-card .dd.rc-placa { padding: 4px 9px; }
@@ -2877,6 +2879,8 @@
   <script src="/js/nome-veiculo.js"></script>
   <script src="/js/selo-veiculo.js"></script>
   <script src="/js/filtro-veiculo.js"></script>
+  <script src="/js/unidade.js"></script>
+  <script src="/js/filtro-cadastro.js"></script>
   <script src="/js/estado-filtros.js"></script>
   <script src="/js/acesso-painel.js"></script>
   <script src="/js/maiores-velocidades.js"></script>
@@ -2885,7 +2889,6 @@
   <script src="/js/severidade-velocidade.js"></script>
   <script src="/js/miniatura.js"></script>
   <script src="/js/usuario-portaria.js"></script>
-  <script src="/js/unidade.js"></script>
   <script src="/js/editor-unidades.js"></script>
   <script src="/js/gestao-porteiros.js"></script>
   <script src="/js/portaria-gestao.js"></script>
@@ -2942,7 +2945,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.12.1 &middot; 2026-10-23
+        v1.13.0 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -3185,7 +3188,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.12.1
+      Protector Traffic Control &middot; v1.13.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3376,6 +3379,10 @@
         <div><label for="filter-ano-de">Ano de</label><input type="number" id="filter-ano-de" inputmode="numeric" min="1950" step="1" placeholder="aaaa"></div>
         <div><label for="filter-ano-ate">Ano até</label><input type="number" id="filter-ano-ate" inputmode="numeric" min="1950" step="1" placeholder="aaaa"></div>
         <div class="campo-largo"><label for="filter-modelo">Modelo</label><input type="text" id="filter-modelo" placeholder="Ex.: Onix" maxlength="40" autocomplete="off"></div>
+        <!-- Cadastro que valia NA HORA da passagem (o mesmo da coluna "Cadastro") -->
+        <div><label for="filter-tipo-cadastro">Tipo de cadastro</label><select id="filter-tipo-cadastro"><option value="">Todos</option></select></div>
+        <div><label for="filter-unidade">Unidade</label><input type="text" id="filter-unidade" list="lista-unidades-filtro" placeholder="Ex.: 101" maxlength="40" autocomplete="off"></div>
+        <datalist id="lista-unidades-filtro"></datalist>
       </div>
       <button type="button" class="btn-ver-passagens" id="btn-ver-passagens" onclick="fecharPainelFiltro(document.getElementById('painel-filtros'))">Ver passagens</button>
     </div>
@@ -3441,6 +3448,7 @@
       rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
       conjuntoCadastradas, filtrarNaoCadastradas,
     } = barraFiltrosLib;
+    const { TAMANHO_PAGINA } = filtroVeiculoLib;
     const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra } = listaDinamicaLib;
     // Escala única: até o limite = ok (verde); acima = alerta (vermelho), em todo o painel
     const { velocidadeMedida, acimaDoLimite, classeVelocidade } = severidadeVelocidadeLib;
@@ -3863,6 +3871,7 @@
       if (!Array.isArray(lista) || !currentCliente || currentCliente.id !== clienteId) return;
       unidadesLista = [...lista].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
       renderCampoUnidadeForm();
+      preencherUnidadesDoFiltro();
     }
 
     function abrirPainelPortaria() {
@@ -4024,6 +4033,7 @@
       placasCadastradas = new Set();
       indiceVinculos = new Map();
       unidadesLista = [];
+      preencherUnidadesDoFiltro();
       cadastro = { estado: 'carregando' };
       veiculosCachePronto = Promise.resolve();
       veiculosBaseCache = {};
@@ -4159,7 +4169,7 @@
     async function loadPeriodo({ resetPage = true } = {}) {
       const chave = chaveFiltros(filtrosAtivos);
       chavePeriodoCarregado = null;
-      if (filtrosAtivos.naoCadastrados) {
+      if (filtrosAtivos.naoCadastrados || temFiltroCadastro(filtrosAtivos)) {
         if (cadastro.estado === 'erro') veiculosCachePronto = loadVeiculosCache(); // tenta de novo
         await veiculosCachePronto;
         escreverAvisoNaoCadastrados(filtrosAtivos);
@@ -4303,6 +4313,15 @@
         if (sessaoValida(sessao)) unidadesLista = [];
       }
       renderCampoUnidadeForm();
+      preencherUnidadesDoFiltro();
+    }
+
+    // Sugestões do filtro "Unidade" (Mais filtros): as unidades ativas da lista
+    function preencherUnidadesDoFiltro() {
+      const lista = document.getElementById('lista-unidades-filtro');
+      if (!lista) return;
+      const rotulos = [...new Set(unidadesLista.map((u) => unidadeLib.rotuloUnidade(u)).filter(Boolean))];
+      lista.innerHTML = rotulos.map((r) => `<option value="${esc(r)}"></option>`).join('');
     }
 
     // <option>s do tipo de pessoa; sem seleção padrão (quem cadastra escolhe)
@@ -4507,17 +4526,27 @@
       return u ? unidadeLib.rotuloUnidade(u) : (v.unidade || '');
     }
 
+    // Selo do tipo que filtra por ele (inclusive "Sem cadastro")
+    function botaoTipoCadastro(id) {
+      const t = vinculoPlacaLib.tipoPessoa(id);
+      return botaoFiltro('tipoCadastro', t.id, seloTipoPessoa(id), `${t.rotulo} — filtrar por tipo de cadastro`, 'dd-cadastro');
+    }
+    // Unidade que filtra por ela
+    function botaoUnidade(unidade) {
+      return botaoFiltro('unidade', unidade, esc(unidade), `Unidade ${unidade} — filtrar por unidade`, 'dd-cadastro');
+    }
+
     // Tipo + nome + unidade de quem estava ligado à placa na hora; sem vínculo: "Sem cadastro" (cinza)
     function celulaMorador(placa, capturaTs) {
       const m = vinculoDaPassagem(placa, capturaTs);
-      if (!m) return `<div class="morador-nc">${seloTipoPessoa(null)}</div>`;
+      if (!m) return `<div class="morador-nc">${botaoTipoCadastro(null)}</div>`;
       const nome = m.nome_morador || '—';
       const t = vinculoPlacaLib.tipoPessoa(m.tipo_pessoa);
       const sub = TIPOS_COM_ROTULO_CADASTRO.has(t.id) ? vinculoPlacaLib.rotuloCadastro(m) : '';
       const unidade = nomeUnidade(m);
-      return `<div class="morador-tipo">${seloTipoPessoa(m.tipo_pessoa)}</div>`
+      return `<div class="morador-tipo">${botaoTipoCadastro(m.tipo_pessoa)}</div>`
         + `<div class="morador-nome" title="${esc(nome)}">${esc(nome)}</div>`
-        + (unidade ? `<div class="morador-sub" title="${esc(unidade)}">${esc(unidade)}</div>` : '')
+        + (unidade ? `<div class="morador-sub" title="${esc(unidade)}">${botaoUnidade(unidade)}</div>` : '')
         + (sub ? `<div class="morador-sub" title="${esc(sub)}">${esc(sub)}</div>` : '');
     }
 
@@ -4966,6 +4995,39 @@
     // ============================================
     // Respostas fora de ordem (mudanças seguidas de filtro, polling) não sobrescrevem a mais nova
     let capturasSeq = 0;
+    const MSG_FILTRO_CADASTRO_VAZIO = 'Nenhuma passagem com esse cadastro no período.';
+    const MSG_CADASTRO_FALHA = 'Não foi possível conferir o cadastro agora. Tente de novo em instantes.';
+
+    function consultaDaLista(f, fv, fc) {
+      return aplicarFiltros(sb.from('capturas').select('*')
+        .eq('cliente_id', currentCliente.id)
+        .gte('timestamp', f.tsStart)
+        .lte('timestamp', f.tsEnd), f, fv, fc)
+        .order('timestamp', { ascending: false });
+    }
+
+    // As LIMITE_CAPTURAS mais recentes direto do servidor (com `ou` do cadastro,
+    // a conferência no cliente não tira nada; "Não cadastrados" tira)
+    async function listaDoServidor(f, fv, fc) {
+      const { data, error } = await consultaDaLista(f, fv, fc).limit(LIMITE_CAPTURAS);
+      if (error || !data) return { data, error, limite: false };
+      return { data: filtrarNoCliente(f, data), limite: data.length === LIMITE_CAPTURAS, error: null };
+    }
+
+    // Filtro de cadastro que não coube na URL (ou "Sem cadastro"): lê o período
+    // em páginas e confere cada passagem, até juntar LIMITE_CAPTURAS + 1
+    async function listaConferidaNoCliente(f, fv, fc) {
+      let achadas = [];
+      for (let p = 0; p < MAX_PAGINAS_CONFERENCIA && achadas.length <= LIMITE_CAPTURAS; p++) {
+        const de = p * TAMANHO_PAGINA;
+        const { data, error } = await consultaDaLista(f, fv, fc).order('id').range(de, de + TAMANHO_PAGINA - 1);
+        if (error || !data) return { data: null, error: error || new Error('falha ao ler página'), limite: false };
+        achadas = achadas.concat(filtrarNoCliente(f, data));
+        if (data.length < TAMANHO_PAGINA) break;
+      }
+      return { data: achadas.slice(0, LIMITE_CAPTURAS), limite: achadas.length > LIMITE_CAPTURAS, error: null };
+    }
+
     async function loadCapturas({ resetPage = true } = {}) {
       const seq = ++capturasSeq;
       const f = getActiveFilters();
@@ -4991,17 +5053,25 @@
       }
       avisoFiltroVeiculo('');
 
-      const query = aplicarFiltros(sb.from('capturas')
-        .select('*')
-        .eq('cliente_id', currentCliente.id)
-        .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd), f, fv)
-        .order('timestamp', { ascending: false })
-        .limit(LIMITE_CAPTURAS);
-      const { data: brutos, error } = await query;
+      // Tipo de cadastro / unidade: trechos por placa no servidor ou conferência no cliente
+      const fc = await filtroCadastroDoPeriodo(f).catch(() => ({ ativo: true, erro: true }));
       if (seq !== capturasSeq) return;
-      // "Não cadastrados" é filtro no cliente sobre o que veio (até LIMITE_CAPTURAS)
-      const data = error ? brutos : soNaoCadastradasSeAtivo(f, brutos);
+      if (fc.erro || fc.vazio) {
+        tbody.innerHTML = fc.erro
+          ? `<div class="table-empty" role="alert">${esc(MSG_CADASTRO_FALHA)}</div>` : htmlListaVazia(MSG_FILTRO_CADASTRO_VAZIO);
+        tabelaEmErro = false;
+        lastCapturas = []; // export não pode sair sem o filtro de cadastro
+        limiteAtingido = false;
+        mostrarPaginas(false);
+        atualizarRodapeSemVel();
+        return !fc.erro;
+      }
+
+      // "Não cadastrados" e o cadastro da hora são conferidos no cliente sobre o que veio
+      const { data, limite: noLimite, error } = fc.ativo && !fc.ou
+        ? await listaConferidaNoCliente(f, fv, fc)
+        : await listaDoServidor(f, fv, fc);
+      if (seq !== capturasSeq) return;
 
       if (error) {
         // Erro não é "nenhuma captura": o síndico leria que ninguém passou.
@@ -5014,7 +5084,8 @@
         return false;
       }
       if (!data || data.length === 0) {
-        tbody.innerHTML = htmlListaVazia(fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : MSG_LISTA_VAZIA);
+        tbody.innerHTML = htmlListaVazia(fv.ativo ? MSG_FILTRO_VEICULO_VAZIO
+          : fc.ativo ? MSG_FILTRO_CADASTRO_VAZIO : MSG_LISTA_VAZIA);
         tabelaEmErro = false;
         lastCapturas = [];
         limiteAtingido = false;
@@ -5025,7 +5096,7 @@
 
       lastCapturas = data;  // sempre o conjunto completo (export usa isto)
       tabelaEmErro = false;
-      limiteAtingido = brutos.length === LIMITE_CAPTURAS;
+      limiteAtingido = noLimite;
       allThumbUrls = {};
       // renderPage() faz o clamp caso o total de páginas tenha diminuído
       if (resetPage) currentPage = 1;
@@ -5492,6 +5563,8 @@
       definir('filter-cor', f.veiculo.cor);
       definir('filter-ano-de', f.veiculo.anoDe);
       definir('filter-ano-ate', f.veiculo.anoAte);
+      definir('filter-tipo-cadastro', f.tipoCadastro);
+      definir('filter-unidade', f.unidade);
     }
 
     function escreverSegmentado(soAlertas) {
@@ -5623,6 +5696,9 @@
       'filter-modelo': (v) => ({ veiculo: { modelo: v } }),
       'filter-ano-de': (v) => ({ veiculo: { anoDe: v } }),
       'filter-ano-ate': (v) => ({ veiculo: { anoAte: v } }),
+      'filter-tipo-cadastro': (v) => ({ tipoCadastro: v }),
+      // "19" ou "019" vira o rótulo da lista ("Bloco A · 19") quando só uma unidade casa
+      'filter-unidade': (v) => ({ unidade: filtroCadastroLib.resolverUnidade(v, unidadesLista).rotulo }),
     };
     const timersCampo = new Map();
 
@@ -5636,6 +5712,8 @@
     }
 
     function ligarCamposMais() {
+      document.getElementById('filter-tipo-cadastro').innerHTML = '<option value="">Todos</option>'
+        + filtroCadastroLib.TIPOS_FILTRO.map((t) => `<option value="${esc(t.id)}">${esc(t.rotulo)}</option>`).join('');
       Object.keys(CAMPOS_MAIS).forEach((id) => {
         const el = document.getElementById(id);
         el.addEventListener('change', () => aplicarCampoMais(id));
@@ -5791,17 +5869,20 @@
       camera: (v) => ({ cameraId: v }),
       alerta: () => ({ soAlertas: true }),
       modelo: (v) => ({ veiculo: { modelo: termoModelo(v) } }),
+      tipoCadastro: (v) => ({ tipoCadastro: v }),
+      unidade: (v) => ({ unidade: v }),
       recorde: (v) => maioresVelocidades.mudancaDoRecorde(v), // placa no dia do recorde
     };
 
     // Captura: o botão filtra sem chegar ao clique do card/linha (que abre o detalhe)
-    function ligarDrillDown(id, rolar) {
+    function ligarDrillDown(id, rolar, antes) {
       const el = document.getElementById(id);
       el.addEventListener('click', (e) => {
         const b = e.target.closest('[data-filtro]');
         if (!b || !el.contains(b) || !MUDANCA_DO_DADO[b.dataset.filtro]) return;
         e.stopPropagation();
         e.preventDefault();
+        if (antes) antes(); // ex.: fechar os detalhes da passagem
         const mudancas = MUDANCA_DO_DADO[b.dataset.filtro](b.dataset.valor);
         if (mudancas) mudarFiltros(mudancas, { rolar });
       }, true);
@@ -5884,6 +5965,7 @@
       });
       ['painel-periodo', 'painel-filtros'].forEach((id) => document.getElementById(id).addEventListener('keydown', prenderFoco));
       ligarDrillDown('table-body', false);
+      ligarDrillDown('modal-body', true, closeModal); // tipo e unidade do cadastro da hora
       ['recent-cards', 'cameras-status', 'ranking-list', 'recordes-list'].forEach((id) => ligarDrillDown(id, true));
       CELULAR_MQ.addEventListener('change', posicionarControlesCelular);
       posicionarControlesCelular();
@@ -6607,7 +6689,7 @@
     // Todas as passagens do período com os filtros da tela (paginado)
     async function capturasParaExportar() {
       const { f, montar } = await consultaDoPeriodo('placa, velocidade, camera_id, timestamp, tipo_veiculo, cor_veiculo');
-      return soNaoCadastradasSeAtivo(f, await linhasDe(montar));
+      return filtrarNoCliente(f, await linhasDe(montar));
     }
 
     async function gerarExcel() {
@@ -6915,7 +6997,7 @@
       const vigenteAtual = vinculoPlacaLib.vinculoVigente(indiceVinculos, captura.placa);
       const alvoEdicao = podeEditarVeiculos() ? edicaoCadastroLib.alvoEdicao(veiculo || vigenteHoje, vigenteAtual) : null;
       html += `<div data-bloco="cadastro">${veiculo ? htmlVeiculoCadastrado(veiculo)
-        : vigenteHoje ? htmlVeiculoCadastrado(vigenteHoje, 'Sem cadastro na hora da passagem — vínculo atual')
+        : vigenteHoje ? htmlVeiculoCadastrado(vigenteHoje, 'Sem cadastro na hora da passagem — vínculo atual', false)
         : htmlCadastroDaPassagem(vb)}</div>`;
       html += htmlAcoesCadastro(alvoEdicao);
 
@@ -6990,13 +7072,17 @@
         </div><div class="vb-fonte">Fonte: APIPLACAS${data ? ` · consultado em ${data}` : ''}</div></div>`;
     }
 
-    function htmlVeiculoCadastrado(v, titulo = 'Cadastro na hora da passagem') {
+    // Tipo e unidade filtram só quando são o cadastro da hora (o vínculo atual não é)
+    function htmlVeiculoCadastrado(v, titulo = 'Cadastro na hora da passagem', daHora = true) {
       const t = vinculoPlacaLib.tipoPessoa(v.tipo_pessoa);
       const rotulo = TIPOS_COM_ROTULO_CADASTRO.has(t.id) ? vinculoPlacaLib.rotuloCadastro(v) : '';
+      const unidade = nomeUnidade(v);
+      const tipoHtml = daHora ? botaoTipoCadastro(v.tipo_pessoa) : seloTipoPessoa(v.tipo_pessoa);
+      const unidadeHtml = !unidade ? '—' : daHora ? botaoUnidade(unidade) : esc(unidade);
       return `<div class="modal-morador"><h4>${esc(titulo)}</h4><div class="morador-grid">
-          <div><span>Tipo</span><strong>${seloTipoPessoa(v.tipo_pessoa)}</strong>${rotulo ? `<small class="morador-sub" style="display:block;white-space:normal">${esc(rotulo)}</small>` : ''}</div>
+          <div><span>Tipo</span><strong>${tipoHtml}</strong>${rotulo ? `<small class="morador-sub" style="display:block;white-space:normal">${esc(rotulo)}</small>` : ''}</div>
           <div><span>Nome</span><strong>${esc(v.nome_morador) || '—'}</strong></div>
-          <div><span>Unidade</span><strong>${esc(nomeUnidade(v)) || '—'}</strong></div>
+          <div><span>Unidade</span><strong>${unidadeHtml}</strong></div>
           <div><span>Veículo</span><strong>${esc([v.marca, v.cor].filter(Boolean).join(' ')) || '—'}</strong></div>
         </div></div>`;
     }
@@ -8271,16 +8357,19 @@
     }
 
     // Aplica à consulta de capturas todos os filtros confirmados, menos o período
-    function aplicarFiltros(q, f, fv) {
+    // fc (filtroCadastroDoPeriodo) com `ou` restringe por placa e trecho do período
+    function aplicarFiltros(q, f, fv, fc) {
       let r = q;
       if (f.cameraId) r = r.eq('camera_id', f.cameraId);
-      if (f.placa) {
-        // Placa completa: procura nas duas grafias (antiga e Mercosul). Só A-Z0-9 chega aqui.
-        const grafias = [...new Set([f.placa, placaLib.paraMercosul(f.placa), placaLib.paraAntiga(f.placa)].filter(Boolean))];
-        r = grafias.length > 1
-          ? r.or(grafias.map(g => `placa.ilike.*${g}*`).join(','))
-          : r.ilike('placa', `%${f.placa}%`);
-      }
+      const cadastroOu = fc && fc.ativo && fc.ou ? fc.ou : '';
+      // Placa completa: procura nas duas grafias (antiga e Mercosul). Só A-Z0-9 chega aqui.
+      const grafias = f.placa
+        ? [...new Set([f.placa, placaLib.paraMercosul(f.placa), placaLib.paraAntiga(f.placa)].filter(Boolean))] : [];
+      const placaOu = grafias.length > 1 ? grafias.map(g => `placa.ilike.*${g}*`).join(',') : '';
+      if (f.placa && !placaOu) r = r.ilike('placa', `%${f.placa}%`);
+      // Um `or=` só (placa E cadastro aninhados): não depende de dois `or=` na URL
+      if (placaOu && cadastroOu) r = r.or(`and(or(${placaOu}),or(${cadastroOu}))`);
+      else if (placaOu || cadastroOu) r = r.or(placaOu || cadastroOu);
       if (f.velMin > 0) r = r.gte('velocidade', f.velMin);
       if (f.velMax) r = r.lte('velocidade', f.velMax);
       if (f.soAlertas) r = r.gt('velocidade', currentCliente.limite_velocidade);
@@ -8291,16 +8380,44 @@
     // Filtro de veículo sem placas (vazio, excesso, erro) = nenhum resultado
     const semPlacasDoVeiculo = (fv) => fv.ativo && !(fv.placas && fv.placas.length);
 
+    // ---------- Tipo de cadastro e unidade (site/js/filtro-cadastro.js)
+    // Vale o cadastro NA HORA da passagem (coluna "Cadastro"). Com os vínculos
+    // do painel, cada placa ganha os trechos do período em que atende; se cabem
+    // na URL, o servidor já restringe (`ou`). Senão (muitos veículos, ou "Sem
+    // cadastro", que seria um NOT IN enorme) o período vem em páginas e
+    // filtrarNoCliente confere linha a linha, como gráfico, indicadores,
+    // alertas, Top 10 e export já fazem (leem o período inteiro).
+    const MAX_PAGINAS_CONFERENCIA = 50;
+    const temFiltroCadastro = (f) => Boolean(f && (f.tipoCadastro || f.unidade));
+
+    function criterioCadastro(f) {
+      return filtroCadastroLib.montarCriterio(f, unidadesLista);
+    }
+
+    // { ativo:false } | { ativo:true, vazio:true } | { ativo:true, ou: string|null }
+    // Lança se o cadastro não carregou: sem ele o filtro mostraria qualquer coisa.
+    async function filtroCadastroDoPeriodo(f) {
+      if (!temFiltroCadastro(f)) return { ativo: false };
+      await veiculosCachePronto;
+      if (cadastro.estado !== 'ok') throw new Error('cadastro de moradores indisponível');
+      const criterio = criterioCadastro(f);
+      if (!criterio) return { ativo: false };
+      const ini = Date.parse(f.tsStart);
+      const fim = Date.parse(f.tsEnd) + 1; // tsEnd é inclusivo (…59.999)
+      const janelas = filtroCadastroLib.janelasDoFiltro(indiceVinculos, criterio, ini, fim);
+      return Object.assign({ ativo: true }, filtroCadastroLib.clausulaDoFiltro(janelas, ini, fim));
+    }
+
     // Consulta do período com todos os filtros. Devolve `montar` (nova consulta a
-    // cada chamada, para paginar) ou null quando o filtro de veículo zera tudo.
+    // cada chamada, para paginar) ou null quando o filtro de veículo/cadastro zera tudo.
     async function consultaDoPeriodo(colunas, ajustar = (q) => q) {
       const f = getActiveFilters();
-      const fv = await placasDoFiltroVeiculo();
-      if (semPlacasDoVeiculo(fv)) return { f, montar: null };
+      const [fv, fc] = await Promise.all([placasDoFiltroVeiculo(), filtroCadastroDoPeriodo(f)]);
+      if (semPlacasDoVeiculo(fv) || fc.vazio) return { f, montar: null };
       const montar = () => ajustar(aplicarFiltros(sb.from('capturas').select(colunas)
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd), f, fv));
+        .lte('timestamp', f.tsEnd), f, fv, fc));
       return { f, montar };
     }
 
@@ -8321,9 +8438,17 @@
       return filtrarNaoCadastradas(linhas, placasCadastradas);
     }
 
+    // Tudo o que é conferido no cliente: "Não cadastrados" e o cadastro da hora
+    // (tipo/unidade). As linhas precisam de placa e timestamp.
+    function filtrarNoCliente(f, linhas) {
+      const base = soNaoCadastradasSeAtivo(f, linhas);
+      if (!temFiltroCadastro(f) || !base) return base;
+      return filtroCadastroLib.filtrarPassagens(base, indiceVinculos, criterioCadastro(f));
+    }
+
     async function consultaELinhas(colunas) {
       const { f, montar } = await consultaDoPeriodo(colunas);
-      return { f, data: soNaoCadastradasSeAtivo(f, await linhasDe(montar)) };
+      return { f, data: filtrarNoCliente(f, await linhasDe(montar)) };
     }
 
     // Roda a consulta de um card. Erro: mostra "Não foi possível atualizar ·
@@ -8351,7 +8476,7 @@
       const seq = ++graficoSeq;
       // Mesmos filtros da tabela; filtro de veículo sem placas = gráfico zerado
       const { f, montar } = await consultaDoPeriodo('timestamp, placa');
-      const data = soNaoCadastradasSeAtivo(f, await linhasDe(montar));
+      const data = filtrarNoCliente(f, await linhasDe(montar));
       if (seq !== graficoSeq) return; // resposta antiga não redesenha por cima
 
       if (f.isSingleDay) {
@@ -8697,7 +8822,7 @@
 
       const { montar } = await consultaDoPeriodo('velocidade, timestamp, placa',
         (q) => q.gt('velocidade', currentCliente.limite_velocidade));
-      const data = soNaoCadastradasSeAtivo(f, await linhasDe(montar));
+      const data = filtrarNoCliente(f, await linhasDe(montar));
       if (seq !== alertasSeq) return; // resposta antiga não redesenha por cima
       if (data) {
         data.forEach(c => {
@@ -8821,7 +8946,7 @@
     let rankingSeq = 0;
     async function loadRanking() {
       const seq = ++rankingSeq;
-      const r = await comFalhaNoCard(() => consultaELinhas('placa, velocidade'),
+      const r = await comFalhaNoCard(() => consultaELinhas('placa, velocidade, timestamp'),
         'falha-ranking', () => seq === rankingSeq);
       if (!r) return; // resposta antiga: a mais nova desenha
       const { f, data } = r;

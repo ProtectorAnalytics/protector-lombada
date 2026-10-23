@@ -12,13 +12,14 @@
  * Também: atalhos de período, perguntas prontas (visões), remoção de um
  * filtro (chips) e o estado na URL (de/para), todos sobre o mesmo estado.
  *
- * Carregado no browser (window.estadoFiltrosLib, depois de filtro-veiculo.js)
+ * Carregado no browser (window.estadoFiltrosLib, depois de filtro-veiculo.js e
+ * filtro-cadastro.js)
  * e no Node (require).
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./filtro-veiculo'));
-  else root.estadoFiltrosLib = factory(root.filtroVeiculoLib);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (filtroVeiculo) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./filtro-veiculo'), require('./filtro-cadastro'));
+  else root.estadoFiltrosLib = factory(root.filtroVeiculoLib, root.filtroCadastroLib);
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (filtroVeiculo, filtroCadastro) {
   'use strict';
   const PLACA_BUSCA_MAX = 7;
   const HORA_INICIO_PADRAO = '00:00';
@@ -99,7 +100,8 @@
   /**
    * Campos crus do formulário → estado congelado (invertidos são trocados).
    * @param {object} campos dataInicio, horaInicio, dataFim, horaFim, placa,
-   *   velMin, velMax, cameraId, soAlertas, veiculo (já montado por filtro-veiculo)
+   *   velMin, velMax, cameraId, soAlertas, naoCadastrados, tipoCadastro, unidade,
+   *   veiculo (já montado por filtro-veiculo)
    * @param {string} hoje 'AAAA-MM-DD' local
    */
   function montarFiltros(campos, hoje) {
@@ -125,6 +127,9 @@
       cameraId: texto(c.cameraId),
       soAlertas: c.soAlertas === true,
       naoCadastrados: c.naoCadastrados === true,
+      // Cadastro na hora da passagem: tipo ('morador'…'prestador', 'sem') e unidade (rótulo)
+      tipoCadastro: filtroCadastro.normalizarTipo(c.tipoCadastro),
+      unidade: filtroCadastro.textoUnidade(c.unidade),
       veiculo: veiculoDe(c.veiculo),
     });
   }
@@ -262,6 +267,8 @@
     alerta: () => ({ soAlertas: false }),
     naoCadastrados: () => ({ naoCadastrados: false }),
     placa: () => ({ placa: '' }),
+    tipoCadastro: () => ({ tipoCadastro: '' }),
+    unidade: () => ({ unidade: '' }),
     marca: () => ({ veiculo: { marca: '' } }),
     modelo: () => ({ veiculo: { modelo: '' } }),
     cor: () => ({ veiculo: { cor: '' } }),
@@ -274,10 +281,10 @@
     return r ? comMudancas(f, r(hoje), hoje) : f;
   }
 
-  /** (n) do botão "Mais filtros": velocidade, marca, modelo, cor, ano. */
+  /** (n) do botão "Mais filtros": velocidade, marca, modelo, cor, ano, tipo de cadastro, unidade. */
   function contarMaisFiltros(f) {
     const v = f.veiculo || {};
-    return [f.velMin > 0 || f.velMax, v.marca, v.modelo, v.cor, v.anoDe || v.anoAte]
+    return [f.velMin > 0 || f.velMax, v.marca, v.modelo, v.cor, v.anoDe || v.anoAte, f.tipoCadastro, f.unidade]
       .filter(Boolean).length;
   }
 
@@ -332,6 +339,8 @@
     if (f.velMin > 0) q.set('vmin', String(f.velMin));
     if (f.velMax) q.set('vmax', String(f.velMax));
     if (f.naoCadastrados) q.set('nc', '1');
+    if (f.tipoCadastro) q.set('tipo', f.tipoCadastro);
+    if (f.unidade) q.set('unidade', f.unidade);
     return q.toString().replace(/\+/g, '%20');
   }
 
@@ -377,6 +386,8 @@
       cameraId: RE_CAMERA.test(cam) ? cam : '',
       soAlertas: q.get('alerta') === '1',
       naoCadastrados: q.get('nc') === '1',
+      tipoCadastro: q.get('tipo'),
+      unidade: q.get('unidade'),
       placa: q.get('placa'),
       velMin: velocidadeDaUrl(q.get('vmin')),
       velMax: velocidadeDaUrl(q.get('vmax')),

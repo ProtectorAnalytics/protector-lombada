@@ -14,11 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.12.1',
+    versao: '1.13.0',
     data: '2026-10-23',
-    titulo: 'Nome do modelo do veículo completo na lista',
+    titulo: 'Filtrar passagens por tipo de cadastro e por unidade',
     itens: Object.freeze([
-      'O modelo do veículo aparece inteiro na lista de passagens (antes "VW KOMBI" virava "VW KO…")',
+      'Em "Mais filtros", escolha o tipo de cadastro (morador, proprietário, visitante, prestador ou sem cadastro) e a unidade',
+      'Vale o cadastro da hora da passagem, o mesmo que aparece na coluna "Cadastro"',
+      'Clique no tipo ou na unidade de uma passagem para filtrar por eles',
     ]),
   });
 });

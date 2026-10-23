@@ -51,7 +51,7 @@ caso('padrão: o dia de hoje inteiro, sem nenhum outro filtro', () => {
   assert.deepStrictEqual(f, {
     dataInicio: '2026-10-05', horaInicio: '00:00', dataFim: '2026-10-05', horaFim: '23:59',
     placa: '', velMin: 0, velMax: null, cameraId: '', soAlertas: false, naoCadastrados: false,
-    veiculo: VEICULO_VAZIO,
+    tipoCadastro: '', unidade: '', veiculo: VEICULO_VAZIO,
   });
 });
 caso('copia os campos do formulário normalizando placa e velocidades', () => {
