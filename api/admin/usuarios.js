@@ -1,4 +1,27 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
+const { erroSenhaPorteiro, usuarioDoEmail } = require('../../site/js/usuario-portaria');
+
+// Usuários role 'portaria' criados ou alterados aqui seguem a mesma regra de
+// senha de /api/admin/porteiros e têm as sessões encerradas na troca de senha
+// e no desativar.
+const ROLE_PORTEIRO = 'portaria';
+const AVISO_SESSOES = 'Feito, mas não foi possível desconectar os aparelhos em que o porteiro já estava logado. Tente de novo em alguns minutos.';
+
+/** Usuário de login para a regra: o técnico sem domínio ou a parte antes do @. */
+const usuarioDeLogin = (email) => usuarioDoEmail(email) || String(email || '').split('@')[0];
+
+/** Mensagem da regra do porteiro quando o role final é portaria; null nos outros roles. */
+function erroSenhaSePorteiro(role, senha, { email, nome }) {
+  if (role !== ROLE_PORTEIRO) return null;
+  return erroSenhaPorteiro(senha, { usuario: usuarioDeLogin(email), nome });
+}
+
+/** Encerra as sessões abertas; não lança (o passo anterior já foi aplicado). */
+async function encerrarSessoes(authId) {
+  const { error } = await supabase.rpc('encerrar_sessoes_usuario', { p_user: authId });
+  if (error) console.error('usuarios: falha ao encerrar sessões', authId, error.message);
+  return !error;
+}
 
 module.exports = async function handler(req, res) {
   try {
@@ -53,6 +76,9 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'cliente_id obrigatório para admin_cliente, operador e portaria' });
       }
 
+      const erroSenha = erroSenhaSePorteiro(role, senha, { email, nome });
+      if (erroSenha) return res.status(400).json({ error: erroSenha });
+
       // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
@@ -61,7 +87,8 @@ module.exports = async function handler(req, res) {
       });
 
       if (authError) {
-        return res.status(400).json({ error: `Erro ao criar login: ${authError.message}` });
+        console.error('usuarios: Auth recusou createUser:', authError.message);
+        return res.status(400).json({ error: 'Não foi possível criar o login. Confira se o e-mail já não está em uso e tente de novo.' });
       }
 
       // Criar perfil na tabela usuarios
@@ -131,6 +158,17 @@ module.exports = async function handler(req, res) {
         if (campos[key] !== undefined) camposFiltrados[key] = campos[key];
       }
 
+      const { data: atual, error: erroAtual } = await supabase
+        .from('usuarios').select('*').eq('id', id).maybeSingle();
+      if (erroAtual) throw erroAtual;
+      if (!atual) return res.status(404).json({ error: 'Usuário não encontrado' });
+      const final = { ...atual, ...camposFiltrados };
+      const ehPorteiro = final.role === ROLE_PORTEIRO;
+      if (senha) {
+        const erroSenha = erroSenhaSePorteiro(final.role, senha, final);
+        if (erroSenha) return res.status(400).json({ error: erroSenha });
+      }
+
       // Atualizar perfil
       const { data, error } = await supabase
         .from('usuarios')
@@ -148,20 +186,25 @@ module.exports = async function handler(req, res) {
           { password: senha }
         );
         if (passErr) {
-          return res.status(400).json({ error: `Erro ao atualizar senha: ${passErr.message}` });
+          console.error('usuarios: Auth recusou updateUserById:', passErr.message);
+          return res.status(400).json({ error: 'Não foi possível atualizar a senha. Tente de novo.' });
         }
       }
+
+      const sessoes = ehPorteiro && (senha || camposFiltrados.ativo === false)
+        ? { sessoes_encerradas: await encerrarSessoes(data.auth_id) } : {};
+      const incompleto = sessoes.sessoes_encerradas === false;
 
       await registrarAuditoria({
         usuarioId: profile.id,
         acao: 'atualizar',
         tabela: 'usuarios',
         registroId: id,
-        detalhes: { ...campos, senha_alterada: !!senha },
+        detalhes: { ...campos, senha_alterada: !!senha, ...sessoes, ...(incompleto ? { incompleto: true } : {}) },
         ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       });
 
-      return res.status(200).json(data);
+      return res.status(200).json(incompleto ? { ...data, aviso: AVISO_SESSOES } : data);
     }
 
     // DELETE: desativar ou excluir usuário
@@ -204,16 +247,19 @@ module.exports = async function handler(req, res) {
 
       if (error) throw error;
 
+      const sessoes = data.role === ROLE_PORTEIRO ? { sessoes_encerradas: await encerrarSessoes(data.auth_id) } : {};
+      const incompleto = sessoes.sessoes_encerradas === false;
+
       await registrarAuditoria({
         usuarioId: profile.id,
         acao: 'desativar',
         tabela: 'usuarios',
         registroId: userId,
-        detalhes: { email: data.email },
+        detalhes: { email: data.email, ...sessoes, ...(incompleto ? { incompleto: true } : {}) },
         ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
       });
 
-      return res.status(200).json({ ok: true, message: 'Usuário desativado' });
+      return res.status(200).json({ ok: true, message: 'Usuário desativado', ...(incompleto ? { aviso: AVISO_SESSOES } : {}) });
     }
 
     return res.status(405).json({ error: 'Método não permitido' });

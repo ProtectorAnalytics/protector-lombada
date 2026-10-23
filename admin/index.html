@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Protector Traffic Control - Admin</title>
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
+  <link rel="stylesheet" href="/css/portaria-gestao.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     html { font-size: 100%; }
@@ -574,11 +575,6 @@
     .tipo-pessoa { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
     .tipo-pessoa svg { width: 18px; height: 18px; flex: none; }
     .unidade-antiga { color: var(--text-secondary); font-style: italic; }
-    .portaria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-    .portaria-bloco textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-primary); font: inherit; resize: vertical; }
-    .portaria-resultado { margin-top: 8px; font-size: .875rem; color: var(--text-secondary); min-height: 1.3em; }
-    .portaria-lista { list-style: none; margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-    .portaria-lista li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-card); }
 
     /* Badge de status com melhor hierarquia */
     .badge-active, .badge-inactive, .badge-role, .badge-tipo {
@@ -646,6 +642,11 @@
   <script src="/js/acesso-painel.js"></script>
   <script src="/js/placa.js"></script>
   <script src="/js/vinculo-placa.js"></script>
+  <script src="/js/unidade.js"></script>
+  <script src="/js/usuario-portaria.js"></script>
+  <script src="/js/editor-unidades.js"></script>
+  <script src="/js/gestao-porteiros.js"></script>
+  <script src="/js/portaria-gestao.js"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -1003,31 +1004,9 @@
           <!-- Tab: Portaria -->
           <div class="tab-panel" id="tab-portaria">
             <div class="toolbar">
-              <span>Unidades e porteiros usados no tablet da portaria.</span>
-              <button class="btn btn-primary btn-sm" onclick="openUsuarioModal(null, 'portaria')">Criar acesso da portaria</button>
+              <span>Unidades e porteiros usados no tablet da portaria. O síndico também gerencia isso no painel do condomínio.</span>
             </div>
-            <div class="portaria-grid">
-              <section class="portaria-bloco" aria-labelledby="pt-unidades-t">
-                <h3 id="pt-unidades-t">Unidades</h3>
-                <div class="form-group">
-                  <label for="pt-unidades-texto">Cole as unidades (uma por linha)</label>
-                  <textarea id="pt-unidades-texto" placeholder="Casa 1&#10;Casa 2&#10;Bloco A - 101"></textarea>
-                </div>
-                <button class="btn btn-primary btn-sm" onclick="comLoading(this, () => adicionarListaPortaria('unidades'))">Adicionar unidades</button>
-                <div class="portaria-resultado" id="pt-unidades-res" role="status" aria-live="polite"></div>
-                <ul class="portaria-lista" id="pt-unidades-lista"></ul>
-              </section>
-              <section class="portaria-bloco" aria-labelledby="pt-porteiros-t">
-                <h3 id="pt-porteiros-t">Porteiros</h3>
-                <div class="form-group">
-                  <label for="pt-porteiros-texto">Cole os porteiros (um por linha)</label>
-                  <textarea id="pt-porteiros-texto" placeholder="Seu José&#10;Dona Maria"></textarea>
-                </div>
-                <button class="btn btn-primary btn-sm" onclick="comLoading(this, () => adicionarListaPortaria('porteiros'))">Adicionar porteiros</button>
-                <div class="portaria-resultado" id="pt-porteiros-res" role="status" aria-live="polite"></div>
-                <ul class="portaria-lista" id="pt-porteiros-lista"></ul>
-              </section>
-            </div>
+            <div id="portaria-gestao"></div>
           </div>
 
           <!-- Tab: Usuários do Cliente -->
@@ -1194,7 +1173,6 @@ let camerasData = [];
 let emailsData = [];
 let veiculosData = [];
 let unidadesData = [];
-let porteirosData = [];
 let usuariosCliData = [];
 
 const API = '/api/admin';
@@ -1278,6 +1256,11 @@ async function doResetPassword() {
   if (!email) {
     msgEl.style.color = 'var(--red)';
     msgEl.textContent = 'Digite seu e-mail.';
+    return;
+  }
+  if (usuarioPortariaLib.recuperacaoDePorteiro(email)) {
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = usuarioPortariaLib.MSG_RECUPERACAO_PORTEIRO;
     return;
   }
 
@@ -1437,6 +1420,7 @@ const PAGINAS = ['dashboard', 'clientes', 'usuarios', 'audit', 'direitos', 'apip
  * `opts.hash` sobrescreve o hash gravado; `opts.fromHistory` não empilha.
  */
 function showPage(page, opts = {}) {
+  if (page !== 'cliente-detail' && seguraSaidaDaPortaria(() => showPage(page, opts))) return;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const pageEl = document.getElementById('page-' + page);
   pageEl.classList.add('active');
@@ -1468,6 +1452,7 @@ function showPage(page, opts = {}) {
 // Escopo no detalhe do cliente: sem isso, trocar de aba apagava o filtro
 // ativo das solicitações LGPD, que também usa .tab-btn.
 function showTab(tab) {
+  if (tab !== 'portaria' && seguraSaidaDaPortaria(() => showTab(tab))) return;
   const detalhe = document.getElementById('page-cliente-detail');
   detalhe.querySelectorAll('.tabs .tab-btn').forEach(t => t.classList.remove('active'));
   detalhe.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -2353,6 +2338,7 @@ async function deleteCliente(id, nome) {
 async function openClienteDetail(id, opts = {}) {
   const cliente = clientesData.find(c => c.id === id);
   if (!cliente) return;
+  if (seguraSaidaDaPortaria(() => openClienteDetail(id, opts))) return;
 
   currentDetailCliente = cliente;
   document.getElementById('detail-nome').textContent = cliente.nome;
@@ -2796,7 +2782,7 @@ async function loadVeiculos(clienteId) {
 function unidadeDoVeiculo(v) {
   if (v.unidade_id) {
     const u = unidadesData.find(x => x.id === v.unidade_id);
-    return u ? esc(u.nome) : `<span class="unidade-antiga">${esc(v.unidade || 'Unidade')} (removida)</span>`;
+    return u ? esc(unidadeLib.rotuloUnidade(u)) : `<span class="unidade-antiga">${esc(v.unidade || 'Unidade')} (removida)</span>`;
   }
   return v.unidade ? `<span class="unidade-antiga" title="Unidade antiga (texto livre)">${esc(v.unidade)} (antiga)</span>` : '—';
 }
@@ -2834,17 +2820,17 @@ function opcoesUnidadeVeiculo(veiculo, unidades) {
     ? `<option value="${esc(atual)}" selected>${esc(veiculo.unidade ? veiculo.unidade + ' (removida)' : 'Unidade removida')}</option>`
     : '';
   return '<option value="">— Sem unidade —</option>' + removida + unidades.map(u =>
-    `<option value="${esc(u.id)}" ${atual === u.id ? 'selected' : ''}>${esc(u.nome)}</option>`).join('');
+    `<option value="${esc(u.id)}" ${atual === u.id ? 'selected' : ''}>${esc(unidadeLib.rotuloUnidade(u))}</option>`).join('');
 }
 
 // Campos de unidade do corpo do POST/PUT: só vão se o campo mudou. Unidade
-// escolhida leva o nome da lista (o texto livre antigo não fica para trás).
+// escolhida leva o rótulo da lista ("Torre 1 · 101"; o texto livre antigo não fica).
 function camposUnidadeDoVeiculo(valor, atual, unidades) {
   const inicial = (atual && atual.unidade_id) || '';
   if (valor === inicial) return {};
   if (!valor) return { unidade_id: null, unidade: null };
   const u = unidades.find(x => x.id === valor);
-  return { unidade_id: valor, unidade: u ? u.nome : null };
+  return { unidade_id: valor, unidade: u ? unidadeLib.rotuloUnidade(u) : null };
 }
 
 function openVeiculoModal(veiculo = null) {
@@ -2935,67 +2921,53 @@ async function encerrarVinculo(id, placa) {
 // ============================================
 // PORTARIA (unidades e porteiros)
 // ============================================
-const ROTULO_LISTA_PORTARIA = { unidades: 'unidade', porteiros: 'porteiro' };
+// Tela compartilhada com o painel do síndico (site/js/portaria-gestao.js).
+// unidadesData alimenta o campo de unidade dos veículos.
+let gestaoPortaria = null;
+
+function garantirGestaoPortaria() {
+  if (gestaoPortaria) return gestaoPortaria;
+  gestaoPortaria = portariaGestao.montar(document.getElementById('portaria-gestao'), {
+    api: (caminho, metodo = 'GET', corpo = null) => api(caminho, metodo, corpo),
+    confirmar: confirmarAcao,
+    toast,
+    aoCarregarUnidades: (lista) => {
+      unidadesData = Array.isArray(lista) ? lista : []; // null = falhou: sem lista
+      if (veiculosData.length) renderVeiculos();
+    },
+  });
+  return gestaoPortaria;
+}
 
 async function loadPortaria(clienteId) {
   const cid = clienteId || currentDetailCliente.id;
-  const [un, po] = await Promise.allSettled([
-    api('/unidades?cliente_id=' + cid),
-    api('/porteiros?cliente_id=' + cid),
-  ]);
-  unidadesData = un.status === 'fulfilled' ? un.value : [];
-  porteirosData = po.status === 'fulfilled' ? po.value : [];
-  if (un.status === 'rejected') erroNoBloco('pt-unidades-lista', 'loadPortaria()');
-  else renderListaPortaria('unidades');
-  if (po.status === 'rejected') erroNoBloco('pt-porteiros-lista', 'loadPortaria()');
-  else renderListaPortaria('porteiros');
+  const cliente = clientesData.find(c => c.id === cid) || currentDetailCliente;
+  await garantirGestaoPortaria().carregar({ clienteId: cid, nomeCondominio: cliente ? cliente.nome : '' });
 }
 
-function renderListaPortaria(tipo) {
-  const dados = tipo === 'unidades' ? unidadesData : porteirosData;
-  const ul = document.getElementById('pt-' + tipo + '-lista');
-  if (!ul) return;
-  if (!dados.length) { ul.innerHTML = `<li style="border:0;color:var(--text-secondary)">Nenhum${tipo === 'unidades' ? 'a' : ''} cadastrad${tipo === 'unidades' ? 'a' : 'o'}.</li>`; return; }
-  ul.innerHTML = dados.map(d => `<li><span>${esc(d.nome)}</span>
-    <button type="button" class="btn btn-ghost btn-sm" aria-label="Remover ${esc(d.nome)}" onclick="removerItemPortaria('${tipo}','${esc(d.id)}')">Remover</button></li>`).join('');
-}
-
-// A API devolve `ignoradas` como lista (linhas longas demais); mostra quantas e quais
-function resumoListaPortaria(r) {
-  const ignoradas = Array.isArray(r.ignoradas) ? r.ignoradas : [];
-  const base = `${r.criadas} criadas · ${r.ja_existiam} já existiam · ${ignoradas.length} ignoradas`;
-  return ignoradas.length ? `${base} (nome longo demais): ${ignoradas.join(', ')}` : base;
-}
-
-async function adicionarListaPortaria(tipo) {
-  const area = document.getElementById('pt-' + tipo + '-texto');
-  const res = document.getElementById('pt-' + tipo + '-res');
-  const texto = area.value;
-  if (!texto.trim()) { res.textContent = 'Cole ao menos um nome.'; return; }
-  try {
-    const r = await api('/' + tipo, 'POST', { cliente_id: currentDetailCliente.id, texto });
-    res.textContent = resumoListaPortaria(r); // textContent: nomes ignorados são texto, nunca HTML
-    area.value = '';
-    await loadPortaria();
-  } catch (err) { res.textContent = err.message; }
-}
-
-async function removerItemPortaria(tipo, id) {
-  const lista = tipo === 'unidades' ? unidadesData : porteirosData;
-  const item = lista.find(x => x.id === id);
-  const confirmado = await confirmarAcao({
-    titulo: `Remover ${ROTULO_LISTA_PORTARIA[tipo]}?`,
-    mensagem: `<strong>${esc(item?.nome || '')}</strong> deixa de aparecer na portaria. Os vínculos e registros já feitos são mantidos.`,
-    textoOk: 'Sim, remover',
-    textoCancel: 'Cancelar',
+/**
+ * Sair da aba Portaria (ou do condomínio) com unidades não salvas pergunta
+ * antes. Devolve true quando segurou a navegação (`seguir` roda se confirmar).
+ */
+function seguraSaidaDaPortaria(seguir) {
+  const aberta = document.getElementById('tab-portaria').classList.contains('active')
+    && document.getElementById('page-cliente-detail').classList.contains('active');
+  if (!aberta || !gestaoPortaria || !gestaoPortaria.temAlteracoes()) return false;
+  confirmarAcao({
+    titulo: 'Sair sem salvar?',
+    mensagem: 'As alterações nas unidades ainda não foram salvas e serão perdidas.',
+    textoOk: 'Sair sem salvar',
+    textoCancel: 'Continuar editando',
+  }).then((ok) => {
+    if (!ok) {
+      const hash = '#cliente/' + currentDetailCliente.id;
+      if (location.hash !== hash) history.pushState({ hash }, '', hash);
+      return;
+    }
+    gestaoPortaria.descartar();
+    seguir();
   });
-  if (!confirmado) return;
-  try {
-    await api('/' + tipo + '?id=' + encodeURIComponent(id), 'DELETE');
-    toast('Removido!');
-    await loadPortaria();
-    renderVeiculos();
-  } catch (err) { toast(err.message, true); }
+  return true;
 }
 
 // ============================================
@@ -3111,15 +3083,19 @@ async function saveUsuario(id) {
   else if (!id && !EMAIL_RE.test(email)) erros.push(['f-usr-email', 'E-mail inválido']);
   if (role !== 'super_admin' && !cliente_id) erros.push(['f-usr-cliente', 'Escolha o cliente deste perfil']);
   if (!id && !senha) erros.push(['f-usr-senha', 'Defina uma senha']);
-  else if (senha && senha.length < SENHA_MIN) erros.push(['f-usr-senha', `A senha precisa ter pelo menos ${SENHA_MIN} caracteres`]);
+  else if (senha && role === 'portaria') {
+    // mesma regra de /api/admin/porteiros (a API confere de novo)
+    const erroPorteiro = usuarioPortariaLib.erroSenhaPorteiro(senha, { usuario: email.split('@')[0], nome });
+    if (erroPorteiro) erros.push(['f-usr-senha', erroPorteiro]);
+  } else if (senha && senha.length < SENHA_MIN) erros.push(['f-usr-senha', `A senha precisa ter pelo menos ${SENHA_MIN} caracteres`]);
   if (aplicarErrosCampo(erros)) return;
 
   try {
     if (id) {
       const body = { id, nome, role, cliente_id };
       if (senha) body.senha = senha;
-      await api('/usuarios', 'PUT', body);
-      toast('Usuário atualizado!');
+      const r = await api('/usuarios', 'PUT', body);
+      if (r && r.aviso) toast(r.aviso, true); else toast('Usuário atualizado!');
     } else {
       await api('/usuarios', 'POST', { email, senha, nome, role, cliente_id });
       toast('Usuário criado!');
@@ -3133,7 +3109,10 @@ async function saveUsuario(id) {
 async function toggleUsuario(id, ativar) {
   try {
     if (ativar) { await api('/usuarios', 'PUT', { id, ativo: true }); toast('Usuário ativado!'); }
-    else { await api('/usuarios?id=' + id, 'DELETE'); toast('Usuário desativado!'); }
+    else {
+      const r = await api('/usuarios?id=' + id, 'DELETE');
+      if (r && r.aviso) toast(r.aviso, true); else toast('Usuário desativado!');
+    }
     loadUsuariosGlobal();
     if (currentDetailCliente) loadUsuariosCli();
   } catch (err) { toast(err.message, true); }

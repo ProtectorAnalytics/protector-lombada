@@ -381,7 +381,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.9.0 | Outubro 2026</p>
+    <p class="version">Versão 1.10.0 | Outubro 2026</p>
 
     <hr>
 
@@ -699,11 +699,29 @@
     <h2 id="portaria">Portaria: unidades, porteiros e acesso</h2>
     <p>No painel de administração, a aba <strong>Portaria</strong> prepara o condomínio para o uso na portaria. Escolha o cliente e abra a aba.</p>
     <h3>Unidades</h3>
-    <p>Em <strong>"Cole as unidades (uma por linha)"</strong>, cole a lista (por exemplo, Casa 1, Casa 2, Bloco A - 101) e clique em <strong>"Adicionar unidades"</strong>. Essas unidades passam a aparecer numa lista de escolha no cadastro de veículos. Para tirar uma unidade, use <strong>Remover</strong> ao lado do nome. Os cadastros já feitos são mantidos.</p>
+    <p>As unidades aparecem numa lista de escolha no cadastro de veículos e na página da portaria, agrupadas por bloco. Nada fica salvo até clicar em <strong>"Salvar"</strong>.</p>
+    <ul>
+        <li><strong>Agrupador (opcional):</strong> informe Bloco, Torre, Quadra ou outro nome livre. As unidades ficam com nomes como "Torre 1 · 101".</li>
+        <li><strong>Em lote:</strong> digite vários números separados por espaço ("101 102 103") ou uma faixa ("101-110") e adicione de uma vez. O <strong>andar</strong> é opcional.</li>
+        <li><strong>Tipo:</strong> Apartamento, Casa, Sala, Loja, Lote ou FIP (Fração Ideal).</li>
+        <li><strong>Renomear:</strong> remova a unidade e adicione de novo. Os cadastros já feitos são mantidos.</li>
+    </ul>
+    <h4>Planilha de unidades</h4>
+    <ul>
+        <li><strong>Baixar modelo:</strong> baixa a planilha em branco para preencher.</li>
+        <li><strong>Exportar:</strong> baixa as unidades atuais em .xlsx.</li>
+        <li><strong>Importar:</strong> escolha o arquivo .xlsx. As unidades entram no editor e as que não estão na planilha <strong>não</strong> são apagadas. As linhas recusadas aparecem com o número da linha e o motivo. Confira e clique em "Salvar".</li>
+    </ul>
     <h3>Porteiros</h3>
-    <p>Em <strong>"Cole os porteiros (um por linha)"</strong>, cole os nomes e clique em <strong>"Adicionar porteiros"</strong>. O nome do porteiro fica registrado em cada cadastro feito por ele.</p>
-    <h3>Criar acesso da portaria</h3>
-    <p>Clique em <strong>"Criar acesso da portaria"</strong> para criar o login usado na portaria. Ele recebe o perfil <strong>Portaria</strong>.</p>
+    <p>Cada porteiro tem login próprio: um <strong>usuário</strong> simples (sem e-mail) e uma senha. O síndico cria os porteiros no painel, pelo menu da conta, em <strong>"Portaria"</strong>. A Protector também cria na aba Portaria do administrador.</p>
+    <ul>
+        <li><strong>Trocar senha:</strong> define uma nova senha para o porteiro (mínimo 10 caracteres sem contar espaços, com letras e números, sem o nome nem o usuário dele e sem palavras óbvias como "portaria" ou "123456"). Os aparelhos em que ele já estava logado saem em até 1 hora.</li>
+        <li><strong>Desativar / Reativar:</strong> para tirar um porteiro, desative o login. Ele deixa de entrar, e os cadastros que fez continuam no nome dele.</li>
+        <li>O porteiro entra na página da portaria e no painel com o usuário. Não há tela de escolha de porteiro ou turno: cada cadastro sai com o nome de quem entrou.</li>
+        <li><strong>Esqueceu a senha?</strong> Não há recuperação por e-mail. O porteiro pede ao síndico ou à Protector, que trocam a senha.</li>
+    </ul>
+    <h3>Perfil dos porteiros</h3>
+    <p>Todo login de porteiro recebe o perfil <strong>Portaria</strong>.</p>
     <h3>O perfil Portaria</h3>
     <ul>
         <li>Vê as passagens e quem estava ligado a cada placa.</li>
@@ -774,6 +792,8 @@
         <li>Clique em <strong>"SALVAR NOVA SENHA"</strong> e faça login com a nova senha</li>
     </ol>
 
+    <blockquote><p><strong>Porteiro:</strong> o porteiro entra com usuário e senha, sem e-mail, e não recebe link de recuperação. Se esquecer a senha, peça uma nova ao síndico (menu da conta, "Portaria") ou à Protector.</p></blockquote>
+
     <blockquote><p>O link de recuperação expira após 24 horas. Se expirar, solicite um novo.</p></blockquote>
 
     <hr>
@@ -841,7 +861,7 @@
     <hr>
 
     <p style="text-align:center; color:#888; font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.9.0 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.10.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 

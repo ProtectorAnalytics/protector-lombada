@@ -463,6 +463,7 @@
     <a href="#importar-veiculos-por-excel">7. Importar Veículos por Excel</a>
     <a href="#exportar-veiculos-para-excel">8. Exportar Veículos para Excel</a>
     <a href="#tipos-de-pessoa">Tipos de pessoa e histórico</a>
+    <a href="#portaria">Portaria: porteiros e unidades</a>
     <a href="#emails-de-alerta">9. Emails de Alerta</a>
     <a href="#notificacoes-automaticas">10. Notificações Automáticas</a>
     <a href="#recuperar-senha">11. Recuperar Senha</a>
@@ -476,7 +477,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.9.0 | Outubro 2026</p>
+    <p class="version">Versão 1.10.0 | Outubro 2026</p>
 
     <hr>
 
@@ -797,6 +798,40 @@
 
     <hr>
 
+    <h2 id="portaria">Portaria: porteiros e unidades</h2>
+    <p>Se o condomínio usa a portaria, o síndico monta tudo pelo painel: abra o <strong>menu da conta</strong> (seu nome, no canto da tela) e clique em <strong>"Portaria"</strong>.</p>
+
+    <h3>Porteiros</h3>
+    <p>Cada porteiro entra com login próprio, e cada cadastro feito na portaria sai no nome dele.</p>
+    <ol>
+        <li>Clique em <strong>"Novo porteiro"</strong>.</li>
+        <li>Digite o <strong>nome</strong>. O <strong>usuário</strong> é sugerido automaticamente e você pode alterar. Não precisa de e-mail.</li>
+        <li>Defina a <strong>senha</strong> (mínimo 10 caracteres sem contar espaços, com letras e números, sem o nome nem o usuário do porteiro e sem palavras óbvias como "portaria" ou "123456") e passe o usuário e a senha ao porteiro.</li>
+    </ol>
+    <ul>
+        <li><strong>Trocar senha:</strong> define uma nova senha para o porteiro e os aparelhos em que ele já estava logado saem em até 1 hora. Use quando ele esquecer: não há recuperação por e-mail.</li>
+        <li><strong>Desativar:</strong> é a forma de tirar o acesso de quem saiu do condomínio. Os cadastros que ele fez continuam no nome dele. Se voltar, use <strong>Reativar</strong>.</li>
+    </ul>
+
+    <h3>Unidades</h3>
+    <p>As unidades aparecem na lista de escolha do cadastro de veículos e na página da portaria, agrupadas por bloco. <strong>Nada é gravado até você clicar em "Salvar".</strong> Para desfazer, clique em <strong>"Descartar alterações"</strong>.</p>
+    <ul>
+        <li><strong>Novo bloco/torre/quadra (opcional):</strong> crie o grupo com o nome que quiser. Condomínio sem blocos pode usar só as unidades.</li>
+        <li><strong>Várias de uma vez:</strong> digite os números separados por espaço ("101 102 103") ou uma faixa ("101-110") e clique em <strong>"Adicionar"</strong>. O <strong>andar</strong> é opcional.</li>
+        <li><strong>Tipo:</strong> Apartamento, Casa, Sala, Loja, Lote ou FIP (Fração Ideal).</li>
+        <li><strong>Etiquetas:</strong> cada unidade aparece com o grupo, por exemplo "Torre 1 · 101".</li>
+        <li><strong>Renomear:</strong> remova a unidade e adicione de novo. Os cadastros já feitos são mantidos.</li>
+    </ul>
+
+    <h3>Planilha de unidades</h3>
+    <ul>
+        <li><strong>Baixar modelo:</strong> baixa a planilha em branco para preencher.</li>
+        <li><strong>Exportar:</strong> baixa as unidades atuais (.xlsx).</li>
+        <li><strong>Importar:</strong> escolha o arquivo .xlsx. As unidades entram no editor, somando às que já existem. <strong>Nenhuma unidade é apagada</strong> por faltar na planilha. As linhas recusadas aparecem com o número da linha e o motivo. Confira e clique em "Salvar".</li>
+    </ul>
+
+    <hr>
+
     <!-- Section 9 -->
     <h2 id="emails-de-alerta">9. Emails de Alerta</h2>
 
@@ -855,6 +890,8 @@
         <li>Digite a <strong>nova senha</strong> (mínimo 6 caracteres) e repita no segundo campo. Se as senhas não conferirem, o aviso aparece na hora</li>
         <li>Clique em <strong>"SALVAR NOVA SENHA"</strong>. Ao ver "Senha alterada. Entre com a nova senha.", faça login com a nova senha</li>
     </ol>
+
+    <blockquote><p><strong>Porteiro:</strong> o porteiro entra com usuário e senha, sem e-mail, e não recebe link de recuperação. Se esquecer a senha, peça uma nova ao síndico (menu da conta, "Portaria") ou à Protector.</p></blockquote>
 
     <blockquote><p>O link de recuperação expira após 24 horas. Se expirar, solicite um novo.</p></blockquote>
 
@@ -920,7 +957,7 @@
     <hr>
 
     <p style="text-align:center; color:var(--text-muted); font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.9.0 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.10.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 

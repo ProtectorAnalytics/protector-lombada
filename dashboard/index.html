@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Protector Traffic Control - Lombada Educativa</title>
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
+  <link rel="stylesheet" href="/css/portaria-gestao.css">
   <script>
     // Tema resolvido ANTES de pintar (sem flash). 'auto' segue o sistema.
     // Mesma chave em dashboard/, novidades e manual.
@@ -69,7 +70,7 @@
         new Promise((resolve, reject) => {
           if (window.XLSX) return resolve();
           const s = document.createElement('script');
-          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          s.src = '/vendor/xlsx-0.20.3/xlsx.full.min.js';
           s.onload = resolve;
           s.onerror = reject;
           document.head.appendChild(s);
@@ -523,6 +524,8 @@
       text-decoration: none;
     }
     .conta-link[hidden] { display: none; }
+    button.conta-link { width: 100%; border: none; background: none; font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer; }
+    @media (hover: hover) { button.conta-link:hover { background: var(--accent-light); } }
     .conta-sair {
       width: 100%;
       min-height: 36px;
@@ -2821,6 +2824,11 @@
   <script src="/js/lista-dinamica.js"></script>
   <script src="/js/severidade-velocidade.js"></script>
   <script src="/js/miniatura.js"></script>
+  <script src="/js/usuario-portaria.js"></script>
+  <script src="/js/unidade.js"></script>
+  <script src="/js/editor-unidades.js"></script>
+  <script src="/js/gestao-porteiros.js"></script>
+  <script src="/js/portaria-gestao.js"></script>
 </head>
 <body>
   <!-- Ícones do tipo de pessoa (os mesmos do admin) -->
@@ -2839,8 +2847,8 @@
       <img class="login-logo" src="https://appps.com.br/assets/logo-protector.png" alt="Protector Sistemas">
       <h1>PROTECTOR TRAFFIC CONTROL</h1>
       <div class="subtitle">Lombada Educativa Inteligente</div>
-      <label for="login-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail</label>
-      <input type="email" id="login-email" placeholder="E-mail" autocomplete="email" aria-label="E-mail de acesso">
+      <label for="login-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail ou usuário</label>
+      <input type="text" id="login-email" placeholder="E-mail ou usuário" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="E-mail ou usuário de acesso">
       <label for="login-password" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Senha</label>
       <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password" aria-label="Senha de acesso" onkeydown="if(event.key==='Enter')doLogin()">
       <button type="button" onclick="doLogin()">ENTRAR</button>
@@ -2850,6 +2858,7 @@
       <!-- Formulario de recuperacao (oculto por padrao) -->
       <div id="reset-password-form" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
         <div style="color:var(--text-secondary);font-size:0.8125rem;margin-bottom:12px;">Digite seu e-mail para receber o link de recuperação:</div>
+        <div style="color:var(--text-secondary);font-size:0.75rem;margin-bottom:12px;">Porteiro: peça uma nova senha ao síndico ou à Protector.</div>
         <label for="reset-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail para recuperação</label>
         <input type="email" id="reset-email" placeholder="Seu e-mail cadastrado" autocomplete="email">
         <button type="button" onclick="doResetPassword()" style="background:var(--accent);margin-top:4px;">ENVIAR LINK DE RECUPERAÇÃO</button>
@@ -2870,7 +2879,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.9.0 &middot; 2026-10-22
+        v1.10.0 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2903,6 +2912,7 @@
           <div class="conta-menu" id="conta-menu">
             <div class="conta-email" id="topbar-email"></div>
             <a class="conta-link" id="conta-portaria" href="/portaria" hidden>Abrir a portaria</a>
+            <button type="button" class="conta-link" id="conta-gestao-portaria" onclick="abrirPainelPortaria()" hidden>Portaria: unidades e porteiros</button>
             <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
           </div>
         </div>
@@ -3111,7 +3121,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.9.0
+      Protector Traffic Control &middot; v1.10.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3129,6 +3139,17 @@
   </div>
 
   <!-- ===== MODAL VEICULOS ===== -->
+  <!-- Portaria do condomínio (só síndico/admin_cliente): unidades e porteiros -->
+  <div class="vm-overlay" id="portaria-overlay" onclick="if(event.target===this)fecharPainelPortaria()">
+    <div class="vm-box" role="dialog" aria-modal="true" aria-labelledby="pp-title">
+      <div class="vm-header">
+        <h3 id="pp-title">Portaria</h3>
+        <button type="button" class="modal-close" onclick="fecharPainelPortaria()" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="vm-body"><div id="painel-portaria-gestao"></div></div>
+    </div>
+  </div>
+
   <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
     <div class="vm-box" role="dialog" aria-modal="true" aria-labelledby="vm-title">
       <div class="vm-header">
@@ -3461,20 +3482,22 @@
     // AUTH
     // ============================================
     async function doLogin() {
-      const email = document.getElementById('login-email').value.trim();
+      const entrada = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       const errorEl = document.getElementById('login-error');
       errorEl.textContent = '';
 
-      if (!email || !password) {
-        errorEl.textContent = 'Preencha e-mail e senha.';
+      if (!entrada || !password) {
+        errorEl.textContent = 'Preencha usuário (ou e-mail) e senha.';
         return;
       }
 
       try {
+        // Porteiro entra com o usuário (sem "@"): vira o e-mail técnico do Auth
+        const email = usuarioPortariaLib.paraLogin(entrada);
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-          errorEl.textContent = 'E-mail ou senha incorretos.';
+          errorEl.textContent = 'Usuário (ou e-mail) ou senha incorretos.';
           console.error('Login error:', error);
           return;
         }
@@ -3593,6 +3616,11 @@
         msgEl.textContent = 'Digite seu e-mail.';
         return;
       }
+      if (usuarioPortariaLib.recuperacaoDePorteiro(email)) {
+        msgEl.style.color = 'var(--red)';
+        msgEl.textContent = usuarioPortariaLib.MSG_RECUPERACAO_PORTEIRO;
+        return;
+      }
 
       try {
         const { error } = await sb.auth.resetPasswordForEmail(email, {
@@ -3702,6 +3730,54 @@
       document.getElementById('vm-body-cadastrar').hidden = !pode;
       document.getElementById('vm-importar-bloco').hidden = !pode;
       document.getElementById('conta-portaria').hidden = pode;
+      // Unidades e porteiros: só o síndico (admin_cliente) do próprio condomínio
+      document.getElementById('conta-gestao-portaria').hidden = !(currentProfile && currentProfile.role === 'admin_cliente');
+    }
+
+    // ============================================
+    // PORTARIA: unidades e porteiros (site/js/portaria-gestao.js)
+    // ============================================
+    let gestaoPortaria = null;
+    let gestaoPortariaCliente = null; // condomínio aberto no painel da portaria
+
+    // Unidades salvas aqui valem já no cadastro de veículos do painel
+    function aplicarUnidadesDaGestao(lista, clienteId) {
+      if (!Array.isArray(lista) || !currentCliente || currentCliente.id !== clienteId) return;
+      unidadesLista = [...lista].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+      renderCampoUnidadeForm();
+    }
+
+    function abrirPainelPortaria() {
+      if (!currentProfile || currentProfile.role !== 'admin_cliente') return;
+      fecharContaMenu({ semFoco: true });
+      const clienteId = currentCliente.id;
+      gestaoPortariaCliente = clienteId;
+      if (!gestaoPortaria) {
+        gestaoPortaria = portariaGestao.montar(document.getElementById('painel-portaria-gestao'), {
+          api: (caminho, metodo = 'GET', corpo) => chamarApiPainel('/api/admin' + caminho, metodo, corpo),
+          aoCarregarUnidades: (lista) => aplicarUnidadesDaGestao(lista, gestaoPortariaCliente),
+        });
+      }
+      abrirOverlay(document.getElementById('portaria-overlay'));
+      document.body.style.overflow = 'hidden';
+      gestaoPortaria.carregar({ clienteId, nomeCondominio: currentCliente.nome });
+    }
+
+    // Fechar com unidades não salvas pergunta na própria página (sem confirm())
+    async function fecharPainelPortaria() {
+      if (gestaoPortaria && gestaoPortaria.temAlteracoes()) {
+        const ok = await portariaGestao.confirmarNaPagina({
+          titulo: 'Sair sem salvar?',
+          texto: 'As alterações nas unidades ainda não foram salvas e serão perdidas.',
+          textoOk: 'Sair sem salvar',
+          textoCancel: 'Continuar editando',
+        });
+        if (!ok) return;
+        gestaoPortaria.descartar();
+      }
+      fecharOverlay(document.getElementById('portaria-overlay'), () => {
+        document.body.style.overflow = '';
+      });
     }
 
     function aplicarModoAdmin() {
@@ -4098,7 +4174,7 @@
         return `<input ${attrs} placeholder="Unidade (ex.: Bloco A - Apto 101)" maxlength="40" autocomplete="off">`;
       }
       return `<select ${attrs}><option value="">— Sem unidade —</option>`
-        + unidadesLista.map((u) => `<option value="${esc(u.id)}">${esc(u.nome)}</option>`).join('') + '</select>';
+        + unidadesLista.map((u) => `<option value="${esc(u.id)}">${esc(unidadeLib.rotuloUnidade(u))}</option>`).join('') + '</select>';
     }
 
     // Lê o campo de unidade (select ou input) no formato da API
@@ -4108,7 +4184,7 @@
       if (el.tagName !== 'SELECT') return { unidade: v || null };
       if (!v) return {};
       const u = unidadesLista.find((x) => x.id === v);
-      return { unidade_id: v, unidade: u ? u.nome : null };
+      return { unidade_id: v, unidade: u ? unidadeLib.rotuloUnidade(u) : null };
     }
 
     function renderCampoUnidadeForm() {
@@ -4285,7 +4361,7 @@
     function nomeUnidade(v) {
       if (!v) return '';
       const u = v.unidade_id && unidadesLista.find((x) => x.id === v.unidade_id);
-      return u ? u.nome : (v.unidade || '');
+      return u ? unidadeLib.rotuloUnidade(u) : (v.unidade || '');
     }
 
     // Tipo + nome + unidade de quem estava ligado à placa na hora; sem vínculo: "Sem cadastro" (cinza)
@@ -7167,6 +7243,7 @@
         document.getElementById('btn-exportar').focus();
         return;
       }
+      if (overlayAberto(document.getElementById('portaria-overlay'))) return fecharPainelPortaria();
       if (overlayAberto(vm)) return fecharModalVeiculo();
       if (overlayAberto(modal)) closeModal();
     });

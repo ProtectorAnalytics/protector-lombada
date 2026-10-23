@@ -46,17 +46,6 @@ async function exigirUnidadeDoCliente(unidadeId, clienteId) {
   if (!data || data.cliente_id !== clienteId) throw new ErroHttp(400, 'Unidade não pertence a este condomínio');
 }
 
-async function nomeDoPorteiro(porteiroId, clienteId) {
-  if (!isValidUUID(porteiroId)) throw new ErroHttp(400, 'Selecione o porteiro que está cadastrando');
-  const { data, error } = await supabase
-    .from('porteiros').select('id, cliente_id, nome, ativo').eq('id', porteiroId).maybeSingle();
-  if (error) throw error;
-  if (!data || data.cliente_id !== clienteId || !data.ativo) {
-    throw new ErroHttp(400, 'Porteiro inválido para este condomínio');
-  }
-  return data.nome;
-}
-
 function origemDe(profile, origemEnviada) {
   if (profile.role === 'portaria') return 'portaria';
   if (origemEnviada === 'planilha') return 'planilha';
@@ -157,9 +146,8 @@ async function cadastrar(req, res) {
 
   const unidadeId = body.unidade_id || null;
   if (unidadeId) await exigirUnidadeDoCliente(unidadeId, clienteId);
-  const cadastradoPor = profile.role === 'portaria'
-    ? await nomeDoPorteiro(body.porteiro_id, clienteId)
-    : profile.nome || null;
+  // Porteiro tem login próprio: o cadastro sai no nome do login (porteiro_id é ignorado)
+  const cadastradoPor = profile.nome || null;
   const ctx = { profile, clienteId, req };
   const original = temSubstituicao ? await exigirCorrigivel(substituiId, body.placa, ctx) : null;
 
@@ -187,7 +175,7 @@ async function cadastrar(req, res) {
     registroId: data && data.id,
     detalhes: {
       cliente_id: clienteId, placa: args.p_placa, tipo_pessoa: args.p_tipo, nome_morador: args.p_nome,
-      unidade_id: unidadeId, origem: args.p_origem, porteiro_id: profile.role === 'portaria' ? body.porteiro_id : undefined,
+      unidade_id: unidadeId, origem: args.p_origem,
       substitui_id: original ? original.id : undefined,
     },
     ip: ipDe(req),

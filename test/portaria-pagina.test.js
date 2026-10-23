@@ -12,6 +12,8 @@ const vm = require('node:vm');
 const placaLib = require('../site/js/placa');
 const vinculoPlacaLib = require('../site/js/vinculo-placa');
 const { esc } = require('../site/js/texto-seguro');
+const usuarioPortariaLib = require('../site/js/usuario-portaria');
+const unidadeLib = require('../site/js/unidade');
 
 const ler = (rel) => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
 const PAGINA = ler('portaria/index.html');
@@ -36,7 +38,7 @@ function extrair(fonte, inicio) {
 
 /** Roda as funções pedidas num contexto isolado com os stubs dados; devolve as funções. */
 function carregarComContexto(nomes, extras = {}) {
-  const ctx = vm.createContext({ placaLib, vinculoPlacaLib, esc, Date, Promise, JSON, Set, Map, ...extras });
+  const ctx = vm.createContext({ placaLib, vinculoPlacaLib, unidadeLib, esc, Intl, Date, Promise, JSON, Set, Map, ...extras });
   const codigo = nomes.map((n) => extrair(FONTE, FONTE.includes(`async function ${n}(`) ? `async function ${n}(` : `function ${n}(`)).join('\n');
   vm.runInContext(`${codigo}\nthis.__f = { ${nomes.join(', ')} };`, ctx);
   return { f: ctx.__f, ctx };
@@ -57,9 +59,8 @@ async function rodar() {
 }
 
 const UNIDADES = [{ id: 'u1', nome: 'Casa 1' }, { id: 'u2', nome: 'Casa 2' }];
-const PORTEIRO = { id: 'p1', nome: 'João' };
-const ctxPortaria = () => ({ clienteId: 'c1', role: 'portaria', porteiro: PORTEIRO, unidades: UNIDADES });
-const ctxAdmin = () => ({ clienteId: 'c1', role: 'admin_cliente', porteiro: null, unidades: UNIDADES });
+const ctxPortaria = () => ({ clienteId: 'c1', role: 'portaria', unidades: UNIDADES });
+const ctxAdmin = () => ({ clienteId: 'c1', role: 'admin_cliente', unidades: UNIDADES });
 
 function novoCadastro(contexto) {
   const { criarCadastro } = carregar(['criarCadastro', 'corpoCadastro', 'limparPlacaDigitada']);
@@ -111,7 +112,7 @@ caso('Salvar com placa inválida não envia', async () => {
   assert.strictEqual(chamadas.length, 0);
 });
 
-caso('Salvar envia porteiro_id do aparelho, unidade com nome da lista e placa limpa', async () => {
+caso('Salvar envia unidade com nome da lista e placa limpa, sem porteiro_id', async () => {
   const { c, chamadas } = novoCadastro(ctxPortaria);
   c.definirPlaca('abc-1d23');
   c.escolherUnidade('u2');
@@ -120,18 +121,18 @@ caso('Salvar envia porteiro_id do aparelho, unidade com nome da lista e placa li
   await c.salvar();
   assert.deepStrictEqual(JSON.parse(JSON.stringify(chamadas[0])), {
     cliente_id: 'c1', placa: 'ABC1D23', tipo_pessoa: 'visitante', nome_morador: 'Maria Silva',
-    unidade_id: 'u2', unidade: 'Casa 2', porteiro_id: 'p1',
+    unidade_id: 'u2', unidade: 'Casa 2',
   });
 });
 
-caso('portaria sem porteiro escolhido não envia', async () => {
-  const { c, chamadas } = novoCadastro(() => ({ ...ctxPortaria(), porteiro: null }));
+caso('portaria grava sem porteiro_id (o cadastro sai no nome do login)', async () => {
+  const { c, chamadas } = novoCadastro(ctxPortaria);
   c.definirPlaca('ABC1D23');
   c.escolherTipo('morador');
   const r = await c.salvar();
-  assert.strictEqual(r.ok, false);
-  assert.match(r.erro, /porteiro/i);
-  assert.strictEqual(chamadas.length, 0);
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(chamadas.length, 1);
+  assert.ok(!('porteiro_id' in chamadas[0]), JSON.stringify(chamadas[0]));
 });
 
 caso('admin_cliente grava sem porteiro_id', async () => {
@@ -190,12 +191,12 @@ caso('erro da API mostra a mensagem da API', async () => {
   const { criarCadastro } = carregar(['criarCadastro', 'corpoCadastro', 'limparPlacaDigitada']);
   const c = criarCadastro({
     contexto: ctxPortaria,
-    enviar: async () => { const e = new Error('Selecione o porteiro que está cadastrando'); e.status = 400; throw e; },
+    enviar: async () => { const e = new Error('Placa inválida. Use formato ABC1234 ou ABC1D23'); e.status = 400; throw e; },
   });
   c.definirPlaca('ABC1D23');
   c.escolherTipo('morador');
   await c.salvar();
-  assert.strictEqual(c.estado().erro, 'Selecione o porteiro que está cadastrando');
+  assert.strictEqual(c.estado().erro, 'Placa inválida. Use formato ABC1234 ou ABC1D23');
 });
 
 caso('estado devolvido é cópia (mexer nele não muda o cadastro)', () => {
@@ -308,38 +309,95 @@ caso('perfil operador vê "Este acesso não é da portaria" com link para o pain
   assert.ok(/href="\/dashboard"/.test(aviso[0]), aviso[0]);
 });
 
-// ---- Porteiro do turno no aparelho
-caso('porteiro guardado: só vale se ainda está na lista; storage quebrado não derruba', () => {
-  const { porteiroGuardado } = carregar(['porteiroGuardado'], { CHAVE_PORTEIRO: 'lombada-portaria-porteiro' });
-  const lista = [PORTEIRO, { id: 'p2', nome: 'Rita' }];
-  const st = (v) => ({ getItem: (k) => (k === 'lombada-portaria-porteiro' ? v : null) });
-  assert.deepStrictEqual({ ...porteiroGuardado(st(JSON.stringify({ id: 'p2', clienteId: 'c1' })), lista, 'c1') }, { id: 'p2', nome: 'Rita' });
-  assert.strictEqual(porteiroGuardado(st(JSON.stringify({ id: 'p9', clienteId: 'c1' })), lista, 'c1'), null);
-  assert.strictEqual(porteiroGuardado(st(JSON.stringify({ id: 'p2', clienteId: 'outro' })), lista, 'c1'), null);
-  assert.strictEqual(porteiroGuardado(st('{quebrado'), lista, 'c1'), null);
-  assert.strictEqual(porteiroGuardado({ getItem: () => { throw new Error('bloqueado'); } }, lista, 'c1'), null);
-  assert.strictEqual(porteiroGuardado(null, lista, 'c1'), null);
+// ---- Login próprio do porteiro (sem escolha de turno no aparelho)
+function rodarEntrar(valor, senha = 'segredo1') {
+  const els = {
+    'login-email': { value: valor }, 'login-senha': { value: senha },
+    'login-erro': { textContent: '' }, 'botao-entrar': { disabled: false },
+  };
+  const chamadas = [];
+  const perfis = [];
+  const { f } = carregarComContexto(['entrar'], {
+    $: (id) => els[id],
+    usuarioPortariaLib,
+    sb: { auth: { signInWithPassword: async (cred) => { chamadas.push(cred); return { data: { user: { id: 'auth-1' } }, error: null }; } } },
+    carregarPerfil: async (u) => { perfis.push(u); },
+  });
+  return f.entrar({ preventDefault() {} }).then(() => ({ chamadas, perfis, els }));
+}
+
+caso('login com "José.PraiaDoCastelo" entra com o e-mail técnico', async () => {
+  const { chamadas, perfis } = await rodarEntrar('  José.PraiaDoCastelo ');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(chamadas)), [{ email: 'jose.praiadocastelo@porteiro.invalid', password: 'segredo1' }]);
+  assert.strictEqual(perfis.length, 1);
 });
 
-caso('porteiroGuardado lê a chave pela constante CHAVE_PORTEIRO (sem texto duplicado)', () => {
-  assert.ok(/const CHAVE_PORTEIRO = 'lombada-portaria-porteiro';/.test(FONTE));
-  const corpo = extrair(FONTE, 'function porteiroGuardado(');
-  assert.ok(corpo.includes('getItem(CHAVE_PORTEIRO)'), 'usa a constante');
-  assert.ok(!corpo.includes("'lombada-portaria-porteiro'"), 'sem a chave escrita de novo');
+caso('login com e-mail normal continua valendo (síndico)', async () => {
+  const { chamadas } = await rodarEntrar(' Sindica@Exemplo.com.br ');
+  assert.strictEqual(chamadas[0].email, 'sindica@exemplo.com.br');
 });
 
-caso('Sair esquece o porteiro do aparelho; storage quebrado não derruba', () => {
-  const { esquecerPorteiro } = carregar(['esquecerPorteiro'], { CHAVE_PORTEIRO: 'lombada-portaria-porteiro' });
-  const removidas = [];
-  esquecerPorteiro({ removeItem: (k) => removidas.push(k) });
-  assert.deepStrictEqual(removidas, ['lombada-portaria-porteiro']);
-  esquecerPorteiro({ removeItem: () => { throw new Error('bloqueado'); } });
-  esquecerPorteiro(null);
-  const sair = extrair(FONTE, 'async function sair(');
-  assert.ok(sair.includes('esquecerPorteiro(armazenamento())'), 'o botão Sair chama esquecerPorteiro');
+caso('login vazio não chama o Supabase', async () => {
+  const { chamadas, els } = await rodarEntrar('   ');
+  assert.strictEqual(chamadas.length, 0);
+  assert.ok(els['login-erro'].textContent);
 });
 
-// ---- Rede de segurança
+caso('campo de login aceita usuário: texto, sem maiúscula automática, rótulo "E-mail ou usuário"', () => {
+  const tag = PAGINA.match(/<input[^>]*id="login-email"[^>]*>/)[0];
+  assert.ok(/type="text"/.test(tag), tag);
+  assert.ok(/autocapitalize="none"/.test(tag), tag);
+  assert.ok(/autocomplete="username"/.test(tag), tag);
+  assert.ok(!/inputmode="email"/.test(tag), tag);
+  assert.ok(/<label[^>]*for="login-email"[^>]*>E-mail ou usuário<\/label>/.test(PAGINA));
+  const srcs = [...PAGINA.matchAll(/<script[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(srcs.includes('/js/usuario-portaria.js'), 'lib do usuário carregada');
+  assert.ok(extrair(FONTE, 'async function entrar(').includes('usuarioPortariaLib.paraLogin('));
+});
+
+caso('página não pede porteiro: sem tela de turno, sem porteiro guardado, nunca chama /api/admin/porteiros', () => {
+  ['/api/admin/porteiros', 'CHAVE_PORTEIRO', 'porteiroGuardado', 'esquecerPorteiro', 'porteiroAtual',
+    'porteiro_id', 'lombada-portaria-porteiro', 'mostrarTurno', 'escolherPorteiro', 'tela-turno', 'botao-trocar']
+    // A única menção à chave antiga é a limpeza única no carregamento.
+    .forEach((t) => assert.ok(!FONTE.replace("localStorage.removeItem('lombada-portaria-porteiro')", '').includes(t), `sobrou ${t}`));
+  ['tela-turno', 'Trocar porteiro', 'Quem está no turno', 'lista-porteiros', 'botao-trocar']
+    .forEach((t) => assert.ok(!PAGINA.includes(t), `sobrou ${t} no HTML`));
+});
+
+caso('carregarListas da portaria só pede unidades e vínculos, depois abre o app', async () => {
+  const urls = [];
+  let abriu = 0;
+  const { f, ctx } = carregarComContexto(['carregarListas'], {
+    cliente: { id: 'c1' }, modo: 'portaria', unidades: [],
+    chamarApi: async (url) => { urls.push(url); return [{ id: 'u1', nome: 'Casa 1' }]; },
+    recarregarVinculos: async () => {},
+    abrirApp: () => { abriu++; },
+    falhaAoCarregar: (t) => { throw new Error(`falhou: ${t}`); },
+    encodeURIComponent,
+  });
+  await f.carregarListas();
+  assert.deepStrictEqual(urls, ['/api/admin/unidades?cliente_id=c1']);
+  assert.strictEqual(abriu, 1);
+  assert.strictEqual(ctx.unidades.length, 1);
+});
+
+caso('topo mostra o nome do login e o botão Sair', () => {
+  const els = { 'topo-cliente': {}, 'topo-quem': {} };
+  const rodarAbrir = (perfil, modo) => {
+    const { f } = carregarComContexto(['abrirApp'], {
+      $: (id) => els[id], cliente: { nome: 'Praia do Castelo' }, perfil, modo, abaAtual: 'cadastrar',
+      mostrarTela: () => {}, trocarAba: () => {}, preCarregarLeitor: () => {},
+    });
+    f.abrirApp();
+    return els['topo-quem'].textContent;
+  };
+  assert.ok(rodarAbrir({ nome: 'José Santos' }, 'portaria').includes('José Santos'));
+  assert.ok(rodarAbrir({ nome: 'Síndica Ana' }, 'admin').includes('Síndica Ana'));
+  assert.strictEqual(els['topo-cliente'].textContent, 'Praia do Castelo');
+  const i = PAGINA.indexOf('<header class="topo">');
+  assert.ok(PAGINA.slice(i, PAGINA.indexOf('</header>', i)).includes('data-acao="sair"'));
+});
+
 caso('rede de segurança: lombada leu 1 caractere diferente e a cadastrada não passou', () => {
   const { correcaoSugerida } = carregar(['correcaoSugerida']);
   const cap = (placa) => ({ placa, timestamp: '2026-10-22T10:00:00Z' });
@@ -433,8 +491,8 @@ caso('ORT e modelo pré-carregados depois do login, sem bloquear a tela', () => 
   assert.ok(!/await\s+preCarregarLeitor/.test(FONTE), 'ninguém espera o pré-carregamento');
 });
 
-caso('link para o manual na tela de login e na do turno', () => {
-  ['tela-login', 'tela-turno'].forEach((id) => {
+caso('link para o manual na tela de login', () => {
+  ['tela-login'].forEach((id) => {
     const i = PAGINA.indexOf(`id="${id}"`);
     const trecho = PAGINA.slice(i, PAGINA.indexOf('</section>', i));
     assert.ok(trecho.includes('href="/portaria/manual.html"'), id);
@@ -461,10 +519,18 @@ caso('manual: "Sem cadastro" fora da tabela de tipos escolhíveis, explicado à 
 });
 
 caso('manual e tela de login dizem o mesmo sobre as credenciais', () => {
-  const frase = 'Entre com o e-mail e a senha do acesso da portaria. O síndico também pode entrar com o login do painel.';
+  const frase = 'Entre com o seu usuário (ou e-mail) e a sua senha. Cada porteiro tem o próprio login. O síndico também pode entrar com o login do painel.';
   assert.ok(semTags(secao('turno')).includes(frase), 'manual');
   const i = PAGINA.indexOf('id="tela-login"');
   assert.ok(semTags(PAGINA.slice(i, PAGINA.indexOf('</section>', i))).includes(frase), 'tela de login');
+});
+
+caso('manual §1: login próprio, senha esquecida com o síndico ou a Protector, Sair no fim do turno', () => {
+  const t = semTags(secao('turno'));
+  assert.ok(!/Trocar porteiro|lista de porteiros|toque no seu nome/i.test(t), t);
+  assert.match(t, /Esqueceu a senha\? Peça ao síndico ou à Protector/);
+  assert.match(t, /fim do turno, toque em Sair/);
+  assert.ok(!/Trocar porteiro/.test(MANUAL));
 });
 
 caso('manual §7: aviso vale nos 3 min após salvar e só para o acesso da portaria', () => {
@@ -504,7 +570,7 @@ caso('lista sem cadastro: suspeita de outro condomínio continua na lista', asyn
 });
 
 // ---- Aparelho compartilhado
-caso('sair/trocar porteiro limpa rede de segurança e avisos', () => {
+caso('sair limpa rede de segurança e avisos', () => {
   const els = { 'aviso-correcao': { hidden: false }, 'aviso-sucesso': { hidden: false } };
   const limpos = [];
   const { f, ctx } = carregarComContexto(['limparAvisos', 'pararRede'], {
@@ -520,7 +586,7 @@ caso('sair/trocar porteiro limpa rede de segurança e avisos', () => {
   assert.strictEqual(els['aviso-correcao'].hidden, true);
   assert.strictEqual(els['aviso-sucesso'].hidden, true);
   assert.deepStrictEqual(limpos, [['i', 7], ['t', 9]]);
-  ['function sairDaPagina(', 'function mostrarTurno('].forEach((n) => assert.ok(extrair(FONTE, n).includes('limparAvisos()'), n));
+  ['function sairDaPagina('].forEach((n) => assert.ok(extrair(FONTE, n).includes('limparAvisos()'), n));
 });
 
 caso('cartão do vínculo sem borda lateral grossa', () => {
