@@ -2912,11 +2912,30 @@ function htmlOpcoesUsuario(u) {
   return ['recebe_alertas', 'recebe_relatorio'].map((o) => `<label class="av-opcao"><input type="checkbox" data-opcao="${o}" data-id="${esc(u.id)}"${u[o] === true ? ' checked' : ''}> ${esc(avisosEmailLib.ROTULOS[o])}</label>`).join('');
 }
 
+/** Botões só com data-usr-acao + id escapado: nada do usuário vai para JS inline (onclick). */
 function htmlAcoesUsuario(u) {
-  return `<button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
-      ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
-      <button class="btn btn-danger-solid btn-sm" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>`;
+  const id = esc(u.id);
+  return `<button type="button" class="btn btn-ghost btn-sm" data-usr-acao="editar" data-id="${id}">Editar</button>
+      ${u.ativo ? `<button type="button" class="btn btn-danger btn-sm" data-usr-acao="desativar" data-id="${id}">Desativar</button>` : `<button type="button" class="btn btn-ghost btn-sm" data-usr-acao="ativar" data-id="${id}">Ativar</button>`}
+      <button type="button" class="btn btn-danger-solid btn-sm" data-usr-acao="excluir" data-id="${id}">Excluir</button>`;
 }
+
+/** Usuário pelo id, nas listas já carregadas (detalhe do cliente ou global). */
+function usuarioCarregado(id) {
+  return usuariosCliData.find((u) => u.id === id) || usuariosData.find((u) => u.id === id) || null;
+}
+
+// Um ouvinte para as ações das duas tabelas de usuários.
+document.addEventListener('click', (e) => {
+  const botao = e.target.closest('#usuarios-cli-body [data-usr-acao], #usuarios-global-body [data-usr-acao]');
+  if (!botao) return;
+  const u = usuarioCarregado(botao.dataset.id);
+  if (!u) return;
+  const acao = botao.dataset.usrAcao;
+  if (acao === 'editar') openUsuarioModal(u);
+  else if (acao === 'desativar' || acao === 'ativar') toggleUsuario(u.id, acao === 'ativar');
+  else if (acao === 'excluir') deleteUsuario(u);
+});
 
 // Marcar/desmarcar uma opção na aba Usuários salva na hora; falha desfaz e avisa.
 document.addEventListener('change', (e) => {
@@ -2954,11 +2973,7 @@ function renderUsuariosGlobal() {
     <td><span class="badge-role">${esc(ROLE_LABEL[u.role] || u.role)}</span></td>
     <td>${esc(u.clientes?.nome || '—')}</td>
     <td>${u.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
-    <td class="actions-cell">
-      <button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
-      ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
-      <button class="btn btn-danger-solid btn-sm" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
-    </td>
+    <td class="actions-cell">${htmlAcoesUsuario(u)}</td>
   </tr>`).join('');
 }
 
@@ -3089,17 +3104,20 @@ async function toggleUsuario(id, ativar) {
   } catch (err) { toast(err.message, true); }
 }
 
-async function deleteUsuario(id, email) {
+async function deleteUsuario(usuario) {
+  const contato = usuario.role === 'so_email';
   const confirmado = await confirmarAcao({
-    titulo: 'Excluir usuário permanentemente?',
-    mensagem: `Você vai remover o login <strong>${esc(email)}</strong> do sistema. A pessoa perderá acesso imediatamente.<br><br>Esta ação <strong>não pode ser desfeita</strong>.`,
+    titulo: contato ? 'Excluir contato permanentemente?' : 'Excluir usuário permanentemente?',
+    mensagem: contato
+      ? `Você vai remover o contato <strong>${esc(usuario.email)}</strong>. Ele deixa de receber os e-mails deste cliente.<br><br>Esta ação <strong>não pode ser desfeita</strong>.`
+      : `Você vai remover o login <strong>${esc(usuario.email)}</strong> do sistema. A pessoa perderá acesso imediatamente.<br><br>Esta ação <strong>não pode ser desfeita</strong>.`,
     textoOk: 'Sim, excluir',
     textoCancel: 'Cancelar',
   });
   if (!confirmado) return;
   try {
-    await api('/usuarios?id=' + id + '&permanent=true', 'DELETE');
-    toast('Usuário excluído permanentemente!');
+    await api('/usuarios?id=' + encodeURIComponent(usuario.id) + '&permanent=true', 'DELETE');
+    toast(contato ? 'Contato excluído permanentemente!' : 'Usuário excluído permanentemente!');
     loadUsuariosGlobal();
     if (currentDetailCliente) loadUsuariosCli();
   } catch (err) { toast(err.message, true); }
@@ -3641,7 +3659,7 @@ async function atualizarBadgeDireitos() {
 // ============================================
 function esc(str) {
   if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function fmtDate(iso) {

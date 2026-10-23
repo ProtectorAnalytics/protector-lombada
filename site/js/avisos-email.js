@@ -29,6 +29,11 @@
   const DOMINIO_PORTEIRO = '@porteiro.invalid';
   // Mesma expressão de isValidEmail (lib/validators.js).
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Defesa extra: e-mail de contato sem aspas, sinais de HTML, parênteses,
+  // crase, barra invertida ou espaço (nenhum e-mail real precisa deles aqui).
+  const EMAIL_PROIBIDOS = /['"<>()`\\\s]/;
+  // No nome, apóstrofo fica (D'Ávila); só < e > são recusados.
+  const NOME_PROIBIDOS = /[<>]/;
   // Controle (C0/DEL) e invisíveis/direção de texto (zero-width, bidi, BOM).
   const INVISIVEIS = /[\u0000-\u001F\u007F​-‏‪-‮⁠-⁩﻿]/g;
 
@@ -42,12 +47,13 @@
   function erroNome(nome) {
     if (!nome) return 'Informe o nome.';
     if (nome.length > NOME_MAX) return `Nome com no máximo ${NOME_MAX} caracteres.`;
+    if (NOME_PROIBIDOS.test(nome)) return 'O nome não pode ter os sinais < ou >.';
     return '';
   }
 
   /** Mensagem de erro do e-mail (já normalizado), ou '' quando serve. */
   function erroEmail(email) {
-    if (!email || email.length > EMAIL_MAX || !EMAIL_RE.test(email)) return 'Informe um e-mail válido.';
+    if (!email || email.length > EMAIL_MAX || !EMAIL_RE.test(email) || EMAIL_PROIBIDOS.test(email)) return 'Informe um e-mail válido.';
     if (email.endsWith(DOMINIO_PORTEIRO)) return 'Use um e-mail real, que receba mensagens.';
     return '';
   }

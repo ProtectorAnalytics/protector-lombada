@@ -154,7 +154,46 @@ caso('admin: opções não aparecem para portaria nem super_admin', () => {
   assert.ok(html.includes('Recebe alertas de excesso') && html.includes('Recebe relatório periódico'));
 });
 
-caso('dashboard: item "Avisos por e-mail" no menu da conta, só para admin_cliente', () => {
+caso('validarContato recusa e-mail com aspas, HTML, parênteses, crase, \\ ou espaço; nome com < >', () => {
+  for (const email of ["x'-alert(1)-'@a.co", 'a"b@a.co', 'a<b@a.co', 'a(b)@a.co', 'a`b@a.co', 'a\\b@a.co', 'a b@a.co']) {
+    assert.ok(lib.validarContato({ nome: 'X', email }).erros.email, email);
+  }
+  assert.ok(lib.validarContato({ nome: 'a<b>', email: 'a@b.test' }).erros.nome);
+  assert.ok(lib.validarContato({ nome: "Maria D'Ávila", email: 'maria.davila+avisos@exemplo.test' }).corpo);
+});
+
+caso("admin: lista de usuários com ' no nome e no e-mail não leva dado do usuário a nenhum onclick", () => {
+  const tbodies = { 'usuarios-cli-body': { innerHTML: '' }, 'usuarios-global-body': { innerHTML: '' } };
+  const document = { getElementById: (id) => tbodies[id] };
+  const mau = {
+    id: '33333333-3333-4333-8333-333333333333', role: 'so_email', ativo: true, cliente_id: 'c1',
+    nome: "a')+alert(1)+('", email: "x'-alert(document.cookie)-'@a.co", clientes: { nome: "Cond'o" },
+    recebe_alertas: true, recebe_relatorio: false,
+  };
+  const codigo = ['const ROLE_LABEL = ', extrair(ADMIN, 'const ROLE_LABEL = {').replace('const ROLE_LABEL = ', ''), ';\n',
+    extrair(ADMIN, 'function esc('), extrair(ADMIN, 'function htmlOpcoesUsuario('), extrair(ADMIN, 'function htmlAcoesUsuario('),
+    extrair(ADMIN, 'function renderUsuariosCli('), extrair(ADMIN, 'function renderUsuariosGlobal('),
+    '; renderUsuariosCli(); renderUsuariosGlobal();'].join('\n');
+  new Function('document', 'avisosEmailLib', 'usuariosCliData', 'usuariosData', codigo)(document, lib, [mau], [mau]);
+  for (const [id, { innerHTML }] of Object.entries(tbodies)) {
+    assert.ok(innerHTML.includes('data-usr-acao="excluir"'), id);
+    const handlers = [...innerHTML.matchAll(/\bon\w+="([^"]*)"/g)].map((m) => m[1]);
+    assert.deepStrictEqual(handlers, [], `${id}: nenhum handler inline`);
+    assert.ok(!innerHTML.includes("'"), `${id}: apóstrofo cru no HTML`);
+    assert.ok(innerHTML.includes('&#39;'), id);
+  }
+});
+
+caso('admin: ações de usuário vão por um ouvinte que busca o usuário pelo id', () => {
+  assert.match(ADMIN, /closest\('#usuarios-cli-body \[data-usr-acao\], #usuarios-global-body \[data-usr-acao\]'\)/);
+  assert.match(extrair(ADMIN, 'function usuarioCarregado('), /usuariosCliData\.find[\s\S]*usuariosData\.find/);
+  assert.doesNotMatch(ADMIN, /onclick="(openUsuarioModal\([^)]|toggleUsuario\(|deleteUsuario\()/);
+  const del = extrair(ADMIN, 'async function deleteUsuario(');
+  assert.match(del, /remover o contato/);
+  assert.match(del, /remover o login/);
+});
+
+caso('dashboard: item "Avisos por e-mail\" no menu da conta, só para admin_cliente', () => {
   assert.match(DASH, /id="conta-avisos-email"[^>]*hidden[^>]*>Avisos por e-mail</);
   assert.match(DASH, /<script src="\/js\/avisos-email\.js"><\/script>/);
   assert.match(DASH, /<script src="\/js\/avisos-painel\.js"><\/script>/);

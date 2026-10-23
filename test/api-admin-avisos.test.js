@@ -194,12 +194,21 @@ console.error = () => {};
     const ruins = [
       { ...NOVO, nome: '' }, { ...NOVO, nome: 'a'.repeat(81) }, { ...NOVO, email: 'nao-e-email' },
       { ...NOVO, email: 'x@porteiro.invalid' }, { ...NOVO, recebe_alertas: 'sim' },
+      // defesa extra: aspas, sinais de HTML, parênteses, crase, \ e espaço no e-mail; < > no nome
+      { ...NOVO, email: "x'-alert(1)-'@exemplo.test" }, { ...NOVO, email: 'a"b@exemplo.test' },
+      { ...NOVO, email: 'a<b>@exemplo.test' }, { ...NOVO, email: 'a`b@exemplo.test' },
+      { ...NOVO, email: 'a\\b@exemplo.test' }, { ...NOVO, email: 'a b@exemplo.test' },
+      { ...NOVO, nome: '<img src=x>' },
     ];
     for (const body of ruins) {
       assert.strictEqual((await chamar('admin', 'POST', { body })).code, 400);
       semEscrita();
     }
     assert.strictEqual((await chamar('admin', 'POST', { body: { ...NOVO, nome: 'a'.repeat(80) } })).code, 201);
+  });
+
+  await caso("POST aceita apóstrofo no nome (D'Ávila)", async () => {
+    assert.strictEqual((await chamar('admin', 'POST', { body: { ...NOVO, nome: "Maria D'Ávila" } })).code, 201);
   });
 
   await caso('POST em outro cliente → 403', async () => {
