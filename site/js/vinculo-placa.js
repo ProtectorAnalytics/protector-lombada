@@ -35,6 +35,12 @@
   // Chave de comparação: placa antiga e Mercosul do mesmo veículo são iguais.
   const chavePlaca = (p) => placaLib.paraMercosul(p || '') || placaLib.limpar(p || '');
 
+  /** Mesma placa nas duas grafias (antiga/Mercosul)? Vazio nunca é igual. */
+  function mesmaPlaca(a, b) {
+    const ca = chavePlaca(a);
+    return Boolean(ca) && ca === chavePlaca(b);
+  }
+
   // Instante em ms; null/ausente = sem limite; inválido também é sem limite.
   function ms(v) {
     if (v === null || v === undefined || v === '') return null;
@@ -42,7 +48,22 @@
     return Number.isNaN(t) ? null : t;
   }
 
-  /** Agrupa por placa (Mercosul); cada lista ordenada por vigente_desde, null primeiro. */
+  // Ordem crescente de instante, null (sem limite) primeiro.
+  function compararInstante(a, b) {
+    const ta = ms(a);
+    const tb = ms(b);
+    if (ta === tb) return 0;
+    if (ta === null) return -1;
+    if (tb === null) return 1;
+    return ta - tb;
+  }
+
+  // Desempate determinístico: quem vem por último vence nas buscas. Primeiro
+  // por vigente_desde; empate (ex.: dois null) → criado_em mais recente.
+  const compararVinculo = (a, b) =>
+    compararInstante(a.vigente_desde, b.vigente_desde) || compararInstante(a.criado_em, b.criado_em);
+
+  /** Agrupa por placa (Mercosul); cada lista ordenada por vigente_desde (null primeiro) e criado_em. */
   function indexarVinculos(linhas) {
     const indice = new Map();
     for (const linha of linhas || []) {
@@ -51,16 +72,7 @@
       if (!indice.has(chave)) indice.set(chave, []);
       indice.get(chave).push(linha);
     }
-    for (const lista of indice.values()) {
-      lista.sort((a, b) => {
-        const ta = ms(a.vigente_desde);
-        const tb = ms(b.vigente_desde);
-        if (ta === tb) return 0;
-        if (ta === null) return -1;
-        if (tb === null) return 1;
-        return ta - tb;
-      });
-    }
+    for (const lista of indice.values()) lista.sort(compararVinculo);
     return indice;
   }
 
@@ -100,5 +112,5 @@
     return autor ? `${base} por ${autor}` : base;
   }
 
-  return { TIPOS_PESSOA, SEM_CADASTRO, tipoPessoa, indexarVinculos, vinculoNaHora, vinculoVigente, rotuloCadastro };
+  return { TIPOS_PESSOA, SEM_CADASTRO, tipoPessoa, mesmaPlaca, indexarVinculos, vinculoNaHora, vinculoVigente, rotuloCadastro };
 });
