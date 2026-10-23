@@ -230,6 +230,15 @@ async function estruturadas() {
     assert.ok(leituras.length >= 2, 'leu mais de uma página');
   });
 
+  await caso('GET devolve mais de 1000 unidades (lê em páginas)', async () => {
+    for (let i = 0; i < 1500; i++) {
+      tabelas.unidades.push({ id: `g-${i}`, cliente_id: C1, bloco: 'Torre G', nome: String(i), tipo: 'apartamento', ordem: 10 + i, ativo: true });
+    }
+    const r = await chamar(unidades, 'portaria', 'GET', {});
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(r.body.filter((l) => l.bloco === 'Torre G').length, 1500, 'nenhuma unidade cortada');
+  });
+
   await caso('POST unidades: reativação em grupos paralelos, presa ao cliente', async () => {
     for (let i = 0; i < 25; i++) {
       tabelas.unidades.push({ id: `r-${i}`, cliente_id: C1, bloco: 'Torre R', nome: String(i), tipo: 'apartamento', ordem: 0, ativo: false });
