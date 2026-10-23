@@ -441,6 +441,39 @@ caso('link para o manual na tela de login e na do turno', () => {
   });
 });
 
+// ---- Manual da portaria
+const MANUAL = ler('portaria/manual.html');
+const secao = (id) => { const i = MANUAL.indexOf(`<h2 id="${id}">`); return MANUAL.slice(i, MANUAL.indexOf('<h2', i + 4)); };
+const semTags = (h) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
+
+caso('manual: "Sim" e "Manter" não registram visita; nada muda', () => {
+  const t = semTags(secao('visitante'));
+  assert.ok(!/registra a nova visita/.test(t));
+  assert.match(t, /Sim: nada muda; o cadastro continua com a unidade\./);
+  assert.match(t, /Manter[^.]*faz o mesmo/);
+});
+
+caso('manual: "Sem cadastro" fora da tabela de tipos escolhíveis, explicado à parte como selo', () => {
+  const s3 = secao('salvar');
+  const tabela = s3.slice(s3.indexOf('<table'), s3.indexOf('</table>'));
+  assert.ok(!tabela.includes('Sem cadastro'), 'não é um tipo que se escolhe');
+  assert.match(semTags(s3), /Sem cadastro[^.]*selo[^.]*placa sem dono/i);
+});
+
+caso('manual e tela de login dizem o mesmo sobre as credenciais', () => {
+  const frase = 'Entre com o e-mail e a senha do acesso da portaria. O síndico também pode entrar com o login do painel.';
+  assert.ok(semTags(secao('turno')).includes(frase), 'manual');
+  const i = PAGINA.indexOf('id="tela-login"');
+  assert.ok(semTags(PAGINA.slice(i, PAGINA.indexOf('</section>', i))).includes(frase), 'tela de login');
+});
+
+caso('manual §7: aviso vale nos 3 min após salvar e só para o acesso da portaria', () => {
+  const t = semTags(secao('correcao'));
+  assert.match(t, /3 minutos depois de salvar/);
+  assert.match(t, /só no acesso da portaria/);
+  assert.match(t, /não aparece[^.]*lista Sem cadastro/);
+});
+
 // ---- Suspeita só do próprio condomínio
 caso('suspeita: só exclui quando a API diz que é deste condomínio; falha da API não exclui; cache na sessão', async () => {
   const { suspeitasDoCondominio } = carregar(['suspeitasDoCondominio']);
