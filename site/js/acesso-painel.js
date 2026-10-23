@@ -54,5 +54,12 @@
     return ehUuid(clienteId) ? `/dashboard?${PARAMETRO}=${clienteId.toLowerCase()}` : '/admin';
   }
 
-  return { ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel };
+  // Parte 1 do módulo portaria: o perfil portaria só consulta veículos no
+  // painel (a API recusa a escrita dele sem porteiro_id); o cadastro da
+  // portaria chega na Parte 2.
+  function podeEditarVeiculos(role) {
+    return role !== 'portaria';
+  }
+
+  return { ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel, podeEditarVeiculos };
 });

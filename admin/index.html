@@ -2796,7 +2796,7 @@ async function loadVeiculos(clienteId) {
 function unidadeDoVeiculo(v) {
   if (v.unidade_id) {
     const u = unidadesData.find(x => x.id === v.unidade_id);
-    return u ? esc(u.nome) : '—';
+    return u ? esc(u.nome) : `<span class="unidade-antiga">${esc(v.unidade || 'Unidade')} (removida)</span>`;
   }
   return v.unidade ? `<span class="unidade-antiga" title="Unidade antiga (texto livre)">${esc(v.unidade)} (antiga)</span>` : '—';
 }
@@ -2826,6 +2826,27 @@ function renderVeiculos() {
   }).join('');
 }
 
+// <option>s do campo unidade. A unidade atual que saiu da lista (removida)
+// continua como opção selecionada, para salvar não zerar o vínculo sem querer.
+function opcoesUnidadeVeiculo(veiculo, unidades) {
+  const atual = veiculo && veiculo.unidade_id;
+  const removida = atual && !unidades.some(u => u.id === atual)
+    ? `<option value="${esc(atual)}" selected>${esc(veiculo.unidade ? veiculo.unidade + ' (removida)' : 'Unidade removida')}</option>`
+    : '';
+  return '<option value="">— Sem unidade —</option>' + removida + unidades.map(u =>
+    `<option value="${esc(u.id)}" ${atual === u.id ? 'selected' : ''}>${esc(u.nome)}</option>`).join('');
+}
+
+// Campos de unidade do corpo do POST/PUT: só vão se o campo mudou. Unidade
+// escolhida leva o nome da lista (o texto livre antigo não fica para trás).
+function camposUnidadeDoVeiculo(valor, atual, unidades) {
+  const inicial = (atual && atual.unidade_id) || '';
+  if (valor === inicial) return {};
+  if (!valor) return { unidade_id: null, unidade: null };
+  const u = unidades.find(x => x.id === valor);
+  return { unidade_id: valor, unidade: u ? u.nome : null };
+}
+
 function openVeiculoModal(veiculo = null) {
   const isEdit = !!veiculo;
   const tipoAtual = veiculo?.tipo_pessoa || '';
@@ -2833,8 +2854,7 @@ function openVeiculoModal(veiculo = null) {
     `<option value="${esc(t.id)}" ${tipoAtual === t.id ? 'selected' : ''}>${esc(t.rotulo)}</option>`).join('');
   const temUnidades = unidadesData.length > 0;
   const unidadeCampo = temUnidades
-    ? `<select id="f-vei-unidade"><option value="">— Sem unidade —</option>${unidadesData.map(u =>
-        `<option value="${esc(u.id)}" ${veiculo?.unidade_id === u.id ? 'selected' : ''}>${esc(u.nome)}</option>`).join('')}</select>`
+    ? `<select id="f-vei-unidade">${opcoesUnidadeVeiculo(veiculo, unidadesData)}</select>`
       + (veiculo && !veiculo.unidade_id && veiculo.unidade ? `<small class="unidade-antiga">Unidade antiga: ${esc(veiculo.unidade)} — escolha uma da lista.</small>` : '')
     : `<input id="f-vei-unidade" value="${esc(veiculo?.unidade || '')}">`;
   openModal(isEdit ? 'Editar Vínculo' : 'Novo Veículo', `
@@ -2868,8 +2888,7 @@ async function saveVeiculo(id) {
     cor: document.getElementById('f-vei-cor').value.trim(),
   };
   if (unidadesData.length) {
-    if (unidadeValor) body.unidade_id = unidadeValor;
-    else if (atual?.unidade_id) body.unidade_id = null;
+    Object.assign(body, camposUnidadeDoVeiculo(unidadeValor, atual, unidadesData));
   } else {
     body.unidade = unidadeValor;
   }
@@ -2941,6 +2960,13 @@ function renderListaPortaria(tipo) {
     <button type="button" class="btn btn-ghost btn-sm" aria-label="Remover ${esc(d.nome)}" onclick="removerItemPortaria('${tipo}','${esc(d.id)}')">Remover</button></li>`).join('');
 }
 
+// A API devolve `ignoradas` como lista (linhas longas demais); mostra quantas e quais
+function resumoListaPortaria(r) {
+  const ignoradas = Array.isArray(r.ignoradas) ? r.ignoradas : [];
+  const base = `${r.criadas} criadas · ${r.ja_existiam} já existiam · ${ignoradas.length} ignoradas`;
+  return ignoradas.length ? `${base} (nome longo demais): ${ignoradas.join(', ')}` : base;
+}
+
 async function adicionarListaPortaria(tipo) {
   const area = document.getElementById('pt-' + tipo + '-texto');
   const res = document.getElementById('pt-' + tipo + '-res');
@@ -2948,7 +2974,7 @@ async function adicionarListaPortaria(tipo) {
   if (!texto.trim()) { res.textContent = 'Cole ao menos um nome.'; return; }
   try {
     const r = await api('/' + tipo, 'POST', { cliente_id: currentDetailCliente.id, texto });
-    res.textContent = `${r.criadas} criadas · ${r.ja_existiam} já existiam · ${r.ignoradas} ignoradas`;
+    res.textContent = resumoListaPortaria(r); // textContent: nomes ignorados são texto, nunca HTML
     area.value = '';
     await loadPortaria();
   } catch (err) { res.textContent = err.message; }

@@ -5,7 +5,7 @@
  */
 const assert = require('node:assert');
 const {
-  ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel,
+  ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel, podeEditarVeiculos,
 } = require('../site/js/acesso-painel');
 
 let passou = 0;
@@ -13,6 +13,14 @@ function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
 
 const UUID = '3f2b8c1e-9a4d-4e6f-8b2a-1c3d5e7f9a0b';
 const OUTRO = '00000000-0000-4000-8000-00000000abcd';
+
+// ---- podeEditarVeiculos (Parte 1: a portaria só consulta; o cadastro dela vem na Parte 2)
+caso('portaria não edita veículos no painel; os demais perfis editam', () => {
+  assert.strictEqual(podeEditarVeiculos('portaria'), false);
+  ['admin_cliente', 'operador', 'super_admin', undefined, null].forEach((r) => {
+    assert.strictEqual(podeEditarVeiculos(r), true, String(r));
+  });
+});
 
 // ---- ehUuid
 caso('aceita UUID em minúsculas e maiúsculas', () => {

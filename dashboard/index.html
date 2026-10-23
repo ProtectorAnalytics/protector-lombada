@@ -1968,6 +1968,8 @@
       border-bottom: 1px solid var(--border);
       margin: 16px 24px 0;
     }
+    /* perfil portaria: controles de escrita escondidos (aplicarPermissaoVeiculos) */
+    .vm-tab[hidden], .vm-body[hidden], #vm-importar-bloco[hidden] { display: none !important; }
     .vm-tab {
       flex: 1;
       padding: 10px 0;
@@ -3185,7 +3187,7 @@
           <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:10px">Baixe a lista completa de veículos cadastrados em formato Excel.</p>
           <button class="vm-btn-primary" onclick="exportarVeiculosExcel(this)" style="width:auto;padding:10px 20px">Exportar Excel</button>
         </div>
-        <div style="border-top:1px solid var(--border);padding-top:20px">
+        <div id="vm-importar-bloco" style="border-top:1px solid var(--border);padding-top:20px">
           <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Importar Veículos</h4>
           <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:6px">Envie um arquivo Excel (.xlsx) com as colunas:</p>
           <p style="font-size:0.75rem;color:var(--accent);font-weight:600;margin-bottom:4px;font-family:var(--font-mono)">PLACA | TIPO | MORADOR | UNIDADE | MARCA | COR</p>
@@ -3593,6 +3595,11 @@
       }
     }
 
+    // Colunas do cliente que o painel lê. O banco só libera estas ao navegador
+    // (grant por coluna em sql/migration-portaria-base.sql); e-mails, contato,
+    // CNPJ e endereço ficam na API. Mudou aqui, muda o grant e o teste SQL.
+    const COLUNAS_CLIENTE_PAINEL = 'id, nome, local_via, cidade_uf, limite_velocidade, ativo, pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, pdf_corpo_texto';
+
     async function loadProfile() {
       const { data: profile } = await sb.from('usuarios')
         .select('*')
@@ -3613,7 +3620,7 @@
 
         if (profile.cliente_id) {
           const { data: cliente } = await sb.from('clientes')
-            .select('*')
+            .select(COLUNAS_CLIENTE_PAINEL)
             .eq('id', profile.cliente_id)
             .eq('ativo', true)
             .single();
@@ -3658,11 +3665,24 @@
         return;
       }
       const { data: cliente, error } = await sb.from('clientes')
-        .select('*').eq('id', clienteId).eq('ativo', true).maybeSingle();
+        .select(COLUNAS_CLIENTE_PAINEL).eq('id', clienteId).eq('ativo', true).maybeSingle();
       if (error || !cliente) { irParaAdmin('cliente-invalido'); return; }
       modoAdmin = true;
       currentCliente = cliente;
       showDashboard();
+    }
+
+    // Perfil portaria (Parte 1): só consulta. Some com cadastrar, importar,
+    // excluir e o cadastro rápido da passagem; a API recusaria a escrita.
+    function podeEditarVeiculos() {
+      return acessoPainel.podeEditarVeiculos(currentProfile && currentProfile.role);
+    }
+
+    function aplicarPermissaoVeiculos() {
+      const pode = podeEditarVeiculos();
+      document.getElementById('vm-tab-cadastrar').hidden = !pode;
+      document.getElementById('vm-body-cadastrar').hidden = !pode;
+      document.getElementById('vm-importar-bloco').hidden = !pode;
     }
 
     function aplicarModoAdmin() {
@@ -3696,9 +3716,10 @@
     }
 
     async function loadClienteLegado() {
+      // Cadastro antigo (clientes.user_id): o RLS já restringe ao dono e a
+      // coluna user_id não é legível pelo navegador, então não se filtra por ela.
       const { data, error } = await sb.from('clientes')
-        .select('*')
-        .eq('user_id', currentUser.id)
+        .select(COLUNAS_CLIENTE_PAINEL)
         .eq('ativo', true)
         .single();
 
@@ -3844,6 +3865,7 @@
       document.getElementById('conta-inicial').textContent = (currentUser.email || '·').charAt(0);
       document.getElementById('conta-btn').setAttribute('aria-label', 'Conta: ' + currentUser.email);
       document.getElementById('btn-topbar-veiculos').style.display = '';
+      aplicarPermissaoVeiculos();
       aplicarModoAdmin();
       sincronizarSeletores(); // o seletor do topo só tem tamanho depois de visível
       document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
@@ -4206,12 +4228,12 @@
 
     const TIPOS_COM_ROTULO_CADASTRO = new Set(['visitante', 'prestador']);
 
-    // Texto da unidade; vínculo só com unidade_id (cadastrado pelo admin) usa o nome da lista
+    // Nome da unidade: a da lista (unidade_id) vale mais que o texto livre,
+    // que pode ter ficado antigo; sem unidade_id na lista, usa o texto.
     function nomeUnidade(v) {
       if (!v) return '';
-      if (v.unidade) return v.unidade;
       const u = v.unidade_id && unidadesLista.find((x) => x.id === v.unidade_id);
-      return u ? u.nome : '';
+      return u ? u.nome : (v.unidade || '');
     }
 
     // Tipo + nome + unidade de quem estava ligado à placa na hora; sem vínculo: "Sem cadastro" (cinza)
@@ -5666,6 +5688,7 @@
     }
 
     function vmSwitchTab(tab) {
+      if (tab === 'cadastrar' && !podeEditarVeiculos()) tab = 'lista';
       ['lista', 'cadastrar', 'importar'].forEach(t => {
         const tabEl = document.getElementById('vm-tab-' + t);
         const bodyEl = document.getElementById('vm-body-' + t);
@@ -5710,7 +5733,7 @@
         return `<div class="vm-lista-item">
           <span class="vm-li-placa">${esc(v.placa)}</span>
           <span class="vm-li-info">${seloTipoPessoa(v.tipo_pessoa)} ${esc(info) || '—'}</span>
-          <button class="vm-li-del" data-id="${esc(v.id)}" data-placa="${esc(v.placa)}" onclick="removerVeiculo(this.dataset.id, this.dataset.placa)" title="Remover">Excluir</button>
+          ${podeEditarVeiculos() ? `<button class="vm-li-del" data-id="${esc(v.id)}" data-placa="${esc(v.placa)}" onclick="removerVeiculo(this.dataset.id, this.dataset.placa)" title="Encerrar o vínculo da placa (o histórico fica)">Encerrar vínculo</button>` : ''}
         </div>`;
       }).join('');
 
@@ -5844,8 +5867,8 @@
           importQueue = lidas.filter(r => r.tipo_pessoa);
 
           // Check existing
-          const existing = new Set(veiculosList.map(v => v.placa));
-          const newOnes = importQueue.filter(r => !existing.has(r.placa));
+          // Chave Mercosul: ABC1234 e ABC1C34 são o mesmo carro (já cadastrado)
+          const newOnes = importQueue.filter(r => !veiculosList.some(v => vinculoPlacaLib.mesmaPlaca(v.placa, r.placa)));
           const dupes = importQueue.length - newOnes.length;
           importQueue = newOnes;
 
@@ -5983,7 +6006,7 @@
       }
 
       // Check duplicate
-      if (veiculosList.some(v => v.placa === placa)) {
+      if (veiculosList.some(v => vinculoPlacaLib.mesmaPlaca(v.placa, placa))) {
         errorEl.textContent = 'Esta placa já está cadastrada.';
         return;
       }
@@ -6058,7 +6081,7 @@
     }
 
     async function removerVeiculo(id, placa) {
-      if (!confirm(`Remover o veículo ${placa}?\n\nAs passagens antigas continuam mostrando quem estava ligado à placa; as novas aparecem como "Sem cadastro".`)) return;
+      if (!confirm(`Encerrar o vínculo da placa ${placa}?\n\nAs passagens antigas continuam mostrando quem estava ligado à placa; as novas aparecem como "Sem cadastro".`)) return;
 
       const token = (await sb.auth.getSession()).data.session?.access_token;
       if (!token) return;
@@ -6550,6 +6573,7 @@
     }
 
     function htmlCadastroDaPassagem(vb) {
+      if (!podeEditarVeiculos()) return '';
       const consultado = vb && vb.status === 'consultado';
       const marcaPre = consultado ? nomeVeiculo(vb) : '';
       const corPre = consultado ? vb.cor || '' : '';
