@@ -3401,6 +3401,11 @@
     let placasCadastradas = new Set();
     // Todos os vínculos (vigentes e encerrados) por placa: "quem estava na hora"
     let indiceVinculos = new Map();
+    // Painel aberto acompanha cadastros novos (ex.: portaria): ver recarregarVinculosSePreciso
+    const RECARGA_VINCULOS_MIN_MS = 60 * 1000;
+    const RECARGA_VINCULOS_PERIODO_MS = 5 * 60 * 1000;
+    let vinculosCargaEm = 0;
+    let vinculosRecarregando = null;
     // Unidades do condomínio (lista do admin); vazia = campo de texto livre
     let unidadesLista = [];
     // Estado do cadastro de moradores: 'carregando' | 'ok' | 'erro'
@@ -3987,6 +3992,7 @@
       const comPeriodo = forcarPeriodo
         || precisaRecarregarPeriodo(filtrosAtivos, chavePeriodoCarregado, new Date());
       dot.classList.add('ativo');
+      recarregarVinculosSePreciso([]); // a cada 5 min (o ciclo só roda com a aba visível)
       try {
         await Promise.all([
           loadStats(),
@@ -4010,6 +4016,7 @@
     // Paginado (max-rows do PostgREST). Falha não é "ninguém cadastrado":
     // fica registrada em `cadastro` e o filtro "Não cadastrados" avisa e não filtra.
     async function loadVeiculosCache() {
+      vinculosCargaEm = Date.now();
       const sessao = marcaDaSessao();
       const clienteId = sessao.clienteId;
       try {
@@ -4031,6 +4038,37 @@
         console.error('Erro ao carregar o cadastro de moradores:', err);
         if (sessaoValida(sessao)) cadastro = { estado: 'erro' };
       }
+    }
+
+    /**
+     * Recarregar os vínculos? Nunca antes de 60 s da última carga nem com outra
+     * em curso; sim a cada 5 min, ou quando chega uma passagem (depois da última
+     * carga) de placa válida sem vínculo vigente no índice — pode ser um
+     * cadastro recém-feito (spec §5.1.6: a próxima passagem já aparece identificada).
+     */
+    function deveRecarregarVinculos({ capturas, indice, ultimaCargaMs, agoraMs, emCurso }) {
+      if (emCurso) return false;
+      const desde = agoraMs - ultimaCargaMs;
+      if (desde < RECARGA_VINCULOS_MIN_MS) return false;
+      if (desde >= RECARGA_VINCULOS_PERIODO_MS) return true;
+      return (capturas || []).some((c) => {
+        const t = Date.parse(c && c.timestamp);
+        return t > ultimaCargaMs && placaLib.ehPlaca(placaLib.limpar(c.placa))
+          && !vinculoPlacaLib.vinculoVigente(indice, c.placa);
+      });
+    }
+
+    // Uma carga por vez; quem chega no meio espera a mesma promessa.
+    function recarregarVinculosSePreciso(capturas) {
+      if (vinculosRecarregando) return vinculosRecarregando;
+      const deve = deveRecarregarVinculos({
+        capturas, indice: indiceVinculos, ultimaCargaMs: vinculosCargaEm, agoraMs: Date.now(), emCurso: false,
+      });
+      if (!deve) return undefined;
+      const carga = loadVeiculosCache().finally(() => { vinculosRecarregando = null; });
+      vinculosRecarregando = carga;
+      veiculosCachePronto = carga;
+      return carga;
     }
 
     // Lista de unidades do condomínio (admin). Falha = sem lista: o campo vira texto livre.
@@ -4483,6 +4521,9 @@
         .order('timestamp', { ascending: false })
         .limit(60);
       if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
+      // Passagem de placa recém-cadastrada: recarrega os vínculos antes de desenhar
+      await recarregarVinculosSePreciso(rawData || []);
+      if (!sessaoValida(sessao)) return;
 
       const container = document.getElementById('recent-cards');
 
