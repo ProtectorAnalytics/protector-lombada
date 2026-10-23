@@ -65,14 +65,18 @@
       const k = n.toLowerCase();
       if (!vistos.has(k)) { vistos.add(k); nomes.push(n); }
     };
-    String(entrada == null ? '' : entrada).split(/[\s,;]+/).filter(Boolean).forEach((item) => {
+    String(entrada == null ? '' : entrada).replace(/\s*-\s*/g, '-').split(/[\s,;]+/).filter(Boolean).forEach((item) => {
       const faixa = /^(\d+)\s*-\s*(\d+)$/.exec(item);
-      if (faixa) {
+      if (/^-|-$/.test(item)) {
+        recusados.push(item); // hífen solto ou faixa incompleta
+      } else if (faixa) {
         const a = Number(faixa[1]);
         const b = Number(faixa[2]);
         const [ini, fim] = a <= b ? [a, b] : [b, a];
         if (fim - ini + 1 > MAX_FAIXA) { recusados.push(item); return; }
-        for (let n = ini; n <= fim; n++) add(String(n));
+        // Zeros à esquerda ("0101-0105", "01-04") mantêm o preenchimento.
+        const largura = /^0\d/.test(faixa[1]) || /^0\d/.test(faixa[2]) ? Math.max(faixa[1].length, faixa[2].length) : 0;
+        for (let n = ini; n <= fim; n++) add(String(n).padStart(largura, '0'));
       } else if (/^[^-]*\d-[^-]*\d$/.test(item)) {
         recusados.push(item); // parece faixa, mas não é só de números
       } else {
@@ -82,10 +86,11 @@
     return { nomes, recusados };
   }
 
-  // Valor da coluna pelo cabeçalho, comparando sem acento/maiúscula.
+  // Valor da coluna pelo cabeçalho (sem acento/maiúscula); com vários
+  // cabeçalhos equivalentes (Bloco e Torre), vale o primeiro valor não vazio.
   function lerColuna(row, aliases) {
     for (const k of Object.keys(row)) {
-      if (aliases.includes(chave(k))) return row[k];
+      if (aliases.includes(chave(k)) && texto(row[k])) return row[k];
     }
     return '';
   }
@@ -95,13 +100,18 @@
   const ALIAS_ANDAR = ['andar'];
   const ALIAS_TIPO_COL = ['tipo'];
 
-  /** Linhas da planilha → unidades válidas + recusadas (linha 1 = primeira linha de dados). */
+  /**
+   * Linhas da planilha → unidades válidas + recusadas.
+   * `linha` é o número da linha na planilha (cabeçalho = linha 1, primeiro
+   * dado = 2). Premissa: quem chama passa as linhas de sheet_to_json com
+   * blankrows: true / defval, para o índice do array bater com a planilha.
+   */
   function linhasDaPlanilha(rows) {
     const unidades = [];
     const recusadas = [];
     const vistas = new Set();
     (Array.isArray(rows) ? rows : []).forEach((row, i) => {
-      const linha = i + 1;
+      const linha = i + 2;
       const bloco = texto(lerColuna(row || {}, ALIAS_AGRUPADOR));
       const nome = texto(lerColuna(row || {}, ALIAS_UNIDADE));
       const andar = texto(lerColuna(row || {}, ALIAS_ANDAR));
@@ -110,7 +120,8 @@
       if (!nome) { recusadas.push({ linha, motivo: 'Unidade vazia' }); return; }
       const tipo = tipoTxt ? tipoUnidade(tipoTxt) : tipoUnidade(TIPO_PADRAO);
       if (!tipo) { recusadas.push({ linha, motivo: `Tipo "${tipoTxt}" desconhecido` }); return; }
-      const k = `${chave(bloco)}\u0000${chave(nome)}`;
+      // Mesma regra única do servidor: só maiúscula/minúscula, acento conta.
+      const k = `${bloco.toLowerCase()}\u0000${nome.toLowerCase()}`;
       if (vistas.has(k)) { recusadas.push({ linha, motivo: 'Unidade duplicada no mesmo agrupador' }); return; }
       vistas.add(k);
       unidades.push({ bloco, nome, andar, tipo: tipo.id });

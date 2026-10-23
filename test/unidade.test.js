@@ -95,7 +95,7 @@ caso('planilha: tipo inválido, unidade vazia e duplicada são recusados com mot
     { 'Bloco/Torre/Quadra': 'B', Unidade: '5' },
   ]);
   assert.deepStrictEqual(r.unidades.map((u) => [u.bloco, u.nome]), [['A', '5'], ['B', '5']]);
-  assert.deepStrictEqual(r.recusadas.map((x) => x.linha), [1, 2, 4]);
+  assert.deepStrictEqual(r.recusadas.map((x) => x.linha), [2, 3, 5]);
   assert.ok(r.recusadas.every((x) => typeof x.motivo === 'string' && x.motivo));
   assert.match(r.recusadas[0].motivo, /tipo/i);
   assert.match(r.recusadas[1].motivo, /unidade/i);
@@ -120,6 +120,41 @@ caso('exportação usa as colunas exatas e o rótulo do tipo', () => {
   // ida e volta
   const volta = linhasDaPlanilha(rows);
   assert.strictEqual(volta.unidades[0].tipo, 'fip');
+});
+
+caso('lote: "101 - 104" é faixa; hífen solto nunca vira unidade', () => {
+  assert.deepStrictEqual(expandirLote('101 - 104').nomes, ['101', '102', '103', '104']);
+  assert.deepStrictEqual(expandirLote('101 -104 , 106- 107').nomes, ['101', '102', '103', '104', '106', '107']);
+  const r = expandirLote('- 5');
+  assert.ok(!r.nomes.includes('-'));
+  assert.deepStrictEqual(expandirLote('-').nomes, []);
+  assert.deepStrictEqual(expandirLote('-').recusados, ['-']);
+});
+
+caso('lote: zeros à esquerda mantêm o preenchimento', () => {
+  assert.deepStrictEqual(expandirLote('0101-0105').nomes, ['0101', '0102', '0103', '0104', '0105']);
+  assert.deepStrictEqual(expandirLote('01-04').nomes, ['01', '02', '03', '04']);
+  assert.deepStrictEqual(expandirLote('08-11').nomes, ['08', '09', '10', '11']);
+});
+
+caso('planilha: com Bloco e Torre, vale o primeiro valor não vazio', () => {
+  const r = linhasDaPlanilha([
+    { Bloco: '', Torre: 'T2', Unidade: '1' },
+    { Bloco: 'B1', Torre: 'T9', Unidade: '2' },
+  ]);
+  assert.deepStrictEqual(r.unidades.map((u) => u.bloco), ['T2', 'B1']);
+});
+
+caso('planilha: duplicidade só ignora maiúscula, acento conta', () => {
+  const r = linhasDaPlanilha([
+    { Unidade: 'Térreo' }, { Unidade: 'Terreo' }, { Unidade: 'TÉRREO' },
+  ]);
+  assert.deepStrictEqual(r.unidades.map((u) => u.nome), ['Térreo', 'Terreo']);
+  assert.deepStrictEqual(r.recusadas.map((x) => x.linha), [4]);
+});
+
+caso('planilha: linha recusada é o número na planilha (cabeçalho = 1)', () => {
+  assert.strictEqual(linhasDaPlanilha([{ Unidade: '' , Tipo: 'x' }]).recusadas[0].linha, 2);
 });
 
 console.log(`\n${passou} casos passaram`);
