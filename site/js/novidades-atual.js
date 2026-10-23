@@ -14,13 +14,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.12.0',
+    versao: '1.12.1',
     data: '2026-10-23',
-    titulo: 'Editar o cadastro da placa e ver o histórico de alterações',
+    titulo: 'Nome do modelo do veículo completo na lista',
     itens: Object.freeze([
-      'Editar o cadastro da placa direto nos detalhes da passagem e na lista de veículos',
-      'Histórico de alterações: veja quem cadastrou, alterou ou encerrou cada placa, e o que mudou',
-      'Síndico, operador e equipe Protector podem corrigir tipo, nome, unidade, marca e cor',
+      'O modelo do veículo aparece inteiro na lista de passagens (antes "VW KOMBI" virava "VW KO…")',
     ]),
   });
 });
