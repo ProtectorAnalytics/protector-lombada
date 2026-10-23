@@ -10,6 +10,7 @@ const C2 = '22222222-2222-4222-8222-222222222222';
 const U_C1 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const U_C2 = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 const P_C1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const P_C2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const SEGREDO = 'detalhe-interno-secreto';
 
 let tabelas;
@@ -25,6 +26,7 @@ function reset() {
     porteiros: [
       { id: P_C1, cliente_id: C1, nome: 'Seu Zé', ativo: true },
       { id: 'p-ant', cliente_id: C1, nome: 'Antigo', ativo: false },
+      { id: P_C2, cliente_id: C2, nome: 'Outro Zé', ativo: true },
     ],
   };
 }
@@ -152,14 +154,23 @@ console.error = () => {};
       assert.strictEqual(estado.auditoria.length, 1);
       assert.strictEqual(estado.auditoria[0].tabela, tab);
     });
+    await caso(`${nomeApi}: preserva apóstrofo e & nos nomes (D'Ávila, A & B)`, async () => {
+      const longa = `${"D'Ávila ".repeat(10)}`.trim();
+      const r = await chamar(h, 'admin', 'POST', { body: { cliente_id: C1, texto: `D'Ávila\nA & B\nDAvila\n${longa}` } });
+      assert.strictEqual(r.code, 201);
+      assert.strictEqual(r.body.criadas, 3);
+      assert.deepStrictEqual(r.body.ignoradas, [longa]);
+      const nomes = tabelas[tab].filter((l) => l.cliente_id === C1).map((l) => l.nome);
+      assert.ok(nomes.includes("D'Ávila") && nomes.includes('A & B') && nomes.includes('DAvila'));
+    });
     await caso(`${nomeApi}: super_admin cria para qualquer cliente`, async () => {
       const r = await chamar(h, 'super', 'POST', { body: { cliente_id: C2, texto: 'Nova' } });
       assert.strictEqual(r.code, 201);
       assert.strictEqual(r.body.criadas, 1);
     });
     await caso(`${nomeApi}: DELETE de id de outro cliente → 403 sem escrever`, async () => {
-      const r = await chamar(h, 'admin', 'DELETE', { query: { id: U_C2 } });
-      assert.strictEqual(r.code, tab === 'unidades' ? 403 : 404);
+      const r = await chamar(h, 'admin', 'DELETE', { query: { id: tab === 'unidades' ? U_C2 : P_C2 } });
+      assert.strictEqual(r.code, 403);
       assert.strictEqual(escritas().length, 0);
     });
     await caso(`${nomeApi}: DELETE com id inválido → 400`, async () => {
