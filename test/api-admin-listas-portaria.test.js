@@ -10,10 +10,13 @@ const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
 const U_C1 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const U_C2 = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+const U_T1 = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+const U_INATIVA = 'abababab-abab-4bab-8bab-abababababab';
 const SEGREDO = 'detalhe-interno-secreto';
 
 let tabelas;
-const estado = { perfil: null, ops: [], auditoria: [], erro: null };
+const estado = { perfil: null, ops: [], auditoria: [], erro: null, antesDoInsert: null };
+const chaveUnica = (l) => `${l.cliente_id}|${String(l.bloco || '').toLowerCase()}|${String(l.nome).toLowerCase()}`;
 
 function reset() {
   tabelas = {
@@ -21,6 +24,8 @@ function reset() {
       { id: U_C1, cliente_id: C1, nome: 'Casa 1', ordem: 4, ativo: true },
       { id: 'u-velha', cliente_id: C1, nome: 'Casa Velha', ordem: 2, ativo: false },
       { id: U_C2, cliente_id: C2, nome: 'Casa 9', ordem: 0, ativo: true },
+      { id: U_T1, cliente_id: C1, bloco: 'Torre 1', nome: '101', andar: '1', tipo: 'apartamento', ordem: 1, ativo: true },
+      { id: U_INATIVA, cliente_id: C1, bloco: 'Torre 1', nome: '102', andar: null, tipo: 'apartamento', ordem: 3, ativo: false },
     ],
   };
 }
@@ -38,12 +43,27 @@ function tabela(nome) {
     if (estado.erro) return { data: null, error: estado.erro };
     const t = tabelas[nome];
     if (op.modo === 'insert') {
-      const novas = [].concat(op.patch).map((l, i) => ({ id: `novo-${t.length + i}`, ativo: true, ...l }));
+      if (estado.antesDoInsert) { const f = estado.antesDoInsert; estado.antesDoInsert = null; f(); if (estado.erro) return { data: null, error: estado.erro }; }
+      const novas = [].concat(op.patch).map((l, i) => ({ id: `novo-${t.length + i}`, ativo: true, bloco: null, andar: null, tipo: 'apartamento', ...l }));
+      // Imita uq_unidades_cliente_bloco_nome (o insert é atômico: tudo ou nada).
+      const chaves = new Set(t.map(chaveUnica));
+      for (const l of novas) {
+        if (chaves.has(chaveUnica(l))) return { data: null, error: { code: '23505', message: SEGREDO } };
+        chaves.add(chaveUnica(l));
+      }
       t.push(...novas);
       return { data: novas, error: null };
     }
     const alvo = t.filter(casa);
-    if (op.modo === 'update') { alvo.forEach((l) => Object.assign(l, op.patch)); return { data: alvo, error: null }; }
+    if (op.modo === 'update') {
+      const conflito = alvo.some((l) => {
+        const k = chaveUnica({ ...l, ...op.patch });
+        return t.some((o) => o !== l && chaveUnica(o) === k);
+      });
+      if (conflito) return { data: null, error: { code: '23505', message: SEGREDO } };
+      alvo.forEach((l) => Object.assign(l, op.patch));
+      return { data: alvo, error: null };
+    }
     return { data: alvo.map((l) => ({ ...l })), error: null };
   };
   const q = {
@@ -91,8 +111,176 @@ async function chamar(handler, perfil, method, { query = {}, body, rawBody } = {
 }
 const escritas = () => estado.ops.filter((o) => o.modo !== 'select');
 
+// ── Unidades estruturadas (agrupador, andar, tipo) ──────────────────────────
+const doC1 = () => tabelas.unidades.filter((l) => l.cliente_id === C1);
+const acha = (bloco, nome) => doC1().find((l) => (l.bloco || '') === bloco && l.nome === nome);
+
+async function estruturadas() {
+  await caso('GET devolve bloco, andar, tipo, ordem e rotulo', async () => {
+    const r = await chamar(unidades, 'portaria', 'GET', {});
+    assert.strictEqual(r.code, 200);
+    const t = r.body.find((l) => l.id === U_T1);
+    assert.deepStrictEqual(
+      { id: t.id, bloco: t.bloco, nome: t.nome, andar: t.andar, tipo: t.tipo, ordem: t.ordem, rotulo: t.rotulo },
+      { id: U_T1, bloco: 'Torre 1', nome: '101', andar: '1', tipo: 'apartamento', ordem: 1, rotulo: 'Torre 1 · 101' });
+    assert.strictEqual(r.body.find((l) => l.id === U_C1).rotulo, 'Casa 1');
+    assert.ok(!r.body.some((l) => l.id === U_INATIVA));
+  });
+
+  await caso('POST unidades: cria, conta existentes (sem diferenciar maiúsculas), reativa inativa, recusa inválidas', async () => {
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [
+      { bloco: '  Torre 2 ', nome: ' 201 ', andar: ' 2 ', tipo: 'casa' },
+      { bloco: 'torre 1', nome: '101' },                 // já existe (maiúsculas diferentes)
+      { bloco: 'Torre 1', nome: '102', tipo: 'Loja' },   // inativa → reativa
+      { bloco: '', nome: '101', andar: '' },             // sem bloco: não colide com Torre 1 · 101
+      { bloco: 'Torre 2', nome: '202', tipo: 'garagem' },// tipo inválido
+      { bloco: 'Torre 2', nome: '   ' },                 // sem nome
+      { bloco: 'TORRE 2', nome: '201' },                 // duplicada no lote
+      { bloco: 'x'.repeat(41), nome: '1' },              // agrupador longo
+      { nome: '3', andar: '12345678901' },               // andar longo
+      { nome: 'x'.repeat(61) },                          // nome longo
+      'texto solto',                                     // não é objeto
+      { nome: 'Lote 7', tipo: 'FIP (Fração Ideal)' },    // rótulo vira id
+    ] } });
+    assert.strictEqual(r.code, 201);
+    assert.strictEqual(r.body.criadas, 4);
+    assert.strictEqual(r.body.ja_existiam, 1);
+    assert.deepStrictEqual(r.body.recusadas.map((x) => x.linha), [5, 6, 7, 8, 9, 10, 11]);
+    assert.ok(r.body.recusadas.every((x) => typeof x.motivo === 'string' && x.motivo));
+    assert.match(r.body.recusadas[0].motivo, /tipo/i);
+    assert.match(r.body.recusadas[2].motivo, /duplicad/i);
+    assert.ok(!JSON.stringify(r.body).includes('garagem'), 'motivo não ecoa a entrada');
+
+    const t2 = acha('Torre 2', '201');
+    assert.deepStrictEqual({ bloco: t2.bloco, nome: t2.nome, andar: t2.andar, tipo: t2.tipo }, { bloco: 'Torre 2', nome: '201', andar: '2', tipo: 'casa' });
+    const semBloco = acha('', '101');
+    assert.strictEqual(semBloco.bloco, null);
+    assert.strictEqual(semBloco.andar, null);
+    assert.strictEqual(semBloco.tipo, 'apartamento');
+    assert.strictEqual(acha('', 'Lote 7').tipo, 'fip');
+    const reativada = tabelas.unidades.find((l) => l.id === U_INATIVA);
+    assert.strictEqual(reativada.ativo, true);
+    assert.strictEqual(reativada.tipo, 'loja');
+    assert.strictEqual(doC1().filter((l) => l.bloco === 'Torre 1' && l.nome === '101').length, 1);
+    assert.ok(t2.ordem > 4, 'ordem continua após a maior');
+    const inserts = escritas().filter((o) => o.modo === 'insert');
+    assert.strictEqual(inserts.length, 1, 'um insert só, sem upsert');
+    assert.strictEqual(estado.auditoria.length, 1);
+  });
+
+  await caso('POST unidades: corpo inválido, lista vazia ou acima do limite → 400 sem escrever', async () => {
+    assert.strictEqual((await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: 'x' } })).code, 400);
+    assert.strictEqual((await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [] } })).code, 400);
+    const muitas = Array.from({ length: 2001 }, (_, i) => ({ nome: String(i) }));
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: muitas } });
+    assert.strictEqual(r.code, 400);
+    assert.match(r.body.error, /2000/);
+    assert.strictEqual(escritas().length, 0);
+  });
+
+  await caso('POST unidades: só inválidas → 201 sem escrever', async () => {
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [{ nome: '' }, { nome: '1', tipo: 'x' }] } });
+    assert.strictEqual(r.code, 201);
+    assert.deepStrictEqual({ criadas: r.body.criadas, ja_existiam: r.body.ja_existiam }, { criadas: 0, ja_existiam: 0 });
+    assert.strictEqual(r.body.recusadas.length, 2);
+    assert.strictEqual(escritas().length, 0);
+  });
+
+  await caso('POST unidades: roles e cliente (portaria/operador 403, outro cliente 403, super qualquer)', async () => {
+    const corpo = { cliente_id: C1, unidades: [{ nome: 'N1' }] };
+    assert.strictEqual((await chamar(unidades, 'portaria', 'POST', { body: corpo })).code, 403);
+    assert.strictEqual((await chamar(unidades, 'operador', 'POST', { body: corpo })).code, 403);
+    assert.strictEqual((await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C2, unidades: [{ nome: 'N1' }] } })).code, 403);
+    assert.strictEqual(escritas().length, 0);
+    const r = await chamar(unidades, 'super', 'POST', { body: { cliente_id: C2, unidades: [{ bloco: 'Q1', nome: 'L1', tipo: 'lote' }] } });
+    assert.strictEqual(r.code, 201);
+    assert.strictEqual(r.body.criadas, 1);
+    assert.ok(tabelas.unidades.find((l) => l.cliente_id === C2 && l.nome === 'L1' && l.tipo === 'lote'));
+  });
+
+  await caso('POST unidades: corrida (23505) relê e conta como já existentes, sem 500', async () => {
+    estado.antesDoInsert = () => tabelas.unidades.push({ id: 'corrida', cliente_id: C1, bloco: 'Torre 3', nome: '301', tipo: 'apartamento', ordem: 9, ativo: true });
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [{ bloco: 'Torre 3', nome: '301' }, { bloco: 'Torre 3', nome: '302' }] } });
+    assert.strictEqual(r.code, 201);
+    assert.strictEqual(r.body.criadas, 1);
+    assert.strictEqual(r.body.ja_existiam, 1);
+    assert.strictEqual(doC1().filter((l) => l.bloco === 'Torre 3').length, 2);
+  });
+
+  await caso('POST unidades: erro de escrita não é engolido → 500 sem detalhe', async () => {
+    const original = tabelas.unidades;
+    estado.antesDoInsert = () => { estado.erro = { code: 'XX000', message: SEGREDO }; };
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [{ nome: 'Nova X' }] } });
+    assert.strictEqual(r.code, 500);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    assert.ok(!original.some((l) => l.nome === 'Nova X'));
+  });
+
+  await caso('POST texto legado: sem bloco não colide com unidade de agrupador', async () => {
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, texto: '101' } });
+    assert.strictEqual(r.code, 201);
+    assert.deepStrictEqual(r.body, { criadas: 1, ja_existiam: 0, ignoradas: [] });
+    assert.ok(!acha('', '101').bloco);
+  });
+
+  await caso('PUT: edita bloco, nome, andar e tipo (trim, vazio vira null) + auditoria', async () => {
+    const r = await chamar(unidades, 'admin', 'PUT', { query: { id: U_T1 }, body: { bloco: '  ', nome: ' 101A ', andar: '', tipo: 'Sala' } });
+    assert.strictEqual(r.code, 200);
+    const l = tabelas.unidades.find((x) => x.id === U_T1);
+    assert.deepStrictEqual({ bloco: l.bloco, nome: l.nome, andar: l.andar, tipo: l.tipo }, { bloco: null, nome: '101A', andar: null, tipo: 'sala' });
+    assert.strictEqual(r.body.rotulo, '101A');
+    assert.strictEqual(r.body.tipo, 'sala');
+    assert.strictEqual(estado.auditoria[0].acao, 'atualizar');
+    const upd = escritas().find((o) => o.modo === 'update');
+    assert.ok(upd.filtros.some(([c, v]) => c === 'cliente_id' && v === C1));
+  });
+
+  await caso('PUT: só o campo enviado muda', async () => {
+    const r = await chamar(unidades, 'admin', 'PUT', { query: { id: U_T1 }, body: { andar: 'Térreo' } });
+    assert.strictEqual(r.code, 200);
+    const l = tabelas.unidades.find((x) => x.id === U_T1);
+    assert.deepStrictEqual({ bloco: l.bloco, nome: l.nome, andar: l.andar, tipo: l.tipo }, { bloco: 'Torre 1', nome: '101', andar: 'Térreo', tipo: 'apartamento' });
+    assert.strictEqual(r.body.rotulo, 'Torre 1 · 101');
+  });
+
+  await caso('PUT: conflito com outra unidade (inclusive desativada) → 409', async () => {
+    const r = await chamar(unidades, 'admin', 'PUT', { query: { id: U_T1 }, body: { nome: '102' } });
+    assert.strictEqual(r.code, 409);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    assert.strictEqual(tabelas.unidades.find((x) => x.id === U_T1).nome, '101');
+    const r2 = await chamar(unidades, 'admin', 'PUT', { query: { id: U_C1 }, body: { nome: 'CASA 1' } });
+    assert.strictEqual(r2.code, 200, 'trocar só a caixa do próprio nome não conflita');
+  });
+
+  await caso('PUT: tipo inválido, campo longo, nome vazio ou corpo sem campos → 400 sem escrever', async () => {
+    for (const body of [{ tipo: 'garagem' }, { nome: '' }, { nome: {} }, { nome: null }, { bloco: 'x'.repeat(41) }, { andar: '12345678901' }, {}]) {
+      const r = await chamar(unidades, 'admin', 'PUT', { query: { id: U_T1 }, body });
+      assert.strictEqual(r.code, 400, JSON.stringify(body));
+      assert.strictEqual(escritas().length, 0);
+    }
+  });
+
+  await caso('PUT: id de outro cliente → 404 (IDOR) sem escrever; inativa e inexistente → 404', async () => {
+    for (const id of [U_C2, U_INATIVA, '99999999-9999-4999-8999-999999999999']) {
+      const r = await chamar(unidades, 'admin', 'PUT', { query: { id }, body: { nome: 'Invasor' } });
+      assert.strictEqual(r.code, 404, id);
+      assert.strictEqual(escritas().length, 0);
+    }
+    assert.strictEqual(tabelas.unidades.find((x) => x.id === U_C2).nome, 'Casa 9');
+  });
+
+  await caso('PUT: id inválido → 400; portaria/operador → 403; super edita qualquer cliente', async () => {
+    assert.strictEqual((await chamar(unidades, 'admin', 'PUT', { query: { id: 'x' }, body: { nome: 'a' } })).code, 400);
+    assert.strictEqual((await chamar(unidades, 'portaria', 'PUT', { query: { id: U_T1 }, body: { nome: 'a' } })).code, 403);
+    assert.strictEqual((await chamar(unidades, 'operador', 'PUT', { query: { id: U_T1 }, body: { nome: 'a' } })).code, 403);
+    const r = await chamar(unidades, 'super', 'PUT', { query: { id: U_C2 }, body: { bloco: 'Quadra A' } });
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(r.body.rotulo, 'Quadra A · Casa 9');
+  });
+}
+
 let passou = 0;
-async function caso(nome, fn) { reset(); estado.erro = null; await fn(); passou++; console.log(`ok - ${nome}`); }
+async function caso(nome, fn) { reset(); estado.erro = null; estado.antesDoInsert = null; await fn(); passou++; console.log(`ok - ${nome}`); }
 console.error = () => {};
 
 (async () => {
@@ -161,9 +349,9 @@ console.error = () => {};
       assert.strictEqual(r.code, 201);
       assert.strictEqual(r.body.criadas, 1);
     });
-    await caso(`${nomeApi}: DELETE de id de outro cliente → 403 sem escrever`, async () => {
+    await caso(`${nomeApi}: DELETE de id de outro cliente → 404 sem escrever (não revela que existe)`, async () => {
       const r = await chamar(h, 'admin', 'DELETE', { query: { id: U_C2 } });
-      assert.strictEqual(r.code, 403);
+      assert.strictEqual(r.code, 404);
       assert.strictEqual(escritas().length, 0);
     });
     await caso(`${nomeApi}: DELETE com id inválido → 400`, async () => {
@@ -191,7 +379,8 @@ console.error = () => {};
     assert.strictEqual(estado.auditoria[0].acao, 'desativar');
   });
   await caso('método inválido → 405', async () => {
-    assert.strictEqual((await chamar(unidades, 'admin', 'PUT', {})).code, 405);
+    assert.strictEqual((await chamar(unidades, 'admin', 'PATCH', {})).code, 405);
   });
+  await estruturadas();
   console.log(`${passou} casos`);
 })().catch((e) => { console.error = () => {}; process.stderr.write(`${e.stack}\n`); process.exit(1); });
