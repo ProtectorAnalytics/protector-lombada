@@ -174,7 +174,7 @@ function lerAlteracoes(body, alvo) {
     mudancas.ativo = body.ativo;
   }
   const senha = body.senha !== undefined
-    ? validarSenha(body.senha, { usuario: usuarioDoAlvo(alvo), nome: alvo.nome })
+    ? validarSenha(body.senha, { usuario: usuarioDoAlvo(alvo), nome: mudancas.nome ?? alvo.nome })
     : null;
   if (!Object.keys(mudancas).length && !senha) throw new ErroHttp(400, 'Nada para alterar');
   return { mudancas, senha };

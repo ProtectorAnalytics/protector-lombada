@@ -3083,15 +3083,19 @@ async function saveUsuario(id) {
   else if (!id && !EMAIL_RE.test(email)) erros.push(['f-usr-email', 'E-mail inválido']);
   if (role !== 'super_admin' && !cliente_id) erros.push(['f-usr-cliente', 'Escolha o cliente deste perfil']);
   if (!id && !senha) erros.push(['f-usr-senha', 'Defina uma senha']);
-  else if (senha && senha.length < SENHA_MIN) erros.push(['f-usr-senha', `A senha precisa ter pelo menos ${SENHA_MIN} caracteres`]);
+  else if (senha && role === 'portaria') {
+    // mesma regra de /api/admin/porteiros (a API confere de novo)
+    const erroPorteiro = usuarioPortariaLib.erroSenhaPorteiro(senha, { usuario: email.split('@')[0], nome });
+    if (erroPorteiro) erros.push(['f-usr-senha', erroPorteiro]);
+  } else if (senha && senha.length < SENHA_MIN) erros.push(['f-usr-senha', `A senha precisa ter pelo menos ${SENHA_MIN} caracteres`]);
   if (aplicarErrosCampo(erros)) return;
 
   try {
     if (id) {
       const body = { id, nome, role, cliente_id };
       if (senha) body.senha = senha;
-      await api('/usuarios', 'PUT', body);
-      toast('Usuário atualizado!');
+      const r = await api('/usuarios', 'PUT', body);
+      if (r && r.aviso) toast(r.aviso, true); else toast('Usuário atualizado!');
     } else {
       await api('/usuarios', 'POST', { email, senha, nome, role, cliente_id });
       toast('Usuário criado!');
@@ -3105,7 +3109,10 @@ async function saveUsuario(id) {
 async function toggleUsuario(id, ativar) {
   try {
     if (ativar) { await api('/usuarios', 'PUT', { id, ativo: true }); toast('Usuário ativado!'); }
-    else { await api('/usuarios?id=' + id, 'DELETE'); toast('Usuário desativado!'); }
+    else {
+      const r = await api('/usuarios?id=' + id, 'DELETE');
+      if (r && r.aviso) toast(r.aviso, true); else toast('Usuário desativado!');
+    }
     loadUsuariosGlobal();
     if (currentDetailCliente) loadUsuariosCli();
   } catch (err) { toast(err.message, true); }

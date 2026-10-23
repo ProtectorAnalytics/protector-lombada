@@ -25,6 +25,11 @@
   const SENHA_MIN_PORTEIRO = 10;
   const SENHA_MAX_BYTES = 72; // limite do bcrypt no Supabase Auth, em bytes UTF-8
   const PARTE_MIN = 3;
+  const DISTINTOS_MIN = 5;
+  // Espaços e caracteres invisíveis (largura zero, direção de texto, BOM) não contam.
+  const SEM_CONTAR = /[\s\u00AD\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/gu;
+  // Recusadas em qualquer parte da senha (já normalizadas).
+  const TRECHOS_PROIBIDOS = Object.freeze(['portaria', 'porteiro', 'senha', 'condominio', '123456', 'abcdef', 'mudar', 'qwerty']);
   // Já normalizadas (minúsculas, sem acento, só letras e números).
   const SENHAS_COMUNS = Object.freeze([
     'portaria123', 'portaria1234', 'porteiro123', 'porteiro1234', '1234567890', '0123456789',
@@ -96,22 +101,28 @@
     return [...doUsuario, primeiroNome].map(soAlfanum).filter((p) => p.length >= PARTE_MIN);
   }
 
+  const MSG_COMUM = 'Essa senha é muito comum ou fácil de adivinhar. Escolha outra.';
+
   /**
    * Regra da senha do porteiro. Devolve a mensagem do problema ou null se a
-   * senha serve: 10+ caracteres, até 72 bytes, letras e números, nada do
-   * usuário nem do primeiro nome e fora da lista de senhas comuns.
+   * senha serve: 10+ caracteres sem contar espaços e invisíveis, até 72
+   * bytes, letras e números, 5+ caracteres diferentes, nada do usuário nem do
+   * primeiro nome e sem palavras/sequências óbvias.
    */
   function erroSenhaPorteiro(senha, { usuario, nome } = {}) {
-    if (typeof senha !== 'string' || [...senha].length < SENHA_MIN_PORTEIRO) {
-      return `A senha precisa ter pelo menos ${SENHA_MIN_PORTEIRO} caracteres.`;
+    const visiveis = typeof senha === 'string' ? [...senha.replace(SEM_CONTAR, '')] : [];
+    if (visiveis.length < SENHA_MIN_PORTEIRO) {
+      return `A senha precisa ter pelo menos ${SENHA_MIN_PORTEIRO} caracteres (espaços não contam).`;
     }
     if (bytesUtf8(senha) > SENHA_MAX_BYTES) return 'A senha está longa demais. Use uma senha mais curta (acentos ocupam mais espaço).';
-    const simples = soAlfanum(senha);
-    if (SENHAS_COMUNS.includes(simples)) return 'Essa senha é muito comum. Escolha outra.';
     if (!/\p{L}/u.test(senha) || !/\d/.test(senha)) return 'Use letras e números na senha.';
+    const distintos = new Set(visiveis.map((c) => semAcento(c).toLowerCase()));
+    if (distintos.size < DISTINTOS_MIN) return `Use pelo menos ${DISTINTOS_MIN} caracteres diferentes na senha.`;
+    const simples = soAlfanum(senha);
     if (partesProibidas(usuario, nome).some((p) => simples.includes(p))) {
       return 'A senha não pode ter o usuário nem o nome do porteiro.';
     }
+    if (SENHAS_COMUNS.includes(simples) || TRECHOS_PROIBIDOS.some((t) => simples.includes(t))) return MSG_COMUM;
     return null;
   }
 

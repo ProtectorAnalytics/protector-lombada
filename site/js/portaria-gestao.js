@@ -209,7 +209,7 @@
   <label class="ed-campo"><span>Nova senha (mínimo ${gp.SENHA_MIN} caracteres; letras e números, sem o nome)</span>
     <span class="pg-senha"><input type="password" name="senha" autocomplete="new-password">
     <button type="button" class="btn btn-ghost btn-sm" data-acao="mostrar-senha" aria-pressed="false">Mostrar</button></span></label>
-  <p class="pg-dica">Trocar a senha desconecta os aparelhos em que esse porteiro já estava logado.</p>
+  <p class="pg-dica">Os aparelhos em que esse porteiro já estava logado saem em até 1 hora depois da troca.</p>
   <p class="pg-erro" role="alert"></p>
   <div class="pg-form-acoes">
     <button type="button" class="btn btn-ghost btn-sm" data-acao="cancelar-troca">Cancelar</button>
@@ -610,14 +610,15 @@
     const erro = form.querySelector('.pg-erro');
     const senha = form.elements.senha.value;
     const alvo = P.lista.find((x) => x.id === form.dataset.id) || {};
-    erro.textContent = gp.erroSenha(senha, { usuario: alvo.usuario, nome: alvo.nome });
+    // porteiro antigo com e-mail: vale a parte antes do @, como na API
+    erro.textContent = gp.erroSenha(senha, { usuario: String(alvo.usuario || '').split('@')[0], nome: alvo.nome });
     if (erro.textContent) { form.elements.senha.focus(); return; }
     botao.disabled = true;
     try {
       const r = await P.api(`/porteiros?id=${encodeURIComponent(form.dataset.id)}`, 'PUT', { senha });
       form.remove();
       if (r && r.aviso) P.toast(r.aviso, true);
-      else P.toast('Senha trocada! Os aparelhos conectados foram desligados.');
+      else P.toast('Senha trocada! Os aparelhos em que o porteiro já estava logado saem em até 1 hora.');
     } catch (err) { erro.textContent = gp.mensagemErro(err); botao.disabled = false; }
   }
 

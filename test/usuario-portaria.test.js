@@ -72,8 +72,8 @@ caso('senha forte: menos de 10 caracteres ou tipo errado → mínimo', () => {
 });
 
 caso('senha forte: limite de 72 bytes (UTF-8), não de caracteres', () => {
-  assert.strictEqual(erroSenhaPorteiro(`a1${'b'.repeat(70)}`, QUEM), null, '72 bytes passa');
-  assert.match(erroSenhaPorteiro(`a1${'b'.repeat(71)}`, QUEM), /longa/);
+  assert.strictEqual(erroSenhaPorteiro(`Tucano8Verde${'x'.repeat(60)}`, QUEM), null, '72 bytes passa');
+  assert.match(erroSenhaPorteiro(`Tucano8Verde${'x'.repeat(61)}`, QUEM), /longa/);
   // 40 caracteres, mas "ç" ocupa 2 bytes: 2 + 38*2 = 78 bytes
   assert.match(erroSenhaPorteiro(`a1${'ç'.repeat(38)}`, QUEM), /longa/);
 });
@@ -89,7 +89,7 @@ caso('senha forte: não pode conter o usuário, partes dele ou o primeiro nome',
     assert.match(erroSenhaPorteiro(s, QUEM), /nome/, s);
   }
   // partes com menos de 3 letras não contam
-  assert.strictEqual(erroSenhaPorteiro('ze1234567890', { usuario: 'ze.mar', nome: 'Zé' }), null);
+  assert.strictEqual(erroSenhaPorteiro('ze7Tucano98', { usuario: 'ze.mar', nome: 'Zé' }), null);
   // nome (não o usuário) também conta, sem acento e sem diferença de maiúsculas
   assert.match(erroSenhaPorteiro('ANTONIA2026x', { usuario: 'toninha.mar', nome: 'Antônia Lima' }), /nome/);
 });
@@ -100,6 +100,24 @@ caso('senha forte: recusa senhas comuns (normalizadas)', () => {
   }
   assert.match(erroSenhaPorteiro('qwerty1234', QUEM), /comum/);
   assert.match(erroSenhaPorteiro('Mudar12345', QUEM), /comum/);
+});
+
+caso('senha forte (rodada 2): espaços e invisíveis não contam; 5+ caracteres distintos', () => {
+  assert.match(erroSenhaPorteiro('aaaaaaaaa1', QUEM), /diferentes/);
+  assert.match(erroSenhaPorteiro(`a1${' '.repeat(8)}`, QUEM), /pelo menos 10/);
+  assert.match(erroSenhaPorteiro(`a1${'​'.repeat(8)}`, QUEM), /pelo menos 10/);
+  assert.match(erroSenhaPorteiro(`a1b2${'﻿⁠‮'.repeat(3)}`, QUEM), /pelo menos 10/);
+  assert.match(erroSenhaPorteiro('ababab1212', QUEM), /diferentes/);
+  assert.strictEqual(erroSenhaPorteiro('abcde12345', QUEM), null, '10 distintos, sem sequência proibida');
+  assert.strictEqual(erroSenhaPorteiro('Lua cheia 77', QUEM), null, 'espaço no meio é permitido se o resto basta');
+});
+
+caso('senha forte (rodada 2): palavras e sequências óbvias em qualquer parte', () => {
+  for (const s of ['Portaria2026', 'xxPORTEIRO9', 'minhaSenha42', 'Condomínio77', 'zz123456xy', 'abcdefg1', 'ABCDEF9876', 'Mudar2026xy', 'qwerty2026x']) {
+    assert.match(erroSenhaPorteiro(s, QUEM) || '', /comum|fácil|pelo menos/, s);
+  }
+  assert.match(erroSenhaPorteiro('Portaria2026', QUEM), /fácil de adivinhar/);
+  assert.strictEqual(erroSenhaPorteiro('Tucano8Verde', QUEM), null);
 });
 
 // ---------------------------------------------------------------- recuperação de senha

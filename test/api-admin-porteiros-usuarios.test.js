@@ -331,6 +331,12 @@ console.error = () => {};
     assert.match(r.body.error, /usuário nem o nome/);
     semEscrita();
   });
+  await caso('PUT com nome e senha juntos valida a senha contra o nome NOVO', async () => {
+    const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'Carlos Lima', senha: 'Carlos2026xy' } });
+    assert.strictEqual(r.code, 400);
+    assert.match(r.body.error, /nome/);
+    semEscrita();
+  });
   await caso('PUT só nome ou reativar não mexe nas sessões', async () => {
     await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'Zé' } });
     assert.deepStrictEqual(estado.rpc, []);
