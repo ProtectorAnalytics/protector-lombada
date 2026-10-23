@@ -141,29 +141,44 @@ begin
     raise exception 'FALHOU: vincular_placa sem trava por chave (pg_advisory_xact_lock)';
   end if;
 
-  -- 4c) Recadastro após encerramento: o novo vínculo começa no fim do antigo
-  --     (não volta a valer "desde sempre"). Passagem anterior ao encerramento
-  --     continua de A; posterior é de B.
+  -- 4c) Recadastro de placa com histórico: o novo vínculo vale a partir do
+  --     cadastro (now()), não do encerramento do anterior. O intervalo entre
+  --     T1 (A encerrado) e T2 (B cadastrado) não casa com ninguém. Dentro de
+  --     uma transação now() é constante; por isso T1 é fixado no passado.
   v1 := public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ7G77', 'morador', 'Morador A',
          'Casa 10', null, null, null, 'painel', null, null);
-  update veiculos set encerrado_em = now() - interval '1 day' where id = v1.id;
+  if v1.vigente_desde is not null then
+    raise exception 'FALHOU: placa que nunca teve vínculo deve ficar com vigente_desde null';
+  end if;
+  update veiculos set encerrado_em = now() - interval '2 days' where id = v1.id;
   v2 := public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ7677', 'morador', 'Morador B',
          'Casa 10', null, null, null, 'painel', null, null);
-  if v2.vigente_desde is distinct from now() - interval '1 day' then
-    raise exception 'FALHOU: recadastro após encerramento com vigente_desde % (esperado o encerrado_em do anterior)',
-      v2.vigente_desde;
+  if v2.vigente_desde is distinct from now() then
+    raise exception 'FALHOU: recadastro com histórico com vigente_desde % (esperado now())', v2.vigente_desde;
   end if;
+  if not (v2.vigente_desde > (select encerrado_em from veiculos where id = v1.id)) then
+    raise exception 'FALHOU: vigente_desde de B não é posterior ao encerramento de A';
+  end if;
+  -- passagem entre T1 e T2 (há 1 dia): ninguém
   if (select string_agg(nome_morador, ',') from veiculos
        where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and placa_mercosul(placa) = 'ZZZ7G77'
-         and (vigente_desde is null or vigente_desde <= now() - interval '2 days')
-         and (encerrado_em is null or encerrado_em > now() - interval '2 days')) is distinct from 'Morador A' then
+         and (vigente_desde is null or vigente_desde <= now() - interval '1 day')
+         and (encerrado_em is null or encerrado_em > now() - interval '1 day')) is not null then
+    raise exception 'FALHOU: passagem entre o encerramento e o recadastro deveria ser Sem cadastro';
+  end if;
+  -- passagem antes de T1 (há 3 dias): só A
+  if (select string_agg(nome_morador, ',') from veiculos
+       where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and placa_mercosul(placa) = 'ZZZ7G77'
+         and (vigente_desde is null or vigente_desde <= now() - interval '3 days')
+         and (encerrado_em is null or encerrado_em > now() - interval '3 days')) is distinct from 'Morador A' then
     raise exception 'FALHOU: passagem anterior ao encerramento não é só de A';
   end if;
+  -- passagem depois de T2 (daqui a 1 hora): só B
   if (select string_agg(nome_morador, ',') from veiculos
        where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and placa_mercosul(placa) = 'ZZZ7G77'
-         and (vigente_desde is null or vigente_desde <= now() - interval '12 hours')
-         and (encerrado_em is null or encerrado_em > now() - interval '12 hours')) is distinct from 'Morador B' then
-    raise exception 'FALHOU: passagem posterior ao encerramento não é só de B';
+         and (vigente_desde is null or vigente_desde <= now() + interval '1 hour')
+         and (encerrado_em is null or encerrado_em > now() + interval '1 hour')) is distinct from 'Morador B' then
+    raise exception 'FALHOU: passagem posterior ao recadastro não é só de B';
   end if;
   delete from veiculos where placa_mercosul(placa) = 'ZZZ7G77'
      and cliente_id = '00000000-0000-0000-0000-00000000aaaa';

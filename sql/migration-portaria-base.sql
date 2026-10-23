@@ -304,11 +304,18 @@ begin
     update public.veiculos set encerrado_em = v_agora where id = v_atual.id;
     v_desde := v_agora;
   else
-    -- null só se a placa nunca teve vínculo neste cliente
-    select max(encerrado_em) into v_desde
-      from public.veiculos
-     where cliente_id = p_cliente_id
-       and public.placa_mercosul(placa) = v_chave;
+    -- Sem vigente: se a placa já teve algum vínculo neste cliente, o novo vale
+    -- a partir de agora (o intervalo entre o encerramento e o recadastro fica
+    -- "Sem cadastro"). Só placa que nunca teve vínculo fica retroativa (null).
+    if exists (
+      select 1 from public.veiculos
+       where cliente_id = p_cliente_id
+         and public.placa_mercosul(placa) = v_chave
+    ) then
+      v_desde := v_agora;
+    else
+      v_desde := null;
+    end if;
   end if;
 
   begin
