@@ -15,7 +15,8 @@ const U_INATIVA = 'abababab-abab-4bab-8bab-abababababab';
 const SEGREDO = 'detalhe-interno-secreto';
 
 let tabelas;
-const estado = { perfil: null, ops: [], auditoria: [], erro: null, antesDoInsert: null };
+const estado = { perfil: null, ops: [], auditoria: [], erro: null, antesDoInsert: null, emVoo: 0, maxEmVoo: 0, erroUpdate: null };
+const MAX_ROWS = 1000; // corte do PostgREST em cada leitura
 const chaveUnica = (l) => `${l.cliente_id}|${String(l.bloco || '').toLowerCase()}|${String(l.nome).toLowerCase()}`;
 
 function reset() {
@@ -56,6 +57,7 @@ function tabela(nome) {
     }
     const alvo = t.filter(casa);
     if (op.modo === 'update') {
+      if (estado.erroUpdate && estado.erroUpdate(op)) return { data: null, error: { code: 'XX000', message: SEGREDO } };
       const conflito = alvo.some((l) => {
         const k = chaveUnica({ ...l, ...op.patch });
         return t.some((o) => o !== l && chaveUnica(o) === k);
@@ -64,7 +66,8 @@ function tabela(nome) {
       alvo.forEach((l) => Object.assign(l, op.patch));
       return { data: alvo, error: null };
     }
-    return { data: alvo.map((l) => ({ ...l })), error: null };
+    const [de, ate] = op.range || [0, Infinity];
+    return { data: alvo.slice(de, Math.min(ate + 1, de + MAX_ROWS)).map((l) => ({ ...l })), error: null };
   };
   const q = {
     select() { return q; },
@@ -72,8 +75,14 @@ function tabela(nome) {
     update(p) { op.modo = 'update'; op.patch = p; return q; },
     eq(c, v) { op.filtros.push([c, v]); return q; },
     order() { return q; },
+    range(de, ate) { op.range = [de, ate]; return q; },
     maybeSingle() { const r = executar(); return Promise.resolve({ data: r.data && r.data[0] || null, error: r.error }); },
-    then(ok, falha) { return Promise.resolve(executar()).then(ok, falha); },
+    then(ok, falha) {
+      if (op.modo !== 'update') return Promise.resolve(executar()).then(ok, falha);
+      // Update assíncrono para medir quantos ficam em voo ao mesmo tempo.
+      estado.emVoo++; estado.maxEmVoo = Math.max(estado.maxEmVoo, estado.emVoo);
+      return new Promise((fim) => setImmediate(() => { estado.emVoo--; fim(executar()); })).then(ok, falha);
+    },
   };
   return q;
 }
@@ -207,6 +216,56 @@ async function estruturadas() {
     assert.strictEqual(doC1().filter((l) => l.bloco === 'Torre 3').length, 2);
   });
 
+  await caso('POST unidades: mais de 1000 existentes são lidas em páginas (sem 409 permanente)', async () => {
+    for (let i = 0; i < 1500; i++) {
+      tabelas.unidades.push({ id: `g-${i}`, cliente_id: C1, bloco: 'Torre G', nome: String(i), tipo: 'apartamento', ordem: 10 + i, ativo: true });
+    }
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [
+      { bloco: 'Torre G', nome: '1499' }, { bloco: 'torre g', nome: '1200' }, { bloco: 'Torre G', nome: '1500' },
+    ] } });
+    assert.strictEqual(r.code, 201);
+    assert.deepStrictEqual({ criadas: r.body.criadas, ja_existiam: r.body.ja_existiam }, { criadas: 1, ja_existiam: 2 });
+    assert.strictEqual(acha('Torre G', '1500').ordem, 10 + 1500, 'ordem continua após a maior, mesmo além da 1ª página');
+    const leituras = estado.ops.filter((o) => o.modo === 'select' && o.range);
+    assert.ok(leituras.length >= 2, 'leu mais de uma página');
+  });
+
+  await caso('POST unidades: reativação em grupos paralelos, presa ao cliente', async () => {
+    for (let i = 0; i < 25; i++) {
+      tabelas.unidades.push({ id: `r-${i}`, cliente_id: C1, bloco: 'Torre R', nome: String(i), tipo: 'apartamento', ordem: 0, ativo: false });
+    }
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades:
+      Array.from({ length: 25 }, (_, i) => ({ bloco: 'Torre R', nome: String(i), tipo: i % 2 ? 'casa' : 'loja' })) } });
+    assert.strictEqual(r.code, 201);
+    assert.strictEqual(r.body.criadas, 25);
+    const torreR = doC1().filter((l) => l.bloco === 'Torre R');
+    assert.ok(torreR.every((l) => l.ativo && l.tipo === (Number(l.nome) % 2 ? 'casa' : 'loja')));
+    assert.strictEqual(new Set(torreR.map((l) => l.ordem)).size, 25, 'cada uma com a sua ordem');
+    const updates = escritas().filter((o) => o.modo === 'update');
+    assert.strictEqual(updates.length, 25);
+    assert.ok(updates.every((o) => o.filtros.some(([c, v]) => c === 'cliente_id' && v === C1)));
+    assert.ok(estado.maxEmVoo > 1, 'não é um por vez');
+    assert.ok(estado.maxEmVoo <= 10, 'no máximo 10 em voo');
+  });
+
+  await caso('POST unidades: falha numa reativação → 500 sem detalhe e sem insert', async () => {
+    tabelas.unidades.push({ id: 'r-x', cliente_id: C1, bloco: 'Torre R', nome: 'X', tipo: 'apartamento', ordem: 0, ativo: false });
+    estado.erroUpdate = (op) => op.filtros.some(([c, v]) => c === 'id' && v === 'r-x');
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [{ bloco: 'Torre R', nome: 'X' }, { nome: 'Nova Y' }] } });
+    assert.strictEqual(r.code, 500);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    assert.ok(!acha('', 'Nova Y'));
+  });
+
+  await caso('POST unidades: corrida dupla (23505 duas vezes) → 409 sem detalhe', async () => {
+    const corrida = (n) => () => tabelas.unidades.push({ id: `c-${n}`, cliente_id: C1, bloco: 'Torre 4', nome: `40${n}`, tipo: 'apartamento', ordem: 9, ativo: true });
+    estado.antesDoInsert = () => { corrida(1)(); estado.antesDoInsert = corrida(2); };
+    const r = await chamar(unidades, 'admin', 'POST', { body: { cliente_id: C1, unidades: [1, 2, 3].map((n) => ({ bloco: 'Torre 4', nome: `40${n}` })) } });
+    assert.strictEqual(r.code, 409);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    assert.ok(!acha('Torre 4', '403'));
+  });
+
   await caso('POST unidades: erro de escrita não é engolido → 500 sem detalhe', async () => {
     const original = tabelas.unidades;
     estado.antesDoInsert = () => { estado.erro = { code: 'XX000', message: SEGREDO }; };
@@ -280,7 +339,7 @@ async function estruturadas() {
 }
 
 let passou = 0;
-async function caso(nome, fn) { reset(); estado.erro = null; estado.antesDoInsert = null; await fn(); passou++; console.log(`ok - ${nome}`); }
+async function caso(nome, fn) { reset(); estado.erro = null; estado.antesDoInsert = null; estado.erroUpdate = null; estado.emVoo = 0; estado.maxEmVoo = 0; await fn(); passou++; console.log(`ok - ${nome}`); }
 console.error = () => {};
 
 (async () => {
