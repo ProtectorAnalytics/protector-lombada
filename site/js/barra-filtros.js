@@ -6,15 +6,15 @@
  * Tudo lê o estado único de estado-filtros.js; nada aqui toca no DOM.
  *
  * Carregado no browser (window.barraFiltrosLib, depois de placa.js,
- * filtro-veiculo.js e estado-filtros.js) e no Node (require).
+ * filtro-veiculo.js, filtro-cadastro.js e estado-filtros.js) e no Node (require).
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./estado-filtros'), require('./filtro-veiculo'), require('./placa'));
+    module.exports = factory(require('./estado-filtros'), require('./filtro-veiculo'), require('./placa'), require('./filtro-cadastro'));
   } else {
-    root.barraFiltrosLib = factory(root.estadoFiltrosLib, root.filtroVeiculoLib, root.placaLib);
+    root.barraFiltrosLib = factory(root.estadoFiltrosLib, root.filtroVeiculoLib, root.placaLib, root.filtroCadastroLib);
   }
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (estado, filtroVeiculo, placaLib) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (estado, filtroVeiculo, placaLib, filtroCadastro) {
   'use strict';
   const SUGESTOES_MAX = 8;
   const BUSCA_MIN = 2;
@@ -60,6 +60,8 @@
     if (f.soAlertas) add('alerta', 'Acima do limite');
     if (f.naoCadastrados) add('naoCadastrados', 'Não cadastrados');
     if (f.placa) add('placa', `Placa contém ${f.placa}`);
+    if (f.tipoCadastro) add('tipoCadastro', `Cadastro: ${filtroCadastro.rotuloTipo(f.tipoCadastro)}`);
+    if (f.unidade) add('unidade', `Unidade: ${f.unidade}`);
     if (v.marca) add('marca', `Marca: ${v.marca}`);
     if (v.modelo) add('modelo', `Modelo: ${v.modelo}`);
     if (v.cor) add('cor', `Cor: ${nomeCor(v.cor)}`);

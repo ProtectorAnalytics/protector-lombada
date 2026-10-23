@@ -30,7 +30,7 @@ caso('clique leva placa e o dia LOCAL do recorde', () => {
 
 caso('valor do clique vira filtro da placa no dia do recorde e limpa o que esconderia a passagem', () => {
   assert.deepStrictEqual(mudancaDoRecorde('ABC1D23|2026-10-14'), {
-    placa: 'ABC1D23', cameraId: '', soAlertas: false, naoCadastrados: false,
+    placa: 'ABC1D23', cameraId: '', soAlertas: false, naoCadastrados: false, tipoCadastro: '', unidade: '',
     velMin: 0, velMax: null,
     veiculo: { marca: '', modelo: '', cor: '', anoDe: null, anoAte: null },
     dataInicio: '2026-10-14', horaInicio: '00:00', dataFim: '2026-10-14', horaFim: '23:59',
