@@ -7,6 +7,29 @@
 -- uma linha com resultado = 'ok'. Falha com exceção 'FALHOU: ...' em cada item.
 begin;
 
+-- ── Migração dos dados (vale quando a migration roda nesta mesma transação,
+--    antes de qualquer insert do teste) ───────────────────────────────────────
+do $$
+declare
+  n int;
+begin
+  select count(*) into n from veiculos where origem is distinct from 'migracao';
+  if n <> 0 then raise exception 'FALHOU: % veiculos migrados sem origem migracao', n; end if;
+  select count(*) into n from veiculos
+   where encerrado_em is not null and vigente_desde is distinct from encerrado_em;
+  if n <> 0 then
+    raise exception 'FALHOU: % encerrados na migração sem vigente_desde = encerrado_em (janela vazia)', n;
+  end if;
+  select count(*) into n from veiculos where encerrado_em is null and vigente_desde is not null;
+  if n <> 0 then raise exception 'FALHOU: % vigentes migrados com vigente_desde', n; end if;
+  select count(*) into n from veiculos where ativo is distinct from (encerrado_em is null);
+  if n <> 0 then raise exception 'FALHOU: % veiculos com ativo fora de sincronia', n; end if;
+  select count(*) into n from (
+    select 1 from veiculos where encerrado_em is null
+     group by cliente_id, placa_mercosul(placa) having count(*) > 1) d;
+  if n <> 0 then raise exception 'FALHOU: % chaves com mais de um vigente após a migração', n; end if;
+end $$;
+
 -- Dois clientes e três usuários fictícios: admin e portaria do A, admin do B
 insert into clientes (id, nome, local_via, cidade_uf, limite_velocidade) values
   ('00000000-0000-0000-0000-00000000aaaa', 'Teste Portaria A', 'Via Teste A', 'Cidade Teste/XX', 30),
@@ -118,6 +141,33 @@ begin
     raise exception 'FALHOU: vincular_placa sem trava por chave (pg_advisory_xact_lock)';
   end if;
 
+  -- 4c) Recadastro após encerramento: o novo vínculo começa no fim do antigo
+  --     (não volta a valer "desde sempre"). Passagem anterior ao encerramento
+  --     continua de A; posterior é de B.
+  v1 := public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ7G77', 'morador', 'Morador A',
+         'Casa 10', null, null, null, 'painel', null, null);
+  update veiculos set encerrado_em = now() - interval '1 day' where id = v1.id;
+  v2 := public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ7677', 'morador', 'Morador B',
+         'Casa 10', null, null, null, 'painel', null, null);
+  if v2.vigente_desde is distinct from now() - interval '1 day' then
+    raise exception 'FALHOU: recadastro após encerramento com vigente_desde % (esperado o encerrado_em do anterior)',
+      v2.vigente_desde;
+  end if;
+  if (select string_agg(nome_morador, ',') from veiculos
+       where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and placa_mercosul(placa) = 'ZZZ7G77'
+         and (vigente_desde is null or vigente_desde <= now() - interval '2 days')
+         and (encerrado_em is null or encerrado_em > now() - interval '2 days')) is distinct from 'Morador A' then
+    raise exception 'FALHOU: passagem anterior ao encerramento não é só de A';
+  end if;
+  if (select string_agg(nome_morador, ',') from veiculos
+       where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and placa_mercosul(placa) = 'ZZZ7G77'
+         and (vigente_desde is null or vigente_desde <= now() - interval '12 hours')
+         and (encerrado_em is null or encerrado_em > now() - interval '12 hours')) is distinct from 'Morador B' then
+    raise exception 'FALHOU: passagem posterior ao encerramento não é só de B';
+  end if;
+  delete from veiculos where placa_mercosul(placa) = 'ZZZ7G77'
+     and cliente_id = '00000000-0000-0000-0000-00000000aaaa';
+
   -- 5) unidade_id de outro cliente é recusada.
   begin
     perform public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ2B22', 'morador', 'Cicrano',
@@ -191,13 +241,17 @@ begin
   exception when insufficient_privilege then null;
   end;
 
-  delete from veiculos;
-  get diagnostics n = row_count;
-  if n <> 0 then raise exception 'FALHOU: portaria apagou % veiculos', n; end if;
+  begin
+    delete from veiculos;
+    raise exception 'FALHOU: portaria tem privilégio de apagar veiculos';
+  exception when insufficient_privilege then null;
+  end;
 
-  update veiculos set marca = 'X';
-  get diagnostics n = row_count;
-  if n <> 0 then raise exception 'FALHOU: portaria alterou % veiculos', n; end if;
+  begin
+    update veiculos set marca = 'X';
+    raise exception 'FALHOU: portaria tem privilégio de alterar veiculos';
+  exception when insufficient_privilege then null;
+  end;
 
   begin
     insert into unidades (cliente_id, nome) values ('00000000-0000-0000-0000-00000000aaaa', 'Casa 99');
@@ -210,6 +264,73 @@ begin
     perform public.vincular_placa('00000000-0000-0000-0000-00000000aaaa', 'ZZZ5E55', 'morador', 'X',
             null, null, null, null, 'portaria', null, null);
     raise exception 'FALHOU: authenticated executou vincular_placa';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- ── Colunas sensíveis e selects do painel (perfil: portaria) ───────────────
+-- As strings de select abaixo são cópia exata das usadas por dashboard/index.html
+-- (COLUNAS_CLIENTE_PAINEL e os selects de cameras/veiculos). Mudou lá, muda aqui.
+do $$
+declare
+  n int;
+  col text;
+begin
+  foreach col in array array['notif_emails', 'emails_notificacao', 'telefone', 'contato_nome', 'cnpj',
+                              'user_id', 'cep', 'endereco'] loop
+    begin
+      execute format('select count(%I) from clientes', col);
+      raise exception 'FALHOU: portaria lê clientes.%', col;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  foreach col in array array['token', 'ip_address', 'mac_address'] loop
+    begin
+      execute format('select count(%I) from cameras', col);
+      raise exception 'FALHOU: portaria lê cameras.%', col;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+
+  -- loadProfile / abrirComoAdmin / loadClienteLegado
+  select count(*) into n from (
+    select id, nome, local_via, cidade_uf, limite_velocidade, ativo, pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, pdf_corpo_texto
+      from clientes where id = '00000000-0000-0000-0000-00000000aaaa' and ativo = true) x;
+  if n <> 1 then raise exception 'FALHOU: portaria não lê o próprio cliente pelas colunas do painel (% linhas)', n; end if;
+  select count(*) into n from (
+    select id, nome, local_via, cidade_uf, limite_velocidade, ativo, pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, pdf_corpo_texto
+      from clientes where ativo = true) x;
+  if n <> 1 then raise exception 'FALHOU: portaria lê % clientes ativos no caminho legado (esperado 1)', n; end if;
+  -- preencherSeletorClientes
+  perform id, nome from clientes where ativo = true order by nome;
+  -- carregar câmeras / status das câmeras
+  select count(*) into n from (
+    select id, nome, nome_exibicao, serial_number, modelo, firmware
+      from cameras where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and ativa = true) x;
+  if n <> 1 then raise exception 'FALHOU: portaria não lê câmeras (% linhas)', n; end if;
+  select count(*) into n from (
+    select id, nome, nome_exibicao, last_seen, ativa
+      from cameras where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and ativa = true) x;
+  if n <> 1 then raise exception 'FALHOU: portaria não lê status das câmeras (% linhas)', n; end if;
+  -- vínculos de placa
+  perform id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, marca, cor, vigente_desde, encerrado_em,
+          criado_em, origem, cadastrado_por
+     from veiculos where cliente_id = '00000000-0000-0000-0000-00000000aaaa' order by placa, id;
+
+  -- escrita direta em veiculos: só pela API (vincular_placa)
+  begin
+    insert into veiculos (cliente_id, placa) values ('00000000-0000-0000-0000-00000000aaaa', 'ZZZ8H88');
+    raise exception 'FALHOU: portaria inseriu em veiculos';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update veiculos set vigente_desde = now() where cliente_id = '00000000-0000-0000-0000-00000000aaaa';
+    raise exception 'FALHOU: portaria alterou veiculos';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    delete from veiculos where cliente_id = '00000000-0000-0000-0000-00000000aaaa';
+    raise exception 'FALHOU: portaria apagou veiculos';
   exception when insufficient_privilege then null;
   end;
 end $$;
@@ -230,6 +351,73 @@ begin
   if public.my_role() is distinct from 'admin_cliente' then
     raise exception 'FALHOU: my_role() do admin devolveu %', public.my_role();
   end if;
+end $$;
+
+-- ── Colunas sensíveis e selects do painel (perfil: admin_cliente) ───────────────
+-- As strings de select abaixo são cópia exata das usadas por dashboard/index.html
+-- (COLUNAS_CLIENTE_PAINEL e os selects de cameras/veiculos). Mudou lá, muda aqui.
+do $$
+declare
+  n int;
+  col text;
+begin
+  foreach col in array array['notif_emails', 'emails_notificacao', 'telefone', 'contato_nome', 'cnpj',
+                              'user_id', 'cep', 'endereco'] loop
+    begin
+      execute format('select count(%I) from clientes', col);
+      raise exception 'FALHOU: admin_cliente lê clientes.%', col;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  foreach col in array array['token', 'ip_address', 'mac_address'] loop
+    begin
+      execute format('select count(%I) from cameras', col);
+      raise exception 'FALHOU: admin_cliente lê cameras.%', col;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+
+  -- loadProfile / abrirComoAdmin / loadClienteLegado
+  select count(*) into n from (
+    select id, nome, local_via, cidade_uf, limite_velocidade, ativo, pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, pdf_corpo_texto
+      from clientes where id = '00000000-0000-0000-0000-00000000aaaa' and ativo = true) x;
+  if n <> 1 then raise exception 'FALHOU: admin_cliente não lê o próprio cliente pelas colunas do painel (% linhas)', n; end if;
+  select count(*) into n from (
+    select id, nome, local_via, cidade_uf, limite_velocidade, ativo, pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, pdf_corpo_texto
+      from clientes where ativo = true) x;
+  if n <> 1 then raise exception 'FALHOU: admin_cliente lê % clientes ativos no caminho legado (esperado 1)', n; end if;
+  -- preencherSeletorClientes
+  perform id, nome from clientes where ativo = true order by nome;
+  -- carregar câmeras / status das câmeras
+  select count(*) into n from (
+    select id, nome, nome_exibicao, serial_number, modelo, firmware
+      from cameras where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and ativa = true) x;
+  if n <> 1 then raise exception 'FALHOU: admin_cliente não lê câmeras (% linhas)', n; end if;
+  select count(*) into n from (
+    select id, nome, nome_exibicao, last_seen, ativa
+      from cameras where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and ativa = true) x;
+  if n <> 1 then raise exception 'FALHOU: admin_cliente não lê status das câmeras (% linhas)', n; end if;
+  -- vínculos de placa
+  perform id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, marca, cor, vigente_desde, encerrado_em,
+          criado_em, origem, cadastrado_por
+     from veiculos where cliente_id = '00000000-0000-0000-0000-00000000aaaa' order by placa, id;
+
+  -- escrita direta em veiculos: só pela API (vincular_placa)
+  begin
+    insert into veiculos (cliente_id, placa) values ('00000000-0000-0000-0000-00000000aaaa', 'ZZZ8H88');
+    raise exception 'FALHOU: admin_cliente inseriu em veiculos';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update veiculos set vigente_desde = now() where cliente_id = '00000000-0000-0000-0000-00000000aaaa';
+    raise exception 'FALHOU: admin_cliente alterou veiculos';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    delete from veiculos where cliente_id = '00000000-0000-0000-0000-00000000aaaa';
+    raise exception 'FALHOU: admin_cliente apagou veiculos';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 
 select 'ok' as resultado;

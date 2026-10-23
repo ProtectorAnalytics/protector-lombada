@@ -7,7 +7,9 @@
 --    quem cadastrou e unidade. Só um vínculo vigente por (cliente, placa).
 --    `ativo` passa a ser derivado de `encerrado_em` (gatilho).
 -- 4. Perfil 'portaria' em usuarios + my_role(); a portaria não vê e-mails nem
---    relatórios, não altera o cliente e não escreve em veiculos direto.
+--    relatórios e não altera o cliente. SELECT de clientes/cameras por coluna
+--    (sem e-mails, contato, CNPJ, endereço, token); ninguém do navegador
+--    escreve em veiculos.
 -- 5. vincular_placa(): única porta de escrita do vínculo (só service_role).
 -- 6. cleanup_vinculos_encerrados(): retenção de 6 meses dos vínculos
 --    encerrados. O agendamento no pg_cron NÃO está aqui: só com "sim"
@@ -94,7 +96,11 @@ alter table public.veiculos
 --   a) cadastro excluído (ativo = false) → encerrado na data em que foi criado;
 --   b) duplicados ativos da mesma placa (nas duas grafias): o mais recente fica
 --      vigente e os outros são encerrados na data de criação do vigente;
---   c) tudo marcado como origem 'migracao', morador, sem vigente_desde.
+--   c) tudo marcado como origem 'migracao', morador. Vigente fica sem
+--      vigente_desde (vale desde sempre); encerrado recebe vigente_desde =
+--      encerrado_em (janela vazia: nunca casa com passagem, mas continua no
+--      histórico e na retenção). Sem isso, um encerrado com vigente_desde null
+--      voltaria a "valer desde sempre" e disputaria passagens antigas.
 update public.veiculos
    set encerrado_em = criado_em, ativo = false
  where ativo = false and encerrado_em is null;
@@ -114,7 +120,8 @@ update public.veiculos v
  where v.id = o.id and o.pos > 1;
 
 update public.veiculos
-   set origem = 'migracao', tipo_pessoa = 'morador', vigente_desde = null,
+   set origem = 'migracao', tipo_pessoa = 'morador',
+       vigente_desde = case when encerrado_em is null then null else encerrado_em end,
        ativo = (encerrado_em is null);
 
 -- ativo é derivado: vigente ⇔ não encerrado.
@@ -185,6 +192,27 @@ alter policy "clientes_update" on public.clientes
                              and usuarios.cliente_id is not null)))
          and (select public.my_role()) is distinct from 'portaria');
 
+-- Colunas sensíveis do cliente (e-mails, telefone, contato, CNPJ, endereço,
+-- dono legado) e o token da câmera não saem pelo navegador: o SELECT passa a
+-- ser por coluna. Quem precisa delas usa a API (service_role, checa o perfil).
+-- Coluna nova nessas tabelas NÃO fica visível ao painel até entrar aqui.
+revoke select on public.clientes from anon, authenticated;
+revoke select (emails_notificacao, notif_emails, telefone, contato_nome, cnpj, user_id, cep, endereco)
+  on public.clientes from anon, authenticated;
+grant select (id, nome, local_via, cidade_uf, limite_velocidade, ativo,
+              pdf_titulo, pdf_subtitulo, pdf_rodape, pdf_logo_url, pdf_corpo_texto)
+  on public.clientes to authenticated;
+
+revoke select on public.cameras from anon, authenticated;
+revoke select (token, ip_address, mac_address) on public.cameras from anon, authenticated;
+grant select (id, cliente_id, nome, nome_exibicao, ativa, last_seen,
+              serial_number, modelo, firmware)
+  on public.cameras to authenticated;
+
+-- Escrita em veiculos só pela API (vincular_placa / service_role): sem o
+-- privilégio, ninguém do navegador forja vigente_desde, encerrado_em ou origem.
+revoke insert, update, delete, truncate on public.veiculos from anon, authenticated;
+
 alter policy "veiculos_insert" on public.veiculos
   with check ((is_super_admin() or cliente_id = my_cliente_id())
               and (select public.my_role()) is distinct from 'portaria');
@@ -200,7 +228,9 @@ alter policy "veiculos_delete" on public.veiculos
 -- ============================================================
 -- Grava o vínculo da placa no cliente. Se já existe vigente com o mesmo tipo,
 -- nome, unidade e unidade_id, só atualiza marca/cor (quando informadas). Se
--- difere, encerra o vigente e abre o novo a partir de agora. Placa nova entra
+-- difere, encerra o vigente e abre o novo a partir de agora. Sem vigente: se a
+-- placa já teve vínculo, o novo começa no último encerrado_em (o histórico de
+-- "quem estava na hora" não é reescrito); placa que nunca teve vínculo entra
 -- sem vigente_desde (não se sabe desde quando o carro é do morador).
 create or replace function public.vincular_placa(
   p_cliente_id uuid,
@@ -230,6 +260,7 @@ declare
   v_agora timestamptz := now();
   v_atual public.veiculos;
   v_novo public.veiculos;
+  v_desde timestamptz;
 begin
   if p_cliente_id is null then
     raise exception 'vincular_placa: cliente obrigatório' using errcode = '22023';
@@ -271,6 +302,13 @@ begin
     end if;
 
     update public.veiculos set encerrado_em = v_agora where id = v_atual.id;
+    v_desde := v_agora;
+  else
+    -- null só se a placa nunca teve vínculo neste cliente
+    select max(encerrado_em) into v_desde
+      from public.veiculos
+     where cliente_id = p_cliente_id
+       and public.placa_mercosul(placa) = v_chave;
   end if;
 
   begin
@@ -280,7 +318,7 @@ begin
     ) values (
       p_cliente_id, v_placa, p_tipo, v_nome, v_unidade, p_unidade_id, v_marca, v_cor,
       p_origem, nullif(trim(p_cadastrado_por), ''), p_usuario,
-      case when v_atual.id is null then null else v_agora end
+      v_desde
     )
     returning * into v_novo;
   exception when unique_violation then
