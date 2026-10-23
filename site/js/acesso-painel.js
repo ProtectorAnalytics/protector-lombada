@@ -61,5 +61,12 @@
     return role !== 'portaria';
   }
 
-  return { ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel, podeEditarVeiculos };
+  // Histórico de alterações dos cadastros: os mesmos papéis que a API
+  // /api/admin/historico-cadastros aceita (síndico, operador, equipe Protector).
+  const PAPEIS_HISTORICO = new Set(['super_admin', 'admin_cliente', 'operador']);
+  function podeVerHistorico(role) {
+    return PAPEIS_HISTORICO.has(role);
+  }
+
+  return { ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel, podeEditarVeiculos, podeVerHistorico };
 });

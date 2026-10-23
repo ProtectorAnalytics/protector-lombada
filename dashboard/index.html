@@ -802,7 +802,17 @@
     .vb-erro:empty { display: none; }
     @media (max-width: 480px) {
       .vb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .vb-form input, .vb-form button { flex-basis: 100%; }
+      .vb-form input, .vb-form button, .vb-form select { flex-basis: 100%; }
+    }
+    /* Editar cadastro (detalhes da passagem e lista de veículos) */
+    .cadastro-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: -6px 0 14px; }
+    .cadastro-acoes .btn-zoom { min-height: 44px; }
+    .cadastro-acoes .btn-link { min-height: 44px; }
+    .cadastro-acoes [hidden] { display: none; }
+    .vb-form-edicao .vb-form-botoes { display: flex; gap: 8px; flex: 1 1 100%; justify-content: flex-end; }
+    .vb-form-edicao .vb-form-botoes button { min-height: 44px; }
+    .btn-zoom:focus-visible, .vm-li-edit:focus-visible, .vh-placa:focus-visible, .vm-tab:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px;
     }
 
     /* Selo OK/ALERTA: fundo opaco (o mesmo da velocidade) colado no canto
@@ -2224,6 +2234,46 @@
       background: rgba(239,68,68,0.1);
       border-color: var(--red);
     }
+    /* Editar: neutro (não é ação destrutiva) */
+    .vm-lista-item .vm-li-edit {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.6875rem;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .vm-lista-item .vm-li-edit:hover { background: var(--bg-hover); }
+    .vm-lista > .vb-quadro { margin: 8px 0; }
+    /* Histórico de alterações */
+    .vh-filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
+    .vh-filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 0.6875rem; font-weight: 600; color: var(--text-secondary); flex: 1 1 130px; min-width: 0; }
+    .vh-filtros input {
+      min-height: 40px; box-sizing: border-box; padding: 8px 10px; font-family: var(--font-sans); font-size: 0.8125rem;
+      color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; width: 100%;
+    }
+    .vh-filtros input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); outline: none; }
+    .vh-filtros .btn-zoom { min-height: 40px; }
+    .vh-lista { list-style: none; margin: 0; padding: 0; max-height: 340px; overflow-y: auto; }
+    .vh-lista li { padding: 8px 4px; border-bottom: 1px solid var(--border); font-size: 0.8125rem; line-height: 1.45; color: var(--text-primary); overflow-wrap: anywhere; }
+    .vh-lista li:last-child { border-bottom: none; }
+    .vh-lista .vh-quando { color: var(--text-secondary); }
+    .vh-lista .vh-detalhe { color: var(--text-secondary); }
+    .vh-placa {
+      background: none; border: none; padding: 0; font: inherit; font-family: var(--font-mono); font-weight: 700;
+      color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+    }
+    .vh-rodape { display: flex; justify-content: center; padding-top: 10px; }
+    .vh-rodape [hidden] { display: none; }
+    @media (max-width: 480px) {
+      .vm-tabs { overflow-x: auto; }
+      .vm-tab { flex: 0 0 auto; padding: 10px 12px; }
+    }
     .vm-lista-pagination {
       display: flex;
       justify-content: center;
@@ -2818,6 +2868,8 @@
   <script src="/js/grafico-acessivel.js"></script>
   <script src="/js/placa.js"></script>
   <script src="/js/vinculo-placa.js"></script>
+  <script src="/js/edicao-cadastro.js"></script>
+  <script src="/js/historico-cadastro.js"></script>
   <script src="/js/novidades-atual.js"></script>
   <script src="/js/texto-seguro.js"></script>
   <script src="/js/nome-veiculo.js"></script>
@@ -2888,7 +2940,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.11.1 &middot; 2026-10-23
+        v1.12.0 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -3131,7 +3183,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.11.1
+      Protector Traffic Control &middot; v1.12.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3181,6 +3233,7 @@
         <button class="vm-tab active" id="vm-tab-lista" onclick="vmSwitchTab('lista')">Lista</button>
         <button class="vm-tab" id="vm-tab-cadastrar" onclick="vmSwitchTab('cadastrar')">Cadastrar</button>
         <button class="vm-tab" id="vm-tab-importar" onclick="vmSwitchTab('importar')">Importar / Exportar</button>
+        <button class="vm-tab" id="vm-tab-historico" onclick="vmSwitchTab('historico')">Histórico de alterações</button>
       </div>
 
       <!-- Tab Lista -->
@@ -3233,6 +3286,25 @@
           <button class="vm-btn-primary" id="vf-salvar" onclick="salvarVeiculo()">Cadastrar Veículo</button>
         </div>
         <div class="vm-error" id="vf-error"></div>
+      </div>
+
+      <!-- Tab Histórico de alterações (quem cadastrou, alterou ou encerrou cada placa) -->
+      <div class="vm-body" id="vm-body-historico" style="display:none">
+        <form class="vh-filtros" id="vh-filtros" novalidate>
+          <label>Placa
+            <input type="text" id="vh-placa" placeholder="Todas" maxlength="8" autocomplete="off" style="text-transform:uppercase">
+          </label>
+          <label>De
+            <input type="date" id="vh-de">
+          </label>
+          <label>Até
+            <input type="date" id="vh-ate">
+          </label>
+          <button type="submit" class="btn-zoom">Filtrar</button>
+        </form>
+        <ul class="vh-lista" id="vh-lista" aria-live="polite"></ul>
+        <div class="vm-error" id="vh-erro" role="alert"></div>
+        <div class="vh-rodape"><button type="button" class="btn-zoom" id="vh-mais" hidden>Carregar mais</button></div>
       </div>
 
       <!-- Tab Importar/Exportar -->
@@ -3759,11 +3831,18 @@
       return acessoPainel.podeEditarVeiculos(currentProfile && currentProfile.role);
     }
 
+    // Histórico de alterações: síndico, operador e equipe Protector
+    function podeVerHistorico() {
+      return acessoPainel.podeVerHistorico(currentProfile && currentProfile.role);
+    }
+
     function aplicarPermissaoVeiculos() {
       const pode = podeEditarVeiculos();
       document.getElementById('vm-tab-cadastrar').hidden = !pode;
       document.getElementById('vm-body-cadastrar').hidden = !pode;
       document.getElementById('vm-importar-bloco').hidden = !pode;
+      document.getElementById('vm-tab-historico').hidden = !podeVerHistorico();
+      document.getElementById('vm-body-historico').hidden = !podeVerHistorico();
       document.getElementById('conta-portaria').hidden = pode;
       // Unidades e porteiros: só o síndico (admin_cliente) do próprio condomínio
       document.getElementById('conta-gestao-portaria').hidden = !(currentProfile && currentProfile.role === 'admin_cliente');
@@ -5856,6 +5935,8 @@
       const overlay = document.getElementById('vm-overlay');
       abrirOverlay(overlay);
       document.body.style.overflow = 'hidden';
+      ligarModalVeiculos();
+      historicoVeiculos.iniciado = false;
       vmSwitchTab('lista');
       limparFormVeiculo();
       vmListaFiltered = [...veiculosList];
@@ -5882,12 +5963,152 @@
 
     function vmSwitchTab(tab) {
       if (tab === 'cadastrar' && !podeEditarVeiculos()) tab = 'lista';
-      ['lista', 'cadastrar', 'importar'].forEach(t => {
+      if (tab === 'historico' && !podeVerHistorico()) tab = 'lista';
+      ['lista', 'cadastrar', 'importar', 'historico'].forEach(t => {
         const tabEl = document.getElementById('vm-tab-' + t);
         const bodyEl = document.getElementById('vm-body-' + t);
         if (tabEl) tabEl.classList.toggle('active', t === tab);
         if (bodyEl) bodyEl.style.display = t === tab ? '' : 'none';
       });
+      if (tab === 'historico' && !historicoVeiculos.iniciado) {
+        prepararHistorico('');
+        carregarHistorico({ reiniciar: true });
+      }
+    }
+
+    // ---- Lista: "Editar" por linha (mesmo formulário dos detalhes da passagem) ----
+    let listaVeiculosLigada = false;
+    function ligarModalVeiculos() {
+      if (listaVeiculosLigada) return;
+      listaVeiculosLigada = true;
+      document.getElementById('vm-lista').addEventListener('click', (ev) => {
+        const botao = ev.target.closest('[data-acao="editar-veiculo"]');
+        if (botao) editarVeiculoDaLista(botao);
+      });
+      document.getElementById('vh-filtros').addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        carregarHistorico({ reiniciar: true });
+      });
+      document.getElementById('vh-mais').addEventListener('click', () => carregarHistorico({ reiniciar: false }));
+      document.getElementById('vh-lista').addEventListener('click', (ev) => {
+        const botao = ev.target.closest('[data-placa-historico]');
+        if (!botao) return;
+        document.getElementById('vh-placa').value = botao.dataset.placaHistorico;
+        carregarHistorico({ reiniciar: true });
+      });
+    }
+
+    function editarVeiculoDaLista(botao) {
+      if (!podeEditarVeiculos()) return;
+      const v = veiculosList.find((x) => x.id === botao.dataset.id);
+      const linha = botao.closest('.vm-lista-item');
+      if (!v || !linha) return;
+      abrirFormEdicao(linha, v, 'Editar cadastro', {
+        aoCancelar: () => { const b = linha.querySelector('[data-acao="editar-veiculo"]'); if (b) b.focus(); },
+        aoSalvar: () => {
+          filtrarListaVeiculos(); // a lista já veio nova do servidor; mantém a busca digitada
+          const b = document.querySelector(`#vm-lista [data-acao="editar-veiculo"][data-id="${CSS.escape(v.id)}"]`);
+          if (b) b.focus();
+        },
+      });
+    }
+
+    // ---- Histórico de alterações (GET /api/admin/historico-cadastros) ----
+    const historicoVeiculos = { iniciado: false, pagina: 1, pedido: 0 };
+    const HISTORICO_DIAS_PADRAO = 30;
+
+    function dataSaoPaulo(deslocDias) {
+      const d = new Date(Date.now() + deslocDias * 86400000);
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+    }
+
+    function prepararHistorico(placa) {
+      historicoVeiculos.iniciado = true;
+      document.getElementById('vh-placa').value = placa || '';
+      document.getElementById('vh-de').value = dataSaoPaulo(-HISTORICO_DIAS_PADRAO);
+      document.getElementById('vh-ate').value = dataSaoPaulo(0);
+    }
+
+    function abrirHistoricoDaPlaca(placa) {
+      if (!podeVerHistorico()) return;
+      abrirModalVeiculo();
+      prepararHistorico(placa);
+      vmSwitchTab('historico');
+      carregarHistorico({ reiniciar: true });
+    }
+
+    function linhaHistoricoTexto(texto) {
+      const li = document.createElement('li');
+      li.textContent = texto;
+      return li;
+    }
+
+    // Uma frase por linha; tudo por textContent
+    function linhaHistorico(item) {
+      const f = historicoCadastroLib.fraseHistorico(item);
+      const li = document.createElement('li');
+      const quando = document.createElement('span');
+      quando.className = 'vh-quando';
+      quando.textContent = f.quando ? `${f.quando} · ` : '';
+      li.append(quando, document.createTextNode(`${f.autor} ${f.verbo} `));
+      if (item.placa) {
+        const botao = document.createElement('button');
+        botao.type = 'button';
+        botao.className = 'vh-placa';
+        botao.dataset.placaHistorico = item.placa;
+        botao.textContent = item.placa;
+        botao.setAttribute('aria-label', `Ver só as alterações da placa ${item.placa}`);
+        li.append(botao);
+      } else {
+        li.append(document.createTextNode(f.placa));
+      }
+      if (f.detalhe) {
+        const det = document.createElement('span');
+        det.className = 'vh-detalhe';
+        det.textContent = ` — ${f.detalhe}`;
+        li.append(det);
+      }
+      return li;
+    }
+
+    function parametrosHistorico(pagina) {
+      const params = new URLSearchParams({ cliente_id: currentCliente.id, pagina: String(pagina) });
+      const placa = placaLib.limpar(document.getElementById('vh-placa').value);
+      const de = document.getElementById('vh-de').value;
+      const ate = document.getElementById('vh-ate').value;
+      if (placa) params.set('placa', placa);
+      if (de) params.set('de', de);
+      if (ate) params.set('ate', ate);
+      return params;
+    }
+
+    async function carregarHistorico({ reiniciar }) {
+      if (!podeVerHistorico() || !currentCliente) return;
+      const lista = document.getElementById('vh-lista');
+      const erro = document.getElementById('vh-erro');
+      const mais = document.getElementById('vh-mais');
+      const pagina = reiniciar ? 1 : historicoVeiculos.pagina + 1;
+      const pedido = ++historicoVeiculos.pedido; // resposta antiga (filtro trocado) é descartada
+      const sessao = marcaDaSessao();
+      erro.textContent = '';
+      mais.disabled = true;
+      if (reiniciar) { mais.hidden = true; lista.replaceChildren(linhaHistoricoTexto('Carregando…')); }
+      try {
+        const r = await chamarApiPainel(`/api/admin/historico-cadastros?${parametrosHistorico(pagina)}`, 'GET');
+        if (pedido !== historicoVeiculos.pedido || !sessaoValida(sessao)) return;
+        const itens = Array.isArray(r.itens) ? r.itens : [];
+        if (reiniciar) lista.replaceChildren();
+        itens.forEach((i) => lista.appendChild(linhaHistorico(i)));
+        if (reiniciar && itens.length === 0) lista.appendChild(linhaHistoricoTexto('Nenhuma alteração neste período.'));
+        historicoVeiculos.pagina = pagina;
+        mais.hidden = !r.tem_mais;
+      } catch (e) {
+        if (pedido !== historicoVeiculos.pedido) return;
+        if (reiniciar) lista.replaceChildren();
+        erro.textContent = e.status === 401 || e.status === 403 ? mensagemErroApi(e) : (e.message || 'Não foi possível carregar o histórico. Tente de novo.');
+      } finally {
+        if (pedido === historicoVeiculos.pedido) mais.disabled = false;
+      }
     }
 
     function filtrarListaVeiculos() {
@@ -5926,7 +6147,7 @@
         return `<div class="vm-lista-item">
           <span class="vm-li-placa">${esc(v.placa)}</span>
           <span class="vm-li-info">${seloTipoPessoa(v.tipo_pessoa)} ${esc(info) || '—'}</span>
-          ${podeEditarVeiculos() ? `<button class="vm-li-del" data-id="${esc(v.id)}" data-placa="${esc(v.placa)}" onclick="removerVeiculo(this.dataset.id, this.dataset.placa)" title="Encerrar o vínculo da placa (o histórico fica)">Encerrar vínculo</button>` : ''}
+          ${podeEditarVeiculos() ? `<button type="button" class="vm-li-edit" data-acao="editar-veiculo" data-id="${esc(v.id)}" aria-label="Editar o cadastro da placa ${esc(v.placa)}">Editar</button><button class="vm-li-del" data-id="${esc(v.id)}" data-placa="${esc(v.placa)}" onclick="removerVeiculo(this.dataset.id, this.dataset.placa)" title="Encerrar o vínculo da placa (o histórico fica)">Encerrar vínculo</button>` : ''}
         </div>`;
       }).join('');
 
@@ -6688,9 +6909,13 @@
 
       // Base de veículos (APIPLACAS) + morador cadastrado ou cadastro direto
       html += htmlBaseVeiculo(vb, suspeita, captura);
-      html += veiculo ? htmlVeiculoCadastrado(veiculo)
+      // A edição vale sempre para o vínculo VIGENTE da placa (por id)
+      const vigenteAtual = vinculoPlacaLib.vinculoVigente(indiceVinculos, captura.placa);
+      const alvoEdicao = podeEditarVeiculos() ? edicaoCadastroLib.alvoEdicao(veiculo || vigenteHoje, vigenteAtual) : null;
+      html += `<div data-bloco="cadastro">${veiculo ? htmlVeiculoCadastrado(veiculo)
         : vigenteHoje ? htmlVeiculoCadastrado(vigenteHoje, 'Sem cadastro na hora da passagem — vínculo atual')
-        : htmlCadastroDaPassagem(vb);
+        : htmlCadastroDaPassagem(vb)}</div>`;
+      html += htmlAcoesCadastro(alvoEdicao);
 
       // Historico de velocidades
       if (historico && historico.length > 1) {
@@ -6728,7 +6953,7 @@
       </div>`;
 
       body.innerHTML = html;
-      ligarControlesModal(body, captura, photoUrl);
+      ligarControlesModal(body, captura, photoUrl, alvoEdicao);
     }
 
     // ---- Quadros do modal (base de veículos, morador, cadastro, suspeita) ----
@@ -6774,6 +6999,14 @@
         </div></div>`;
     }
 
+    // Abaixo do cadastro: "Editar cadastro" (só com vínculo vigente) e o histórico da placa
+    function htmlAcoesCadastro(alvo) {
+      const editar = alvo ? '<button type="button" class="btn-zoom" data-acao="editar-cadastro">Editar cadastro</button>' : '';
+      const historico = podeVerHistorico()
+        ? '<button type="button" class="btn-link" data-acao="ver-historico-placa">Ver alterações desta placa</button>' : '';
+      return editar || historico ? `<div class="cadastro-acoes">${editar}${historico}</div>` : '';
+    }
+
     function htmlCadastroDaPassagem(vb) {
       if (!podeEditarVeiculos()) return '';
       const consultado = vb && vb.status === 'consultado';
@@ -6794,7 +7027,7 @@
     }
 
     // Controles novos: data-* + addEventListener (nada de dado dentro de onclick)
-    function ligarControlesModal(body, captura, photoUrl) {
+    function ligarControlesModal(body, captura, photoUrl, alvoEdicao) {
       // A URL da foto fica no fechamento, não no HTML
       body.querySelectorAll('[data-acao="ampliar-foto"]').forEach((el) => {
         el.addEventListener('click', () => openLightbox(photoUrl));
@@ -6812,6 +7045,145 @@
       if (outro) outro.addEventListener('click', () => liberarSuspeita(captura, outro));
       const form = body.querySelector('form[data-acao="cadastrar"]');
       if (form) form.addEventListener('submit', (ev) => cadastrarDaPassagem(ev, captura));
+      const editar = body.querySelector('[data-acao="editar-cadastro"]');
+      if (editar && alvoEdicao) ligarEdicaoDaPassagem(body, editar, alvoEdicao);
+      const historico = body.querySelector('[data-acao="ver-historico-placa"]');
+      if (historico) historico.addEventListener('click', () => { closeModal(); abrirHistoricoDaPlaca(captura.placa); });
+    }
+
+    // "Editar cadastro" nos detalhes da passagem: o formulário entra no lugar do quadro
+    function ligarEdicaoDaPassagem(body, botao, alvoInicial) {
+      const caixa = body.querySelector('[data-bloco="cadastro"]');
+      let alvo = alvoInicial;
+      botao.addEventListener('click', () => {
+        const bloco = caixa && caixa.firstElementChild;
+        if (!bloco || botao.hidden) return;
+        botao.hidden = true;
+        abrirFormEdicao(bloco, alvo.vinculo, alvo.titulo, {
+          aoCancelar: () => { botao.hidden = false; botao.focus(); },
+          aoSalvar: (atualizado, form) => {
+            form.replaceWith(elementoDoHtml(htmlVeiculoCadastrado(atualizado, 'Cadastro atual')));
+            alvo = { vinculo: atualizado, titulo: 'Editar cadastro' };
+            botao.hidden = false;
+            botao.focus();
+          },
+        });
+      });
+    }
+
+    function elementoDoHtml(html) {
+      const t = document.createElement('template');
+      t.innerHTML = html; // só HTML montado aqui, com esc() em todo valor
+      return t.content.firstElementChild;
+    }
+
+    // ---- Edição de cadastro: um formulário e um salvar para a passagem e a lista ----
+    function htmlFormEdicao(titulo, placa) {
+      return `<form class="vb-quadro vb-form-edicao" novalidate aria-label="${esc(titulo)}, placa ${esc(placa)}">
+          <h4>${esc(titulo)} · ${esc(placa)}</h4>
+          <div class="vb-form">
+            <select name="tipo_pessoa" aria-label="Tipo" required>${opcoesTipoPessoa()}</select>
+            <input name="nome_morador" placeholder="Nome" aria-label="Nome" maxlength="120" autocomplete="off" required>
+            ${htmlCampoUnidade('name="unidade" aria-label="Unidade"')}
+            <input name="marca" placeholder="Marca e modelo" aria-label="Marca e modelo" maxlength="60" autocomplete="off">
+            <input name="cor" placeholder="Cor" aria-label="Cor" maxlength="30" autocomplete="off">
+            <div class="vb-form-botoes">
+              <button type="button" class="btn-zoom" data-acao="cancelar-edicao">Cancelar</button>
+              <button type="submit" class="btn-pdf">Salvar</button>
+            </div>
+          </div>
+          <div class="vb-erro" role="alert"></div>
+        </form>`;
+    }
+
+    // Valores pelo DOM (value/textContent), nunca por HTML
+    function preencherFormEdicao(form, v) {
+      const el = form.elements;
+      el.tipo_pessoa.value = vinculoPlacaLib.TIPOS_PESSOA.some((t) => t.id === v.tipo_pessoa) ? v.tipo_pessoa : '';
+      el.nome_morador.value = v.nome_morador || '';
+      el.marca.value = v.marca || '';
+      el.cor.value = v.cor || '';
+      const u = el.unidade;
+      if (u.tagName !== 'SELECT') { u.value = v.unidade || ''; return; }
+      if (!v.unidade_id) return;
+      // Unidade que saiu da lista: continua selecionada (salvar não apaga sem querer)
+      if (!unidadesLista.some((x) => x.id === v.unidade_id)) {
+        const opcao = document.createElement('option');
+        opcao.value = v.unidade_id;
+        opcao.textContent = v.unidade || 'Unidade atual';
+        u.appendChild(opcao);
+      }
+      u.value = v.unidade_id;
+    }
+
+    function lerFormEdicao(form) {
+      const el = form.elements;
+      const u = el.unidade;
+      const lista = u.tagName === 'SELECT';
+      let rotulo = null;
+      if (lista && u.value) {
+        const daLista = unidadesLista.find((x) => x.id === u.value);
+        rotulo = daLista ? unidadeLib.rotuloUnidade(daLista) : (u.selectedOptions[0] ? u.selectedOptions[0].textContent : null);
+      }
+      return {
+        tipo_pessoa: el.tipo_pessoa.value, nome_morador: el.nome_morador.value,
+        marca: el.marca.value, cor: el.cor.value, unidade: { lista, valor: u.value, rotulo },
+      };
+    }
+
+    // Troca `alvoEl` pelo formulário; Cancelar devolve o mesmo elemento intacto
+    function abrirFormEdicao(alvoEl, vinculo, titulo, { aoSalvar, aoCancelar }) {
+      const form = elementoDoHtml(htmlFormEdicao(titulo, vinculo.placa));
+      preencherFormEdicao(form, vinculo);
+      alvoEl.replaceWith(form);
+      const cancelar = () => { form.replaceWith(alvoEl); if (aoCancelar) aoCancelar(); };
+      form.querySelector('[data-acao="cancelar-edicao"]').addEventListener('click', cancelar);
+      form.addEventListener('keydown', (ev) => {
+        if (ev.key !== 'Escape') return;
+        ev.preventDefault();
+        ev.stopPropagation(); // fecha só o formulário, não o modal
+        cancelar();
+      });
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const atualizado = await salvarEdicaoCadastro(form, vinculo);
+        if (atualizado) aoSalvar(atualizado, form);
+      });
+      form.elements.tipo_pessoa.focus();
+      return form;
+    }
+
+    function mensagemErroEdicao(e) {
+      if (e && (e.status === 401 || e.status === 403)) return mensagemErroApi(e);
+      if (e && (e.status === 404 || e.status === 409)) return 'Este cadastro mudou enquanto você editava (foi encerrado ou trocado). Feche e abra de novo.';
+      return (e && e.message) || 'Não foi possível salvar. Tente de novo.';
+    }
+
+    // PUT no vínculo vigente (por id). Devolve o vínculo gravado ou null (erro no formulário).
+    async function salvarEdicaoCadastro(form, vinculo) {
+      const botao = form.querySelector('button[type=submit]');
+      if (botao.disabled) return null;
+      const erro = form.querySelector('.vb-erro');
+      erro.textContent = '';
+      const r = edicaoCadastroLib.montarEdicao(vinculo, lerFormEdicao(form));
+      if (r.erro) { erro.textContent = r.erro; form.elements[r.campo].focus(); return null; }
+      travarBotoes(form, true);
+      botao.textContent = 'Salvando…';
+      let atualizado;
+      try {
+        atualizado = await chamarApiPainel(edicaoCadastroLib.urlEdicao(vinculo.id), 'PUT', r.corpo);
+      } catch (e) {
+        erro.textContent = mensagemErroEdicao(e);
+        travarBotoes(form, false);
+        botao.textContent = 'Salvar';
+        return null;
+      }
+      mostrarAviso(`Cadastro da placa ${vinculo.placa} atualizado.`);
+      historicoVeiculos.iniciado = false; // a aba recarrega com a alteração nova
+      await Promise.all([loadVeiculosCache(), loadVeiculos()]);
+      loadRecentCards();
+      renderPage();
+      return atualizado && atualizado.id ? atualizado : { ...vinculo, ...r.corpo };
     }
 
     // Mensagem amigável a partir do status HTTP da API

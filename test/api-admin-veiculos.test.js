@@ -26,6 +26,7 @@ const V_ERRADO_OCUPADA = 'f0000000-0000-4000-8000-00000000000a';
 const V_ANTERIOR_OCUPADA = 'f0000000-0000-4000-8000-00000000000b';
 const V_OUTRO_VIGENTE = 'f0000000-0000-4000-8000-00000000000c';
 const V_PORT_ENCERRADO = 'f0000000-0000-4000-8000-00000000000d';
+const V_COMPLETO = 'f0000000-0000-4000-8000-00000000000e';
 const T_DIFERE = '2026-10-22T09:55:00.123456+00:00';
 const T_OCUPADA = '2026-10-22T09:56:00.654321+00:00';
 const minutosAtras = (m) => new Date(Date.now() - m * 60000).toISOString();
@@ -60,6 +61,11 @@ const TABELAS = {
     { id: V_ANTERIOR_OCUPADA, cliente_id: C1, placa: 'MNO3D45', encerrado_em: T_OCUPADA, origem: 'painel' },
     { id: V_OUTRO_VIGENTE, cliente_id: C1, placa: 'MNO3345', encerrado_em: null, origem: 'painel' },
     vPort(V_PORT_ENCERRADO, { placa: 'PQR4E56', encerrado_em: '2026-01-01T00:00:00Z' }),
+    // Cadastro preenchido (dados fictícios) para o antes/depois da edição
+    {
+      id: V_COMPLETO, cliente_id: C1, placa: 'TST0A00', encerrado_em: null, origem: 'painel', cadastrado_por_usuario: 'u-admin',
+      tipo_pessoa: 'morador', nome_morador: 'PRESTADOR-TESTE', unidade: 'Casa 1', unidade_id: UNIDADE_C1, marca: 'Fiat', cor: 'Prata',
+    },
   ],
 };
 
@@ -139,6 +145,8 @@ const PERFIS = {
   admin: { id: 'u-admin', role: 'admin_cliente', cliente_id: C1, nome: 'Síndica Ana' },
   super: { id: 'u-super', role: 'super_admin', cliente_id: null, nome: 'Protector' },
   portaria: { id: 'u-port', role: 'portaria', cliente_id: C1, nome: 'Tablet Portaria' },
+  operador: { id: 'u-oper', role: 'operador', cliente_id: C1, nome: 'Operador Teste' },
+  operadorC2: { id: 'u-oper2', role: 'operador', cliente_id: C2, nome: 'Operador Outro' },
 };
 
 function resp() {
@@ -520,7 +528,11 @@ console.error = () => {};
     assert.strictEqual(a.acao, 'atualizar');
     assert.strictEqual(a.usuarioId, 'u-port');
     assert.strictEqual(a.registroId, V_PORT_20);
-    assert.deepStrictEqual(a.detalhes, { cliente_id: C1, ...MUDANCA });
+    assert.deepStrictEqual(a.detalhes, {
+      cliente_id: C1, placa: 'QWE1R23', ...MUDANCA,
+      antes: { tipo_pessoa: null, nome_morador: null, unidade: null },
+      depois: { tipo_pessoa: 'visitante', nome_morador: 'Rita Teste', unidade: 'Torre 1 · 101' },
+    });
   });
   await caso('portaria editando cadastro de outro porteiro → 403 sem escrita', async () => {
     const r = await editar(V_PORT_OUTRO, { nome_morador: 'X' });
@@ -571,6 +583,57 @@ console.error = () => {};
     const [w] = escritas();
     assert.deepStrictEqual(w.patch, { marca: 'Fiat', cor: 'Prata' });
     assert.ok(!w.filtros.some(([, c]) => c === 'cadastrado_por_usuario'));
+  });
+
+  // ---------- PUT: quem edita e o antes/depois ----------
+  for (const perfil of ['admin', 'operador', 'super']) {
+    await caso(`PUT como ${perfil} edita o vínculo do condomínio (200)`, async () => {
+      const r = await chamar(perfil, 'PUT', { query: { id: V_COMPLETO }, body: { tipo_pessoa: 'prestador' } });
+      assert.strictEqual(r.code, 200, JSON.stringify(r.body));
+      assert.strictEqual(escritas().length, 1);
+    });
+  }
+  await caso('PUT como operador de outro condomínio → 403 sem escrita', async () => {
+    const r = await chamar('operadorC2', 'PUT', { query: { id: V_COMPLETO }, body: { tipo_pessoa: 'prestador' } });
+    assert.strictEqual(r.code, 403);
+    assert.strictEqual(escritas().length, 0);
+    assert.strictEqual(estado.auditoria.length, 0);
+  });
+  await caso('PUT audita antes/depois só dos campos que mudaram, com placa e cliente', async () => {
+    const r = await chamar('operador', 'PUT', {
+      query: { id: V_COMPLETO },
+      body: { tipo_pessoa: 'prestador', nome_morador: 'PRESTADOR-TESTE', unidade_id: null, unidade: null, marca: 'Fiat', cor: 'Branco' },
+    });
+    assert.strictEqual(r.code, 200);
+    const [a] = estado.auditoria;
+    assert.strictEqual(a.acao, 'atualizar');
+    assert.strictEqual(a.detalhes.placa, 'TST0A00');
+    assert.strictEqual(a.detalhes.cliente_id, C1);
+    assert.deepStrictEqual(a.detalhes.antes, { tipo_pessoa: 'morador', cor: 'Prata', unidade: 'Casa 1' });
+    assert.deepStrictEqual(a.detalhes.depois, { tipo_pessoa: 'prestador', cor: 'Branco', unidade: null });
+  });
+  await caso('PUT sem mudança nenhuma → 200 com o cadastro, sem gravar nem auditar', async () => {
+    const r = await chamar('admin', 'PUT', {
+      query: { id: V_COMPLETO },
+      body: { tipo_pessoa: 'morador', nome_morador: ' PRESTADOR-TESTE ', marca: 'Fiat', cor: 'Prata' },
+    });
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(escritas().length, 0);
+    assert.strictEqual(estado.auditoria.length, 0);
+    assert.strictEqual(r.body.placa, 'TST0A00');
+    assert.ok(!('cadastrado_por_usuario' in r.body) && !('cliente_id' in r.body));
+  });
+  await caso('POST audita o cadastro como ficou (depois) com placa e cliente', async () => {
+    const r = await chamar('admin', 'POST', { body: base({ unidade: 'Casa 1', marca: 'Fiat', cor: 'Prata' }) });
+    assert.strictEqual(r.code, 201);
+    const d = estado.auditoria[0].detalhes;
+    assert.strictEqual(d.placa, 'ABC1234');
+    assert.strictEqual(d.cliente_id, C1);
+    assert.deepStrictEqual(d.depois, { tipo_pessoa: 'morador', nome_morador: 'João', unidade: 'Casa 1', marca: 'Fiat', cor: 'Prata' });
+  });
+  await caso('DELETE audita placa e cliente', async () => {
+    await chamar('admin', 'DELETE', { query: { id: V_COMPLETO } });
+    assert.deepStrictEqual([estado.auditoria[0].detalhes.placa, estado.auditoria[0].detalhes.cliente_id], ['TST0A00', C1]);
   });
 
   // ---------- DELETE ----------

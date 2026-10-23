@@ -197,10 +197,10 @@ caso('dashboard: item "Avisos por e-mail\" no menu da conta, só para admin_clie
   assert.match(DASH, /id="conta-avisos-email"[^>]*hidden[^>]*>Avisos por e-mail</);
   assert.match(DASH, /<script src="\/js\/avisos-email\.js"><\/script>/);
   assert.match(DASH, /<script src="\/js\/avisos-painel\.js"><\/script>/);
-  const aplicar = `${extrair(DASH, 'function podeEditarVeiculos(')}\n${extrair(DASH, 'function aplicarPermissaoVeiculos(')}`;
+  const aplicar = `${extrair(DASH, 'function podeEditarVeiculos(')}\n${extrair(DASH, 'function podeVerHistorico(')}\n${extrair(DASH, 'function aplicarPermissaoVeiculos(')}`;
   const els = {};
   const document = { getElementById: (id) => (els[id] = els[id] || { hidden: false }) };
-  const acessoPainel = { podeEditarVeiculos: (r) => r !== 'portaria' };
+  const acessoPainel = { podeEditarVeiculos: (r) => r !== 'portaria', podeVerHistorico: (r) => r !== 'portaria' };
   for (const [role, escondido] of [['admin_cliente', false], ['operador', true], ['portaria', true], ['super_admin', true]]) {
     new Function('document', 'acessoPainel', 'currentProfile', `${aplicar}; aplicarPermissaoVeiculos();`)(document, acessoPainel, { role });
     assert.strictEqual(els['conta-avisos-email'].hidden, escondido, role);

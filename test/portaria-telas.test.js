@@ -136,10 +136,10 @@ caso('painel: link "Abrir a portaria" só para o perfil portaria', () => {
   const el = { hidden: true };
   const rodar = (role) => {
     el.hidden = true;
-    new Function('document', 'podeEditarVeiculos', 'currentProfile',
+    new Function('document', 'podeEditarVeiculos', 'podeVerHistorico', 'currentProfile',
       `${fn}; aplicarPermissaoVeiculos();`)(
       { getElementById: (id) => (id === 'conta-portaria' ? el : { hidden: false }) },
-      () => role !== 'portaria', { role });
+      () => role !== 'portaria', () => role !== 'portaria', { role });
     return el.hidden;
   };
   assert.strictEqual(rodar('portaria'), false);
