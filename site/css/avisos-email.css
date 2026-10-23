@@ -1,0 +1,25 @@
+/*
+ * Avisos por e-mail (Portaria 2.2): opções por usuário na aba Usuários do
+ * admin e a tela "Avisos por e-mail" do painel do síndico. Reaproveita os
+ * botões, campos e formulário de portaria-gestao.css (.pg-raiz).
+ */
+.av-opcao { display: flex; align-items: center; gap: 6px; font-size: .8125rem; line-height: 1.3; cursor: pointer; min-height: 28px; }
+.av-opcao input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); flex: none; }
+.av-opcao input:disabled { cursor: progress; }
+.av-opcao input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.av-topo { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.av-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.av-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); padding: 10px 14px; }
+.av-inativo .av-quem { opacity: .7; }
+.av-quem { display: flex; flex-direction: column; min-width: 0; flex: 1 1 200px; overflow-wrap: anywhere; }
+.av-email { font-size: .8125rem; color: var(--text-secondary); }
+.av-selo { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); font-size: .6875rem; font-weight: 600; color: var(--text-secondary); vertical-align: middle; }
+.av-desativado { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); margin-left: 6px; }
+.av-opcoes { display: grid; gap: 2px; }
+.av-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.av-vazio { font-size: .875rem; color: var(--text-secondary); }
+.av-raiz input[type="email"] {
+  width: 100%; min-height: 36px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-input); color: var(--text-primary); font: inherit; font-size: .875rem;
+}
+@media (max-width: 640px) { .av-opcao { min-height: 44px; } }

@@ -5,6 +5,10 @@ const { erroSenhaPorteiro, usuarioDoEmail } = require('../../site/js/usuario-por
 // senha de /api/admin/porteiros e têm as sessões encerradas na troca de senha
 // e no desativar.
 const ROLE_PORTEIRO = 'portaria';
+const ROLE_CONTATO = 'so_email';
+const MSG_CONTATO = 'Contatos "Só recebe e-mail" não têm login: use Avisos por e-mail';
+// Num so_email (sem login) estes campos só mudam por /api/admin/avisos.
+const CAMPOS_TRAVADOS_CONTATO = ['role', 'email', 'cliente_id'];
 const AVISO_SESSOES = 'Feito, mas não foi possível desconectar os aparelhos em que o porteiro já estava logado. Tente de novo em alguns minutos.';
 
 /** Usuário de login para a regra: o técnico sem domínio ou a parte antes do @. */
@@ -14,6 +18,18 @@ const usuarioDeLogin = (email) => usuarioDoEmail(email) || String(email || '').s
 function erroSenhaSePorteiro(role, senha, { email, nome }) {
   if (role !== ROLE_PORTEIRO) return null;
   return erroSenhaPorteiro(senha, { usuario: usuarioDeLogin(email), nome });
+}
+
+/** As duas opções de aviso por e-mail sempre como booleanos. */
+const comOpcoes = (u) => ({ ...u, recebe_alertas: u.recebe_alertas === true, recebe_relatorio: u.recebe_relatorio === true });
+
+/** Mensagem de recusa quando o PUT mexe no que um so_email não tem (senha) ou não troca por aqui. */
+function erroEdicaoContato(atual, senha, campos) {
+  if (campos.role === ROLE_CONTATO && atual.role !== ROLE_CONTATO) return MSG_CONTATO;
+  if (atual.role !== ROLE_CONTATO) return null;
+  if (senha) return MSG_CONTATO;
+  const muda = CAMPOS_TRAVADOS_CONTATO.some((c) => campos[c] !== undefined && campos[c] !== atual[c]);
+  return muda ? MSG_CONTATO : null;
 }
 
 /** Encerra as sessões abertas; não lança (o passo anterior já foi aplicado). */
@@ -39,7 +55,7 @@ module.exports = async function handler(req, res) {
           .select('*, clientes(nome)')
           .order('criado_em', { ascending: false });
         if (error) throw error;
-        return res.status(200).json(data);
+        return res.status(200).json((data || []).map(comOpcoes));
       }
 
       if (!clienteId) return res.status(400).json({ error: 'cliente_id obrigatório' });
@@ -54,7 +70,7 @@ module.exports = async function handler(req, res) {
         .order('criado_em', { ascending: false });
 
       if (error) throw error;
-      return res.status(200).json(data);
+      return res.status(200).json((data || []).map(comOpcoes));
     }
 
     // POST: criar usuário (cria no Auth + tabela usuarios)
@@ -63,6 +79,8 @@ module.exports = async function handler(req, res) {
       const body = typeof req.body === 'object' ? req.body : JSON.parse(await readBody(req));
 
       const { email, senha, nome, cliente_id, role } = body;
+
+      if (role === ROLE_CONTATO) return res.status(400).json({ error: MSG_CONTATO });
 
       if (!email || !senha || !nome || !role) {
         return res.status(400).json({ error: 'Campos obrigatórios: email, senha, nome, role' });
@@ -162,6 +180,8 @@ module.exports = async function handler(req, res) {
         .from('usuarios').select('*').eq('id', id).maybeSingle();
       if (erroAtual) throw erroAtual;
       if (!atual) return res.status(404).json({ error: 'Usuário não encontrado' });
+      const erroContato = erroEdicaoContato(atual, senha, campos);
+      if (erroContato) return res.status(400).json({ error: erroContato });
       const final = { ...atual, ...camposFiltrados };
       const ehPorteiro = final.role === ROLE_PORTEIRO;
       if (senha) {
@@ -179,8 +199,8 @@ module.exports = async function handler(req, res) {
 
       if (error) throw error;
 
-      // Atualizar senha no Auth se fornecida
-      if (senha) {
+      // Atualizar senha no Auth se fornecida (so_email já foi recusado acima)
+      if (senha && data.auth_id) {
         const { error: passErr } = await supabase.auth.admin.updateUserById(
           data.auth_id,
           { password: senha }
@@ -216,7 +236,8 @@ module.exports = async function handler(req, res) {
 
       if (permanent) {
         // Buscar dados do usuário antes de excluir
-        const { data: usuario } = await supabase.from('usuarios').select('email, auth_id').eq('id', userId).single();
+        const { data: usuario, error: erroBusca } = await supabase.from('usuarios').select('email, auth_id').eq('id', userId).maybeSingle();
+        if (erroBusca) throw erroBusca;
 
         // Excluir da tabela usuarios
         const { error } = await supabase.from('usuarios').delete().eq('id', userId);

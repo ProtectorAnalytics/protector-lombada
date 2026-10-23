@@ -86,4 +86,136 @@ caso('XSS: nome, e-mail e id escapados', () => {
   assert.ok(html.includes('&lt;script&gt;'));
 });
 
-console.log(`\n${passou} casos ok`);
+// ---------------------------------------------------------------- telas (Task 4)
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const painel = require('../site/js/avisos-painel');
+
+const raizRepo = path.join(__dirname, '..');
+const ler = (rel) => fs.readFileSync(path.join(raizRepo, rel), 'utf8');
+const ADMIN = ler('admin/index.html');
+const DASH = ler('dashboard/index.html');
+
+/** Recorta a declaração que começa em `inicio` até a chave que fecha a primeira chave aberta. */
+function extrair(fonte, inicio) {
+  const i = fonte.indexOf(inicio);
+  if (i < 0) throw new Error(`não achei "${inicio}"`);
+  let nivel = 0;
+  for (let j = fonte.indexOf('{', i); j < fonte.length; j++) {
+    if (fonte[j] === '{') nivel++;
+    else if (fonte[j] === '}' && --nivel === 0) return fonte.slice(i, j + 1);
+  }
+  throw new Error(`chaves desbalanceadas em "${inicio}"`);
+}
+
+caso('nenhuma referência à aba E-mails nem a /api/admin/emails em admin/, dashboard/, site/', () => {
+  const achados = [];
+  const varrer = (dir) => {
+    for (const ent of fs.readdirSync(path.join(raizRepo, dir), { withFileTypes: true })) {
+      const rel = path.join(dir, ent.name);
+      if (ent.isDirectory()) { if (ent.name !== 'vendor') varrer(rel); continue; }
+      if (!/\.(html|js|css)$/.test(rel) || /manual|novidades/.test(rel)) continue;
+      const src = ler(rel);
+      if (/tab-emails|showTab\('emails'\)|\/api\/admin\/emails|api\('\/emails|loadEmails|emails-body/.test(src)) achados.push(rel);
+    }
+  };
+  ['admin', 'dashboard', 'site'].forEach(varrer);
+  assert.deepStrictEqual(achados, []);
+  assert.ok(!fs.existsSync(path.join(raizRepo, 'api/admin/emails.js')), 'api/admin/emails.js removido');
+  assert.ok(!ler('vercel.json').includes('/api/admin/emails"'), 'rota removida do vercel.json');
+  assert.doesNotMatch(ADMIN, /aba E-mails/);
+});
+
+caso('admin: aba Usuários mostra as duas opções e o tipo "Só recebe e-mail" no novo usuário', () => {
+  assert.match(ADMIN, /<script src="\/js\/avisos-email\.js"><\/script>/);
+  assert.match(ADMIN, /<script src="\/js\/avisos-painel\.js"><\/script>/);
+  const render = extrair(ADMIN, 'function renderUsuariosCli(');
+  assert.match(render, /htmlOpcoesUsuario\(/);
+  const opcoes = extrair(ADMIN, 'function htmlOpcoesUsuario(');
+  assert.match(opcoes, /avisosEmailLib\.ROTULOS/);
+  const modal = extrair(ADMIN, 'function openUsuarioModal(');
+  assert.match(modal, /value="so_email"/);
+  assert.match(modal, /avisosEmailLib\.ROTULOS\.so_email/);
+  assert.match(extrair(ADMIN, 'async function saveUsuario('), /role === 'so_email'[\s\S]*salvarContatoSoEmail\(/);
+  const contato = extrair(ADMIN, 'async function salvarContatoSoEmail(');
+  assert.match(contato, /api\('\/avisos/);
+  assert.match(contato, /validarContato/);
+  assert.doesNotMatch(contato, /\/usuarios|senha/);
+});
+
+caso('admin: opções não aparecem para portaria nem super_admin', () => {
+  const fn = new Function('avisosEmailLib', 'esc', `${extrair(ADMIN, 'function htmlOpcoesUsuario(')}; return htmlOpcoesUsuario;`)(lib, lib.esc);
+  assert.strictEqual(fn(u({ role: 'portaria', email: 'p@porteiro.invalid' })), '—');
+  assert.strictEqual(fn(u({ role: 'super_admin' })), '—');
+  const html = fn(u({ id: 'o1', recebe_relatorio: true }));
+  assert.match(html, /data-opcao="recebe_alertas" data-id="o1"/);
+  assert.match(html, /data-opcao="recebe_relatorio" data-id="o1"[^>]*checked/);
+  assert.ok(html.includes('Recebe alertas de excesso') && html.includes('Recebe relatório periódico'));
+});
+
+caso('dashboard: item "Avisos por e-mail" no menu da conta, só para admin_cliente', () => {
+  assert.match(DASH, /id="conta-avisos-email"[^>]*hidden[^>]*>Avisos por e-mail</);
+  assert.match(DASH, /<script src="\/js\/avisos-email\.js"><\/script>/);
+  assert.match(DASH, /<script src="\/js\/avisos-painel\.js"><\/script>/);
+  const aplicar = `${extrair(DASH, 'function podeEditarVeiculos(')}\n${extrair(DASH, 'function aplicarPermissaoVeiculos(')}`;
+  const els = {};
+  const document = { getElementById: (id) => (els[id] = els[id] || { hidden: false }) };
+  const acessoPainel = { podeEditarVeiculos: (r) => r !== 'portaria' };
+  for (const [role, escondido] of [['admin_cliente', false], ['operador', true], ['portaria', true], ['super_admin', true]]) {
+    new Function('document', 'acessoPainel', 'currentProfile', `${aplicar}; aplicarPermissaoVeiculos();`)(document, acessoPainel, { role });
+    assert.strictEqual(els['conta-avisos-email'].hidden, escondido, role);
+  }
+  const abrir = extrair(DASH, 'function abrirPainelAvisos(');
+  assert.match(abrir, /currentProfile\.role !== 'admin_cliente'\) return/);
+  assert.match(abrir, /avisosPainel\.montar\(/);
+  const novo = `${abrir}${extrair(DASH, 'function fecharPainelAvisos(')}${ler('site/js/avisos-painel.js')}`;
+  assert.doesNotMatch(novo, /\bconfirm\(|\balert\(/);
+});
+
+caso('scripts inline do admin e do painel passam no node --check', () => {
+  fs.mkdirSync(path.join(raizRepo, 'tmp'), { recursive: true });
+  const dir = fs.mkdtempSync(path.join(raizRepo, 'tmp', 'check-'));
+  try {
+    for (const [nome, html] of [['admin', ADMIN], ['dash', DASH]]) {
+      const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+      scripts.forEach((src, i) => {
+        const arq = path.join(dir, `${nome}-${i}.js`);
+        fs.writeFileSync(arq, src);
+        execFileSync(process.execPath, ['--check', arq]);
+      });
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+(async () => {
+  const caixa = (o) => ({ dataset: { id: 'id-1', opcao: 'recebe_alertas' }, checked: true, disabled: false, ...o });
+  const chamadas = [];
+  const avisos = [];
+  const avisar = (m, erro) => avisos.push([m, erro]);
+
+  let c = caixa();
+  let ok = await painel.salvarOpcao(c, { api: async (...a) => { chamadas.push(a); assert.strictEqual(c.disabled, true); return {}; }, avisar });
+  assert.strictEqual(ok, true);
+  assert.deepStrictEqual(chamadas[0], ['/avisos?id=id-1', 'PUT', { recebe_alertas: true }]);
+  assert.strictEqual(c.checked, true);
+  assert.strictEqual(c.disabled, false);
+  assert.strictEqual(avisos[0][1], false);
+  passou++; console.log('ok - opção salva na hora (PUT só com a opção), caixa travada enquanto salva');
+
+  c = caixa({ checked: false, dataset: { id: 'a&b', opcao: 'recebe_relatorio' } });
+  ok = await painel.salvarOpcao(c, { api: async () => { throw new Error('Usuário não encontrado'); }, avisar });
+  assert.strictEqual(ok, false);
+  assert.strictEqual(c.checked, true, 'volta ao que era');
+  assert.strictEqual(c.disabled, false);
+  assert.deepStrictEqual(avisos[1], ['Usuário não encontrado', true]);
+  passou++; console.log('ok - falha: a caixa volta ao estado anterior e o erro aparece');
+
+  const antes = chamadas.length;
+  ok = await painel.salvarOpcao(caixa({ dataset: { id: 'x', opcao: 'role' } }), { api: async (...a) => { chamadas.push(a); }, avisar });
+  assert.strictEqual(ok, false);
+  assert.strictEqual(chamadas.length, antes);
+  passou++; console.log('ok - opção desconhecida não chama a API');
+
+  console.log(`\n${passou} casos ok`);
+})().catch((e) => { console.error(e); process.exit(1); });

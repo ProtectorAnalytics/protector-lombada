@@ -143,13 +143,13 @@ async function caso(nome, fn) { await fn(); passou++; console.log(`ok - ${nome}`
     assert.ok(iSo > 0 && iSo < iCli, 'so_email apagado antes do cliente');
   });
 
-  await caso('nenhum arquivo de api/ e lib/ usa email_destinatarios (exceto api/admin/emails.js, Task 4)', async () => {
+  await caso('nenhum arquivo de api/ e lib/ usa email_destinatarios', async () => {
     const achados = [];
     const varrer = (dir) => {
       for (const ent of fs.readdirSync(path.join(__dirname, '..', dir), { withFileTypes: true })) {
         const rel = path.join(dir, ent.name);
         if (ent.isDirectory()) { varrer(rel); continue; }
-        if (!rel.endsWith('.js') || rel === path.join('api', 'admin', 'emails.js')) continue;
+        if (!rel.endsWith('.js')) continue;
         if (ler(rel).includes('email_destinatarios')) achados.push(rel);
       }
     };

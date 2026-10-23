@@ -17,7 +17,6 @@
     { "src": "/api/admin/clientes", "dest": "/api/admin/clientes.js" },
     { "src": "/api/admin/cameras", "dest": "/api/admin/cameras.js" },
     { "src": "/api/admin/usuarios", "dest": "/api/admin/usuarios.js" },
-    { "src": "/api/admin/emails", "dest": "/api/admin/emails.js" },
     { "src": "/api/admin/veiculos", "dest": "/api/admin/veiculos.js" },
     { "src": "/api/admin/unidades", "dest": "/api/admin/unidades.js" },
     { "src": "/api/admin/porteiros", "dest": "/api/admin/porteiros.js" },

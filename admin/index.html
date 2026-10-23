@@ -6,6 +6,7 @@
   <title>Protector Traffic Control - Admin</title>
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
   <link rel="stylesheet" href="/css/portaria-gestao.css">
+  <link rel="stylesheet" href="/css/avisos-email.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     html { font-size: 100%; }
@@ -651,6 +652,8 @@
   <script src="/js/editor-unidades.js"></script>
   <script src="/js/gestao-porteiros.js"></script>
   <script src="/js/portaria-gestao.js"></script>
+  <script src="/js/avisos-email.js"></script>
+  <script src="/js/avisos-painel.js"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -851,7 +854,6 @@
           <div class="tabs">
             <button class="tab-btn active" onclick="showTab('cameras')">Câmeras</button>
             <button class="tab-btn" onclick="showTab('notificacao')">PDF</button>
-            <button class="tab-btn" onclick="showTab('emails')">E-mails</button>
             <button class="tab-btn" onclick="showTab('relatorio')">Relatório</button>
             <button class="tab-btn" onclick="showTab('veiculos')">Veículos</button>
             <button class="tab-btn" onclick="showTab('portaria')">Portaria</button>
@@ -920,8 +922,8 @@
             <div class="config-block" style="background:var(--bg-input);border-radius:10px;padding:18px;margin-bottom:20px;border-left:3px solid var(--accent)">
               <div style="font-size:0.8125rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Relatório semanal por e-mail</div>
               <div style="font-size:0.75rem;color:var(--text-secondary)">
-                Resumo de circulação enviado aos destinatários do tipo <strong>Relatório</strong>
-                cadastrados na aba E-mails. O texto aceita variáveis e é personalizado
+                Resumo de circulação enviado a quem tem marcada a opção <strong>Recebe relatório periódico</strong>
+                na aba Usuários. O texto aceita variáveis e é personalizado
                 para cada destinatário.
               </div>
             </div>
@@ -983,17 +985,6 @@
             <div id="rel-envios-recentes" class="config-block" style="margin-top:28px"></div>
           </div>
 
-          <!-- Tab: E-mails -->
-          <div class="tab-panel" id="tab-emails">
-            <div class="toolbar">
-              <span></span>
-              <button class="btn btn-primary btn-sm" onclick="openEmailModal()">+ Novo Destinatário</button>
-            </div>
-            <table class="data-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
-              <tbody id="emails-body"><tr><td colspan="5" class="table-empty">Carregando...</td></tr></tbody>
-            </table>
-          </div>
-
           <!-- Tab: Veículos -->
           <div class="tab-panel" id="tab-veiculos">
             <div class="toolbar">
@@ -1020,8 +1011,8 @@
               <span></span>
               <button class="btn btn-primary btn-sm" onclick="openUsuarioModal()">+ Novo Usuário</button>
             </div>
-            <table class="data-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
-              <tbody id="usuarios-cli-body"><tr><td colspan="5" class="table-empty">Carregando...</td></tr></tbody>
+            <table class="data-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Avisos por e-mail</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="usuarios-cli-body"><tr><td colspan="6" class="table-empty">Carregando...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1177,7 +1168,6 @@ let currentDetailCliente = null;
 let clientesData = [];
 let usuariosData = [];
 let camerasData = [];
-let emailsData = [];
 let veiculosData = [];
 let unidadesData = [];
 let usuariosCliData = [];
@@ -2384,7 +2374,6 @@ async function openClienteDetail(id, opts = {}) {
   showPage('cliente-detail', { hash: 'cliente/' + id, fromHistory: opts.fromHistory });
   showTab('cameras');
   loadCameras(id);
-  loadEmails(id);
   loadPortaria(id).then(() => loadVeiculos(id));
   loadUsuariosCli(id);
   loadPdfConfig();
@@ -2508,107 +2497,6 @@ async function deleteCamera(id, nome) {
     await api('/cameras?id=' + id + '&permanent=true', 'DELETE');
     toast('Câmera excluída permanentemente!');
     loadCameras();
-  } catch (err) { toast(err.message, true); }
-}
-
-// ============================================
-// EMAILS
-// ============================================
-async function loadEmails(clienteId) {
-  try {
-    emailsData = await api('/emails?cliente_id=' + (clienteId || currentDetailCliente.id));
-    renderEmails();
-  } catch (err) { console.error(err); erroNaTabela('emails-body', 5, 'loadEmails()'); }
-}
-
-function renderEmails() {
-  const tbody = document.getElementById('emails-body');
-  if (!emailsData.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhum destinatário</td></tr>'; return; }
-
-  const tipoLabel = { alerta: 'Alertas', relatorio: 'Relatórios', todos: 'Todos' };
-  tbody.innerHTML = emailsData.map(e => `<tr>
-    <td><strong>${esc(e.nome)}</strong></td>
-    <td>${esc(e.email)}</td>
-    <td><span class="badge-tipo">${tipoLabel[e.tipo] || e.tipo}</span></td>
-    <td>${e.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
-    <td class="actions-cell">
-      <button class="btn btn-ghost btn-sm" onclick="openEmailModal(emailsData.find(x=>x.id==='${e.id}'))">Editar</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteEmail('${e.id}')">Remover</button>
-    </td>
-  </tr>`).join('');
-}
-
-function openEmailModal(email = null) {
-  const isEdit = !!email;
-  openModal(isEdit ? 'Editar Destinatário' : 'Novo Destinatário', `
-    <div class="form-row">
-      <div class="form-group"><label>Nome *</label><input id="f-em-nome" value="${esc(email?.nome || '')}"></div>
-      <div class="form-group"><label>E-mail *</label><input type="email" id="f-em-email" value="${esc(email?.email || '')}"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Tipo</label>
-        <select id="f-em-tipo">
-          <option value="alerta" ${email?.tipo === 'alerta' ? 'selected' : ''}>Alertas de Velocidade</option>
-          <option value="relatorio" ${email?.tipo === 'relatorio' ? 'selected' : ''}>Relatórios</option>
-          <option value="todos" ${(email?.tipo === 'todos' || !email) ? 'selected' : ''}>Todos</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Status</label>
-        <select id="f-em-ativo">
-          <option value="true" ${email?.ativo !== false ? 'selected' : ''}>Ativo</option>
-          <option value="false" ${email?.ativo === false ? 'selected' : ''}>Inativo</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-error" id="f-em-error"></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="comLoading(this, () => saveEmail(${isEdit ? `'${email.id}'` : 'null'}))">${isEdit ? 'Salvar' : 'Adicionar'}</button>
-    </div>
-  `);
-}
-
-async function saveEmail(id) {
-  const body = {
-    nome: document.getElementById('f-em-nome').value.trim(),
-    email: document.getElementById('f-em-email').value.trim(),
-    tipo: document.getElementById('f-em-tipo').value,
-    ativo: document.getElementById('f-em-ativo').value === 'true',
-  };
-  limparErrosCampo();
-  const erros = [];
-  if (!body.nome) erros.push(['f-em-nome', 'Informe o nome']);
-  if (!body.email) erros.push(['f-em-email', 'Informe o e-mail']);
-  else if (!EMAIL_RE.test(body.email)) erros.push(['f-em-email', 'E-mail inválido']);
-  if (aplicarErrosCampo(erros)) return;
-
-  try {
-    if (id) {
-      body.id = id;
-      await api('/emails', 'PUT', body);
-      toast('Destinatário atualizado!');
-    } else {
-      body.cliente_id = currentDetailCliente.id;
-      await api('/emails', 'POST', body);
-      toast('Destinatário adicionado!');
-    }
-    closeModal();
-    loadEmails();
-  } catch (err) { document.getElementById('f-em-error').textContent = err.message; }
-}
-
-async function deleteEmail(id) {
-  const confirmado = await confirmarAcao({
-    titulo: 'Remover destinatário?',
-    mensagem: 'Este e-mail não receberá mais alertas e notificações deste cliente.',
-    textoOk: 'Remover',
-    textoCancel: 'Cancelar',
-  });
-  if (!confirmado) return;
-  try {
-    await api('/emails?id=' + id, 'DELETE');
-    toast('Destinatário removido!');
-    loadEmails();
   } catch (err) { toast(err.message, true); }
 }
 
@@ -2996,30 +2884,52 @@ function seguraSaidaDaPortaria(seguir) {
 // ============================================
 // USUARIOS (no detalhe do cliente)
 // ============================================
+const ROLE_LABEL = { super_admin: 'Super Admin', admin_cliente: 'Admin Cliente', operador: 'Operador', portaria: 'Portaria', so_email: avisosEmailLib.ROTULOS.so_email };
 async function loadUsuariosCli(clienteId) {
   try {
     usuariosCliData = await api('/usuarios?cliente_id=' + (clienteId || currentDetailCliente.id));
     renderUsuariosCli();
-  } catch (err) { console.error(err); erroNaTabela('usuarios-cli-body', 5, 'loadUsuariosCli()'); }
+  } catch (err) { console.error(err); erroNaTabela('usuarios-cli-body', 6, 'loadUsuariosCli()'); }
 }
 
 function renderUsuariosCli() {
   const tbody = document.getElementById('usuarios-cli-body');
-  if (!usuariosCliData.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhum usuário</td></tr>'; return; }
+  if (!usuariosCliData.length) { tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Nenhum usuário</td></tr>'; return; }
 
-  const roleLabel = { super_admin: 'Super Admin', admin_cliente: 'Admin Cliente', operador: 'Operador', portaria: 'Portaria' };
   tbody.innerHTML = usuariosCliData.map(u => `<tr>
     <td><strong>${esc(u.nome)}</strong></td>
     <td>${esc(u.email)}</td>
-    <td><span class="badge-role">${roleLabel[u.role]}</span></td>
+    <td><span class="badge-role">${esc(ROLE_LABEL[u.role] || u.role)}</span></td>
+    <td>${htmlOpcoesUsuario(u)}</td>
     <td>${u.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
-    <td class="actions-cell">
-      <button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
-      ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
-      <button class="btn btn-danger-solid btn-sm" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>
-    </td>
+    <td class="actions-cell">${htmlAcoesUsuario(u)}</td>
   </tr>`).join('');
 }
+
+/** As duas opções de aviso por e-mail (salvam na hora); portaria e super_admin não recebem. */
+function htmlOpcoesUsuario(u) {
+  if (u.role === 'portaria' || u.role === 'super_admin') return '—';
+  return ['recebe_alertas', 'recebe_relatorio'].map((o) => `<label class="av-opcao"><input type="checkbox" data-opcao="${o}" data-id="${esc(u.id)}"${u[o] === true ? ' checked' : ''}> ${esc(avisosEmailLib.ROTULOS[o])}</label>`).join('');
+}
+
+function htmlAcoesUsuario(u) {
+  return `<button class="btn btn-ghost btn-sm" onclick="openUsuarioModal(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(u))}')))">Editar</button>
+      ${u.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleUsuario('${u.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleUsuario('${u.id}',true)">Ativar</button>`}
+      <button class="btn btn-danger-solid btn-sm" onclick="deleteUsuario('${u.id}','${esc(u.email)}')">Excluir</button>`;
+}
+
+// Marcar/desmarcar uma opção na aba Usuários salva na hora; falha desfaz e avisa.
+document.addEventListener('change', (e) => {
+  if (!e.target.matches('#usuarios-cli-body input[data-opcao]')) return;
+  avisosPainel.salvarOpcao(e.target, {
+    api: (caminho, metodo, corpo) => api(caminho, metodo, corpo),
+    avisar: (msg, erro) => toast(msg, erro),
+  }).then((ok) => {
+    if (!ok) return;
+    const { id, opcao } = e.target.dataset;
+    usuariosCliData = usuariosCliData.map((u) => (u.id === id ? { ...u, [opcao]: e.target.checked } : u));
+  });
+});
 
 // ============================================
 // USUARIOS (global)
@@ -3038,11 +2948,10 @@ function renderUsuariosGlobal() {
 
   if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Nenhum usuário</td></tr>'; return; }
 
-  const roleLabel = { super_admin: 'Super Admin', admin_cliente: 'Admin Cliente', operador: 'Operador', portaria: 'Portaria' };
   tbody.innerHTML = filtered.map(u => `<tr>
     <td><strong>${esc(u.nome)}</strong></td>
     <td>${esc(u.email)}</td>
-    <td><span class="badge-role">${roleLabel[u.role]}</span></td>
+    <td><span class="badge-role">${esc(ROLE_LABEL[u.role] || u.role)}</span></td>
     <td>${esc(u.clientes?.nome || '—')}</td>
     <td>${u.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
     <td class="actions-cell">
@@ -3055,30 +2964,37 @@ function renderUsuariosGlobal() {
 
 function openUsuarioModal(usuario = null, roleInicial = null) {
   const isEdit = !!usuario;
+  const ehContato = usuario?.role === 'so_email';
   const clienteOptions = clientesData.map(c => `<option value="${c.id}" ${usuario?.cliente_id === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('');
+  const sel = (r) => ((usuario?.role || roleInicial) === r ? 'selected' : '');
+  // Contato "Só recebe e-mail" não tem login: nada de senha, e não troca de tipo
+  // (nem um usuário com login vira contato).
+  const opcaoContato = !isEdit || ehContato ? `<option value="so_email" ${sel('so_email')}>${esc(avisosEmailLib.ROTULOS.so_email)} (sem login)</option>` : '';
 
   openModal(isEdit ? 'Editar Usuário' : 'Novo Usuário', `
     <div class="form-row">
-      <div class="form-group"><label>Nome *</label><input id="f-usr-nome" value="${esc(usuario?.nome || '')}"></div>
-      <div class="form-group"><label>E-mail *</label><input type="email" id="f-usr-email" value="${esc(usuario?.email || '')}" ${isEdit ? 'disabled' : ''}></div>
+      <div class="form-group"><label for="f-usr-nome">Nome *</label><input id="f-usr-nome" value="${esc(usuario?.nome || '')}"></div>
+      <div class="form-group"><label for="f-usr-email">E-mail *</label><input type="email" id="f-usr-email" value="${esc(usuario?.email || '')}" ${isEdit && !ehContato ? 'disabled' : ''}></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>${isEdit ? 'Nova Senha (deixe vazio para manter)' : 'Senha *'}</label><input type="password" id="f-usr-senha" placeholder="${isEdit ? '••••••' : ''}"></div>
-      <div class="form-group"><label>Perfil *</label>
-        <select id="f-usr-role">
-          <option value="admin_cliente" ${usuario?.role === 'admin_cliente' ? 'selected' : ''}>Admin Cliente</option>
-          <option value="operador" ${usuario?.role === 'operador' ? 'selected' : ''}>Operador (somente leitura)</option>
-          <option value="portaria" ${(usuario?.role || roleInicial) === 'portaria' ? 'selected' : ''}>Portaria</option>
-          <option value="super_admin" ${usuario?.role === 'super_admin' ? 'selected' : ''}>Super Admin</option>
+      <div class="form-group" id="f-usr-senha-grupo"><label for="f-usr-senha">${isEdit ? 'Nova Senha (deixe vazio para manter)' : 'Senha *'}</label><input type="password" id="f-usr-senha" placeholder="${isEdit ? '••••••' : ''}"></div>
+      <div class="form-group"><label for="f-usr-role">Perfil *</label>
+        <select id="f-usr-role" onchange="aplicarTipoUsuario()" ${ehContato ? 'disabled' : ''}>
+          ${ehContato ? '' : `<option value="admin_cliente" ${sel('admin_cliente')}>Admin Cliente</option>
+          <option value="operador" ${sel('operador')}>Operador (somente leitura)</option>
+          <option value="portaria" ${sel('portaria')}>Portaria</option>
+          <option value="super_admin" ${sel('super_admin')}>Super Admin</option>`}
+          ${opcaoContato}
         </select>
       </div>
     </div>
-    <div class="form-group"><label>Cliente</label>
-      <select id="f-usr-cliente">
+    <div class="form-group"><label for="f-usr-cliente">Cliente</label>
+      <select id="f-usr-cliente" ${ehContato ? 'disabled' : ''}>
         <option value="">--- Nenhum (Super Admin) ---</option>
         ${clienteOptions}
       </select>
     </div>
+    <p class="hint" id="f-usr-dica-contato" hidden>Sem senha e sem acesso ao painel: só recebe os e-mails marcados na aba Usuários.</p>
     <div class="form-error" id="f-usr-error"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
@@ -3090,16 +3006,32 @@ function openUsuarioModal(usuario = null, roleInicial = null) {
   if (!isEdit && currentDetailCliente) {
     document.getElementById('f-usr-cliente').value = currentDetailCliente.id;
   }
+  aplicarTipoUsuario();
 }
 
-async function saveUsuario(id) {
-  const nome = document.getElementById('f-usr-nome').value.trim();
-  const email = document.getElementById('f-usr-email').value.trim();
-  const senha = document.getElementById('f-usr-senha').value;
-  const role = document.getElementById('f-usr-role').value;
-  const cliente_id = document.getElementById('f-usr-cliente').value || null;
+/** "Só recebe e-mail" esconde a senha (o contato não tem login). */
+function aplicarTipoUsuario() {
+  const contato = document.getElementById('f-usr-role').value === 'so_email';
+  document.getElementById('f-usr-senha-grupo').hidden = contato;
+  document.getElementById('f-usr-dica-contato').hidden = !contato;
+}
 
+/** Contato "Só recebe e-mail": criado e editado por /api/admin/avisos, nunca pelo Auth. */
+async function salvarContatoSoEmail(id, dados) {
+  const { nome, email, cliente_id } = dados;
   limparErrosCampo();
+  const r = avisosEmailLib.validarContato({ nome, email });
+  const erros = Object.entries(r.erros || {}).map(([c, m]) => [c === 'nome' ? 'f-usr-nome' : 'f-usr-email', m]);
+  if (!id && !cliente_id) erros.push(['f-usr-cliente', 'Escolha o cliente deste contato']);
+  if (aplicarErrosCampo(erros)) return false;
+  if (id) await api('/avisos?id=' + encodeURIComponent(id), 'PUT', r.corpo);
+  else await api('/avisos', 'POST', { cliente_id, ...r.corpo });
+  toast(id ? 'Contato atualizado!' : 'Contato criado!');
+  return true;
+}
+
+function errosDoUsuario(id, dados) {
+  const { nome, email, senha, role, cliente_id } = dados;
   const erros = [];
   if (!nome) erros.push(['f-usr-nome', 'Informe o nome']);
   if (!id && !email) erros.push(['f-usr-email', 'Informe o e-mail']);
@@ -3111,17 +3043,33 @@ async function saveUsuario(id) {
     const erroPorteiro = usuarioPortariaLib.erroSenhaPorteiro(senha, { usuario: email.split('@')[0], nome });
     if (erroPorteiro) erros.push(['f-usr-senha', erroPorteiro]);
   } else if (senha && senha.length < SENHA_MIN) erros.push(['f-usr-senha', `A senha precisa ter pelo menos ${SENHA_MIN} caracteres`]);
-  if (aplicarErrosCampo(erros)) return;
+  return erros;
+}
 
+async function saveUsuario(id) {
+  const dados = {
+    nome: document.getElementById('f-usr-nome').value.trim(),
+    email: document.getElementById('f-usr-email').value.trim(),
+    senha: document.getElementById('f-usr-senha').value,
+    role: document.getElementById('f-usr-role').value,
+    cliente_id: document.getElementById('f-usr-cliente').value || null,
+  };
   try {
-    if (id) {
-      const body = { id, nome, role, cliente_id };
-      if (senha) body.senha = senha;
-      const r = await api('/usuarios', 'PUT', body);
-      if (r && r.aviso) toast(r.aviso, true); else toast('Usuário atualizado!');
+    if (dados.role === 'so_email') {
+      if (!(await salvarContatoSoEmail(id, dados))) return;
     } else {
-      await api('/usuarios', 'POST', { email, senha, nome, role, cliente_id });
-      toast('Usuário criado!');
+      limparErrosCampo();
+      if (aplicarErrosCampo(errosDoUsuario(id, dados))) return;
+      const { nome, email, senha, role, cliente_id } = dados;
+      if (id) {
+        const body = { id, nome, role, cliente_id };
+        if (senha) body.senha = senha;
+        const r = await api('/usuarios', 'PUT', body);
+        if (r && r.aviso) toast(r.aviso, true); else toast('Usuário atualizado!');
+      } else {
+        await api('/usuarios', 'POST', { email, senha, nome, role, cliente_id });
+        toast('Usuário criado!');
+      }
     }
     closeModal();
     loadUsuariosGlobal();
