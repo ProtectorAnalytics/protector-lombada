@@ -1278,7 +1278,7 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 48px 82px 5.75rem minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
+      grid-template-columns: var(--colunas-lista);
       gap: 8px;
       padding: 10px 14px;
       /* Cabeçalho discreto: a faixa azul sólida competia com os dados (hierarquia) */
@@ -1351,7 +1351,7 @@
 
     .table-row {
       display: grid;
-      grid-template-columns: 48px 82px 5.75rem minmax(90px, 0.9fr) minmax(140px, 1.4fr) 140px minmax(110px, 1.1fr) 64px;
+      grid-template-columns: var(--colunas-lista);
       gap: 8px;
       padding: 6px 14px;
       border-bottom: 1px solid var(--border);
@@ -2393,27 +2393,6 @@
       .topbar-status { order: 5; flex-basis: 100%; justify-content: flex-start; }
       .topbar-logo { height: 26px; }
       .topbar-titulos { padding-left: 10px; }
-      /* Tabela compacta (2 linhas por passagem):
-         linha 1 = Foto · Placa · Velocidade · Status;
-         linha 2 = Veículo · Data/Hora. Radar e Morador ficam no detalhe. */
-      .table-header, .table-row {
-        grid-template-columns: 40px 4.5rem minmax(0, 1fr) auto;
-        grid-template-areas: "foto placa vel status" "foto veic veic data";
-        column-gap: 8px; row-gap: 2px; padding-left: 10px; padding-right: 10px;
-      }
-      .table-header { grid-template-areas: "foto placa vel status"; }
-      .table-header > div:nth-child(4), .table-row > div:nth-child(4),
-      .table-header > div:nth-child(5), .table-header > div:nth-child(6),
-      .table-header > div:nth-child(7), .table-row > div:nth-child(7) {
-        display: none;
-      }
-      .table-header > div:nth-child(1), .table-row > div:nth-child(1) { grid-area: foto; }
-      .table-header > div:nth-child(2), .table-row > div:nth-child(2) { grid-area: placa; }
-      .table-header > div:nth-child(3), .table-row > div:nth-child(3) { grid-area: vel; }
-      .table-row > div:nth-child(5) { grid-area: veic; }
-      .table-row > div:nth-child(6) { grid-area: data; text-align: right; align-self: start; }
-      .table-header > div:nth-child(8), .table-row > div:nth-child(8) { grid-area: status; text-align: right !important; white-space: nowrap; }
-      .table-row .datetime { font-size: 0.75rem; }
       /* Mobile: font mínimo legível */
       body { font-size: 1rem; }
       .modal-details { grid-template-columns: 1fr 1fr; }
@@ -2429,11 +2408,10 @@
     .left-panel.agora-recolhido #recent-cards,
     .left-panel.agora-recolhido #cameras-status { display: none; }
 
-    /* Pouca altura (monitor comum, zoom 100%): a grade 3×2 vira uma faixa de
-       6 cartões com foto baixa; placa e velocidade continuam legíveis.
-       Calibrado medindo: até 1100 px de altura a grade alta deixava a lista
-       com 0–6 linhas. */
-    @media (min-width: 901px) and (max-height: 1100px) {
+    /* v1.14.0: as últimas passagens são sempre uma faixa só de 6 cartões com
+       foto baixa (antes, 2 linhas de 3 em tela alta); o espaço vai para a
+       faixa de tipos e para a lista. */
+    @media (min-width: 601px) {
       /* altura do cartão já reservada no "Carregando…": a lista não muda de tamanho ao chegar a foto */
       .recent-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; min-height: calc(76px + 2.5rem + 2px); }
       .recent-card { --rc-info-h: 2.5rem; }
@@ -2460,11 +2438,9 @@
       .filtros-topo .btn-secundario { min-height: 30px; padding: 3px 12px; }
       .table-pagination .btn-link, .btn-recolher { min-height: 24px; }
     }
-    /* Largura média: com 6 colunas o rodapé do cartão (nome/radar) mostra
-       menos de 18 caracteres abaixo de 1720 px (medido: 15 em 1600, 17 em
-       1680, 18 em 1720) e o selo encosta na velocidade. Abaixo disso ficam
-       os 3 mais recentes, com a mesma foto baixa */
-    @media (min-width: 901px) and (max-width: 1719px) and (max-height: 1100px) {
+    /* Tela estreita (abaixo de 1.200 px): ficam os 3 mais recentes, com a
+       mesma foto baixa */
+    @media (max-width: 1199px) {
       .recent-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .recent-cards > .recent-card:nth-child(n+4) { display: none; }
     }
@@ -2489,6 +2465,108 @@
     .main-layout.lista-rolante .left-panel { overflow: visible; align-self: start; }
     .main-layout.lista-rolante .sidebar { height: auto; overflow: visible; align-self: start; }
     .main-layout.lista-rolante .table-body { flex: none; overflow: visible; min-height: calc(5 * 38px); }
+
+    /* ===== v1.14.0: veículos do dia, faixa de tipos e lista (opção B) ===== */
+    :root { --colunas-lista: 48px 8.25rem 5.75rem 4.75rem minmax(80px, 0.8fr) minmax(130px, 1.3fr) 7.5rem minmax(100px, 1fr) minmax(56px, 0.55fr); }
+    .stat-sub { color: var(--text-secondary); font-size: 0.75rem; font-weight: 500; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-card .value.laranja { color: var(--orange); }
+    /* Barra fina por tipo (Veículos hoje): proporção, sem rótulo (o rótulo está na faixa de tipos) */
+    .barra-tipos { display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: var(--border); margin-top: 4px; }
+    .barra-tipos:empty { visibility: hidden; }
+    .barra-tipos > i { display: block; height: 100%; }
+    .faixa-tipos {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 5px 8px; box-shadow: var(--shadow-sm);
+    }
+    .faixa-tipos-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .faixa-tipos-dica { margin-left: auto; color: var(--text-secondary); font-size: 0.75rem; }
+    .tipo-chip {
+      display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 3px 11px 3px 9px;
+      border: 1px solid var(--border); border-radius: 999px; background: var(--chip-bg);
+      color: var(--text-primary); font: 600 0.8125rem/1.2 var(--font-sans); cursor: pointer; white-space: nowrap;
+    }
+    .tipo-chip::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--c); flex: none; }
+    .tipo-chip b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .tipo-chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-light); box-shadow: 0 0 0 1px var(--accent) inset; }
+    @media (hover: hover) { .tipo-chip:hover { border-color: var(--accent); } }
+    @media (pointer: coarse), (max-width: 600px) { .tipo-chip { min-height: 44px; } }
+
+    /* Lista: linha em alerta com fundo vermelho leve (sem coluna Status) */
+    .table-row.alerta { background: var(--tint-red); }
+    .table-row.alerta:hover { background: linear-gradient(var(--accent-light), var(--accent-light)), var(--tint-red); }
+    .table-row .hora { color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .table-row .c-placa { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
+    .selo-dia {
+      flex: none; font: 700 0.6875rem/1 var(--font-sans); color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: 999px; padding: 3px 6px; letter-spacing: 0;
+    }
+    .table-row .c-tipo, .table-row .c-nome, .table-row .c-unid { min-width: 0; font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .table-row .c-nome { font-weight: 600; color: var(--text-primary); }
+    .table-row .c-unid .dd { font-family: var(--font-mono); font-weight: 700; }
+    .table-row .sem-dado { color: var(--text-secondary); }
+    .btn-cadastrar {
+      font: 600 0.75rem/1 var(--font-sans); color: var(--accent); background: none; cursor: pointer;
+      border: 1px solid var(--accent); border-radius: 6px; padding: 4px 8px; white-space: nowrap;
+    }
+    @media (hover: hover) { .btn-cadastrar:hover { background: var(--accent-light); } }
+    @media (pointer: coarse) { .btn-cadastrar { min-height: 44px; } }
+    /* Cabeçalho do dia ("Sexta, 23 de outubro") sempre que o dia muda */
+    .linha-dia {
+      padding: 5px 14px; background: var(--surface-2); color: var(--text-secondary);
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Gráfico com abas: "Por hora" (passagens do período) e "Por dia" (veículos, 8 dias) */
+    .abas-grafico { display: flex; gap: 4px; margin-bottom: 8px; }
+    .abas-grafico [role="tab"] {
+      font: 600 0.75rem/1.2 var(--font-sans); color: var(--text-secondary); background: none; cursor: pointer;
+      border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+    }
+    .abas-grafico [role="tab"][aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    @media (pointer: coarse) { .abas-grafico [role="tab"] { min-height: 44px; } }
+    .por-dia { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; align-items: end; height: 120px; }
+    .por-dia .dia { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; min-width: 0; }
+    .por-dia .pilha { width: 100%; max-width: 30px; display: flex; flex-direction: column-reverse; border-radius: 3px 3px 0 0; overflow: hidden; min-height: 1px; }
+    .por-dia .pilha > i { display: block; width: 100%; }
+    .por-dia .n { font: 700 0.6875rem/1 var(--font-mono); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    .por-dia .d { font-size: 0.6875rem; line-height: 1.15; text-align: center; color: var(--text-secondary); white-space: nowrap; }
+    .por-dia .dia.pico .n { color: var(--orange); }
+    .por-dia .dia.parcial .pilha { opacity: 0.5; }
+    .por-dia-legenda { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 0.6875rem; color: var(--text-secondary); }
+    .por-dia-legenda span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--c); margin-right: 4px; vertical-align: -1px; }
+
+    /* Abaixo de 1.200 px: cada passagem em duas linhas, nada cortado (opção C) */
+    @media (max-width: 1199px) {
+      .table-header, .table-row {
+        grid-template-columns: 44px 8.25rem 5.25rem 4.5rem minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.7fr);
+        grid-template-areas: "foto placa vel hora radar radar radar" "foto veic veic veic tipo nome unid";
+        row-gap: 2px;
+      }
+      .table-header { grid-template-areas: "foto placa vel hora radar radar radar"; }
+      .table-header .c-veic, .table-header .c-tipo, .table-header .c-nome, .table-header .c-unid { display: none; }
+      .table-row { height: auto; padding-top: 6px; padding-bottom: 6px; }
+      .c-foto { grid-area: foto; } .c-placa { grid-area: placa; } .c-vel { grid-area: vel; } .c-hora { grid-area: hora; }
+      .c-radar { grid-area: radar; } .c-veic { grid-area: veic; } .c-tipo { grid-area: tipo; } .c-nome { grid-area: nome; } .c-unid { grid-area: unid; }
+      .table-row > div, .table-row .veiculo-info, .table-row .vb-nome, .table-row .vb-linha .vb-txt,
+      .table-row .celula-radar, .table-row .celula-radar .dd, .table-row .c-tipo, .table-row .c-nome, .table-row .c-unid {
+        white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+      }
+      .table-row .veiculo-info { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+      .table-row .dd.dd-veiculo, .table-row .dd.dd-cadastro { white-space: normal; overflow: visible; max-width: none; }
+    }
+    /* Celular: três linhas (placa · velocidade · hora / radar · veículo / cadastro) */
+    @media (max-width: 600px) {
+      .table-header, .table-row {
+        grid-template-columns: 40px minmax(0, 1fr) auto auto;
+        grid-template-areas: "foto placa vel hora" "foto radar radar radar" "foto veic veic veic" "foto tipo nome unid";
+        column-gap: 8px; padding-left: 10px; padding-right: 10px;
+      }
+      .table-header { grid-template-areas: "foto placa vel hora"; }
+      .table-header .c-radar { display: none; }
+      .table-row .c-nome { text-align: left; }
+    }
 
     /* ===== UX / ACESSIBILIDADE ===== */
 
@@ -2872,6 +2950,7 @@
   <script src="/js/grafico-acessivel.js"></script>
   <script src="/js/placa.js"></script>
   <script src="/js/vinculo-placa.js"></script>
+  <script src="/js/veiculos-do-dia.js"></script>
   <script src="/js/edicao-cadastro.js"></script>
   <script src="/js/historico-cadastro.js"></script>
   <script src="/js/novidades-atual.js"></script>
@@ -2887,6 +2966,7 @@
   <script src="/js/barra-filtros.js"></script>
   <script src="/js/lista-dinamica.js"></script>
   <script src="/js/severidade-velocidade.js"></script>
+  <script src="/js/exportacao-passagens.js"></script>
   <script src="/js/miniatura.js"></script>
   <script src="/js/usuario-portaria.js"></script>
   <script src="/js/editor-unidades.js"></script>
@@ -2945,7 +3025,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.13.0 &middot; 2026-10-23
+        v1.14.0 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -3007,8 +3087,9 @@
         </div>
         <div class="stats-row">
           <div class="stat-card destaque">
-            <div class="label">Passagens hoje</div>
-            <div class="valor-linha"><span class="value" id="stat-total">0</span><span class="unit" id="stat-total-unit" title="Passagens contam cada leitura; o mesmo veículo pode passar várias vezes">passagens</span></div>
+            <div class="label">Veículos hoje</div>
+            <div class="valor-linha"><span class="value" id="stat-veiculos">0</span><span class="unit" id="stat-passagens" title="Cada veículo conta uma vez no dia, mesmo passando por vários radares; passagens contam cada leitura">passagens</span></div>
+            <div class="barra-tipos" id="barra-tipos" role="img" aria-label="Veículos de hoje por tipo de cadastro"></div>
           </div>
           <div class="stat-card destaque" id="card-alertas">
             <div class="label" id="label-alertas">Alertas hoje</div>
@@ -3017,11 +3098,19 @@
           <div class="stat-card">
             <div class="label">Velocidade máxima hoje</div>
             <div class="valor-linha"><span class="value" id="stat-maxvel">0</span><span class="unit">km/h</span></div>
+            <div class="stat-sub">limite <span id="stat-limite">30</span> km/h</div>
           </div>
           <div class="stat-card">
-            <div class="label">Limite configurado</div>
-            <div class="valor-linha"><span class="value" id="stat-limite">30</span><span class="unit">km/h</span></div>
+            <div class="label">Dentro do limite hoje</div>
+            <div class="valor-linha"><span class="value" id="stat-conformidade">--</span></div>
+            <div class="stat-sub" id="stat-media" title="Média só das passagens que o radar mediu (a partir de 10 km/h)">média -- km/h</div>
           </div>
+        </div>
+
+        <!-- Veículos de hoje por tipo: clicar filtra a lista (clicar de novo tira o filtro) -->
+        <div class="faixa-tipos" id="faixa-tipos" role="group" aria-label="Veículos de hoje por tipo de cadastro">
+          <div class="faixa-tipos-chips" id="faixa-tipos-chips"></div>
+          <span class="faixa-tipos-dica">veículos hoje · clique filtra</span>
         </div>
 
         <!-- 6 Recent Cards -->
@@ -3091,7 +3180,6 @@
           </div>
 
           <div class="chips-filtros" id="chips-filtros" hidden></div>
-          <p class="aviso-filtros" id="aviso-nc" role="status" hidden></p>
           <p class="aviso-filtros" id="fv-aviso" role="status" aria-live="polite"></p>
           <p class="visualmente-oculto" id="anuncio-resultado" aria-live="polite"></p>
         </section>
@@ -3099,14 +3187,15 @@
           <!-- Table -->
           <div class="table-container">
             <div class="table-header">
-              <div>Foto</div>
-              <div>Placa</div>
-              <div>Velocidade</div>
-              <div>Radar</div>
-              <div>Veículo</div>
-              <div>Data / Hora</div>
-              <div>Cadastro</div>
-              <div>Status</div>
+              <div class="c-foto">Foto</div>
+              <div class="c-placa">Placa</div>
+              <div class="c-vel">Velocidade</div>
+              <div class="c-hora">Hora</div>
+              <div class="c-radar">Radar</div>
+              <div class="c-veic">Veículo</div>
+              <div class="c-tipo">Tipo</div>
+              <div class="c-nome">Nome</div>
+              <div class="c-unid">Unidade</div>
             </div>
             <div class="table-body" id="table-body">
               <div class="table-empty">Carregando...</div>
@@ -3127,21 +3216,12 @@
 
       <!-- RIGHT: sidebar unificada — analytics de altura total -->
       <div class="sidebar">
-        <!-- Indicadores Rapidos — 4 KPIs compactos em grid 2×2 -->
+        <!-- Hora pico e reincidentes do período, lado a lado (velocidade média e
+             "dentro do limite" de hoje subiram para os cartões do topo) -->
         <div class="sidebar-card" id="sidebar-indicators">
           <h3 id="title-indicators">Indicadores do Período</h3>
           <p class="card-falha" id="falha-indicators" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
           <div class="sidebar-kpis">
-            <div class="sidebar-kpi">
-              <div class="sidebar-kpi-label">Vel. Média</div>
-              <div class="sidebar-kpi-value" id="ind-vel-media">--</div>
-              <div class="sidebar-kpi-unit" id="ind-vel-media-base">km/h</div>
-            </div>
-            <div class="sidebar-kpi">
-              <div class="sidebar-kpi-label">Conformidade</div>
-              <div class="sidebar-kpi-value" id="ind-conformidade" style="color:var(--green)">--</div>
-              <div class="sidebar-kpi-unit" id="ind-conformidade-base">no limite</div>
-            </div>
             <div class="sidebar-kpi">
               <div class="sidebar-kpi-label" id="lbl-hora-pico">Hora Pico</div>
               <div class="sidebar-kpi-value" id="ind-hora-pico" style="color:var(--orange)">--</div>
@@ -3155,11 +3235,23 @@
           </div>
         </div>
 
-        <!-- Chart: Passagens por Hora (compacto) -->
+        <!-- Gráfico: "Por hora" (passagens do período) e "Por dia" (veículos, últimos 8 dias) -->
         <div class="sidebar-card">
-          <h3 id="title-hourly">Passagens por Hora</h3>
-          <div class="chart-container">
-            <canvas id="chart-hourly"></canvas>
+          <div class="abas-grafico" role="tablist" aria-label="Gráfico">
+            <button type="button" role="tab" id="aba-por-hora" aria-controls="painel-por-hora" aria-selected="true" data-aba="hora">Por hora</button>
+            <button type="button" role="tab" id="aba-por-dia" aria-controls="painel-por-dia" aria-selected="false" tabindex="-1" data-aba="dia">Por dia</button>
+          </div>
+          <div role="tabpanel" id="painel-por-hora" aria-labelledby="aba-por-hora">
+            <h3 id="title-hourly">Passagens por Hora</h3>
+            <div class="chart-container">
+              <canvas id="chart-hourly"></canvas>
+            </div>
+          </div>
+          <div role="tabpanel" id="painel-por-dia" aria-labelledby="aba-por-dia" hidden>
+            <h3 id="title-por-dia">Veículos por dia · últimos 8 dias</h3>
+            <p class="card-falha" id="falha-por-dia" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" data-acao="recarregar-por-dia">Tentar de novo</button></p>
+            <div class="por-dia" id="veiculos-por-dia" role="img" aria-label="Veículos diferentes por dia: carregando"></div>
+            <div class="por-dia-legenda" id="por-dia-legenda" aria-hidden="true"></div>
           </div>
         </div>
 
@@ -3188,7 +3280,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.13.0
+      Protector Traffic Control &middot; v1.14.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3444,12 +3536,12 @@
       contarMaisFiltros, VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString,
       validarPeriodo, buscaPorVeiculo,
     } = estadoFiltrosLib;
-    const {
-      rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
-      conjuntoCadastradas, filtrarNaoCadastradas,
-    } = barraFiltrosLib;
+    const { rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado } = barraFiltrosLib;
     const { TAMANHO_PAGINA } = filtroVeiculoLib;
-    const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra } = listaDinamicaLib;
+    const {
+      linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra, faixaDaPagina, textoFaixa,
+    } = listaDinamicaLib;
+    const veiculosDoDia = veiculosDoDiaLib;
     // Escala única: até o limite = ok (verde); acima = alerta (vermelho), em todo o painel
     const { velocidadeMedida, acimaDoLimite, classeVelocidade } = severidadeVelocidadeLib;
 
@@ -3479,21 +3571,19 @@
     function mostrarSemVel() {
       try { return localStorage.getItem(SEM_VEL_KEY) === '1'; } catch { return false; }
     }
-    function capturasVisiveis() {
-      // Busca por placa/veículo mostra tudo: quem procura um carro quer todas as passagens dele
-      if (mostrarSemVel() || buscaPorVeiculo(filtrosAtivos)) return lastCapturas;
-      return (lastCapturas || []).filter(c => c.velocidade > 0);
+    // Busca por placa/veículo mostra tudo: quem procura um carro quer todas as passagens dele
+    function listaMostraSemVel() {
+      return mostrarSemVel() || buscaPorVeiculo(filtrosAtivos);
     }
     function toggleSemVel(checked) {
       try { localStorage.setItem(SEM_VEL_KEY, checked ? '1' : '0'); } catch { /* sem storage */ }
-      currentPage = 1;
-      renderPage();
+      loadCapturas({ resetPage: true }); // o filtro de velocidade vai na consulta do servidor
       loadRecentCards();
     }
 
     // Rodapé da tabela: "N passagens sem velocidade ocultas · Mostrar" / "Ocultar"
     function atualizarRodapeSemVel() {
-      const semVel = (lastCapturas || []).filter(c => !(c.velocidade > 0)).length;
+      const semVel = lista.semVel;
       const naBusca = buscaPorVeiculo(filtrosAtivos);
       const mostrando = mostrarSemVel() || naBusca;
       const uma = semVel === 1;
@@ -3524,7 +3614,6 @@
     let veiculosCache = {};
     // Cadastro carregado: "Não cadastrados" espera por ele (senão tudo pareceria não cadastrado)
     let veiculosCachePronto = Promise.resolve();
-    let placasCadastradas = new Set();
     // Todos os vínculos (vigentes e encerrados) por placa: "quem estava na hora"
     let indiceVinculos = new Map();
     // Painel aberto acompanha cadastros novos (ex.: portaria): ver recarregarVinculosSePreciso
@@ -3540,7 +3629,12 @@
     const CARREGANDO_CARTOES_HTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>';
     let recentCardsData = []; // capturas dos cards (o clique abre pelo índice, sem JSON no HTML)
     let tabelaPaginaData = [];  // idem para as linhas da tabela
-    let lastCapturas = []; // store last filtered captures for export
+    // Lista paginada no servidor: total exato do período e o que falta para a página.
+    // modo 'servidor': cada página vem por .range(); 'conferida': o cadastro da hora é
+    // conferido no navegador e `conferidas` guarda as passagens (leves) que atendem.
+    let lista = { modo: 'servidor', total: 0, semVel: 0, incompleta: false, consulta: null, conferidas: null };
+    // Passagens de hoje (placa, hora, velocidade): KPIs, faixa de tipos, "Nª hoje" e gráfico por dia
+    let capturasHoje = [];
 
     // "Hoje" no fuso local (BRT). new Date().toISOString() retorna UTC,
     // o que vira o dia seguinte após 21h em BRT — bug do filtro default.
@@ -4022,15 +4116,16 @@
       camerasMeta = {};
       veiculosList = [];
       vmListaFiltered = [];
-      limiteAtingido = false;
-      lastCapturas = [];
+      lista = { modo: 'servidor', total: 0, semVel: 0, incompleta: false, consulta: null, conferidas: null };
+      capturasHoje = [];
+      resumoHoje = null; // a faixa de tipos não mostra números do condomínio anterior
+      porDiaCache = null;
       recentCardsData = [];
       tabelaPaginaData = [];
       allThumbUrls = {};
       fotosAssinadas.limpar(); // URL assinada é da sessão: nada do condomínio anterior
       fotosQueFalharam = new Set();
       veiculosCache = {};
-      placasCadastradas = new Set();
       indiceVinculos = new Map();
       unidadesLista = [];
       preencherUnidadesDoFiltro();
@@ -4065,8 +4160,14 @@
       html('cameras-status', '');
       html('ranking-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
       html('recordes-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
-      ['stat-total', 'stat-alertas', 'stat-maxvel', 'ind-vel-media', 'ind-conformidade', 'ind-hora-pico', 'ind-reincidentes']
+      ['stat-veiculos', 'stat-alertas', 'stat-maxvel', 'stat-conformidade', 'ind-hora-pico', 'ind-reincidentes']
         .forEach((id) => texto(id, '--'));
+      texto('stat-passagens', 'passagens');
+      texto('stat-media', 'média -- km/h');
+      html('barra-tipos', '');
+      html('faixa-tipos-chips', '');
+      html('veiculos-por-dia', '');
+      html('por-dia-legenda', '');
       texto('titulo-tabela', 'Passagens');
       texto('title-hourly', 'Passagens por Hora');
       texto('title-ranking', 'Top 10 Placas');
@@ -4169,10 +4270,9 @@
     async function loadPeriodo({ resetPage = true } = {}) {
       const chave = chaveFiltros(filtrosAtivos);
       chavePeriodoCarregado = null;
-      if (filtrosAtivos.naoCadastrados || temFiltroCadastro(filtrosAtivos)) {
+      if (temFiltroCadastro(filtrosAtivos)) {
         if (cadastro.estado === 'erro') veiculosCachePronto = loadVeiculosCache(); // tenta de novo
         await veiculosCachePronto;
-        escreverAvisoNaoCadastrados(filtrosAtivos);
       }
       const r = await Promise.allSettled([
         loadCapturas({ resetPage }),
@@ -4243,7 +4343,7 @@
     // VEICULOS CACHE (for plate cross-reference)
     // ============================================
     // Paginado (max-rows do PostgREST). Falha não é "ninguém cadastrado":
-    // fica registrada em `cadastro` e o filtro "Não cadastrados" avisa e não filtra.
+    // fica registrada em `cadastro` e o filtro de cadastro avisa em vez de filtrar.
     async function loadVeiculosCache() {
       vinculosCargaEm = Date.now();
       const sessao = marcaDaSessao();
@@ -4259,8 +4359,6 @@
         indiceVinculos = vinculoPlacaLib.indexarVinculos(data);
         veiculosCache = {};
         vigentes.forEach((v) => { veiculosCache[v.placa] = v; });
-        // "Não cadastrados" = fora dos vínculos vigentes (encerrado não conta)
-        placasCadastradas = conjuntoCadastradas(vigentes.map((v) => v.placa));
         loadUnidades(sessao);
         cadastro = { estado: 'ok' };
       } catch (err) {
@@ -4534,20 +4632,6 @@
     // Unidade que filtra por ela
     function botaoUnidade(unidade) {
       return botaoFiltro('unidade', unidade, esc(unidade), `Unidade ${unidade} — filtrar por unidade`, 'dd-cadastro');
-    }
-
-    // Tipo + nome + unidade de quem estava ligado à placa na hora; sem vínculo: "Sem cadastro" (cinza)
-    function celulaMorador(placa, capturaTs) {
-      const m = vinculoDaPassagem(placa, capturaTs);
-      if (!m) return `<div class="morador-nc">${botaoTipoCadastro(null)}</div>`;
-      const nome = m.nome_morador || '—';
-      const t = vinculoPlacaLib.tipoPessoa(m.tipo_pessoa);
-      const sub = TIPOS_COM_ROTULO_CADASTRO.has(t.id) ? vinculoPlacaLib.rotuloCadastro(m) : '';
-      const unidade = nomeUnidade(m);
-      return `<div class="morador-tipo">${botaoTipoCadastro(m.tipo_pessoa)}</div>`
-        + `<div class="morador-nome" title="${esc(nome)}">${esc(nome)}</div>`
-        + (unidade ? `<div class="morador-sub" title="${esc(unidade)}">${botaoUnidade(unidade)}</div>` : '')
-        + (sub ? `<div class="morador-sub" title="${esc(sub)}">${esc(sub)}</div>` : '');
     }
 
     // ============================================
@@ -4886,10 +4970,11 @@
     // ============================================
     // STATS
     // ============================================
-    function textoPassagensVeiculos(capturas) {
-      const veiculos = new Set(capturas.filter(c => placaLib.ehPlaca(c.placa)).map(c => c.placa)).size;
-      return veiculos ? `de ${veiculos} ${veiculos === 1 ? 'veículo' : 'veículos'}` : 'passagens';
-    }
+    // "Agora · hoje": veículos (placa normalizada, uma vez no dia, qualquer
+    // radar), alertas, velocidade máxima e "dentro do limite" do dia inteiro
+    // (00:00–23:59), sem os filtros da lista. O tipo de cada veículo é o do
+    // cadastro na primeira passagem do dia (site/js/veiculos-do-dia.js).
+    const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
     async function loadStats() {
       const todayStart = new Date();
@@ -4900,27 +4985,25 @@
       let data;
       try {
         data = await coletarPaginado((de, ate) => sb.from('capturas')
-          .select('placa, velocidade')
+          .select('id, placa, velocidade, velocidade_invalida, timestamp')
           .eq('cliente_id', currentCliente.id)
           .gte('timestamp', todayStart.toISOString())
           .order('timestamp', { ascending: false }).order('id').range(de, ate));
       } catch { return; }
 
       if (!sessaoValida(sessao)) return;
+      capturasHoje = data;
 
-      const total = data.length;
-      const alertas = data.filter(c => acimaDoLimite(c.velocidade, currentCliente.limite_velocidade)).length;
-      const maxVel = data.length > 0 ? Math.max(...data.map(c => c.velocidade)) : 0;
+      const limite = currentCliente.limite_velocidade;
+      const alertas = data.filter(c => acimaDoLimite(c.velocidade, limite)).length;
+      const maxVel = data.length > 0 ? Math.max(...data.map(c => c.velocidade || 0)) : 0;
 
-      document.getElementById('stat-total').textContent = total;
-      // Passagem ≠ veículo: o mesmo carro passa várias vezes (ou fica parado
-      // no quadro). O card mostra as duas contagens para não confundir com a
-      // lista, que conta passagens.
-      document.getElementById('stat-total-unit').textContent = textoPassagensVeiculos(data);
+      document.getElementById('stat-passagens').textContent = plural(data.length, 'passagem', 'passagens');
       document.getElementById('stat-alertas').textContent = alertas;
       const maxEl = document.getElementById('stat-maxvel');
       maxEl.textContent = maxVel;
-      maxEl.classList.toggle('red', acimaDoLimite(maxVel, currentCliente.limite_velocidade));
+      maxEl.classList.toggle('red', acimaDoLimite(maxVel, limite));
+      escreverDentroDoLimite(veiculosDoDia.indicadoresDeVelocidade(data, limite), limite);
 
       // Realce do card "Alertas Hoje": crítico (vermelho + ⚠) quando > 0,
       // tranquilo (verde + ✓) quando zero — diferencia estado vazio de crítico.
@@ -4936,6 +5019,154 @@
         labelAlertas.textContent = '✓ Alertas hoje';
         valAlertas.classList.remove('red'); valAlertas.classList.add('green');
       }
+
+      // O tipo de cada veículo depende do cadastro: espera os vínculos carregarem
+      await veiculosCachePronto;
+      if (!sessaoValida(sessao)) return;
+      escreverVeiculosDoDia(data);
+      loadVeiculosPorDia(sessao).catch((err) => console.error('Erro em veículos por dia:', err));
+    }
+
+    function escreverDentroDoLimite(ind, limite) {
+      const el = document.getElementById('stat-conformidade');
+      const pct = ind.dentroPct;
+      el.textContent = pct === null ? '--' : `${pct}%`;
+      el.classList.toggle('green', pct !== null && pct >= 80);
+      el.classList.toggle('laranja', pct !== null && pct >= 50 && pct < 80);
+      el.classList.toggle('red', pct !== null && pct < 50);
+      el.title = ind.validas ? `${plural(ind.validas, 'passagem', 'passagens')} hoje; limite ${limite} km/h` : '';
+      document.getElementById('stat-media').textContent = ind.media === null ? 'média -- km/h' : `média ${ind.media} km/h`;
+    }
+
+    // ---------- Veículos hoje: número, barra fina por tipo e faixa de tipos clicável
+    const TIPOS_DA_FAIXA = veiculosDoDia.TIPOS.map((id) => vinculoPlacaLib.tipoPessoa(id));
+    let resumoHoje = null;
+
+    function escreverVeiculosDoDia(capturas) {
+      const cadastroOk = cadastro.estado === 'ok';
+      const r = veiculosDoDia.resumoDoDia(capturas, indiceVinculos);
+      resumoHoje = cadastroOk ? r : null;
+      document.getElementById('stat-veiculos').textContent = r.veiculos;
+      const barra = document.getElementById('barra-tipos');
+      const fatias = cadastroOk ? veiculosDoDia.fatiasDaBarra(r.porTipo, r.veiculos) : [];
+      barra.innerHTML = fatias.map((f) =>
+        `<i style="width:${Number(f.pct)}%;background:var(${esc(vinculoPlacaLib.tipoPessoa(f.tipo).cor)})"></i>`).join('');
+      barra.setAttribute('aria-label', cadastroOk
+        ? `${plural(r.veiculos, 'veículo', 'veículos')} hoje: `
+          + TIPOS_DA_FAIXA.map((t) => `${r.porTipo[t.id]} ${t.rotulo.toLowerCase()}`).join(', ')
+        : 'Tipos de cadastro indisponíveis agora');
+      escreverFaixaTipos();
+    }
+
+    // Chips com os veículos de hoje por tipo; o pressionado é o filtro de tipo da lista
+    function escreverFaixaTipos() {
+      const el = document.getElementById('faixa-tipos-chips');
+      const ativo = filtrosAtivos ? filtrosAtivos.tipoCadastro : '';
+      el.innerHTML = TIPOS_DA_FAIXA.map((t) => {
+        const n = resumoHoje ? resumoHoje.porTipo[t.id] : null;
+        const pressionado = ativo === t.id;
+        const rotulo = `${t.rotulo}: ${n === null ? 'carregando' : plural(n, 'veículo', 'veículos')} hoje — `
+          + (pressionado ? 'tirar o filtro' : 'filtrar a lista');
+        return `<button type="button" class="tipo-chip" data-tipo="${esc(t.id)}" aria-pressed="${pressionado}"`
+          + ` style="--c:var(${esc(t.cor)})" aria-label="${esc(rotulo)}">${esc(t.rotulo)} <b>${n === null ? '—' : n}</b></button>`;
+      }).join('');
+    }
+
+    // Clicar no tipo filtra a lista; clicar no que já está ativo tira o filtro
+    function aoClicarFaixaTipos(e) {
+      const b = e.target.closest('[data-tipo]');
+      if (!b || !filtrosAtivos) return;
+      const id = b.dataset.tipo;
+      // No desktop a lista já está logo abaixo; na tela estreita (página rola) leva até ela
+      mudarFiltros({ tipoCadastro: filtrosAtivos.tipoCadastro === id ? '' : id }, { rolar: ESTREITO_MQ.matches });
+    }
+
+    // ---------- Veículos por dia (últimos 8 dias, empilhado por tipo)
+    // Os dias anteriores mudam pouco: ficam guardados (por condomínio e dias)
+    // por PORDIA_TTL_MS; hoje sai de capturasHoje, já carregado. Com a função
+    // do banco (primeiras_passagens_por_dia) vem uma linha por veículo e dia;
+    // sem ela (migration ainda não aplicada), o navegador agrupa as passagens.
+    const DIAS_POR_DIA = 8;
+    const PORDIA_TTL_MS = 30 * 60 * 1000;
+    let porDiaCache = null; // { chave, em, primeiras }
+    let porDiaSemRpc = false;
+
+    async function primeirasPelaRpc(clienteId, desde, ate) {
+      const linhas = await coletarPaginado((de, fim) => sb.rpc('primeiras_passagens_por_dia', {
+        p_cliente: clienteId, p_desde: desde, p_ate: ate,
+      }).range(de, fim));
+      return linhas.map((l) => ({ dia: String(l.dia), placa: l.placa, primeira: l.primeira, passagens: l.passagens }));
+    }
+
+    async function primeirasNoNavegador(clienteId, desde, ate) {
+      const capturas = await coletarPaginado((de, fim) => sb.from('capturas')
+        .select('placa, timestamp')
+        .eq('cliente_id', clienteId)
+        .gte('timestamp', desde).lt('timestamp', ate)
+        .order('timestamp').order('id').range(de, fim));
+      return veiculosDoDia.primeirasDoDia(capturas);
+    }
+
+    async function primeirasDosDiasAnteriores(sessao, dias) {
+      const chave = `${sessao.clienteId}|${dias[0]}|${dias[dias.length - 1]}`;
+      if (porDiaCache && porDiaCache.chave === chave && Date.now() - porDiaCache.em < PORDIA_TTL_MS) return porDiaCache.primeiras;
+      const desde = veiculosDoDia.inicioDoDiaIso(dias[0]);
+      const ate = veiculosDoDia.inicioDoDiaIso(veiculosDoDia.somarDias(dias[dias.length - 1], 1));
+      let primeiras = null;
+      if (!porDiaSemRpc) {
+        try {
+          primeiras = await primeirasPelaRpc(sessao.clienteId, desde, ate);
+        } catch {
+          porDiaSemRpc = true; // função ausente no banco: agrupa no navegador
+        }
+      }
+      if (!primeiras) primeiras = await primeirasNoNavegador(sessao.clienteId, desde, ate);
+      if (sessaoValida(sessao)) porDiaCache = { chave, em: Date.now(), primeiras };
+      return primeiras;
+    }
+
+    async function loadVeiculosPorDia(sessao) {
+      const hoje = veiculosDoDia.diaDe(new Date());
+      const dias = veiculosDoDia.ultimosDias(hoje, DIAS_POR_DIA);
+      const falha = document.getElementById('falha-por-dia');
+      let anteriores;
+      try {
+        anteriores = await primeirasDosDiasAnteriores(sessao, dias.slice(0, -1));
+      } catch (err) {
+        if (sessaoValida(sessao)) falha.hidden = false;
+        throw err;
+      }
+      if (!sessaoValida(sessao)) return;
+      falha.hidden = true;
+      const deHoje = veiculosDoDia.primeirasDoDia(capturasHoje).filter((p) => p.dia === hoje);
+      desenharVeiculosPorDia(veiculosDoDia.serieVeiculosPorDia(anteriores.concat(deHoje), indiceVinculos, dias, hoje));
+    }
+
+    function htmlDiaDoGrafico(d, max, cadastroOk) {
+      const pilha = cadastroOk
+        ? TIPOS_DA_FAIXA.filter((t) => d.porTipo[t.id] > 0)
+          .map((t) => `<i style="flex:${Number(d.porTipo[t.id])};background:var(${esc(t.cor)})"></i>`).join('')
+        : '<i style="flex:1;background:var(--accent)"></i>';
+      // "sex" em cima, "23" embaixo: 8 colunas cabem na lateral estreita
+      const [semana, numero] = veiculosDoDia.rotuloDiaCurto(d.dia).split(' ');
+      return `<div class="dia${d.pico ? ' pico' : ''}${d.parcial ? ' parcial' : ''}">`
+        + `<span class="n">${Number(d.total)}</span>`
+        + `<div class="pilha" style="height:${Math.round((d.total / max) * 100)}%">${d.total ? pilha : ''}</div>`
+        + `<span class="d">${esc(semana)}<br>${esc(numero)}${d.parcial ? '*' : ''}</span></div>`;
+    }
+
+    function desenharVeiculosPorDia(serie) {
+      const max = Math.max(1, ...serie.map((d) => d.total));
+      const cadastroOk = cadastro.estado === 'ok';
+      const horaAgora = new Date().getHours();
+      const el = document.getElementById('veiculos-por-dia');
+      el.innerHTML = serie.map((d) => htmlDiaDoGrafico(d, max, cadastroOk)).join('');
+      const descricao = serie.map((d) => `${veiculosDoDia.rotuloDiaCurto(d.dia)}: ${d.total}`
+        + (d.parcial ? ` (hoje, até ${horaAgora}h)` : '') + (d.pico ? ', o maior' : '')).join('; ');
+      el.setAttribute('aria-label', `Veículos diferentes por dia, últimos ${serie.length} dias — ${descricao}`);
+      document.getElementById('por-dia-legenda').innerHTML = (cadastroOk
+        ? TIPOS_DA_FAIXA.map((t) => `<span style="--c:var(${esc(t.cor)})">${esc(t.rotulo)}</span>`).join('') : '')
+        + `<span class="sem-cor">* hoje, até ${horaAgora}h</span>`;
     }
 
     // ============================================
@@ -4997,44 +5228,64 @@
     let capturasSeq = 0;
     const MSG_FILTRO_CADASTRO_VAZIO = 'Nenhuma passagem com esse cadastro no período.';
     const MSG_CADASTRO_FALHA = 'Não foi possível conferir o cadastro agora. Tente de novo em instantes.';
-    const MSG_CONFERENCIA_INCOMPLETA = 'Período com passagens demais para conferir o cadastro de todas: a lista mostra só parte. Refine o período.';
+    const MSG_CONFERENCIA_INCOMPLETA = 'Período com passagens demais para conferir o cadastro de todas: a lista mostra as mais recentes conferidas. Refine o período para ver todas.';
 
-    function consultaDaLista(f, fv, fc) {
-      return aplicarFiltros(sb.from('capturas').select('*')
+    // Consulta da lista: período + todos os filtros confirmados
+    function consultaDaLista(f, fv, fc, colunas, opcoes) {
+      return aplicarFiltros(sb.from('capturas').select(colunas, opcoes)
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', f.tsStart)
-        .lte('timestamp', f.tsEnd), f, fv, fc)
-        .order('timestamp', { ascending: false });
+        .lte('timestamp', f.tsEnd), f, fv, fc);
     }
+    // Ordem estável para paginar por .range(): mais nova primeiro, empate pelo id
+    const ordenarLista = (q) => q.order('timestamp', { ascending: false }).order('id');
+    // Abaixo de 10 km/h o radar não mede: oculto na lista (salvo "Mostrar" ou busca por veículo)
+    const soComVelocidade = (q) => q.gt('velocidade', 0);
 
-    // As LIMITE_CAPTURAS mais recentes direto do servidor (com `ou` do cadastro,
-    // a conferência no cliente não tira nada; "Não cadastrados" tira)
-    async function listaDoServidor(f, fv, fc) {
-      const { data, error } = await consultaDaLista(f, fv, fc).limit(LIMITE_CAPTURAS);
-      if (error || !data) return { data, error, limite: false };
-      return { data: filtrarNoCliente(f, data), limite: data.length === LIMITE_CAPTURAS, error: null };
+    // Total EXATO no servidor (sem o teto antigo de 300): todas e só as com velocidade
+    async function contarNoServidor(f, fv, fc) {
+      const contar = (ajuste) => ajuste(consultaDaLista(f, fv, fc, 'id', { count: 'exact', head: true }));
+      const [todas, comVel] = await Promise.all([contar((q) => q), contar(soComVelocidade)]);
+      const erro = todas.error || comVel.error;
+      if (erro) throw erro;
+      const total = todas.count || 0;
+      const comVelocidade = comVel.count || 0;
+      return { total: listaMostraSemVel() ? total : comVelocidade, semVel: total - comVelocidade };
     }
 
     // Filtro de cadastro que não coube na URL (ou "Sem cadastro"): lê o período
-    // em páginas e confere cada passagem, até juntar LIMITE_CAPTURAS + 1.
-    // Parou no teto de páginas com período sobrando: avisa (nunca "lista completa").
-    async function listaConferidaNoCliente(f, fv, fc) {
-      try {
-        const r = await filtroCadastroLib.conferirEmPaginas(
-          (de, ate) => consultaDaLista(f, fv, fc).order('id').range(de, ate),
-          (linhas) => filtrarNoCliente(f, linhas),
-          { limite: LIMITE_CAPTURAS, tamanho: TAMANHO_PAGINA, maxPaginas: MAX_PAGINAS_CONFERENCIA });
-        if (r.incompleta) avisoFiltroVeiculo(MSG_CONFERENCIA_INCOMPLETA);
-        return { data: r.linhas, limite: r.limite, error: null };
-      } catch (error) {
-        return { data: null, error, limite: false };
-      }
+    // em páginas só com id/placa/hora/velocidade e confere cada passagem pelo
+    // cadastro da hora. Parou no teto de páginas: avisa (nunca "lista completa").
+    async function conferirNoCliente(f, fv, fc) {
+      const r = await filtroCadastroLib.conferirEmPaginas(
+        (de, ate) => ordenarLista(consultaDaLista(f, fv, fc, 'id, placa, timestamp, velocidade')).range(de, ate),
+        (linhas) => filtrarNoCliente(f, linhas),
+        { limite: Infinity, tamanho: TAMANHO_PAGINA, maxPaginas: MAX_PAGINAS_CONFERENCIA });
+      const visiveis = listaMostraSemVel() ? r.linhas : r.linhas.filter((c) => c.velocidade > 0);
+      return { conferidas: visiveis, total: visiveis.length, semVel: r.linhas.length - r.linhas.filter((c) => c.velocidade > 0).length, incompleta: r.incompleta };
+    }
+
+    // Lista vazia por um motivo (filtro sem resultado ou falha): nada velho fica na tela
+    function listaSemDados(html) {
+      document.getElementById('table-body').innerHTML = html;
+      tabelaEmErro = false;
+      tabelaPaginaData = [];
+      lista = { modo: 'servidor', total: 0, semVel: 0, incompleta: false, consulta: null, conferidas: null };
+      mostrarPaginas(false);
+      atualizarRodapeSemVel();
+    }
+
+    function mostrarErroDaLista() {
+      // Erro não é "nenhuma captura": o síndico leria que ninguém passou
+      document.getElementById('table-body').innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></div>';
+      tabelaEmErro = true; // o ajuste de linhas não troca este erro por dados velhos
+      document.getElementById('rodape-sem-vel').hidden = true;
+      mostrarPaginas(false);
     }
 
     async function loadCapturas({ resetPage = true } = {}) {
       const seq = ++capturasSeq;
       const f = getActiveFilters();
-      const tbody = document.getElementById('table-body');
 
       // Filtro por dados do veículo: vira lista de placas (sem lista, sem consulta)
       const fv = await placasDoFiltroVeiculo();
@@ -5045,12 +5296,7 @@
           : !fv.placas.length ? MSG_FILTRO_VEICULO_VAZIO : '';
         if (motivo) {
           avisoFiltroVeiculo(fv.placas ? '' : motivo);
-          tbody.innerHTML = fv.erro ? `<div class="table-empty" role="alert">${esc(motivo)}</div>` : htmlListaVazia(motivo);
-          tabelaEmErro = false; // lista vazia: nada velho para redesenhar
-          lastCapturas = []; // export não pode sair sem o filtro de veículo
-          limiteAtingido = false;
-          mostrarPaginas(false);
-          atualizarRodapeSemVel();
+          listaSemDados(fv.erro ? `<div class="table-empty" role="alert">${esc(motivo)}</div>` : htmlListaVazia(motivo));
           return !fv.erro;
         }
       }
@@ -5060,61 +5306,39 @@
       const fc = await filtroCadastroDoPeriodo(f, fv).catch(() => ({ ativo: true, erro: true }));
       if (seq !== capturasSeq) return;
       if (fc.erro || fc.vazio) {
-        tbody.innerHTML = fc.erro
-          ? `<div class="table-empty" role="alert">${esc(MSG_CADASTRO_FALHA)}</div>` : htmlListaVazia(MSG_FILTRO_CADASTRO_VAZIO);
-        tabelaEmErro = false;
-        lastCapturas = []; // export não pode sair sem o filtro de cadastro
-        limiteAtingido = false;
-        mostrarPaginas(false);
-        atualizarRodapeSemVel();
+        listaSemDados(fc.erro
+          ? `<div class="table-empty" role="alert">${esc(MSG_CADASTRO_FALHA)}</div>` : htmlListaVazia(MSG_FILTRO_CADASTRO_VAZIO));
         return !fc.erro;
       }
 
-      // "Não cadastrados" e o cadastro da hora são conferidos no cliente sobre o que veio
-      const { data, limite: noLimite, error } = fc.ativo && !fc.ou
-        ? await listaConferidaNoCliente(f, fv, fc)
-        : await listaDoServidor(f, fv, fc);
-      if (seq !== capturasSeq) return;
-
-      if (error) {
-        // Erro não é "nenhuma captura": o síndico leria que ninguém passou.
-        // Mantém lastCapturas para o export não perder o último conjunto válido.
-        tbody.innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></div>';
-        tabelaEmErro = true; // o ajuste de linhas não troca este erro por dados velhos
-        // lastCapturas fica (export), mas o rodapé não pode oferecer "Mostrar" de uma tabela em erro
-        document.getElementById('rodape-sem-vel').hidden = true;
-        mostrarPaginas(false);
+      // Com `ou` (ou sem filtro de cadastro) o servidor já filtra e pagina; sem ele, confere no cliente
+      const conferir = fc.ativo && !fc.ou;
+      let r;
+      try {
+        r = conferir ? await conferirNoCliente(f, fv, fc) : await contarNoServidor(f, fv, fc);
+      } catch (err) {
+        if (seq !== capturasSeq) return;
+        console.error('Erro ao carregar a lista:', err);
+        mostrarErroDaLista();
         return false;
       }
-      if (!data || data.length === 0) {
-        tbody.innerHTML = htmlListaVazia(fv.ativo ? MSG_FILTRO_VEICULO_VAZIO
-          : fc.ativo ? MSG_FILTRO_CADASTRO_VAZIO : MSG_LISTA_VAZIA);
-        tabelaEmErro = false;
-        lastCapturas = [];
-        limiteAtingido = false;
-        mostrarPaginas(false);
+      if (seq !== capturasSeq) return;
+      if (conferir && r.incompleta) avisoFiltroVeiculo(MSG_CONFERENCIA_INCOMPLETA);
+
+      lista = {
+        modo: conferir ? 'conferida' : 'servidor', total: r.total, semVel: r.semVel,
+        incompleta: Boolean(r.incompleta), consulta: { f, fv, fc }, conferidas: conferir ? r.conferidas : null,
+      };
+      tabelaEmErro = false;
+      allThumbUrls = {};
+      if (resetPage) currentPage = 1; // renderPage() limita se o total de páginas diminuiu
+      if (!lista.total) {
+        listaSemDados(htmlListaVazia(fv.ativo ? MSG_FILTRO_VEICULO_VAZIO : fc.ativo ? MSG_FILTRO_CADASTRO_VAZIO : MSG_LISTA_VAZIA));
+        lista = { ...lista, semVel: r.semVel, consulta: { f, fv, fc } };
         atualizarRodapeSemVel();
         return true;
       }
-
-      lastCapturas = data;  // sempre o conjunto completo (export usa isto)
-      tabelaEmErro = false;
-      limiteAtingido = noLimite;
-      allThumbUrls = {};
-      // renderPage() faz o clamp caso o total de páginas tenha diminuído
-      if (resetPage) currentPage = 1;
-
-      // Miniaturas das primeiras 50 visíveis numa chamada só (assinatura em
-      // lote; o cache de URL evita reassinar no polling), por foto_path
-      const vis = capturasVisiveis();
-      const firstVis = vis.slice(0, 50).filter(c => c.foto_path);
-      const sessao = marcaDaSessao();
-      const fotos = await fotosDaLista(firstVis);
-      if (seq !== capturasSeq || !sessaoValida(sessao)) return; // mais nova (ou outro condomínio) desenha
-      Object.assign(allThumbUrls, fotos);
-
-      await renderPage();
-      return true;
+      return renderPage();
     }
 
     // Linhas por página = o que cabe na altura útil da lista (5 a 50)
@@ -5137,12 +5361,129 @@
     // Tabela mostrando "Não foi possível carregar…": o ajuste só recalcula o
     // número de linhas, sem redesenhar (senão o erro vira dados velhos)
     let tabelaEmErro = false;
-    // Consulta traz no máximo isto; ao bater o teto a tela avisa que não é o total
-    const LIMITE_CAPTURAS = 300;
-    let limiteAtingido = false;
     let currentPage = 1;
     let allThumbUrls = {};
     let renderSeq = 0;
+    const MAX_PAGINAS_ORDINAL = 5;
+
+    // Passagens da página: do servidor por .range() ou, na conferência, pelos ids conferidos
+    async function paginaDaLista(faixa) {
+      const { f, fv, fc } = lista.consulta;
+      if (lista.modo === 'conferida') {
+        const ids = lista.conferidas.slice(faixa.inicio, faixa.fim).map((l) => l.id);
+        if (!ids.length) return [];
+        const { data, error } = await sb.from('capturas').select('*').eq('cliente_id', currentCliente.id).in('id', ids);
+        if (error || !data) throw error || new Error('falha ao ler a página da lista');
+        const porId = new Map(data.map((c) => [c.id, c]));
+        return ids.map((id) => porId.get(id)).filter(Boolean);
+      }
+      let q = consultaDaLista(f, fv, fc, '*');
+      if (!listaMostraSemVel()) q = soComVelocidade(q);
+      const { data, error } = await ordenarLista(q).range(faixa.de, faixa.ate);
+      if (error || !data) throw error || new Error('falha ao ler a página da lista');
+      return data;
+    }
+
+    // "Nª hoje": as passagens do mesmo dia das placas da página, até a mais nova
+    // dela. Página só de hoje já coberta por capturasHoje não consulta nada.
+    async function ordinaisDaPagina(pagina) {
+      const comPlaca = pagina.filter((c) => veiculosDoDia.chaveVeiculo(c.placa));
+      if (!comPlaca.length) return new Map();
+      const hoje = veiculosDoDia.diaDe(new Date());
+      const idsHoje = new Set(capturasHoje.map((c) => c.id));
+      if (comPlaca.every((c) => idsHoje.has(c.id) && veiculosDoDia.diaDe(c.timestamp) === hoje)) {
+        return veiculosDoDia.ordinaisNoDia(comPlaca, capturasHoje);
+      }
+      const grafias = [...new Set(comPlaca.flatMap((c) => {
+        const chave = veiculosDoDia.chaveVeiculo(c.placa);
+        return [chave, placaLib.paraAntiga(chave), placaLib.limpar(c.placa)];
+      }).filter(Boolean))];
+      const dias = comPlaca.map((c) => veiculosDoDia.diaDe(c.timestamp)).sort();
+      const ate = new Date(Math.max(...comPlaca.map((c) => Date.parse(c.timestamp)))).toISOString();
+      try {
+        const passagens = await coletarPaginado((de, fim) => sb.from('capturas').select('id, placa, timestamp')
+          .eq('cliente_id', currentCliente.id).in('placa', grafias)
+          .gte('timestamp', veiculosDoDia.inicioDoDiaIso(dias[0])).lte('timestamp', ate)
+          .order('timestamp').order('id').range(de, fim), MAX_PAGINAS_ORDINAL);
+        return veiculosDoDia.ordinaisNoDia(comPlaca, passagens);
+      } catch (err) {
+        console.error('Erro ao contar as passagens do dia:', err); // o selo é extra: a lista segue sem ele
+        return new Map();
+      }
+    }
+
+    // Placa (com o selo "Nª hoje"), velocidade (▲ no alerta), hora, radar,
+    // veículo e o cadastro da hora em três colunas: Tipo, Nome e Unidade
+    function htmlLinhaDaLista(c, pi, ordinais, hoje, limite) {
+      const velMedida = velocidadeMedida(c.velocidade);
+      const isAlert = acimaDoLimite(c.velocidade, limite);
+      const ts = new Date(c.timestamp);
+      const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const dataHora = `${ts.toLocaleDateString('pt-BR')} ${hora}`;
+      const velTexto = velMedida ? `${isAlert ? '▲ ' : ''}${c.velocidade} km/h` : '— km/h';
+      const velHtml = isAlert
+        ? botaoFiltro('alerta', '1', esc(velTexto), `${c.velocidade} km/h, acima do limite — filtrar só acima do limite`)
+        : velMedida ? esc(velTexto) : `<span title="Abaixo de 10 km/h: o radar não mede">${esc(velTexto)}</span>`;
+      const thumbHtml = c.foto_path && allThumbUrls[c.foto_path]
+        ? htmlFotoLista(allThumbUrls[c.foto_path], {
+          classe: 'row-thumb', alt: '', largura: 40, altura: 28, semFoto: 'linha', adiada: ESTREITO_MQ.matches,
+        })
+        : '<div class="row-no-thumb">&#128663;</div>';
+      const radarNome = camerasMap[c.camera_id] || '—';
+      const radarHtml = camerasMap[c.camera_id]
+        ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`) : esc(radarNome);
+      const ordinal = veiculosDoDia.textoOrdinal(ordinais.get(c.id), veiculosDoDia.diaDe(c.timestamp), hoje);
+      const selo = ordinal ? `<span class="selo-dia" title="${esc(`${ordinal}: a placa já tinha passado neste dia`)}">${esc(ordinal)}</span>` : '';
+      // A linha não é botão (teria botões dentro): o detalhe abre pela hora,
+      // que é um <button>; clicar na área vazia da linha é só atalho de mouse
+      return `<div class="table-row${isAlert ? ' alerta' : ''}" onclick="openModal(tabelaPaginaData[${pi}])">
+          <div class="c-foto">${thumbHtml}</div>
+          <div class="c-placa placa">${botaoFiltro('placa', c.placa, esc(c.placa), `Filtrar pela placa ${c.placa}`)}${selo}</div>
+          <div class="c-vel vel ${classeVelocidade(c.velocidade, limite)}">${velHtml}</div>
+          <div class="c-hora hora"><button type="button" class="dd dd-detalhe" aria-label="${esc(`${dataHora} — ver detalhes da passagem ${c.placa}`)}">${esc(hora)}</button></div>
+          <div class="c-radar celula-radar" title="${esc(radarNome)}">${radarHtml}</div>
+          <div class="c-veic veiculo-info">${celulaVeiculoTabela(c.placa, c.timestamp)}</div>
+          ${celulasCadastro(c, pi)}
+        </div>`;
+    }
+
+    // Tipo · Nome · Unidade do vínculo NA HORA da passagem. Sem cadastro (e
+    // sem vínculo hoje), quem pode editar ganha "+ Cadastrar" no lugar do nome.
+    function celulasCadastro(c, pi) {
+      const m = vinculoDaPassagem(c.placa, c.timestamp);
+      const tipo = `<div class="c-tipo">${botaoTipoCadastro(m ? m.tipo_pessoa : null)}</div>`;
+      if (m) {
+        const nome = m.nome_morador || '—';
+        const unidade = nomeUnidade(m);
+        return tipo + `<div class="c-nome" title="${esc(nome)}">${esc(nome)}</div>`
+          + `<div class="c-unid">${unidade ? botaoUnidade(unidade) : '<span class="sem-dado">—</span>'}</div>`;
+      }
+      const podeCadastrar = podeEditarVeiculos() && placaLib.ehPlaca(placaLib.limpar(c.placa))
+        && !vinculoPlacaLib.vinculoVigente(indiceVinculos, c.placa);
+      const nome = podeCadastrar
+        ? `<button type="button" class="btn-cadastrar" data-acao="cadastrar-passagem" data-indice="${pi}" aria-label="${esc(`Cadastrar a placa ${c.placa}`)}">+ Cadastrar</button>`
+        : '<span class="sem-dado">—</span>';
+      return tipo + `<div class="c-nome">${nome}</div><div class="c-unid"><span class="sem-dado">—</span></div>`;
+    }
+
+    function escreverPaginacao(faixa) {
+      if (faixa.totalPaginas <= 1) { mostrarPaginas(false); return; }
+      mostrarPaginas(true);
+      const pgInfo = document.getElementById('pg-info');
+      pgInfo.textContent = textoFaixa(faixa, lista.total, lista.incompleta);
+      const p = faixa.pagina;
+      const n = faixa.totalPaginas;
+      const botao = (alvo, rotulo, desabilitado, extra) =>
+        `<button class="pg-btn${extra || ''}" onclick="goToPage(${alvo})" ${desabilitado ? 'disabled' : ''}>${rotulo}</button>`;
+      let btns = botao(1, '&laquo;', p === 1) + botao(p - 1, '&lsaquo;', p === 1);
+      // No máximo 5 números de página
+      let pgStart = Math.max(1, p - 2);
+      const pgEnd = Math.min(n, pgStart + 4);
+      if (pgEnd - pgStart < 4) pgStart = Math.max(1, pgEnd - 4);
+      for (let i = pgStart; i <= pgEnd; i++) btns += botao(i, String(i), false, i === p ? ' active' : '');
+      btns += botao(p + 1, '&rsaquo;', p === n) + botao(n, '&raquo;', p === n);
+      document.getElementById('pg-controls').innerHTML = btns;
+    }
 
     async function renderPage({ conferida = false } = {}) {
       // Sessão e número da chamada conferidos depois de cada espera, antes de
@@ -5151,111 +5492,55 @@
       const sessao = marcaDaSessao();
       const minha = ++renderSeq;
       const atual = () => minha === renderSeq && sessaoValida(sessao);
-      const data = capturasVisiveis();
       const tbody = document.getElementById('table-body');
       atualizarRodapeSemVel();
 
-      if (!data || data.length === 0) {
+      if (!lista.consulta || !lista.total) {
         tbody.innerHTML = htmlListaVazia(MSG_LISTA_VAZIA);
+        tabelaPaginaData = [];
         mostrarPaginas(false);
-        return;
+        return true;
       }
 
-      ajustarLinhasPorPagina(data.length);
-      const totalPages = Math.ceil(data.length / linhasPorPagina);
-      if (currentPage > totalPages) currentPage = totalPages;
-      const start = (currentPage - 1) * linhasPorPagina;
-      const end = Math.min(start + linhasPorPagina, data.length);
-      const pageData = data.slice(start, end);
+      ajustarLinhasPorPagina(lista.total);
+      const faixa = faixaDaPagina(currentPage, linhasPorPagina, lista.total);
+      currentPage = faixa.pagina;
       const limite = currentCliente.limite_velocidade;
 
-      // Load thumbs for current page if not cached (keyed por foto_path)
+      let pageData;
+      try {
+        pageData = await paginaDaLista(faixa);
+      } catch (err) {
+        if (!atual()) return undefined;
+        console.error('Erro ao carregar a página da lista:', err);
+        mostrarErroDaLista();
+        return false;
+      }
+      if (!atual()) return undefined;
+
+      const placas = pageData.map(c => c.placa);
       const needThumb = pageData.filter(c => c.foto_path && !(c.foto_path in allThumbUrls));
-      if (needThumb.length > 0) {
-        const fotos = await fotosDaLista(needThumb);
-        if (!atual()) return;
-        Object.assign(allThumbUrls, fotos);
-      }
+      const [fotos, ordinais] = await Promise.all([
+        needThumb.length ? fotosDaLista(needThumb) : {},
+        ordinaisDaPagina(pageData),
+        loadVeiculosBase(placas).then(() => carregarSuspeitas(placas)),
+      ]);
+      if (!atual()) return undefined; // chamada mais nova, saída ou troca de condomínio durante as esperas
+      Object.assign(allThumbUrls, fotos);
 
-      await loadVeiculosBase(pageData.map(c => c.placa));
-      await carregarSuspeitas(pageData.map(c => c.placa));
-      if (!atual()) return; // chamada mais nova, saída ou troca de condomínio durante as esperas
-
+      tabelaEmErro = false;
       tabelaPaginaData = pageData;
-      tbody.innerHTML = pageData.map((c, pi) => {
-        const velMedida = velocidadeMedida(c.velocidade);
-        const velClass = classeVelocidade(c.velocidade, limite); // unknown | green | red
-        const ts = new Date(c.timestamp);
-        const dt = ts.toLocaleDateString('pt-BR') + ' ' + ts.toLocaleTimeString('pt-BR');
-        const isAlert = acimaDoLimite(c.velocidade, limite);
-        const velTexto = velMedida ? `${isAlert ? '▲ ' : ''}${c.velocidade} km/h` : '— km/h';
-        // Status com ícone redundante (não depende só de cor — daltonismo)
-        const statusTexto = isAlert ? '▲ ALERTA' : (!velMedida ? '⊘ SEM RADAR' : '✓ OK');
-        const statusCor = isAlert ? 'var(--red)' : (!velMedida ? 'var(--text-secondary)' : 'var(--green)');
+      const hoje = veiculosDoDia.diaDe(new Date());
+      tbody.innerHTML = veiculosDoDia.comCabecalhosDeDia(pageData).map((item) => (item.tipo === 'dia'
+        ? `<div class="linha-dia">${esc(item.rotulo)}</div>`
+        : htmlLinhaDaLista(item.linha, item.indice, ordinais, hoje, limite))).join('');
 
-        // A lista cabe na tela no desktop; só adia quando a página rola (≤ 900 px)
-        const thumbHtml = c.foto_path && allThumbUrls[c.foto_path]
-          ? htmlFotoLista(allThumbUrls[c.foto_path], {
-            classe: 'row-thumb', alt: '', largura: 40, altura: 28, semFoto: 'linha', adiada: ESTREITO_MQ.matches,
-          })
-          : `<div class="row-no-thumb">&#128663;</div>`;
-
-        const radarNome = camerasMap[c.camera_id] || '—';
-        const radarHtml = camerasMap[c.camera_id]
-          ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`) : esc(radarNome);
-        const statusHtml = isAlert ? botaoFiltro('alerta', '1', statusTexto, `${statusTexto} — filtrar só acima do limite`) : statusTexto;
-        // A linha não é botão (teria botões dentro): o detalhe abre pela data/hora,
-        // que é um <button>; clicar na área vazia da linha é só atalho de mouse
-        return `<div class="table-row" onclick="openModal(tabelaPaginaData[${pi}])">
-          <div>${thumbHtml}</div>
-          <div class="placa">${botaoFiltro('placa', c.placa, esc(c.placa), `Filtrar pela placa ${c.placa}`)}</div>
-          <div class="vel ${velClass}">${velTexto}</div>
-          <div class="celula-radar" title="${esc(radarNome)}">${radarHtml}</div>
-          <div class="veiculo-info">${celulaVeiculoTabela(c.placa, c.timestamp)}</div>
-          <div class="datetime"><button type="button" class="dd dd-detalhe" aria-label="${esc(`${dt} — ver detalhes da passagem ${c.placa}`)}">${dt}</button></div>
-          <div class="morador-info">${celulaMorador(c.placa, c.timestamp)}</div>
-          <div style="text-align:center;font-size:0.75rem;font-weight:600;color:${statusCor}">${statusHtml}</div>
-        </div>`;
-      }).join('');
-
-      // Pagination controls
-      if (totalPages > 1) {
-        mostrarPaginas(true);
-        const pgInfo = document.getElementById('pg-info');
-        pgInfo.textContent = `${start + 1}-${end} de ${data.length} ${data.length === 1 ? 'passagem' : 'passagens'}`;
-        if (limiteAtingido) {
-          // A consulta traz LIMITE_CAPTURAS; as sem velocidade podem estar
-          // ocultas, então o total exibido pode ser menor que o limite.
-          // As sem velocidade ocultas aparecem no rodapé (Mostrar/Ocultar)
-          const aviso = document.createElement('span');
-          aviso.className = 'pg-limite';
-          aviso.textContent = ` · consulta limitada às ${LIMITE_CAPTURAS} passagens mais recentes`
-            + '; refine o período para ver mais';
-          pgInfo.append(aviso);
-        }
-
-        let btns = '';
-        btns += `<button class="pg-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>&laquo;</button>`;
-        btns += `<button class="pg-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&lsaquo;</button>`;
-
-        // Show max 5 page numbers
-        let pgStart = Math.max(1, currentPage - 2);
-        let pgEnd = Math.min(totalPages, pgStart + 4);
-        if (pgEnd - pgStart < 4) pgStart = Math.max(1, pgEnd - 4);
-
-        for (let p = pgStart; p <= pgEnd; p++) {
-          btns += `<button class="pg-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
-        }
-
-        btns += `<button class="pg-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>&rsaquo;</button>`;
-        btns += `<button class="pg-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>&raquo;</button>`;
-
-        document.getElementById('pg-controls').innerHTML = btns;
-        // Página cheia desenhada: confere a sobra real (uma vez por desenho)
-        if (!conferida && pageData.length === linhasPorPagina && conferirSobraDaLista()) await renderPage({ conferida: true });
-      } else {
-        mostrarPaginas(false);
+      escreverPaginacao(faixa);
+      // Página cheia desenhada: confere a sobra real (uma vez por desenho)
+      if (faixa.totalPaginas > 1 && !conferida && pageData.length === linhasPorPagina && conferirSobraDaLista()) {
+        return renderPage({ conferida: true });
       }
+      return true;
     }
 
     // Depois de desenhar: a altura real das linhas pode diferir da usada no
@@ -5272,12 +5557,13 @@
       const tbody = document.getElementById('table-body');
       const linhas = tbody.querySelectorAll('.table-row');
       if (!linhas.length) return false;
+      const primeiroItem = tbody.firstElementChild; // o cabeçalho do dia também ocupa altura
       // Mede sem a altura que a recarga reserva no #table-body (leitura síncrona)
       const reservada = tbody.style.minHeight;
       tbody.style.minHeight = '';
       let sobra;
       try {
-        const topo = linhas[0].getBoundingClientRect().top;
+        const topo = primeiroItem.getBoundingClientRect().top;
         const fim = linhas[linhas.length - 1].getBoundingClientRect().bottom;
         sobra = tbody.clientHeight - (fim - topo);
       } finally {
@@ -5293,7 +5579,7 @@
     }
 
     function goToPage(page) {
-      const totalPages = Math.ceil(capturasVisiveis().length / linhasPorPagina);
+      const totalPages = faixaDaPagina(1, linhasPorPagina, lista.total).totalPaginas;
       if (page < 1 || page > totalPages) return;
       currentPage = page;
       renderPage();
@@ -5371,7 +5657,7 @@
       clearTimeout(timerLinhas);
       timerLinhas = setTimeout(() => {
         if (!painelAtivo) return;
-        const total = capturasVisiveis().length;
+        const total = lista.total;
         if (ajustarLinhasPorPagina(total) && total > 0 && !tabelaEmErro) renderPage();
       }, DEBOUNCE_LINHAS_MS);
     }
@@ -5483,7 +5769,7 @@
     // O que a lista mostra ("36 passagens", já sem os não cadastrados/sem
     // velocidade ocultos); no teto da consulta ganha "+" (há mais no período)
     function textoDoResultadoAtual() {
-      return textoResultado(capturasVisiveis().length, limiteAtingido);
+      return textoResultado(lista.total, lista.incompleta);
     }
 
     function anunciarResultado(ok) {
@@ -5536,16 +5822,7 @@
         b.setAttribute('aria-pressed', String(b.dataset.visao === visao));
       });
       renderChips(f, hoje);
-      escreverAvisoNaoCadastrados(f);
-    }
-
-    const AVISO_NC = 'Não cadastrados: placas fora do cadastro de moradores, entre as passagens carregadas (até 300).';
-    const AVISO_NC_FALHA = 'Não foi possível conferir o cadastro agora: mostrando todas as passagens. Tente de novo em instantes.';
-    function escreverAvisoNaoCadastrados(f) {
-      const el = document.getElementById('aviso-nc');
-      el.hidden = !f.naoCadastrados;
-      el.textContent = cadastro.estado === 'erro' ? AVISO_NC_FALHA : AVISO_NC;
-      el.classList.toggle('aviso-falha', cadastro.estado === 'erro');
+      escreverFaixaTipos(); // o tipo pressionado na faixa é o filtro de tipo da lista
     }
 
     function escreverCampos(f) {
@@ -5743,7 +6020,7 @@
 
     function fontesBusca() {
       return {
-        placas: [...(lastCapturas || []).map((c) => c.placa), ...Object.keys(veiculosCache), ...busca.remotas],
+        placas: [...tabelaPaginaData.map((c) => c.placa), ...capturasHoje.map((c) => c.placa), ...Object.keys(veiculosCache), ...busca.remotas],
         modelos: opcoesBusca.modelos,
         marcas: opcoesBusca.marcas,
       };
@@ -5966,6 +6243,16 @@
       document.getElementById('table-body').addEventListener('click', (e) => {
         if (e.target.closest('[data-limpar-filtros]')) limparTodosOsFiltros();
       });
+      // "+ Cadastrar" (Sem cadastro): abre o detalhe da passagem no formulário de cadastro
+      document.getElementById('table-body').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-acao="cadastrar-passagem"]');
+        if (!b) return;
+        e.stopPropagation(); // não chega ao clique da linha
+        const captura = tabelaPaginaData[Number(b.dataset.indice)];
+        if (captura) openModal(captura, { focoCadastro: true });
+      }, true);
+      document.getElementById('faixa-tipos-chips').addEventListener('click', aoClicarFaixaTipos);
+      ligarAbasGrafico();
       ['painel-periodo', 'painel-filtros'].forEach((id) => document.getElementById(id).addEventListener('keydown', prenderFoco));
       ligarDrillDown('table-body', false);
       ligarDrillDown('modal-body', true, closeModal); // tipo e unidade do cadastro da hora
@@ -6689,6 +6976,15 @@
       };
     }
 
+    // Contexto de uma passagem para a exportação (site/js/exportacao-passagens.js)
+    function contextoExportacao(c, radares, limite) {
+      const vinculo = vinculoDaPassagem(c.placa, c.timestamp);
+      return {
+        captura: c, radar: radares[c.camera_id] || '', limite,
+        vinculo, unidade: nomeUnidade(vinculo), base: dadosVeiculoExport(c.placa),
+      };
+    }
+
     // Todas as passagens do período com os filtros da tela (paginado)
     async function capturasParaExportar() {
       const { f, montar } = await consultaDoPeriodo('placa, velocidade, camera_id, timestamp, tipo_veiculo, cor_veiculo');
@@ -6696,7 +6992,7 @@
     }
 
     async function gerarExcel() {
-      // Exporta o período inteiro do filtro, não só as 300 passagens da lista
+      // Exporta o período inteiro do filtro (todas as páginas da lista)
       const capturas = await capturasParaExportar();
       if (capturas.length === 0) {
         mostrarAviso('Nenhum dado para exportar. Aplique os filtros primeiro.', { erro: true });
@@ -6707,28 +7003,8 @@
       await loadVeiculosBase(capturas.map(c => c.placa));
 
       const limite = currentCliente.limite_velocidade;
-      const rows = capturas.map(c => {
-        const ts = new Date(c.timestamp);
-        const veiculo = vinculoDaPassagem(c.placa, c.timestamp);
-        const vb = dadosVeiculoExport(c.placa);
-        return {
-          'Placa': c.placa,
-          'Velocidade (km/h)': c.velocidade,
-          'Radar': camerasMapFull[c.camera_id] || '—',
-          'Data': ts.toLocaleDateString('pt-BR'),
-          'Hora': ts.toLocaleTimeString('pt-BR'),
-          'Status': acimaDoLimite(c.velocidade, limite) ? 'ALERTA' : 'OK',
-          'Tipo': vinculoPlacaLib.tipoPessoa(veiculo?.tipo_pessoa).rotulo,
-          'Morador': veiculo?.nome_morador || '',
-          'Unidade': nomeUnidade(veiculo),
-          'Tipo (câmera)': c.tipo_veiculo || '',
-          'Cor (câmera)': c.cor_veiculo || '',
-          'Marca': vb.marca,
-          'Modelo': vb.modelo,
-          'Cor (cadastro)': vb.cor,
-          'Ano': vb.ano,
-        };
-      });
+      // Tipo, Nome e Unidade: o cadastro NA HORA da passagem (o mesmo da lista)
+      const rows = capturas.map(c => exportacaoPassagensLib.linhaExcel(contextoExportacao(c, camerasMapFull, limite)));
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
@@ -6752,7 +7028,7 @@
     }
 
     async function gerarPDF() {
-      // Exporta o período inteiro do filtro, não só as 300 passagens da lista
+      // Exporta o período inteiro do filtro (todas as páginas da lista)
       const capturas = await capturasParaExportar();
       if (capturas.length === 0) {
         mostrarAviso('Nenhum dado para exportar. Aplique os filtros primeiro.', { erro: true });
@@ -6824,18 +7100,8 @@
 
       // --- Tabela ---
       y += 16;
-      const cols = [
-        { label: 'Placa', w: usableW * 0.11 },
-        { label: 'Velocidade', w: usableW * 0.09 },
-        { label: 'Radar', w: usableW * 0.12 },
-        { label: 'Status', w: usableW * 0.07 },
-        { label: 'Data', w: usableW * 0.09 },
-        { label: 'Hora', w: usableW * 0.09 },
-        { label: 'Morador', w: usableW * 0.16 },
-        { label: 'Unidade', w: usableW * 0.12 },
-        { label: 'Tipo', w: usableW * 0.08 },
-        { label: 'Cor', w: usableW * 0.07 },
-      ];
+      const cols = exportacaoPassagensLib.COLUNAS_PDF.map((c) => ({ label: c.label, w: usableW * c.w }));
+      const COL_STATUS = exportacaoPassagensLib.COLUNA_STATUS_PDF;
 
       const rowH = 6;
 
@@ -6872,24 +7138,12 @@
         doc.setFillColor(...bg);
         doc.rect(margin, y, usableW, rowH, 'F');
 
-        const ts = new Date(c.timestamp);
-        const veiculo = vinculoDaPassagem(c.placa, c.timestamp);
-        const values = [
-          c.placa,
-          `${c.velocidade} km/h`,
-          camerasMapFull[c.camera_id] || '—',
-          isAlert ? 'ALERTA' : 'OK',
-          ts.toLocaleDateString('pt-BR'),
-          ts.toLocaleTimeString('pt-BR'),
-          veiculo?.nome_morador || '—',
-          nomeUnidade(veiculo) || '—',
-          c.tipo_veiculo || '—',
-          c.cor_veiculo || '—',
-        ];
+        // Tipo, Nome e Unidade do cadastro na hora da passagem
+        const values = exportacaoPassagensLib.valoresPdf(contextoExportacao(c, camerasMapFull, limite));
 
         let x = margin;
         values.forEach((val, i) => {
-          if (i === 3) { // Status column
+          if (i === COL_STATUS) {
             doc.setTextColor(isAlert ? 220 : 22, isAlert ? 38 : 163, isAlert ? 38 : 74);
             doc.setFont(undefined, 'bold');
           } else {
@@ -6925,7 +7179,9 @@
     // Cada abertura tem um número: resposta atrasada de outra abertura (ou de
     // outra sessão/condomínio) não escreve no modal
     let aberturaModalSeq = 0;
-    async function openModal(captura) {
+    // { focoCadastro }: "+ Cadastrar" da lista abre o detalhe já no formulário
+    // de cadastro da passagem (mesmo formulário, placa da passagem)
+    async function openModal(captura, { focoCadastro = false } = {}) {
       const abertura = ++aberturaModalSeq;
       const sessao = marcaDaSessao();
       const modal = document.getElementById('modal');
@@ -7041,6 +7297,14 @@
 
       body.innerHTML = html;
       ligarControlesModal(body, captura, photoUrl, alvoEdicao);
+      if (focoCadastro) focarCadastroDaPassagem(body);
+    }
+
+    function focarCadastroDaPassagem(body) {
+      const form = body.querySelector('form[data-acao="cadastrar"]');
+      if (!form) return;
+      form.scrollIntoView({ block: 'center', behavior: MOVIMENTO_REDUZIDO_MQ.matches ? 'auto' : 'smooth' });
+      form.elements.tipo_pessoa.focus({ preventScroll: true });
     }
 
     // ---- Quadros do modal (base de veículos, morador, cadastro, suspeita) ----
@@ -8438,19 +8702,11 @@
         .order('timestamp', { ascending: false }).order('id').range(de, ate));
     }
 
-    // "Não cadastrados": placa fora do cadastro de moradores (as duas grafias)
-    // Sem o cadastro (falha), não filtra: marcaria todo mundo como não cadastrado
-    function soNaoCadastradasSeAtivo(f, linhas) {
-      if (!f.naoCadastrados || cadastro.estado !== 'ok') return linhas;
-      return filtrarNaoCadastradas(linhas, placasCadastradas);
-    }
-
-    // Tudo o que é conferido no cliente: "Não cadastrados" e o cadastro da hora
-    // (tipo/unidade). As linhas precisam de placa e timestamp.
+    // O que é conferido no cliente: o cadastro da hora (tipo/unidade; "Não
+    // cadastrados" é o tipo "Sem cadastro"). As linhas precisam de placa e timestamp.
     function filtrarNoCliente(f, linhas) {
-      const base = soNaoCadastradasSeAtivo(f, linhas);
-      if (!temFiltroCadastro(f) || !base) return base;
-      return filtroCadastroLib.filtrarPassagens(base, indiceVinculos, criterioCadastro(f));
+      if (!temFiltroCadastro(f) || !linhas) return linhas;
+      return filtroCadastroLib.filtrarPassagens(linhas, indiceVinculos, criterioCadastro(f));
     }
 
     async function consultaELinhas(colunas) {
@@ -8473,6 +8729,47 @@
       if (!ehAtual()) return null;
       document.getElementById(idFalha).hidden = true;
       return r;
+    }
+
+    // ---------- Abas do gráfico: "Por hora" (passagens do período) | "Por dia"
+    // (veículos dos últimos 8 dias). A escolha fica lembrada no computador.
+    const ABA_GRAFICO_KEY = 'lombada_aba_grafico';
+    function mostrarAbaGrafico(aba, { foco = false } = {}) {
+      const porDia = aba === 'dia';
+      [['aba-por-hora', 'painel-por-hora', !porDia], ['aba-por-dia', 'painel-por-dia', porDia]].forEach(([idAba, idPainel, ativa]) => {
+        const b = document.getElementById(idAba);
+        b.setAttribute('aria-selected', String(ativa));
+        b.tabIndex = ativa ? 0 : -1;
+        document.getElementById(idPainel).hidden = !ativa;
+        if (ativa && foco) b.focus();
+      });
+      try { localStorage.setItem(ABA_GRAFICO_KEY, porDia ? 'dia' : 'hora'); } catch { /* sem storage */ }
+      // O canvas escondido desenhou sem largura: redesenha ao voltar
+      const redesenhar = !porDia && ultimosGraficos.get('chart-hourly');
+      if (redesenhar) redesenhar();
+    }
+
+    function ligarAbasGrafico() {
+      const abas = document.querySelector('.abas-grafico');
+      abas.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-aba]');
+        if (b) mostrarAbaGrafico(b.dataset.aba);
+      });
+      // Setas, Home e End trocam de aba (padrão de abas do WAI-ARIA)
+      abas.addEventListener('keydown', (e) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+        e.preventDefault();
+        const atual = document.getElementById('aba-por-dia').getAttribute('aria-selected') === 'true' ? 'dia' : 'hora';
+        const proxima = e.key === 'Home' ? 'hora' : e.key === 'End' ? 'dia' : atual === 'dia' ? 'hora' : 'dia';
+        mostrarAbaGrafico(proxima, { foco: true });
+      });
+      document.querySelector('[data-acao="recarregar-por-dia"]').addEventListener('click', () => {
+        porDiaCache = null;
+        if (currentCliente) loadVeiculosPorDia(marcaDaSessao()).catch(() => {});
+      });
+      let salva = 'hora';
+      try { salva = localStorage.getItem(ABA_GRAFICO_KEY) === 'dia' ? 'dia' : 'hora'; } catch { /* sem storage */ }
+      mostrarAbaGrafico(salva);
     }
 
     // ============================================
@@ -8714,7 +9011,7 @@
     let indicadoresSeq = 0;
     async function loadIndicators() {
       const seq = ++indicadoresSeq;
-      const r = await comFalhaNoCard(() => consultaELinhas('placa, velocidade, timestamp, velocidade_invalida'),
+      const r = await comFalhaNoCard(() => consultaELinhas('placa, velocidade, timestamp'),
         'falha-indicators', () => seq === indicadoresSeq);
       if (!r) return; // resposta antiga: a mais nova desenha
       const { f, data } = r;
@@ -8722,54 +9019,14 @@
       document.getElementById('title-indicators').textContent = `Indicadores · ${f.label}`;
 
       if (!data || data.length === 0) {
-        document.getElementById('ind-vel-media').textContent = '--';
-        document.getElementById('ind-vel-media-base').textContent = 'km/h';
-        document.getElementById('ind-conformidade').textContent = '--';
-        document.getElementById('ind-conformidade-base').textContent = 'no limite';
         document.getElementById('ind-hora-pico').textContent = '--';
         document.getElementById('ind-reincidentes').textContent = '0';
         return;
       }
 
+      // Velocidade média e "dentro do limite" são de hoje e ficam nos cartões
+      // do topo (veiculos-do-dia.js: indicadoresDeVelocidade); aqui, o período.
       const limite = currentCliente.limite_velocidade;
-
-      // Velocidade média — considera apenas medições efetivas.
-      //
-      // O doppler da lombada (ASV5300) é parametrizado de fábrica para coletar
-      // somente de 10 a 250 km/h (manual ALPHADIGI, seção 11). Abaixo de 10 o
-      // sensor não reporta e a captura chega com velocidade 0: não é falha, é
-      // veículo em velocidade de segurança. Somar esses zeros à média puxava o
-      // indicador para baixo e mostrava o condomínio mais lento do que é.
-      // Acima de 250 é ruído do equipamento.
-      //
-      // Os registros continuam visíveis na listagem — a captura também serve de
-      // rastreabilidade. O que muda aqui é só o que entra no cálculo. Os dois
-      // geradores de PDF já aplicam essa mesma regra.
-      // Leituras rejeitadas pelo sanity-cap do radar saem de todos os
-      // indicadores: foram zeradas na captura e, sem este filtro, contariam
-      // como "veículo abaixo de 10 km/h" — ou seja, como conformidade.
-      const utilizaveis = data.filter(c => c.velocidade_invalida !== true);
-      const medidas = utilizaveis.filter(c => c.velocidade >= 10 && c.velocidade <= 250);
-      const avgEl = document.getElementById('ind-vel-media');
-      const avg = medidas.length
-        ? Math.round(medidas.reduce((s, c) => s + c.velocidade, 0) / medidas.length)
-        : 0;
-      avgEl.textContent = medidas.length ? avg : '--';
-      // A base da média fica explícita: só entram as passagens que o radar mediu
-      document.getElementById('ind-vel-media-base').textContent =
-        `km/h · ${medidas.length} ${medidas.length === 1 ? 'medição' : 'medições'}`;
-      avgEl.style.color = acimaDoLimite(avg, limite) ? 'var(--red)' : 'var(--accent)';
-
-      // Conformidade — passagens abaixo de 10 km/h contam como conformes
-      // (o veículo estava devagar); leituras acima de 250 são descartadas.
-      const validas = utilizaveis.filter(c => c.velocidade <= 250);
-      const dentro = validas.filter(c => c.velocidade <= limite).length;
-      const pct = validas.length ? Math.round((dentro / validas.length) * 100) : 100;
-      const confEl = document.getElementById('ind-conformidade');
-      confEl.textContent = pct + '%';
-      document.getElementById('ind-conformidade-base').textContent =
-        `de ${validas.length} ${validas.length === 1 ? 'passagem' : 'passagens'}`;
-      confEl.style.color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
 
       // Hora/Dia pico
       if (f.isSingleDay) {
