@@ -14,13 +14,14 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.13.0',
+    versao: '1.14.0',
     data: '2026-10-23',
-    titulo: 'Filtrar passagens por tipo de cadastro e por unidade',
+    titulo: 'Veículos do dia por tipo e nova lista de passagens',
     itens: Object.freeze([
-      'Em "Mais filtros", escolha o tipo de cadastro (morador, proprietário, visitante, prestador ou sem cadastro) e a unidade',
-      'Vale o cadastro da hora da passagem, o mesmo que aparece na coluna "Cadastro"',
-      'Clique no tipo ou na unidade de uma passagem para filtrar por eles',
+      'Veículos do dia por tipo: o topo mostra quantos veículos diferentes passaram hoje e quantos são de moradores, proprietários, visitantes, prestadores ou sem cadastro; clique num tipo para filtrar a lista',
+      'Nova lista de passagens: colunas Tipo, Nome e Unidade, só a hora (o dia vira um título), linha vermelha clara no alerta, o selo "2ª hoje" e o botão "+ Cadastrar" para placa sem cadastro',
+      'Lista sem limite de 300: todas as passagens do período, página por página, com o total exato',
+      'Exportação com tipo, nome e unidade: o Excel e o PDF trazem o cadastro da hora da passagem',
     ]),
   });
 });
