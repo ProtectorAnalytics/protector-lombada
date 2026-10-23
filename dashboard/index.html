@@ -4997,6 +4997,7 @@
     let capturasSeq = 0;
     const MSG_FILTRO_CADASTRO_VAZIO = 'Nenhuma passagem com esse cadastro no período.';
     const MSG_CADASTRO_FALHA = 'Não foi possível conferir o cadastro agora. Tente de novo em instantes.';
+    const MSG_CONFERENCIA_INCOMPLETA = 'Período com passagens demais para conferir o cadastro de todas: a lista mostra só parte. Refine o período.';
 
     function consultaDaLista(f, fv, fc) {
       return aplicarFiltros(sb.from('capturas').select('*')
@@ -5015,17 +5016,19 @@
     }
 
     // Filtro de cadastro que não coube na URL (ou "Sem cadastro"): lê o período
-    // em páginas e confere cada passagem, até juntar LIMITE_CAPTURAS + 1
+    // em páginas e confere cada passagem, até juntar LIMITE_CAPTURAS + 1.
+    // Parou no teto de páginas com período sobrando: avisa (nunca "lista completa").
     async function listaConferidaNoCliente(f, fv, fc) {
-      let achadas = [];
-      for (let p = 0; p < MAX_PAGINAS_CONFERENCIA && achadas.length <= LIMITE_CAPTURAS; p++) {
-        const de = p * TAMANHO_PAGINA;
-        const { data, error } = await consultaDaLista(f, fv, fc).order('id').range(de, de + TAMANHO_PAGINA - 1);
-        if (error || !data) return { data: null, error: error || new Error('falha ao ler página'), limite: false };
-        achadas = achadas.concat(filtrarNoCliente(f, data));
-        if (data.length < TAMANHO_PAGINA) break;
+      try {
+        const r = await filtroCadastroLib.conferirEmPaginas(
+          (de, ate) => consultaDaLista(f, fv, fc).order('id').range(de, ate),
+          (linhas) => filtrarNoCliente(f, linhas),
+          { limite: LIMITE_CAPTURAS, tamanho: TAMANHO_PAGINA, maxPaginas: MAX_PAGINAS_CONFERENCIA });
+        if (r.incompleta) avisoFiltroVeiculo(MSG_CONFERENCIA_INCOMPLETA);
+        return { data: r.linhas, limite: r.limite, error: null };
+      } catch (error) {
+        return { data: null, error, limite: false };
       }
-      return { data: achadas.slice(0, LIMITE_CAPTURAS), limite: achadas.length > LIMITE_CAPTURAS, error: null };
     }
 
     async function loadCapturas({ resetPage = true } = {}) {
@@ -5054,7 +5057,7 @@
       avisoFiltroVeiculo('');
 
       // Tipo de cadastro / unidade: trechos por placa no servidor ou conferência no cliente
-      const fc = await filtroCadastroDoPeriodo(f).catch(() => ({ ativo: true, erro: true }));
+      const fc = await filtroCadastroDoPeriodo(f, fv).catch(() => ({ ativo: true, erro: true }));
       if (seq !== capturasSeq) return;
       if (fc.erro || fc.vazio) {
         tbody.innerHTML = fc.erro
@@ -8396,7 +8399,8 @@
 
     // { ativo:false } | { ativo:true, vazio:true } | { ativo:true, ou: string|null }
     // Lança se o cadastro não carregou: sem ele o filtro mostraria qualquer coisa.
-    async function filtroCadastroDoPeriodo(f) {
+    // Com filtro de veículo, só as placas dele entram e o orçamento de URL é conjunto.
+    async function filtroCadastroDoPeriodo(f, fv) {
       if (!temFiltroCadastro(f)) return { ativo: false };
       await veiculosCachePronto;
       if (cadastro.estado !== 'ok') throw new Error('cadastro de moradores indisponível');
@@ -8405,15 +8409,18 @@
       const ini = Date.parse(f.tsStart);
       const fim = Date.parse(f.tsEnd) + 1; // tsEnd é inclusivo (…59.999)
       const janelas = filtroCadastroLib.janelasDoFiltro(indiceVinculos, criterio, ini, fim);
-      return Object.assign({ ativo: true }, filtroCadastroLib.clausulaDoFiltro(janelas, ini, fim));
+      const placasVeiculo = fv && fv.ativo && fv.placas && fv.placas.length ? fv.placas : null;
+      return Object.assign({ ativo: true }, filtroCadastroLib.clausulaDoFiltro(janelas, ini, fim, { placasVeiculo }));
     }
 
     // Consulta do período com todos os filtros. Devolve `montar` (nova consulta a
     // cada chamada, para paginar) ou null quando o filtro de veículo/cadastro zera tudo.
     async function consultaDoPeriodo(colunas, ajustar = (q) => q) {
       const f = getActiveFilters();
-      const [fv, fc] = await Promise.all([placasDoFiltroVeiculo(), filtroCadastroDoPeriodo(f)]);
-      if (semPlacasDoVeiculo(fv) || fc.vazio) return { f, montar: null };
+      const fv = await placasDoFiltroVeiculo();
+      if (semPlacasDoVeiculo(fv)) return { f, montar: null };
+      const fc = await filtroCadastroDoPeriodo(f, fv);
+      if (fc.vazio) return { f, montar: null };
       const montar = () => ajustar(aplicarFiltros(sb.from('capturas').select(colunas)
         .eq('cliente_id', currentCliente.id)
         .gte('timestamp', f.tsStart)

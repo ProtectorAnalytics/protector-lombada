@@ -11,7 +11,8 @@
  *     filtro. Placa com troca de vínculo no meio do período ganha só o trecho
  *     certo (timestamp >= início e < fim).
  *  2. clausulaDoFiltro: transforma isso num `or=(…)` do PostgREST. Se passar do
- *     orçamento de URL (condomínio com muitos veículos) ou se o filtro for
+ *     orçamento de URL codificada, somado ao filtro de veículo (condomínio
+ *     com muitos veículos), ou se o filtro for
  *     "Sem cadastro" (seria um NOT IN gigante), não restringe no servidor.
  *  3. passagemAtende: conferência exata linha a linha, sempre aplicada no
  *     cliente; quando o servidor não restringiu, ela é o filtro.
@@ -33,9 +34,10 @@
     vinculoLib.TIPOS_PESSOA.concat([vinculoLib.SEM_CADASTRO]).map((t) => Object.freeze({ id: t.id, rotulo: t.rotulo })),
   );
   const UNIDADE_MAX = 40;
-  // Orçamento do texto do `or=(…)` antes de codificar (vírgulas, parênteses e
-  // ":" viram %XX): ~3.500 caracteres ficam bem abaixo dos ~8 KB do gateway.
-  const LIMITE_CLAUSULA = 3500;
+  // Orçamento de URL JÁ CODIFICADA (vírgulas, parênteses e ":" viram %XX) do
+  // `or=(…)` do cadastro SOMADO ao `.in('placa', …)` do filtro de veículo:
+  // 6 KB deixam folga para o resto da URL abaixo dos ~8 KB do gateway.
+  const LIMITE_URL_CODIFICADA = 6000;
   const RE_GRAFIA = /^[A-Z0-9]{1,10}$/;
 
   const texto = (v) => (v === null || v === undefined ? '' : String(v).trim());
@@ -195,13 +197,34 @@
     return r;
   }
 
+  /** Tamanho do valor depois de codificado na URL (como o URLSearchParams faz). */
+  function tamanhoNaUrl(valor) {
+    return new URLSearchParams({ x: valor }).toString().length - 2;
+  }
+
+  /** Tamanho codificado do `.in('placa', …)` do filtro de veículo (0 sem ele). */
+  function tamanhoDoFiltroVeiculo(placas) {
+    return placas && placas.length ? tamanhoNaUrl(`in.(${placas.join(',')})`) : 0;
+  }
+
   /**
    * Janelas → condição para `.or()` do PostgREST.
    * { vazio:true } nenhuma passagem pode atender · { ou:'…' } restringe no
    * servidor · { ou:null } grande demais: o filtro fica só no cliente.
+   * Com filtro de veículo (`placasVeiculo`), só as placas dele entram (a
+   * passagem tem de atender aos dois) e o orçamento conta as duas listas.
    */
-  function clausulaDoFiltro(janelas, iniMs, fimMs, limite = LIMITE_CLAUSULA) {
+  function clausulaDoFiltro(janelas, iniMs, fimMs, opcoes) {
+    const o = opcoes || {};
+    const limite = o.limite || LIMITE_URL_CODIFICADA;
+    const veiculo = o.placasVeiculo || null;
     if (janelas === null || janelas === undefined) return { ou: null };
+    if (veiculo) {
+      const permitidas = new Set(veiculo);
+      janelas = janelas
+        .map((j) => ({ grafias: j.grafias.filter((g) => permitidas.has(g)), trechos: j.trechos }))
+        .filter((j) => j.grafias.length);
+    }
     if (!janelas.length) return { vazio: true };
     const inteiras = [];
     const partes = [];
@@ -217,11 +240,41 @@
     });
     const itens = (inteiras.length ? [`placa.in.(${inteiras.join(',')})`] : []).concat(partes);
     const ou = itens.join(',');
-    return ou.length > limite ? { ou: null } : { ou };
+    return tamanhoNaUrl(`(${ou})`) + tamanhoDoFiltroVeiculo(veiculo) > limite ? { ou: null } : { ou };
+  }
+
+  /**
+   * Lê páginas (buscarPagina(de, ate) → { data, error }) e fica com as linhas
+   * que `filtrar` aprova, até passar de `limite`. Linha repetida entre páginas
+   * (passagem nova no meio da leitura empurra a paginação) conta uma vez só.
+   * `limite: true` quando há mais do que o mostrado OU a leitura parou no teto
+   * de páginas com a última cheia (sobrou período sem conferir).
+   */
+  async function conferirEmPaginas(buscarPagina, filtrar, opcoes) {
+    const { limite, tamanho, maxPaginas } = opcoes;
+    const vistos = new Set();
+    let achadas = [];
+    let incompleta = false;
+    for (let p = 0; ; p++) {
+      if (p >= maxPaginas) { incompleta = true; break; }
+      const de = p * tamanho;
+      const { data, error } = await buscarPagina(de, de + tamanho - 1);
+      if (error || !data) throw error || new Error('falha ao ler página ' + p);
+      const novas = data.filter((l) => {
+        const id = l && l.id;
+        if (id === undefined || id === null) return true;
+        if (vistos.has(id)) return false;
+        vistos.add(id);
+        return true;
+      });
+      achadas = achadas.concat(filtrar(novas));
+      if (data.length < tamanho || achadas.length > limite) break;
+    }
+    return { linhas: achadas.slice(0, limite), limite: incompleta || achadas.length > limite, incompleta };
   }
 
   return Object.freeze({
-    TIPOS_FILTRO, TIPO_SEM, UNIDADE_MAX, LIMITE_CLAUSULA,
+    TIPOS_FILTRO, TIPO_SEM, UNIDADE_MAX, LIMITE_URL_CODIFICADA, tamanhoNaUrl, tamanhoDoFiltroVeiculo, conferirEmPaginas,
     normalizarTipo, rotuloTipo, textoUnidade, chaveUnidade, resolverUnidade, rotuloDoVinculo,
     montarCriterio, vinculoAtende, passagemAtende, filtrarPassagens, janelasDoFiltro, clausulaDoFiltro,
   });

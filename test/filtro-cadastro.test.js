@@ -18,7 +18,13 @@ const PAINEL = fs.readFileSync(path.join(RAIZ, 'dashboard', 'index.html'), 'utf8
 const HOJE = '2026-10-05';
 
 let passou = 0;
-function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
+const pendentes = [];
+function caso(nome, fn) {
+  const r = fn();
+  const ok = () => { passou++; console.log(`ok - ${nome}`); };
+  if (r && typeof r.then === 'function') pendentes.push(r.then(ok));
+  else ok();
+}
 
 const UNIDADES = [
   { id: 'u-a19', bloco: 'Bloco A', nome: '19' },
@@ -189,7 +195,93 @@ caso('cláusula: nada atende = vazio; "sem" ou grande demais = só no cliente', 
   assert.deepStrictEqual(fc.clausulaDoFiltro(null, INI, FIM), { ou: null });
   const muitas = Array.from({ length: 600 }, (_, i) => ({ grafias: [`AAA${String(i).padStart(4, '0')}`], trechos: [[INI, FIM]] }));
   assert.deepStrictEqual(fc.clausulaDoFiltro(muitas, INI, FIM), { ou: null });
-  assert.ok(fc.LIMITE_CLAUSULA <= 4000);
+  assert.ok(fc.LIMITE_URL_CODIFICADA <= 6000);
+});
+caso('tamanho na URL conta a codificação (, ( ) : viram %XX)', () => {
+  assert.strictEqual(fc.tamanhoNaUrl('a,b'), 5);
+  assert.strictEqual(fc.tamanhoNaUrl('(t:1)'), 11);
+  assert.strictEqual(fc.tamanhoDoFiltroVeiculo([]), 0);
+  assert.strictEqual(fc.tamanhoDoFiltroVeiculo(['ABC1D23', 'ABC1323']), fc.tamanhoNaUrl('in.(ABC1D23,ABC1323)'));
+});
+
+// Placas fictícias: n veículos, cada um nas duas grafias (Mercosul e antiga)
+function placasFicticias(n, prefixo) {
+  return Array.from({ length: n }, (_, i) => {
+    const num = String(i).padStart(4, '0');
+    const merc = `${prefixo}${num[0]}${'ABCDEFGHIJ'[Number(num[1])]}${num.slice(2)}`;
+    return [merc, placaLib.paraAntiga(merc)];
+  });
+}
+caso('orçamento conjunto: veículo (400 grafias) + cadastro grande cabem em 6 KB codificados', () => {
+  // 200 veículos no filtro de veículo (400 grafias, o teto do filtro-veiculo)
+  const veiculo = placasFicticias(200, 'VEI').flat();
+  assert.strictEqual(veiculo.length, 400);
+  // 250 prestadores, sem placa em comum com o filtro de veículo
+  const janelas = placasFicticias(250, 'PRE').map((g) => ({ grafias: g, trechos: [[INI, FIM]] }));
+  // sozinho, o cadastro cabe; com o veículo, não: fica só no cliente
+  const sozinho = fc.clausulaDoFiltro(janelas, INI, FIM);
+  assert.ok(sozinho.ou && fc.tamanhoNaUrl(`(${sozinho.ou})`) <= fc.LIMITE_URL_CODIFICADA);
+  const semComum = fc.clausulaDoFiltro(janelas, INI, FIM, { placasVeiculo: veiculo });
+  assert.deepStrictEqual(semComum, { vazio: true }); // nenhuma placa atende aos dois
+  // 20 placas do cadastro também estão no filtro de veículo: interseção pequena
+  const mistas = janelas.concat(placasFicticias(20, 'VEI').map((g) => ({ grafias: g, trechos: [[INI, FIM]] })));
+  const inter = fc.clausulaDoFiltro(mistas, INI, FIM, { placasVeiculo: veiculo });
+  assert.ok(inter.ou);
+  assert.ok(!/PRE/.test(inter.ou)); // só as placas do veículo
+  const total = fc.tamanhoNaUrl(`(${inter.ou})`) + fc.tamanhoDoFiltroVeiculo(veiculo);
+  assert.ok(total <= fc.LIMITE_URL_CODIFICADA, `URL codificada com ${total} > limite`);
+  // interseção grande (200 veículos nos dois) + lista do veículo passam de 6 KB: só no cliente
+  const grande = janelas.concat(placasFicticias(200, 'VEI').map((g) => ({ grafias: g, trechos: [[INI, FIM]] })));
+  assert.deepStrictEqual(fc.clausulaDoFiltro(grande, INI, FIM, { placasVeiculo: veiculo }), { ou: null });
+  // o que passar do orçamento conjunto não restringe no servidor
+  const apertado = fc.clausulaDoFiltro(mistas, INI, FIM, { placasVeiculo: veiculo, limite: total - 1 });
+  assert.deepStrictEqual(apertado, { ou: null });
+  // a consulta montada pelo supabase-js (URLSearchParams) fica dentro do limite
+  const q = new URLSearchParams();
+  q.set('placa', `in.(${veiculo.join(',')})`);
+  q.set('or', `(${inter.ou})`);
+  assert.ok(q.toString().length <= fc.LIMITE_URL_CODIFICADA + 10);
+});
+
+// ---------------------------------------------------------------- conferência paginada
+function paginas(total, { tamanho = 10, duplicarPrimeira = false } = {}) {
+  const linhas = Array.from({ length: total }, (_, i) => ({ id: i + 1, ok: i % 2 === 0 }));
+  return async (de, ate) => {
+    const pagina = linhas.slice(de, ate + 1);
+    // passagem nova no meio da leitura: a página seguinte repete a última linha
+    if (duplicarPrimeira && de > 0) return { data: [linhas[de - 1], ...pagina].slice(0, tamanho), error: null };
+    return { data: pagina, error: null };
+  };
+}
+const soOk = (ls) => ls.filter((l) => l.ok);
+caso('conferência: período lido até o fim = resultado completo', async () => {
+  const r = await fc.conferirEmPaginas(paginas(25), soOk, { limite: 300, tamanho: 10, maxPaginas: 50 });
+  assert.strictEqual(r.linhas.length, 13);
+  assert.strictEqual(r.limite, false);
+  assert.strictEqual(r.incompleta, false);
+});
+caso('conferência: parou no teto de páginas com a última cheia = limite (nunca "completo")', async () => {
+  const r = await fc.conferirEmPaginas(paginas(100), soOk, { limite: 300, tamanho: 10, maxPaginas: 3 });
+  assert.strictEqual(r.linhas.length, 15);
+  assert.strictEqual(r.limite, true);
+  assert.strictEqual(r.incompleta, true);
+});
+caso('conferência: passou do limite de linhas = limite, sem ler o resto', async () => {
+  let lidas = 0;
+  const buscar = paginas(1000);
+  const r = await fc.conferirEmPaginas(async (de, ate) => { lidas++; return buscar(de, ate); }, soOk,
+    { limite: 12, tamanho: 10, maxPaginas: 50 });
+  assert.strictEqual(r.linhas.length, 12);
+  assert.strictEqual(r.limite, true);
+  assert.strictEqual(lidas, 3);
+});
+caso('conferência: linha repetida entre páginas conta uma vez; erro sobe', async () => {
+  const r = await fc.conferirEmPaginas(paginas(30, { duplicarPrimeira: true }), (ls) => ls,
+    { limite: 300, tamanho: 10, maxPaginas: 50 });
+  const ids = r.linhas.map((l) => l.id);
+  assert.strictEqual(new Set(ids).size, ids.length);
+  await assert.rejects(fc.conferirEmPaginas(async () => ({ data: null, error: new Error('x') }), soOk,
+    { limite: 10, tamanho: 10, maxPaginas: 5 }));
 });
 caso('cláusula: só grafias A-Z0-9 (nada que quebre o or=(…))', () => {
   const idx = vinculoPlacaLib.indexarVinculos([V({ placa: 'ab,c)1', tipo_pessoa: 'morador' })]);
@@ -295,6 +387,12 @@ caso('painel: campos no "Mais filtros", scripts na ordem e drill-down ligado', (
   assert.strictEqual((PAINEL.match(/filtrarNoCliente\(f, await linhasDe\(montar\)\)/g) || []).length, 4);
   assert.ok(PAINEL.includes("consultaELinhas('placa, velocidade, timestamp')")); // Top 10 precisa da hora
   assert.ok(PAINEL.includes('fc.ativo && !fc.ou\n        ? await listaConferidaNoCliente(f, fv, fc)'));
+  // Orçamento conjunto com o filtro de veículo e conferência que avisa quando para no teto
+  assert.ok(PAINEL.includes('filtroCadastroDoPeriodo(f, fv)'));
+  assert.ok(PAINEL.includes('clausulaDoFiltro(janelas, ini, fim, { placasVeiculo })'));
+  assert.ok(PAINEL.includes('filtroCadastroLib.conferirEmPaginas('));
+  assert.ok(PAINEL.includes('if (r.incompleta) avisoFiltroVeiculo(MSG_CONFERENCIA_INCOMPLETA);'));
+  assert.ok(PAINEL.includes('return { data: r.linhas, limite: r.limite, error: null };'));
 });
 
 caso('libs carregam no browser (window.filtroCadastroLib)', () => {
@@ -307,4 +405,4 @@ caso('libs carregam no browser (window.filtroCadastroLib)', () => {
   assert.strictEqual(ctx.estadoFiltrosLib.filtrosPadrao(HOJE).tipoCadastro, '');
 });
 
-console.log(`\n${passou} casos ok`);
+Promise.all(pendentes).then(() => console.log(`\n${passou} casos ok`), (err) => { console.error(err); process.exit(1); });
