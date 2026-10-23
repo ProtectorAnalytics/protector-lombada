@@ -61,6 +61,7 @@ const TABELAS = {
   ],
 };
 
+const MAX_ROWS = 1000;
 // falharUpdate(op): força um update a não afetar linha (corrida / falha ao desfazer)
 // db: cópia de TABELAS refeita a cada chamada; updates alteram a cópia (como no banco).
 const copiar = () => JSON.parse(JSON.stringify(TABELAS));
@@ -89,7 +90,9 @@ function tabela(nome) {
     if (op.modo === 'update') alvo.forEach((l) => Object.assign(l, op.patch));
     const ls = alvo.map((l) => ({ ...l }));
     if (unico) return { data: ls[0] || null, error: null };
-    return { data: ls, error: null };
+    // Como o PostgREST: no máximo MAX_ROWS por resposta; range() escolhe a fatia.
+    const [ini, fim] = op.range || [0, MAX_ROWS - 1];
+    return { data: ls.slice(ini, Math.min(fim + 1, ini + MAX_ROWS)), error: null };
   };
   const q = {
     select(cols) { op.colunas = cols; return q; },
@@ -103,6 +106,7 @@ function tabela(nome) {
     ilike(c, v) { op.filtros.push(['ilike', c, v]); return q; },
     order() { return q; },
     limit() { return q; },
+    range(a, b) { op.range = [a, b]; return q; },
     single() { return Promise.resolve(resultado(true)); },
     maybeSingle() { return Promise.resolve(resultado(true)); },
     then(ok, falha) { return Promise.resolve(resultado(false)).then(ok, falha); },
@@ -263,6 +267,35 @@ console.error = () => {};
     assert.strictEqual(h.body.length, doC1.length);
     assert.ok(/\bmarca\b/.test(estado.ops[0].colunas), 'admin continua vendo marca no histórico');
   });
+  const comMuitos = (n) => {
+    const extra = Array.from({ length: n }, (_, i) => ({
+      id: `h${i}`, cliente_id: C1, placa: 'AAA1A11', encerrado_em: '2026-01-01T00:00:00Z', criado_em: '2026-01-01T00:00:00Z',
+    }));
+    TABELAS.veiculos.push(...extra);
+    return () => { TABELAS.veiculos.splice(TABELAS.veiculos.length - n, n); };
+  };
+  await caso('GET historico=1 pagina em lotes de 1000 até acabar (sem corte do max-rows)', async () => {
+    const tirar = comMuitos(2500);
+    try {
+      const total = TABELAS.veiculos.filter((v) => v.cliente_id === C1).length;
+      const h = await chamar('admin', 'GET', { query: { cliente_id: C1, historico: '1' } });
+      assert.strictEqual(h.code, 200);
+      assert.ok(Array.isArray(h.body), 'contrato: continua devolvendo um array');
+      assert.strictEqual(h.body.length, total);
+      assert.strictEqual(new Set(h.body.map((v) => v.id)).size, total, 'sem repetir linhas');
+      const ranges = estado.ops.filter((o) => o.tabela === 'veiculos').map((o) => o.range);
+      assert.deepStrictEqual(ranges, [[0, 999], [1000, 1999], [2000, 2999]]);
+    } finally { tirar(); }
+  });
+  await caso('GET historico=1 para no teto de segurança de 20 000 linhas', async () => {
+    const tirar = comMuitos(20500);
+    try {
+      const h = await chamar('portaria', 'GET', { query: { cliente_id: C1, historico: '1' } });
+      assert.strictEqual(h.code, 200);
+      assert.strictEqual(h.body.length, 20000);
+      assert.strictEqual(estado.ops.filter((o) => o.tabela === 'veiculos').length, 20);
+    } finally { tirar(); }
+  });
   await caso('GET portaria historico=1 traz só as colunas de sugestão (sem marca/cor/origem)', async () => {
     const h = await chamar('portaria', 'GET', { query: { cliente_id: C1, historico: '1' } });
     assert.strictEqual(h.code, 200);
@@ -315,6 +348,19 @@ console.error = () => {};
     const r = await chamar('portaria', 'POST', { body: corrige(V_ERRADO_DIFERE, { placa: 'JKL2C34' }) });
     assert.strictEqual(r.code, 400);
     assert.match(r.body.error, /cadastre de novo/);
+  });
+  await recusa('portaria corrigindo para placa com 2 caracteres diferentes → 400 sem escrita', 'portaria',
+    corrige(V_PORT_5, { placa: 'QWE1S24' }));
+  await recusa('portaria corrigindo para placa totalmente outra → 400 sem escrita', 'portaria',
+    corrige(V_PORT_5, { placa: 'ZZZ9Z99' }));
+  await caso('placa com mais de 1 caractere diferente: mensagem diz que a correção é de 1 caractere', async () => {
+    const r = await chamar('portaria', 'POST', { body: corrige(V_PORT_5, { placa: 'QWE1S24' }) });
+    assert.strictEqual(r.code, 400);
+    assert.match(r.body.error, /1 caractere/);
+  });
+  await caso('placa antiga que difere em 1 caractere da chave Mercosul é aceita', async () => {
+    const r = await chamar('portaria', 'POST', { body: corrige(V_PORT_5, { placa: 'QWE1723' }) });
+    assert.strictEqual(r.code, 201);
   });
   await caso('corrida: checagem passa mas o update condicional não afeta linha → 400 sem mais escritas', async () => {
     estado.falharUpdate = () => true;

@@ -85,6 +85,24 @@ function exigirAcesso(profile, clienteId) {
   if (!verificarAcessoCliente(profile, clienteId)) throw new ErroHttp(403, 'Sem acesso a este cliente');
 }
 
+// PostgREST corta cada resposta em max-rows (1000): lê em lotes até acabar.
+const LOTE = 1000;
+const TETO_LINHAS = 20000;
+
+async function lerEmLotes(montarQuery) {
+  const linhas = [];
+  while (linhas.length < TETO_LINHAS) {
+    const ini = linhas.length;
+    const fim = Math.min(ini + LOTE, TETO_LINHAS) - 1;
+    const { data, error } = await montarQuery().range(ini, fim);
+    if (error) throw error;
+    const lote = data || [];
+    linhas.push(...lote);
+    if (lote.length < fim - ini + 1) break;
+  }
+  return linhas;
+}
+
 // GET: vigentes (padrão) ou histórico completo (historico=1)
 async function listar(req, res) {
   const { profile } = await autenticar(req, ROLES_LEITURA);
@@ -94,19 +112,21 @@ async function listar(req, res) {
 
   const historico = req.query.historico === '1';
   const colunas = historico && profile.role === 'portaria' ? COLUNAS_HISTORICO_PORTARIA : COLUNAS;
-  const query = supabase
-    .from('veiculos')
-    .select(colunas)
-    .eq('cliente_id', clienteId)
-    .order('criado_em', { ascending: false });
-  if (!historico) query.is('encerrado_em', null);
-
   const placa = limpar(req.query.placa);
-  if (placa) query.ilike('placa', `%${placa}%`);
+  // Ordem estável entre lotes: criado_em e, no empate, id.
+  const montarQuery = () => {
+    let query = supabase
+      .from('veiculos')
+      .select(colunas)
+      .eq('cliente_id', clienteId)
+      .order('criado_em', { ascending: false })
+      .order('id', { ascending: true });
+    if (!historico) query = query.is('encerrado_em', null);
+    if (placa) query = query.ilike('placa', `%${placa}%`);
+    return query;
+  };
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return res.status(200).json(data);
+  return res.status(200).json(await lerEmLotes(montarQuery));
 }
 
 async function vincular(args) {
