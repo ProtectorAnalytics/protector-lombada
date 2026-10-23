@@ -274,7 +274,7 @@ quem instala o quadro no PC.
 - **Usuário simples, sem e-mail** (CEO): ex. `jose.praiadocastelo`. Por baixo, o login usa o e-mail técnico `<usuario>@porteiro.invalid` (domínio reservado que nunca recebe nada). As telas de entrada (painel, portaria) aceitam o usuário sem "@". **Decisão minha:** usuário em minúsculas, `a–z 0–9 .`, 3 a 40 caracteres, único no sistema; sugestão automática `primeironome.condominio`.
 - Sem e-mail não há "esqueci minha senha": a senha é definida e trocada no admin.
 - O cadastro na portaria sai **no nome do login**; a escolha de nome no turno e a lista de porteiros deixam de existir. A correção dos 15 minutos já é por login.
-- **Decisão minha:** só a Protector (admin) cria porteiros nesta etapa; o síndico pode ganhar isso depois. O acesso único "da portaria" criado na Parte 1 continua funcionando (cadastros saem no nome dele).
+- **Quem cria (CEO, 23/10):** a Protector, no admin, **e o síndico, no painel do condomínio**. Regra de segurança (decisão minha): o síndico (`admin_cliente`) só cria, edita, troca a senha e desativa usuários com perfil **Portaria** do **próprio condomínio**; nunca outros perfis nem outros condomínios. O acesso único "da portaria" criado na Parte 1 continua funcionando (cadastros saem no nome dele).
 - A tabela `porteiros` fica sem uso (não é apagada nesta etapa).
 
 ### 11.2 Unidades em massa (CEO, referência: tela "Blocos e unidades" do EasyAlert)
