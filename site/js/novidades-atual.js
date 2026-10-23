@@ -14,14 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.10.0',
+    versao: '1.10.1',
     data: '2026-10-23',
-    titulo: 'Login próprio para cada porteiro e unidades em massa',
+    titulo: 'Login com verificação anti-robô para proteger as senhas',
     itens: Object.freeze([
-      'Cada porteiro agora tem login próprio.',
-      'Cadastre unidades em massa por bloco, torre ou quadra, com o tipo da unidade, inclusive FIP (Fração Ideal).',
-      'Planilha de unidades para importar e exportar.',
-      'Esqueceu a senha? O porteiro pede ao síndico ou à Protector.',
+      'O login do painel, da portaria e do administrador passa a confirmar que quem entra é uma pessoa, e não um robô tentando adivinhar senhas.',
+      'Quase sempre a verificação é invisível. Se aparecer uma caixa de confirmação, é só clicar nela.',
+      'O "Esqueci minha senha" ganhou a mesma proteção.',
     ]),
   });
 });
