@@ -9,3 +9,5 @@ docs/apresentacoes/*
 !docs/apresentacoes/.gitkeep
 .superpowers/
 .claude/worktrees/
+
+.DS_Store

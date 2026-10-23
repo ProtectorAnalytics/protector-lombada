@@ -14,11 +14,14 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.7.3',
+    versao: '1.8.0',
     data: '2026-10-22',
-    titulo: 'Fotos apagadas no prazo de 15 dias',
+    titulo: 'Tipo de pessoa em cada veículo',
     itens: Object.freeze([
-      'As fotos das passagens voltam a ser apagadas todos os dias depois de 15 dias, como manda a política de privacidade (LGPD).',
+      'Cada veículo agora tem um tipo (Morador, Proprietário, Visitante ou Prestador), com ícone e cor próprios.',
+      'Quando um carro troca de dono, como um carro alugado, cada passagem mostra quem era o responsável naquele dia.',
+      'O cadastro de veículos tem uma lista de unidades do condomínio para escolher.',
+      'Nova aba Portaria no administrador, com acesso próprio para os porteiros.',
     ]),
   });
 });
