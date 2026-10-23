@@ -16,7 +16,8 @@ const {
   supabase,
 } = require('../lib/supabase');
 const { gerarPDF } = require('../lib/pdf-generator');
-const { enviarAlerta, getDestinatarios } = require('../lib/email-sender');
+const { enviarAlerta } = require('../lib/email-sender');
+const { destinatariosDoCliente } = require('../lib/destinatarios');
 const { checkRateLimit } = require('../lib/rate-limiter');
 const { isValidToken, parseTimestamp, parseVehicleId, placaParaArquivo } = require('../lib/validators');
 const { criarClienteApiplacas } = require('../lib/apiplacas');
@@ -489,7 +490,7 @@ async function processarAposResposta({
         camera,
       });
 
-      const destinatarios = await getDestinatarios(cliente.id, 'alerta');
+      const destinatarios = await destinatariosDoCliente(cliente.id, 'alerta');
 
       if (destinatarios.length > 0) {
         await enviarAlerta({

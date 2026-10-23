@@ -29,6 +29,7 @@ const {
   TZ, TEMPLATE_PADRAO, agoraLocal, calcularMetricas, montarEmailHtml, formatarBR,
 } = require('../lib/relatorio-semanal');
 const { gerarRelatorioSemanalPDF } = require('../lib/pdf-relatorio-semanal');
+const { destinatariosComNome } = require('../lib/destinatarios');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
@@ -53,19 +54,6 @@ function createTransporter() {
   });
 }
 
-/** Destinatários ativos marcados para receber relatório. */
-async function getDestinatariosRelatorio(clienteId) {
-  const { data, error } = await supabase
-    .from('email_destinatarios')
-    .select('nome, email')
-    .eq('cliente_id', clienteId)
-    .eq('ativo', true)
-    .in('tipo', ['relatorio', 'todos']);
-
-  if (error) throw new Error(`destinatarios: ${error.message}`);
-  return (data || []).filter((d) => d.email);
-}
-
 async function getNomesCameras(clienteId) {
   const { data } = await supabase
     .from('cameras')
@@ -79,7 +67,8 @@ async function getNomesCameras(clienteId) {
  * com corpo personalizado pelo nome de cada um.
  */
 async function processarCliente(cliente, isoRef, transporter) {
-  const destinatarios = await getDestinatariosRelatorio(cliente.id);
+  // Usuários ativos com "Recebe relatório periódico" (sem legado, como antes).
+  const destinatarios = await destinatariosComNome(cliente.id, 'relatorio');
   if (destinatarios.length === 0) {
     return { cliente: cliente.nome, pulado: 'sem destinatários do tipo relatório' };
   }

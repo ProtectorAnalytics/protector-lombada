@@ -1,5 +1,12 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
+const { contarDestinatarios } = require('../../lib/destinatarios');
 const { isValidVelocidade, isValidCNPJ, isValidTelefone, isValidCEP, sanitize } = require('../../lib/validators');
+
+/** Acrescenta destinatarios_email (e-mails distintos que recebem algo) a cada cliente. */
+async function comContagemDestinatarios(clientes) {
+  const contagem = await contarDestinatarios(clientes.map((c) => c.id));
+  return clientes.map((c) => ({ ...c, destinatarios_email: contagem.get(c.id) || 0 }));
+}
 
 module.exports = async function handler(req, res) {
   try {
@@ -12,18 +19,19 @@ module.exports = async function handler(req, res) {
       if (profile.role === 'super_admin') {
         const { data, error } = await supabase
           .from('clientes')
-          .select('*, cameras(count), email_destinatarios(count)')
+          .select('*, cameras(count)')
           .order('criado_em', { ascending: false });
         if (error) throw error;
-        return res.status(200).json(data);
+        return res.status(200).json(await comContagemDestinatarios(data || []));
       } else {
         const { data, error } = await supabase
           .from('clientes')
-          .select('*, cameras(count), email_destinatarios(count)')
+          .select('*, cameras(count)')
           .eq('id', profile.cliente_id)
           .single();
         if (error) throw error;
-        return res.status(200).json(data);
+        const [comContagem] = await comContagemDestinatarios([data]);
+        return res.status(200).json(comContagem);
       }
     }
 
@@ -184,7 +192,11 @@ module.exports = async function handler(req, res) {
         // Exclusão permanente: remove veículos, emails, câmeras e o cliente
         const { data: cliente } = await supabase.from('clientes').select('nome').eq('id', clienteId).single();
         await supabase.from('veiculos').delete().eq('cliente_id', clienteId);
-        await supabase.from('email_destinatarios').delete().eq('cliente_id', clienteId);
+        // so_email (sem login) primeiro: a FK de usuarios.cliente_id é
+        // ON DELETE SET NULL, e so_email sem cliente viola o check da 2.2.
+        const { error: soEmailErr } = await supabase
+          .from('usuarios').delete().eq('cliente_id', clienteId).eq('role', 'so_email');
+        if (soEmailErr) throw soEmailErr;
         await supabase.from('cameras').delete().eq('cliente_id', clienteId);
         await supabase.from('usuarios').delete().eq('cliente_id', clienteId);
         const { error } = await supabase.from('clientes').delete().eq('id', clienteId);
