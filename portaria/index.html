@@ -167,6 +167,8 @@
     /* Listas de escolha (unidades, nomes, tipos) */
     .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
     .grade .botao { width: 100%; justify-content: flex-start; text-align: left; overflow-wrap: anywhere; }
+    .grupo-unidades + .grupo-unidades { margin-top: 14px; }
+    .grupo-unidades-titulo { margin: 0 0 8px; font-weight: 700; color: var(--text-secondary); }
     .escolha[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-light); box-shadow: inset 0 0 0 2px var(--accent); }
     .tipos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .tipo { color: var(--cor-tipo); border-color: var(--border-campo); min-height: 64px; }
@@ -302,7 +304,7 @@
           <fieldset>
             <legend class="rotulo">Unidade</legend>
             <input id="busca-unidade" class="campo" type="search" placeholder="Buscar unidade" aria-label="Buscar unidade" hidden style="margin-bottom:10px">
-            <div id="lista-unidades" class="grade"></div>
+            <div id="lista-unidades"></div>
             <p id="unidades-vazio" class="mudo" hidden>Nenhuma unidade cadastrada.</p>
           </fieldset>
           <fieldset>
@@ -342,6 +344,7 @@
   <script src="/js/vinculo-placa.js"></script>
   <script src="/js/texto-seguro.js"></script>
   <script src="/js/usuario-portaria.js"></script>
+  <script src="/js/unidade.js"></script>
   <script src="/js/miniatura.js"></script>
   <script src="/js/leitor-placa.js"></script>
   <script src="/js/sugestao-nomes.js"></script>
@@ -370,11 +373,11 @@
     return modo === 'portaria' && origem === 'entrada' && Boolean(salvo && salvo.id);
   }
 
-  /** Nome da unidade: o da lista (unidade_id) vale mais que o texto livre antigo. */
+  /** Rótulo da unidade ("Torre 1 · 101"): o da lista (unidade_id) vale mais que o texto livre antigo. */
   function nomeUnidadeDe(v, unidades) {
     if (!v) return '';
     const u = v.unidade_id ? (unidades || []).find((x) => x.id === v.unidade_id) : null;
-    return u ? u.nome : (v.unidade || '');
+    return u ? unidadeLib.rotuloUnidade(u) : (v.unidade || '');
   }
 
   /** Cartão do vínculo vigente: ícone + tipo escrito, nome, unidade e "cadastrado em … por …". */
@@ -417,7 +420,7 @@
       tipo_pessoa: estado.tipo,
       nome_morador: nome || null,
       unidade_id: unidade ? unidade.id : null,
-      unidade: unidade ? unidade.nome : null,
+      unidade: unidade ? unidadeLib.rotuloUnidade(unidade) : null,
     };
     return { corpo };
   }
@@ -865,8 +868,24 @@
 
   const normalizar = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
+  const ordemNatural = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
+
+  /** Botões das unidades agrupados por bloco/torre/quadra (sem bloco por último). */
   function htmlUnidades(lista) {
-    return lista.map((u) => `<button type="button" class="botao escolha" data-unidade="${esc(u.id)}" aria-pressed="false">${esc(u.nome)}</button>`).join('');
+    const grupos = new Map();
+    lista.forEach((u) => {
+      const k = String(u.bloco || '').toLowerCase();
+      if (!grupos.has(k)) grupos.set(k, { bloco: u.bloco || '', unidades: [] });
+      grupos.get(k).unidades.push(u);
+    });
+    const ordenados = [...grupos.values()].sort((a, b) => (!a.bloco) - (!b.bloco) || ordemNatural.compare(a.bloco, b.bloco));
+    const comTitulo = ordenados.length > 1 || Boolean(ordenados[0] && ordenados[0].bloco);
+    return ordenados.map((g) => {
+      const botoes = [...g.unidades].sort((a, b) => ordemNatural.compare(a.nome, b.nome)).map((u) => '<button type="button" class="botao escolha" '
+        + `data-unidade="${esc(u.id)}" aria-pressed="false" aria-label="${esc(unidadeLib.rotuloUnidade(u))}">${esc(u.nome)}</button>`).join('');
+      const titulo = comTitulo ? `<p class="grupo-unidades-titulo">${esc(g.bloco || 'Sem bloco')}</p>` : '';
+      return `<div class="grupo-unidades">${titulo}<div class="grade">${botoes}</div></div>`;
+    }).join('');
   }
 
   function htmlNomes(nomes) {
@@ -911,7 +930,7 @@
 
   function filtrarUnidades() {
     const termo = normalizar($('busca-unidade').value);
-    const lista = termo ? unidades.filter((u) => normalizar(u.nome).includes(termo)) : unidades;
+    const lista = termo ? unidades.filter((u) => normalizar(unidadeLib.rotuloUnidade(u)).includes(termo)) : unidades;
     $('lista-unidades').innerHTML = htmlUnidades(lista);
     desenharCadastro(cadastro.estado());
   }
@@ -919,7 +938,7 @@
   function desenharNomes() {
     const e = cadastro.estado();
     const unidade = unidades.find((u) => u.id === e.unidadeId);
-    const nomes = unidade ? sugestaoNomesLib.sugerirNomes(vinculos, { unidadeId: unidade.id, unidadeNome: unidade.nome }) : [];
+    const nomes = unidade ? sugestaoNomesLib.sugerirNomes(vinculos, { unidadeId: unidade.id, unidadeNome: unidadeLib.rotuloUnidade(unidade) }) : [];
     $('nomes-sugeridos').innerHTML = htmlNomes(nomes);
     $('nomes-sugeridos').hidden = nomes.length === 0;
   }
@@ -1202,6 +1221,8 @@
   });
 
   ligarEventos();
+  // Chave da escolha de nome no turno (antes do login próprio): sai uma vez.
+  try { localStorage.removeItem('lombada-portaria-porteiro'); } catch { /* armazenamento bloqueado */ }
   iniciar();
   </script>
 </body>

@@ -13,6 +13,7 @@ const placaLib = require('../site/js/placa');
 const vinculoPlacaLib = require('../site/js/vinculo-placa');
 const { esc } = require('../site/js/texto-seguro');
 const usuarioPortariaLib = require('../site/js/usuario-portaria');
+const unidadeLib = require('../site/js/unidade');
 
 const ler = (rel) => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
 const PAGINA = ler('portaria/index.html');
@@ -37,7 +38,7 @@ function extrair(fonte, inicio) {
 
 /** Roda as funções pedidas num contexto isolado com os stubs dados; devolve as funções. */
 function carregarComContexto(nomes, extras = {}) {
-  const ctx = vm.createContext({ placaLib, vinculoPlacaLib, esc, Date, Promise, JSON, Set, Map, ...extras });
+  const ctx = vm.createContext({ placaLib, vinculoPlacaLib, unidadeLib, esc, Intl, Date, Promise, JSON, Set, Map, ...extras });
   const codigo = nomes.map((n) => extrair(FONTE, FONTE.includes(`async function ${n}(`) ? `async function ${n}(` : `function ${n}(`)).join('\n');
   vm.runInContext(`${codigo}\nthis.__f = { ${nomes.join(', ')} };`, ctx);
   return { f: ctx.__f, ctx };
@@ -357,7 +358,8 @@ caso('campo de login aceita usuário: texto, sem maiúscula automática, rótulo
 caso('página não pede porteiro: sem tela de turno, sem porteiro guardado, nunca chama /api/admin/porteiros', () => {
   ['/api/admin/porteiros', 'CHAVE_PORTEIRO', 'porteiroGuardado', 'esquecerPorteiro', 'porteiroAtual',
     'porteiro_id', 'lombada-portaria-porteiro', 'mostrarTurno', 'escolherPorteiro', 'tela-turno', 'botao-trocar']
-    .forEach((t) => assert.ok(!FONTE.includes(t), `sobrou ${t}`));
+    // A única menção à chave antiga é a limpeza única no carregamento.
+    .forEach((t) => assert.ok(!FONTE.replace("localStorage.removeItem('lombada-portaria-porteiro')", '').includes(t), `sobrou ${t}`));
   ['tela-turno', 'Trocar porteiro', 'Quem está no turno', 'lista-porteiros', 'botao-trocar']
     .forEach((t) => assert.ok(!PAGINA.includes(t), `sobrou ${t} no HTML`));
 });

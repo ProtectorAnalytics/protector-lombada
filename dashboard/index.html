@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Protector Traffic Control - Lombada Educativa</title>
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
+  <link rel="stylesheet" href="/css/portaria-gestao.css">
   <script>
     // Tema resolvido ANTES de pintar (sem flash). 'auto' segue o sistema.
     // Mesma chave em dashboard/, novidades e manual.
@@ -523,6 +524,8 @@
       text-decoration: none;
     }
     .conta-link[hidden] { display: none; }
+    button.conta-link { width: 100%; border: none; background: none; font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer; }
+    @media (hover: hover) { button.conta-link:hover { background: var(--accent-light); } }
     .conta-sair {
       width: 100%;
       min-height: 36px;
@@ -2822,6 +2825,10 @@
   <script src="/js/severidade-velocidade.js"></script>
   <script src="/js/miniatura.js"></script>
   <script src="/js/usuario-portaria.js"></script>
+  <script src="/js/unidade.js"></script>
+  <script src="/js/editor-unidades.js"></script>
+  <script src="/js/gestao-porteiros.js"></script>
+  <script src="/js/portaria-gestao.js"></script>
 </head>
 <body>
   <!-- Ícones do tipo de pessoa (os mesmos do admin) -->
@@ -2904,6 +2911,7 @@
           <div class="conta-menu" id="conta-menu">
             <div class="conta-email" id="topbar-email"></div>
             <a class="conta-link" id="conta-portaria" href="/portaria" hidden>Abrir a portaria</a>
+            <button type="button" class="conta-link" id="conta-gestao-portaria" onclick="abrirPainelPortaria()" hidden>Portaria: unidades e porteiros</button>
             <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
           </div>
         </div>
@@ -3130,6 +3138,17 @@
   </div>
 
   <!-- ===== MODAL VEICULOS ===== -->
+  <!-- Portaria do condomínio (só síndico/admin_cliente): unidades e porteiros -->
+  <div class="vm-overlay" id="portaria-overlay" onclick="if(event.target===this)fecharPainelPortaria()">
+    <div class="vm-box" role="dialog" aria-modal="true" aria-labelledby="pp-title">
+      <div class="vm-header">
+        <h3 id="pp-title">Portaria</h3>
+        <button type="button" class="modal-close" onclick="fecharPainelPortaria()" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="vm-body"><div id="painel-portaria-gestao"></div></div>
+    </div>
+  </div>
+
   <div class="vm-overlay" id="vm-overlay" onclick="if(event.target===this)fecharModalVeiculo()">
     <div class="vm-box" role="dialog" aria-modal="true" aria-labelledby="vm-title">
       <div class="vm-header">
@@ -3705,6 +3724,54 @@
       document.getElementById('vm-body-cadastrar').hidden = !pode;
       document.getElementById('vm-importar-bloco').hidden = !pode;
       document.getElementById('conta-portaria').hidden = pode;
+      // Unidades e porteiros: só o síndico (admin_cliente) do próprio condomínio
+      document.getElementById('conta-gestao-portaria').hidden = !(currentProfile && currentProfile.role === 'admin_cliente');
+    }
+
+    // ============================================
+    // PORTARIA: unidades e porteiros (site/js/portaria-gestao.js)
+    // ============================================
+    let gestaoPortaria = null;
+    let gestaoPortariaCliente = null; // condomínio aberto no painel da portaria
+
+    // Unidades salvas aqui valem já no cadastro de veículos do painel
+    function aplicarUnidadesDaGestao(lista, clienteId) {
+      if (!Array.isArray(lista) || !currentCliente || currentCliente.id !== clienteId) return;
+      unidadesLista = [...lista].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+      renderCampoUnidadeForm();
+    }
+
+    function abrirPainelPortaria() {
+      if (!currentProfile || currentProfile.role !== 'admin_cliente') return;
+      fecharContaMenu({ semFoco: true });
+      const clienteId = currentCliente.id;
+      gestaoPortariaCliente = clienteId;
+      if (!gestaoPortaria) {
+        gestaoPortaria = portariaGestao.montar(document.getElementById('painel-portaria-gestao'), {
+          api: (caminho, metodo = 'GET', corpo) => chamarApiPainel('/api/admin' + caminho, metodo, corpo),
+          aoCarregarUnidades: (lista) => aplicarUnidadesDaGestao(lista, gestaoPortariaCliente),
+        });
+      }
+      abrirOverlay(document.getElementById('portaria-overlay'));
+      document.body.style.overflow = 'hidden';
+      gestaoPortaria.carregar({ clienteId, nomeCondominio: currentCliente.nome });
+    }
+
+    // Fechar com unidades não salvas pergunta na própria página (sem confirm())
+    async function fecharPainelPortaria() {
+      if (gestaoPortaria && gestaoPortaria.temAlteracoes()) {
+        const ok = await portariaGestao.confirmarNaPagina({
+          titulo: 'Sair sem salvar?',
+          mensagem: 'As alterações nas unidades ainda não foram salvas e serão perdidas.',
+          textoOk: 'Sair sem salvar',
+          textoCancel: 'Continuar editando',
+        });
+        if (!ok) return;
+        gestaoPortaria.descartar();
+      }
+      fecharOverlay(document.getElementById('portaria-overlay'), () => {
+        document.body.style.overflow = '';
+      });
     }
 
     function aplicarModoAdmin() {
@@ -4101,7 +4168,7 @@
         return `<input ${attrs} placeholder="Unidade (ex.: Bloco A - Apto 101)" maxlength="40" autocomplete="off">`;
       }
       return `<select ${attrs}><option value="">— Sem unidade —</option>`
-        + unidadesLista.map((u) => `<option value="${esc(u.id)}">${esc(u.nome)}</option>`).join('') + '</select>';
+        + unidadesLista.map((u) => `<option value="${esc(u.id)}">${esc(unidadeLib.rotuloUnidade(u))}</option>`).join('') + '</select>';
     }
 
     // Lê o campo de unidade (select ou input) no formato da API
@@ -4111,7 +4178,7 @@
       if (el.tagName !== 'SELECT') return { unidade: v || null };
       if (!v) return {};
       const u = unidadesLista.find((x) => x.id === v);
-      return { unidade_id: v, unidade: u ? u.nome : null };
+      return { unidade_id: v, unidade: u ? unidadeLib.rotuloUnidade(u) : null };
     }
 
     function renderCampoUnidadeForm() {
@@ -4288,7 +4355,7 @@
     function nomeUnidade(v) {
       if (!v) return '';
       const u = v.unidade_id && unidadesLista.find((x) => x.id === v.unidade_id);
-      return u ? u.nome : (v.unidade || '');
+      return u ? unidadeLib.rotuloUnidade(u) : (v.unidade || '');
     }
 
     // Tipo + nome + unidade de quem estava ligado à placa na hora; sem vínculo: "Sem cadastro" (cinza)
@@ -7170,6 +7237,7 @@
         document.getElementById('btn-exportar').focus();
         return;
       }
+      if (overlayAberto(document.getElementById('portaria-overlay'))) return fecharPainelPortaria();
       if (overlayAberto(vm)) return fecharModalVeiculo();
       if (overlayAberto(modal)) closeModal();
     });

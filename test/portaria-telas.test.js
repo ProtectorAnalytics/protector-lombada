@@ -14,6 +14,8 @@ const PAINEL = ler('dashboard/index.html');
 const MIGRATION = ler('sql/migration-portaria-base.sql');
 const TESTE_SQL = ler('test/sql/portaria-base.sql');
 const usuarioPortariaLib = require('../site/js/usuario-portaria');
+// As funções extraídas das páginas usam window.unidadeLib (rotuloUnidade).
+globalThis.unidadeLib = require('../site/js/unidade');
 
 /** Recorta a declaração que começa em `inicio` até a chave que fecha a primeira chave aberta. */
 function extrair(fonte, inicio) {
@@ -75,14 +77,7 @@ caso('admin: unidade atual fora da lista aparece no select como "(removida)"', (
   assert.ok(opcoes({ unidade_id: 'u1' }, UNIDADES).includes('value="u1" selected'));
 });
 
-// ---- M7: resumo da lista de unidades/porteiros
-caso('admin: resumo conta as ignoradas (array) e lista quais', () => {
-  const resumo = new Function(`${extrair(ADMIN, 'function resumoListaPortaria(')}; return resumoListaPortaria;`)();
-  assert.strictEqual(resumo({ criadas: 2, ja_existiam: 1, ignoradas: [] }), '2 criadas · 1 já existiam · 0 ignoradas');
-  assert.strictEqual(resumo({ criadas: 0, ja_existiam: 0, ignoradas: ['A'.repeat(61), 'B'] }),
-    `0 criadas · 0 já existiam · 2 ignoradas (nome longo demais): ${'A'.repeat(61)}, B`);
-  assert.strictEqual(resumo({ criadas: 1, ja_existiam: 0 }), '1 criadas · 0 já existiam · 0 ignoradas');
-});
+// ---- M7: a caixa de texto de unidades/porteiros virou o editor (test/editor-unidades.test.js)
 
 // ---- I2/I3: colunas pedidas pelo navegador = colunas concedidas
 const colunasDoGrant = (tabela) => {
