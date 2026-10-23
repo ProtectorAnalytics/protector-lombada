@@ -205,27 +205,22 @@ console.error = () => {};
     await chamar('admin', 'POST', { body: base({ origem: 'condfy' }) });
     assert.strictEqual(estado.rpc[0].args.p_origem, 'painel');
   });
-  await caso('POST como portaria ignora origem enviada e usa o nome do porteiro', async () => {
-    const r = await chamar('portaria', 'POST', { body: base({ origem: 'condfy', porteiro_id: PORTEIRO_C1 }) });
+  await caso('POST como portaria sem porteiro_id → 201 no nome do login', async () => {
+    const r = await chamar('portaria', 'POST', { body: base({ origem: 'condfy' }) });
     assert.strictEqual(r.code, 201);
     assert.strictEqual(estado.rpc[0].args.p_origem, 'portaria');
-    assert.strictEqual(estado.rpc[0].args.p_cadastrado_por, 'Seu Zé');
+    assert.strictEqual(estado.rpc[0].args.p_cadastrado_por, 'Tablet Portaria');
     assert.strictEqual(estado.auditoria.length, 1);
+    assert.ok(!estado.ops.some((o) => o.tabela === 'porteiros'), 'não consulta porteiros');
   });
-  await caso('POST como portaria sem porteiro_id → 400', async () => {
-    const r = await chamar('portaria', 'POST', { body: base() });
-    assert.strictEqual(r.code, 400);
-    assert.strictEqual(estado.rpc.length, 0);
-  });
-  await caso('POST como portaria com porteiro de outro cliente → 400', async () => {
-    const r = await chamar('portaria', 'POST', { body: base({ porteiro_id: PORTEIRO_C2 }) });
-    assert.strictEqual(r.code, 400);
-    assert.strictEqual(estado.rpc.length, 0);
-  });
-  await caso('POST como portaria com porteiro inativo → 400', async () => {
-    const r = await chamar('portaria', 'POST', { body: base({ porteiro_id: PORTEIRO_INATIVO }) });
-    assert.strictEqual(r.code, 400);
-    assert.strictEqual(estado.rpc.length, 0);
+  await caso('POST como portaria com porteiro_id qualquer → ignorado, nome do login', async () => {
+    for (const pid of [PORTEIRO_C1, PORTEIRO_C2, PORTEIRO_INATIVO, 'lixo']) {
+      const r = await chamar('portaria', 'POST', { body: base({ porteiro_id: pid }) });
+      assert.strictEqual(r.code, 201, pid);
+      assert.strictEqual(estado.rpc[0].args.p_cadastrado_por, 'Tablet Portaria');
+      assert.ok(!estado.ops.some((o) => o.tabela === 'porteiros'));
+      assert.strictEqual(estado.auditoria[0].detalhes.porteiro_id, undefined);
+    }
   });
   await caso('POST com unidade_id de outro cliente → 400', async () => {
     const r = await chamar('admin', 'POST', { body: base({ unidade_id: UNIDADE_C2 }) });
@@ -233,7 +228,7 @@ console.error = () => {};
     assert.strictEqual(estado.rpc.length, 0);
   });
   await caso('portaria em cliente diferente do seu → 403', async () => {
-    const r = await chamar('portaria', 'POST', { body: base({ cliente_id: C2, porteiro_id: PORTEIRO_C2 }) });
+    const r = await chamar('portaria', 'POST', { body: base({ cliente_id: C2 }) });
     assert.strictEqual(r.code, 403);
     assert.strictEqual(estado.rpc.length, 0);
     const g = await chamar('portaria', 'GET', { query: { cliente_id: C2 } });
@@ -309,7 +304,7 @@ console.error = () => {};
   });
 
   // ---------- POST com substitui_id (correção da portaria) ----------
-  const corrige = (id, extra) => base({ placa: 'QWE1R24', porteiro_id: PORTEIRO_C1, substitui_id: id, ...extra });
+  const corrige = (id, extra) => base({ placa: 'QWE1R24', substitui_id: id, ...extra });
   await caso('portaria corrige o próprio cadastro de 5 min: encerra e depois vincula a placa nova', async () => {
     const r = await chamar('portaria', 'POST', { body: corrige(V_PORT_5) });
     assert.strictEqual(r.code, 201);
@@ -432,8 +427,8 @@ console.error = () => {};
   await recusa('portaria com substitui_id já encerrado → 400 sem escrita', 'portaria', corrige(V_ENCERRADO));
   await recusa('portaria com substitui_id inexistente → 400 sem escrita', 'portaria', corrige('f0000000-0000-4000-8000-0000000000ff'));
   await recusa('portaria com substitui_id inválido → 400 sem escrita', 'portaria', corrige('nao-e-uuid'));
-  await recusa('admin_cliente com substitui_id → 400 sem escrita', 'admin', corrige(V_PORT_5, { porteiro_id: undefined }));
-  await recusa('super_admin com substitui_id → 400 sem escrita', 'super', corrige(V_PORT_5, { porteiro_id: undefined }));
+  await recusa('admin_cliente com substitui_id → 400 sem escrita', 'admin', corrige(V_PORT_5));
+  await recusa('super_admin com substitui_id → 400 sem escrita', 'super', corrige(V_PORT_5));
   await caso('falha da RPC depois de encerrar reabre o cadastro original e não vaza erro', async () => {
     estado.erroRpc = { code: '42501', message: SEGREDO };
     const r = await chamar('portaria', 'POST', { body: corrige(V_PORT_5) });
