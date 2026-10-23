@@ -25,8 +25,8 @@ function reset() {
     { id: P_C2, auth_id: 'auth-p2', cliente_id: C2, nome: 'Outro', email: 'outro.mar@porteiro.invalid', role: 'portaria', ativo: true, criado_em: '2026-10-02' },
   ];
   Object.assign(estado, {
-    perfil: null, ops: [], auditoria: [], auth: [],
-    erroLeitura: null, erroInsert: null, erroAuthCriar: null, erroAuthAtualizar: null,
+    perfil: null, ops: [], auditoria: [], auth: [], rpc: [],
+    erroLeitura: null, erroInsert: null, erroAuthCriar: null, erroAuthAtualizar: null, erroAuthApagar: null, erroRpc: null,
   });
 }
 
@@ -76,7 +76,7 @@ const authAdmin = {
     estado.auth.push(['atualizar', id, a]);
     return { data: { user: { id } }, error: estado.erroAuthAtualizar };
   },
-  deleteUser: async (id) => { estado.auth.push(['apagar', id]); return { data: {}, error: null }; },
+  deleteUser: async (id) => { estado.auth.push(['apagar', id]); return { data: {}, error: estado.erroAuthApagar || null }; },
 };
 
 stub('lib/auth-middleware', {
@@ -86,7 +86,11 @@ stub('lib/auth-middleware', {
   },
   verificarAcessoCliente: (p, c) => p.role === 'super_admin' || p.cliente_id === c,
   registrarAuditoria: async (a) => { estado.auditoria.push(a); return { error: null }; },
-  supabase: { from: tabela, auth: { admin: authAdmin } },
+  supabase: {
+    from: tabela,
+    auth: { admin: authAdmin },
+    rpc: async (nome, args) => { estado.rpc.push([nome, args]); return { data: null, error: estado.erroRpc }; },
+  },
 });
 
 const handler = require('../api/admin/porteiros');
@@ -101,7 +105,7 @@ const PERFIS = {
 
 async function chamar(perfil, method, { query = {}, body, rawBody } = {}) {
   estado.perfil = PERFIS[perfil];
-  estado.ops = []; estado.auditoria = []; estado.auth = [];
+  estado.ops = []; estado.auditoria = []; estado.auth = []; estado.rpc = [];
   const r = { code: null, body: null, status(c) { r.code = c; return r; }, json(b) { r.body = b; return r; } };
   const req = { method, headers: {}, query, body };
   if (rawBody !== undefined) {
@@ -112,8 +116,13 @@ async function chamar(perfil, method, { query = {}, body, rawBody } = {}) {
   return r;
 }
 const escritas = () => estado.ops.filter((o) => o.modo !== 'select');
-const semEscrita = () => { assert.strictEqual(escritas().length, 0); assert.strictEqual(estado.auth.length, 0); };
-const NOVO = { cliente_id: C1, nome: 'Maria Souza', usuario: 'maria.castelo', senha: 'segredo1' };
+const semEscrita = () => {
+  assert.strictEqual(escritas().length, 0);
+  assert.strictEqual(estado.auth.length, 0);
+  assert.strictEqual(estado.rpc.length, 0);
+};
+const ENCERRAR_P1 = [['encerrar_sessoes_usuario', { p_user: 'auth-p1' }]];
+const NOVO = { cliente_id: C1, nome: 'Maria Souza', usuario: 'maria.castelo', senha: 'Girassol42' };
 
 let passou = 0;
 async function caso(nome, fn) { reset(); await fn(); passou++; console.log(`ok - ${nome}`); }
@@ -163,7 +172,7 @@ console.error = () => {};
   await caso('POST cria login com e-mail técnico e insere usuarios role portaria + auditoria', async () => {
     const r = await chamar('admin', 'POST', { body: { ...NOVO, usuario: '  Maria.Castelo ' } });
     assert.strictEqual(r.code, 201);
-    assert.deepStrictEqual(estado.auth, [['criar', { email: 'maria.castelo@porteiro.invalid', password: 'segredo1', email_confirm: true }]]);
+    assert.deepStrictEqual(estado.auth, [['criar', { email: 'maria.castelo@porteiro.invalid', password: 'Girassol42', email_confirm: true }]]);
     const ins = escritas().find((o) => o.modo === 'insert').patch;
     assert.deepStrictEqual(ins, {
       auth_id: 'auth-novo', cliente_id: C1, nome: 'Maria Souza',
@@ -174,7 +183,7 @@ console.error = () => {};
     assert.strictEqual(estado.auditoria[0].acao, 'criar');
     assert.strictEqual(estado.auditoria[0].tabela, 'usuarios');
     assert.strictEqual(estado.auditoria[0].registroId, 'novo-id');
-    assert.ok(!JSON.stringify(estado.auditoria).includes('segredo1'));
+    assert.ok(!JSON.stringify(estado.auditoria).includes('Girassol42'));
   });
   await caso('POST: role e ativo do corpo são ignorados (sempre portaria)', async () => {
     const r = await chamar('admin', 'POST', { body: { ...NOVO, role: 'super_admin', ativo: false } });
@@ -196,6 +205,13 @@ console.error = () => {};
   await caso('POST com dados inválidos → 400 sem criar login', async () => {
     const invalidos = [
       { ...NOVO, senha: '12345' },
+      { ...NOVO, senha: 'abc123456' },
+      { ...NOVO, senha: 'girassolazul' },
+      { ...NOVO, senha: '9876543210' },
+      { ...NOVO, senha: 'Portaria123' },
+      { ...NOVO, senha: 'castelo2026' },
+      { ...NOVO, senha: 'Maria2026xyz' },
+      { ...NOVO, senha: `a1${'ç'.repeat(38)}` },
       { ...NOVO, senha: 123456 },
       { ...NOVO, senha: undefined },
       { ...NOVO, usuario: 'ab' },
@@ -218,9 +234,15 @@ console.error = () => {};
       semEscrita();
     }
   });
-  await caso('POST com senha < 6 tem mensagem clara', async () => {
-    const r = await chamar('admin', 'POST', { body: { ...NOVO, senha: '12345' } });
-    assert.match(r.body.error, /6/);
+  await caso('POST com senha fraca tem mensagem clara para o síndico', async () => {
+    let r = await chamar('admin', 'POST', { body: { ...NOVO, senha: '12345' } });
+    assert.match(r.body.error, /pelo menos 10 caracteres/);
+    r = await chamar('admin', 'POST', { body: { ...NOVO, senha: 'castelo2026' } });
+    assert.match(r.body.error, /usuário nem o nome/);
+    r = await chamar('admin', 'POST', { body: { ...NOVO, senha: 'senha12345' } });
+    assert.match(r.body.error, /comum/);
+    r = await chamar('admin', 'POST', { body: { ...NOVO, senha: `a1${'b'.repeat(71)}` } });
+    assert.match(r.body.error, /longa/);
   });
   await caso('POST usuário já existente no Auth → 409 "Esse usuário já existe", sem vazar mensagem', async () => {
     estado.erroAuthCriar = { message: `A user with this email address has already been registered ${SEGREDO}`, status: 422, code: 'email_exists' };
@@ -244,6 +266,22 @@ console.error = () => {};
     assert.deepStrictEqual(estado.auth.at(-1), ['apagar', 'auth-novo']);
     assert.strictEqual(estado.auditoria.length, 0);
   });
+  await caso('POST: rollback do Auth falha → bane o login órfão como segunda tentativa', async () => {
+    estado.erroInsert = { message: SEGREDO, code: 'XX000' };
+    estado.erroAuthApagar = { message: SEGREDO };
+    const r = await chamar('admin', 'POST', { body: NOVO });
+    assert.strictEqual(r.code, 500);
+    assert.deepStrictEqual(estado.auth.slice(-2), [['apagar', 'auth-novo'], ['atualizar', 'auth-novo', { ban_duration: '876000h' }]]);
+  });
+  await caso('POST/PUT: nome perde caracteres invisíveis e de direção de texto', async () => {
+    let r = await chamar('admin', 'POST', { body: { ...NOVO, nome: '\u202EMaria\u200B Souza\uFEFF' } });
+    assert.strictEqual(r.code, 201);
+    assert.strictEqual(escritas().find((o) => o.modo === 'insert').patch.nome, 'Maria Souza');
+    r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: '\u2066José\u2069' } });
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(usuarios.find((u) => u.id === P_C1).nome, 'José');
+    assert.strictEqual((await chamar('admin', 'POST', { body: { ...NOVO, nome: '\u200B\u202E' } })).code, 400);
+  });
   await caso('POST: insert com e-mail duplicado → 409 e rollback do Auth', async () => {
     estado.erroInsert = { message: SEGREDO, code: '23505' };
     const r = await chamar('admin', 'POST', { body: NOVO });
@@ -254,16 +292,50 @@ console.error = () => {};
 
   // --- PUT ---
   await caso('PUT nome e senha do próprio cliente → atualiza + updateUserById + auditoria sem senha', async () => {
-    const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'José Silva', senha: 'novaSenha' } });
+    const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'José Silva', senha: 'Ventania2026' } });
     assert.strictEqual(r.code, 200);
     assert.strictEqual(usuarios.find((u) => u.id === P_C1).nome, 'José Silva');
-    assert.deepStrictEqual(estado.auth, [['atualizar', 'auth-p1', { password: 'novaSenha' }]]);
+    assert.deepStrictEqual(estado.auth, [['atualizar', 'auth-p1', { password: 'Ventania2026' }]]);
     assert.deepStrictEqual(r.body, { id: P_C1, nome: 'José Silva', usuario: 'jose.castelo', ativo: true, criado_em: '2026-10-01' });
     assert.strictEqual(estado.auditoria.length, 1);
     assert.strictEqual(estado.auditoria[0].acao, 'atualizar');
     assert.strictEqual(estado.auditoria[0].registroId, P_C1);
     assert.strictEqual(estado.auditoria[0].detalhes.senha_alterada, true);
-    assert.ok(!JSON.stringify(estado.auditoria).includes('novaSenha'));
+    assert.strictEqual(estado.auditoria[0].detalhes.sessoes_encerradas, true);
+    assert.ok(!estado.auditoria[0].detalhes.incompleto);
+    assert.ok(!JSON.stringify(estado.auditoria).includes('Ventania2026'));
+    assert.deepStrictEqual(estado.rpc, ENCERRAR_P1, 'troca de senha derruba as sessões abertas');
+  });
+  await caso('PUT senha: encerrar sessões falha → 200 com aviso, auditoria incompleta, sem vazar', async () => {
+    estado.erroRpc = { message: SEGREDO, code: 'XX000' };
+    const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { senha: 'Ventania2026' } });
+    assert.strictEqual(r.code, 200);
+    assert.match(r.body.aviso, /aparelhos/);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    assert.deepStrictEqual(estado.rpc, ENCERRAR_P1);
+    const d = estado.auditoria[0].detalhes;
+    assert.strictEqual(d.senha_alterada, true);
+    assert.strictEqual(d.sessoes_encerradas, false);
+    assert.strictEqual(d.incompleto, true);
+    assert.ok(!JSON.stringify(estado.auditoria).includes(SEGREDO));
+  });
+  await caso('PUT senha fraca usa o usuário e o nome do porteiro alvo → 400 sem escrever', async () => {
+    for (const senha of ['Jose12345678', 'castelo2026x', 'portaria123', 'girassolazul']) {
+      const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { senha } });
+      assert.strictEqual(r.code, 400, senha);
+      semEscrita();
+    }
+    // porteiro antigo com e-mail normal: a parte antes do @ conta como usuário
+    const r = await chamar('admin', 'PUT', { query: { id: P_INATIVO }, body: { senha: 'xportaria2026' } });
+    assert.strictEqual(r.code, 400);
+    assert.match(r.body.error, /usuário nem o nome/);
+    semEscrita();
+  });
+  await caso('PUT só nome ou reativar não mexe nas sessões', async () => {
+    await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'Zé' } });
+    assert.deepStrictEqual(estado.rpc, []);
+    await chamar('admin', 'PUT', { query: { id: P_INATIVO }, body: { ativo: true } });
+    assert.deepStrictEqual(estado.rpc, []);
   });
   await caso('PUT só altera nome/ativo (ignora email, role, cliente_id do corpo)', async () => {
     const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'Zé', role: 'super_admin', cliente_id: C2, email: 'x@y.z', auth_id: 'h' } });
@@ -281,6 +353,7 @@ console.error = () => {};
     assert.strictEqual(r.code, 200);
     assert.strictEqual(usuarios.find((u) => u.id === P_C1).ativo, false);
     assert.deepStrictEqual(estado.auth, [['atualizar', 'auth-p1', { ban_duration: '876000h' }]]);
+    assert.deepStrictEqual(estado.rpc, ENCERRAR_P1);
     r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { ativo: true } });
     assert.strictEqual(r.code, 200);
     assert.strictEqual(usuarios.find((u) => u.id === P_C1).ativo, true);
@@ -288,13 +361,13 @@ console.error = () => {};
     assert.strictEqual(estado.auditoria.length, 1);
   });
   await caso('PUT do síndico em porteiro de outro cliente → 403 sem escrever', async () => {
-    const r = await chamar('admin', 'PUT', { query: { id: P_C2 }, body: { senha: 'novaSenha', ativo: false } });
+    const r = await chamar('admin', 'PUT', { query: { id: P_C2 }, body: { senha: 'Ventania2026', ativo: false } });
     assert.strictEqual(r.code, 403);
     semEscrita();
     assert.strictEqual(usuarios.find((u) => u.id === P_C2).ativo, true);
   });
   await caso('PUT em alvo admin_cliente (mesmo cliente) → 403 sem escrever', async () => {
-    const r = await chamar('admin', 'PUT', { query: { id: ADM_C1 }, body: { senha: 'novaSenha' } });
+    const r = await chamar('admin', 'PUT', { query: { id: ADM_C1 }, body: { senha: 'Ventania2026' } });
     assert.strictEqual(r.code, 403);
     semEscrita();
   });
@@ -315,7 +388,7 @@ console.error = () => {};
     semEscrita();
   });
   await caso('PUT com campos inválidos ou vazio → 400 sem escrever', async () => {
-    for (const body of [{}, { senha: '123' }, { nome: '' }, { ativo: 'sim' }, { nome: 'x'.repeat(121) }]) {
+    for (const body of [{}, { senha: '123' }, { senha: 'Girassol4' }, { nome: '' }, { ativo: 'sim' }, { nome: 'x'.repeat(121) }]) {
       const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body });
       assert.strictEqual(r.code, 400, JSON.stringify(body));
       semEscrita();
@@ -323,7 +396,7 @@ console.error = () => {};
   });
   await caso('PUT: erro do Auth na troca de senha → genérico, sem vazar e sem gravar nada', async () => {
     estado.erroAuthAtualizar = { message: SEGREDO, status: 422 };
-    const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'Outro', senha: 'novaSenha' } });
+    const r = await chamar('admin', 'PUT', { query: { id: P_C1 }, body: { nome: 'Outro', senha: 'Ventania2026' } });
     assert.ok(r.code >= 400);
     assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
     assert.ok(!escritas().some((o) => o.modo === 'update'));
@@ -339,6 +412,22 @@ console.error = () => {};
     assert.strictEqual(estado.auditoria.length, 1);
     assert.strictEqual(estado.auditoria[0].acao, 'desativar');
     assert.strictEqual(estado.auditoria[0].registroId, P_C1);
+    assert.strictEqual(estado.auditoria[0].detalhes.sessoes_encerradas, true);
+    assert.deepStrictEqual(estado.rpc, ENCERRAR_P1, 'desativar derruba as sessões abertas');
+    assert.strictEqual(r.body.aviso, undefined);
+  });
+  await caso('DELETE: encerrar sessões falha → ainda desativa e bane, 200 com aviso e auditoria incompleta', async () => {
+    estado.erroRpc = { message: SEGREDO };
+    const r = await chamar('admin', 'DELETE', { query: { id: P_C1 } });
+    assert.strictEqual(r.code, 200);
+    assert.match(r.body.aviso, /aparelhos/);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    assert.strictEqual(usuarios.find((u) => u.id === P_C1).ativo, false);
+    assert.deepStrictEqual(estado.auth, [['atualizar', 'auth-p1', { ban_duration: '876000h' }]]);
+    const d = estado.auditoria[0].detalhes;
+    assert.strictEqual(d.login_bloqueado, true);
+    assert.strictEqual(d.sessoes_encerradas, false);
+    assert.strictEqual(d.incompleto, true);
   });
   await caso('DELETE do síndico em outro cliente ou em admin_cliente → 403 sem escrever', async () => {
     assert.strictEqual((await chamar('admin', 'DELETE', { query: { id: P_C2 } })).code, 403);

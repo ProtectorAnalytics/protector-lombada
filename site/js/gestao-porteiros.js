@@ -15,8 +15,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (usuarioLib) {
   'use strict';
 
-  const SENHA_MIN = 6;
-  const SENHA_MAX = 72;
+  const SENHA_MIN = usuarioLib.SENHA_MIN_PORTEIRO;
   const NOME_MAX = 120;
   const MSG_USUARIO = 'Usuário inválido: use 3 a 40 letras minúsculas, números ou ponto (sem ponto no início, no fim ou repetido).';
 
@@ -30,10 +29,9 @@
     return usuarioLib.sugerirUsuario(nome, condominio);
   }
 
-  function erroSenha(senha) {
-    if (typeof senha !== 'string' || senha.length < SENHA_MIN) return `A senha precisa ter pelo menos ${SENHA_MIN} caracteres.`;
-    if (senha.length > SENHA_MAX) return `A senha pode ter no máximo ${SENHA_MAX} caracteres.`;
-    return '';
+  /** Mesma regra da API (usuario-portaria.js); '' quando a senha serve. */
+  function erroSenha(senha, { usuario, nome } = {}) {
+    return usuarioLib.erroSenhaPorteiro(senha, { usuario, nome }) || '';
   }
 
   /** { corpo } pronto para o POST, ou { erros: { nome?, usuario?, senha? } }. */
@@ -44,7 +42,7 @@
     else if (nomeLimpo.length > NOME_MAX) erros.nome = `Nome com no máximo ${NOME_MAX} caracteres.`;
     const u = usuarioLib.normalizarUsuario(usuario);
     if (!usuarioLib.usuarioValido(u)) erros.usuario = MSG_USUARIO;
-    const s = erroSenha(senha);
+    const s = erroSenha(senha, { usuario: u, nome: nomeLimpo });
     if (s) erros.senha = s;
     if (Object.keys(erros).length) return { erros };
     return { corpo: { nome: nomeLimpo, usuario: u, senha } };

@@ -3,6 +3,9 @@
  * e-mail (a-z 0-9 ponto, 3–40), convertido no e-mail técnico
  * `<usuario>@porteiro.invalid` que o Supabase Auth exige.
  *
+ * Também a regra da senha do porteiro (erroSenhaPorteiro), a mesma na API e
+ * na tela.
+ *
  * Nada aqui toca no DOM. Carregado no browser (window.usuarioPortariaLib) e
  * no Node (require).
  */
@@ -19,6 +22,15 @@
   const MIN = 3;
   const MAX = 40;
   const PALAVRAS_VAZIAS = ['condominio', 'residencial', 'do', 'da', 'de'];
+  const SENHA_MIN_PORTEIRO = 10;
+  const SENHA_MAX_BYTES = 72; // limite do bcrypt no Supabase Auth, em bytes UTF-8
+  const PARTE_MIN = 3;
+  // Já normalizadas (minúsculas, sem acento, só letras e números).
+  const SENHAS_COMUNS = Object.freeze([
+    'portaria123', 'portaria1234', 'porteiro123', 'porteiro1234', '1234567890', '0123456789',
+    '12345678910', 'senha12345', 'senha123456', 'mudar12345', 'mudar123456', 'qwerty1234',
+    'qwerty12345', 'abc1234567', 'abcd123456', 'admin12345', 'password123', 'condominio123',
+  ]);
 
   // Remove acentos (NFD + marcas combinantes, faixa escapada).
   const semAcento = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -64,5 +76,47 @@
     return [primeiro, sig].filter(Boolean).join('.');
   }
 
-  return Object.freeze({ DOMINIO, normalizarUsuario, usuarioValido, emailDoUsuario, usuarioDoEmail, paraLogin, sugerirUsuario });
+  const MSG_RECUPERACAO_PORTEIRO = 'Porteiro: peça uma nova senha ao síndico ou à Protector.';
+
+  /**
+   * "Esqueci minha senha" não serve ao porteiro: sem "@" é usuário de porteiro
+   * e o e-mail técnico nunca recebe nada (só gastaria o limite de e-mails do Auth).
+   */
+  function recuperacaoDePorteiro(entrada) {
+    const txt = String(entrada == null ? '' : entrada).trim().toLowerCase();
+    return !txt.includes('@') || txt.endsWith(`@${DOMINIO}`);
+  }
+
+  const bytesUtf8 = (s) => new TextEncoder().encode(s).length;
+
+  /** Partes do usuário (separadas por ponto) e o primeiro nome, com 3+ caracteres. */
+  function partesProibidas(usuario, nome) {
+    const doUsuario = String(usuario || '').split('.');
+    const primeiroNome = String(nome || '').trim().split(/\s+/)[0];
+    return [...doUsuario, primeiroNome].map(soAlfanum).filter((p) => p.length >= PARTE_MIN);
+  }
+
+  /**
+   * Regra da senha do porteiro. Devolve a mensagem do problema ou null se a
+   * senha serve: 10+ caracteres, até 72 bytes, letras e números, nada do
+   * usuário nem do primeiro nome e fora da lista de senhas comuns.
+   */
+  function erroSenhaPorteiro(senha, { usuario, nome } = {}) {
+    if (typeof senha !== 'string' || [...senha].length < SENHA_MIN_PORTEIRO) {
+      return `A senha precisa ter pelo menos ${SENHA_MIN_PORTEIRO} caracteres.`;
+    }
+    if (bytesUtf8(senha) > SENHA_MAX_BYTES) return 'A senha está longa demais. Use uma senha mais curta (acentos ocupam mais espaço).';
+    const simples = soAlfanum(senha);
+    if (SENHAS_COMUNS.includes(simples)) return 'Essa senha é muito comum. Escolha outra.';
+    if (!/\p{L}/u.test(senha) || !/\d/.test(senha)) return 'Use letras e números na senha.';
+    if (partesProibidas(usuario, nome).some((p) => simples.includes(p))) {
+      return 'A senha não pode ter o usuário nem o nome do porteiro.';
+    }
+    return null;
+  }
+
+  return Object.freeze({
+    DOMINIO, SENHA_MIN_PORTEIRO, normalizarUsuario, usuarioValido, emailDoUsuario, usuarioDoEmail, paraLogin, sugerirUsuario, erroSenhaPorteiro,
+    MSG_RECUPERACAO_PORTEIRO, recuperacaoDePorteiro,
+  });
 });

@@ -24,7 +24,7 @@
   const ed = root.editorUnidadesLib;
   const gp = root.gestaoPorteirosLib;
   const esc = ed.esc;
-  const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  const XLSX_URL = '/vendor/xlsx-0.20.3/xlsx.full.min.js';
   const COLUNAS_PLANILHA = ['Bloco/Torre/Quadra', 'Unidade', 'Andar', 'Tipo'];
   const MAX_ARQUIVO = 5 * 1024 * 1024;
   const EM_PARALELO = 5;
@@ -190,7 +190,7 @@
     <form class="pg-form" data-ref="form-porteiro" novalidate hidden>
       ${htmlCampoPorteiro(p, 'nome', 'Nome', 'maxlength="120" autocomplete="off"')}
       ${htmlCampoPorteiro(p, 'usuario', 'Usuário (sugerido, pode editar)', 'maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false"')}
-      <label class="ed-campo"><span>Senha (mínimo ${gp.SENHA_MIN} caracteres)</span>
+      <label class="ed-campo"><span>Senha (mínimo ${gp.SENHA_MIN} caracteres; letras e números, sem o nome)</span>
         <span class="pg-senha"><input type="password" name="senha" autocomplete="new-password" aria-describedby="${p}-e-senha">
         <button type="button" class="btn btn-ghost btn-sm" data-acao="mostrar-senha" aria-pressed="false">Mostrar</button></span></label>
       <p class="pg-erro" id="${p}-e-senha" data-erro="senha" role="alert"></p>
@@ -206,9 +206,10 @@
 
   function htmlTrocaSenha(id) {
     return `<form class="pg-troca" data-id="${esc(id)}" novalidate>
-  <label class="ed-campo"><span>Nova senha (mínimo ${gp.SENHA_MIN} caracteres)</span>
+  <label class="ed-campo"><span>Nova senha (mínimo ${gp.SENHA_MIN} caracteres; letras e números, sem o nome)</span>
     <span class="pg-senha"><input type="password" name="senha" autocomplete="new-password">
     <button type="button" class="btn btn-ghost btn-sm" data-acao="mostrar-senha" aria-pressed="false">Mostrar</button></span></label>
+  <p class="pg-dica">Trocar a senha desconecta os aparelhos em que esse porteiro já estava logado.</p>
   <p class="pg-erro" role="alert"></p>
   <div class="pg-form-acoes">
     <button type="button" class="btn btn-ghost btn-sm" data-acao="cancelar-troca">Cancelar</button>
@@ -608,13 +609,15 @@
   async function trocarSenha(P, form, botao) {
     const erro = form.querySelector('.pg-erro');
     const senha = form.elements.senha.value;
-    erro.textContent = gp.erroSenha(senha);
+    const alvo = P.lista.find((x) => x.id === form.dataset.id) || {};
+    erro.textContent = gp.erroSenha(senha, { usuario: alvo.usuario, nome: alvo.nome });
     if (erro.textContent) { form.elements.senha.focus(); return; }
     botao.disabled = true;
     try {
-      await P.api(`/porteiros?id=${encodeURIComponent(form.dataset.id)}`, 'PUT', { senha });
+      const r = await P.api(`/porteiros?id=${encodeURIComponent(form.dataset.id)}`, 'PUT', { senha });
       form.remove();
-      P.toast('Senha trocada!');
+      if (r && r.aviso) P.toast(r.aviso, true);
+      else P.toast('Senha trocada! Os aparelhos conectados foram desligados.');
     } catch (err) { erro.textContent = gp.mensagemErro(err); botao.disabled = false; }
   }
 
@@ -628,8 +631,8 @@
     });
     if (!ok) return;
     try {
-      await P.api(`/porteiros?id=${encodeURIComponent(id)}`, 'DELETE');
-      P.toast('Porteiro desativado.');
+      const r = await P.api(`/porteiros?id=${encodeURIComponent(id)}`, 'DELETE');
+      P.toast(r && r.aviso ? r.aviso : 'Porteiro desativado.', !!(r && r.aviso));
       await carregarPorteiros(P);
     } catch (err) { P.toast(gp.mensagemErro(err), true); }
   }

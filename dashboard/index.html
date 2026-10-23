@@ -70,7 +70,7 @@
         new Promise((resolve, reject) => {
           if (window.XLSX) return resolve();
           const s = document.createElement('script');
-          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          s.src = '/vendor/xlsx-0.20.3/xlsx.full.min.js';
           s.onload = resolve;
           s.onerror = reject;
           document.head.appendChild(s);
@@ -3614,6 +3614,11 @@
       if (!email) {
         msgEl.style.color = 'var(--red)';
         msgEl.textContent = 'Digite seu e-mail.';
+        return;
+      }
+      if (usuarioPortariaLib.recuperacaoDePorteiro(email)) {
+        msgEl.style.color = 'var(--red)';
+        msgEl.textContent = usuarioPortariaLib.MSG_RECUPERACAO_PORTEIRO;
         return;
       }
 

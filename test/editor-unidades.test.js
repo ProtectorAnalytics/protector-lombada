@@ -263,16 +263,24 @@ caso('porteiro: usuário sugerido acompanha o nome até ser editado', () => {
   assert.strictEqual(gp.usuarioSugerido({ nome: '', condominio: 'Praia', atual: '', editado: false }), '');
 });
 
-caso('porteiro: senha curta bloqueada, usuário inválido e nome vazio apontam o campo', () => {
+caso('porteiro: senha fraca bloqueada, usuário inválido e nome vazio apontam o campo', () => {
   const r = gp.validarNovoPorteiro({ nome: ' ', usuario: 'Jo', senha: '12345' });
   assert.strictEqual(r.corpo, undefined);
   assert.match(r.erros.nome, /nome/i);
   assert.match(r.erros.usuario, /3 a 40/);
-  assert.match(r.erros.senha, /6 caracteres/);
-  assert.strictEqual(gp.erroSenha('123456'), '');
-  assert.match(gp.erroSenha('12345'), /6 caracteres/);
-  const ok = gp.validarNovoPorteiro({ nome: ' José ', usuario: ' Jose.Castelo ', senha: 'abcdef' });
-  assert.deepStrictEqual(ok, { corpo: { nome: 'José', usuario: 'jose.castelo', senha: 'abcdef' } });
+  assert.match(r.erros.senha, /10 caracteres/);
+  assert.strictEqual(gp.SENHA_MIN, 10);
+  assert.strictEqual(gp.erroSenha('girassol42'), '');
+  assert.match(gp.erroSenha('abc123456'), /10 caracteres/);
+  assert.match(gp.erroSenha('girassolazul'), /letras e números/);
+  assert.match(gp.erroSenha('jose.castelo7', { usuario: 'jose.castelo', nome: 'José' }), /nome/);
+  assert.match(gp.erroSenha('portaria123'), /comum/);
+  const comNome = gp.validarNovoPorteiro({ nome: 'Maria Souza', usuario: 'maria.castelo', senha: 'Castelo2026' });
+  assert.match(comNome.erros.senha, /nome/, 'compara com o usuário digitado');
+  const comPrimeiroNome = gp.validarNovoPorteiro({ nome: 'Maria Souza', usuario: 'portao.um', senha: 'maria2026xx' });
+  assert.match(comPrimeiroNome.erros.senha, /nome/, 'compara com o primeiro nome');
+  const ok = gp.validarNovoPorteiro({ nome: ' José ', usuario: ' Jose.Castelo ', senha: 'girassol42' });
+  assert.deepStrictEqual(ok, { corpo: { nome: 'José', usuario: 'jose.castelo', senha: 'girassol42' } });
 });
 
 caso('porteiro: lista escapa nome e usuário (XSS) e mostra Trocar senha / Desativar / Reativar', () => {
@@ -315,7 +323,22 @@ caso('telas: admin e painel carregam os scripts da gestão; sem confirm() nativo
   assert.ok(!/[^.\w]confirm\(/.test(ctl));
   assert.ok(!/\balert\(/.test(ctl));
   assert.ok(ctl.includes("{ defval: '', blankrows: true }"));
-  assert.ok(ctl.includes('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'));
+  // SheetJS 0.20.3 hospedado no próprio site (0.18.5 tem CVE ao ler planilha)
+  assert.ok(ctl.includes("'/vendor/xlsx-0.20.3/xlsx.full.min.js'"));
+  assert.ok(!/cdnjs\.cloudflare\.com\/ajax\/libs\/xlsx/.test(ctl));
+  const dash = ler('dashboard/index.html');
+  assert.ok(dash.includes("s.src = '/vendor/xlsx-0.20.3/xlsx.full.min.js';"));
+  assert.ok(!/xlsx\/0\.18\.5/.test(dash), 'painel sem a 0.18.5');
+  const lib = ler('site/vendor/xlsx-0.20.3/xlsx.full.min.js');
+  assert.ok(lib.startsWith('/*! xlsx.js (C) 2013-present SheetJS'));
+  const ctxX = { console }; ctxX.window = ctxX; ctxX.self = ctxX; vm.createContext(ctxX);
+  vm.runInContext(lib, ctxX);
+  assert.strictEqual(ctxX.XLSX.version, '0.20.3');
+  const wb = ctxX.XLSX.utils.book_new();
+  ctxX.XLSX.utils.book_append_sheet(wb, ctxX.XLSX.utils.json_to_sheet([{ Unidade: '101' }, {}, { Unidade: '102' }], { header: ['Unidade', 'Tipo'] }), 'U');
+  const lido = ctxX.XLSX.read(ctxX.XLSX.write(wb, { type: 'array', bookType: 'xlsx' }), { type: 'array' });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(ctxX.XLSX.utils.sheet_to_json(lido.Sheets.U, { defval: '', blankrows: true }))),
+    [{ Unidade: '101', Tipo: '' }, { Unidade: '', Tipo: '' }, { Unidade: '102', Tipo: '' }]);
   for (const pagina of ['admin/index.html', 'dashboard/index.html']) {
     const h = ler(pagina);
     ['unidade', 'usuario-portaria', 'editor-unidades', 'gestao-porteiros', 'portaria-gestao']
