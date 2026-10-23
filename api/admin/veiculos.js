@@ -17,6 +17,11 @@ const ROLES_EDICAO = ['super_admin', 'admin_cliente', 'operador'];
 const TIPOS_VALIDOS = new Set(TIPOS_PESSOA.map((t) => t.id));
 const CAMPOS_EDITAVEIS = ['tipo_pessoa', 'nome_morador', 'unidade', 'unidade_id', 'marca', 'cor'];
 const COLUNAS = 'id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, marca, cor, vigente_desde, encerrado_em, criado_em, origem, cadastrado_por';
+// Portaria no histórico: só o necessário para sugerir nomes (sem marca/cor/origem).
+const COLUNAS_HISTORICO_PORTARIA = 'id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, vigente_desde, encerrado_em, criado_em, cadastrado_por';
+// Janela em que o porteiro pode corrigir o próprio cadastro (placa lida errada).
+const JANELA_CORRECAO_MS = 15 * 60 * 1000;
+const ERRO_CORRECAO = 'Só dá para corrigir um cadastro feito por este acesso da portaria nos últimos 15 minutos';
 const MAX_TEXTO = 80;
 const ERRO_ENTRADA_INVALIDA = '22023';
 
@@ -93,12 +98,14 @@ async function listar(req, res) {
   if (!clienteId) return res.status(400).json({ error: 'cliente_id obrigatório' });
   exigirAcesso(profile, clienteId);
 
+  const historico = req.query.historico === '1';
+  const colunas = historico && profile.role === 'portaria' ? COLUNAS_HISTORICO_PORTARIA : COLUNAS;
   const query = supabase
     .from('veiculos')
-    .select(COLUNAS)
+    .select(colunas)
     .eq('cliente_id', clienteId)
     .order('criado_em', { ascending: false });
-  if (req.query.historico !== '1') query.is('encerrado_em', null);
+  if (!historico) query.is('encerrado_em', null);
 
   const placa = limpar(req.query.placa);
   if (placa) query.ilike('placa', `%${placa}%`);
@@ -106,6 +113,89 @@ async function listar(req, res) {
   const { data, error } = await query;
   if (error) throw error;
   return res.status(200).json(data);
+}
+
+// Confere se o vínculo a substituir é um cadastro recente desta portaria.
+async function exigirCorrigivel(substituiId, profile, clienteId) {
+  if (!isValidUUID(substituiId)) throw new ErroHttp(400, ERRO_CORRECAO);
+  const { data, error } = await supabase
+    .from('veiculos')
+    .select('id, cliente_id, placa, encerrado_em, origem, cadastrado_por_usuario, criado_em')
+    .eq('id', substituiId)
+    .maybeSingle();
+  if (error) throw error;
+  const idade = data ? Date.now() - Date.parse(data.criado_em) : NaN;
+  const corrigivel = data
+    && data.cliente_id === clienteId
+    && data.encerrado_em === null
+    && data.origem === 'portaria'
+    && data.cadastrado_por_usuario === profile.id
+    && idade <= JANELA_CORRECAO_MS;
+  if (!corrigivel) throw new ErroHttp(400, ERRO_CORRECAO);
+  return data;
+}
+
+// Encerra o vínculo a corrigir; o update repete as condições (corrida/janela).
+async function encerrarParaCorrecao(original, profile, clienteId, req) {
+  const encerradoEm = new Date().toISOString();
+  const limite = new Date(Date.now() - JANELA_CORRECAO_MS).toISOString();
+  const { data, error } = await supabase
+    .from('veiculos')
+    .update({ encerrado_em: encerradoEm })
+    .eq('id', original.id)
+    .eq('cliente_id', clienteId)
+    .eq('origem', 'portaria')
+    .eq('cadastrado_por_usuario', profile.id)
+    .is('encerrado_em', null)
+    .gte('criado_em', limite)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new ErroHttp(400, ERRO_CORRECAO);
+  await registrarAuditoria({
+    usuarioId: profile.id, acao: 'encerrar', tabela: 'veiculos', registroId: original.id,
+    detalhes: { cliente_id: clienteId, placa: original.placa, encerrado_em: encerradoEm, motivo: 'correcao_portaria' },
+    ip: ipDe(req),
+  });
+  return encerradoEm;
+}
+
+// Desfaz o encerramento quando a placa nova não grava (o porteiro não perde o original).
+async function reabrirOriginal(original, encerradoEm, profile, clienteId, req) {
+  const { error } = await supabase
+    .from('veiculos')
+    .update({ encerrado_em: null })
+    .eq('id', original.id)
+    .eq('encerrado_em', encerradoEm);
+  if (error) {
+    console.error('Erro ao reabrir vínculo após falha na correção:', error.message);
+    return;
+  }
+  await registrarAuditoria({
+    usuarioId: profile.id, acao: 'reabrir', tabela: 'veiculos', registroId: original.id,
+    detalhes: { cliente_id: clienteId, placa: original.placa, motivo: 'correcao_portaria_falhou' },
+    ip: ipDe(req),
+  });
+}
+
+async function vincular(args) {
+  const { data, error } = await supabase.rpc('vincular_placa', args);
+  if (error && error.code === ERRO_ENTRADA_INVALIDA) {
+    throw new ErroHttp(400, 'Não foi possível gravar: confira a placa e a unidade');
+  }
+  if (error) throw error;
+  return data;
+}
+
+// Correção da portaria: encerra o original, vincula a placa nova; se falhar, reabre.
+async function substituir(original, args, profile, clienteId, req) {
+  const encerradoEm = await encerrarParaCorrecao(original, profile, clienteId, req);
+  try {
+    return await vincular(args);
+  } catch (err) {
+    await reabrirOriginal(original, encerradoEm, profile, clienteId, req);
+    throw err;
+  }
 }
 
 // POST: vincula a placa via RPC (histórico preservado pelo banco)
@@ -119,11 +209,18 @@ async function cadastrar(req, res) {
   validarTipo(body.tipo_pessoa);
   exigirAcesso(profile, clienteId);
 
+  const substituiId = body.substitui_id;
+  const temSubstituicao = substituiId !== undefined && substituiId !== null && substituiId !== '';
+  if (temSubstituicao && profile.role !== 'portaria') {
+    throw new ErroHttp(400, 'Para corrigir um cadastro, edite ou exclua o vínculo na lista de veículos');
+  }
+
   const unidadeId = body.unidade_id || null;
   if (unidadeId) await exigirUnidadeDoCliente(unidadeId, clienteId);
   const cadastradoPor = profile.role === 'portaria'
     ? await nomeDoPorteiro(body.porteiro_id, clienteId)
     : profile.nome || null;
+  const original = temSubstituicao ? await exigirCorrigivel(substituiId, profile, clienteId) : null;
 
   const args = {
     p_cliente_id: clienteId,
@@ -138,11 +235,9 @@ async function cadastrar(req, res) {
     p_cadastrado_por: cadastradoPor,
     p_usuario: profile.id,
   };
-  const { data, error } = await supabase.rpc('vincular_placa', args);
-  if (error && error.code === ERRO_ENTRADA_INVALIDA) {
-    throw new ErroHttp(400, 'Não foi possível gravar: confira a placa e a unidade');
-  }
-  if (error) throw error;
+  const data = original
+    ? await substituir(original, args, profile, clienteId, req)
+    : await vincular(args);
 
   await registrarAuditoria({
     usuarioId: profile.id,
@@ -152,6 +247,7 @@ async function cadastrar(req, res) {
     detalhes: {
       cliente_id: clienteId, placa: args.p_placa, tipo_pessoa: args.p_tipo, nome_morador: args.p_nome,
       unidade_id: unidadeId, origem: args.p_origem, porteiro_id: profile.role === 'portaria' ? body.porteiro_id : undefined,
+      substitui_id: original ? original.id : undefined,
     },
     ip: ipDe(req),
   });

@@ -15,6 +15,16 @@ const UNIDADE_C2 = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 const V_VIGENTE = 'f0000000-0000-4000-8000-000000000001';
 const V_ENCERRADO = 'f0000000-0000-4000-8000-000000000002';
 const SEGREDO = 'detalhe-interno-secreto';
+const V_PORT_5 = 'f0000000-0000-4000-8000-000000000003';
+const V_PORT_20 = 'f0000000-0000-4000-8000-000000000004';
+const V_PORT_OUTRO = 'f0000000-0000-4000-8000-000000000005';
+const V_PORT_C2 = 'f0000000-0000-4000-8000-000000000006';
+const V_PAINEL_5 = 'f0000000-0000-4000-8000-000000000007';
+const minutosAtras = (m) => new Date(Date.now() - m * 60000).toISOString();
+const vPort = (id, extra) => ({
+  id, cliente_id: C1, placa: 'QWE1R23', encerrado_em: null, origem: 'portaria',
+  cadastrado_por_usuario: 'u-port', criado_em: minutosAtras(5), ...extra,
+});
 
 const TABELAS = {
   porteiros: [
@@ -29,6 +39,11 @@ const TABELAS = {
   veiculos: [
     { id: V_VIGENTE, cliente_id: C1, placa: 'ABC1D23', encerrado_em: null },
     { id: V_ENCERRADO, cliente_id: C1, placa: 'XYZ9A87', encerrado_em: '2026-01-01T00:00:00Z' },
+    vPort(V_PORT_5),
+    vPort(V_PORT_20, { criado_em: minutosAtras(20) }),
+    vPort(V_PORT_OUTRO, { cadastrado_por_usuario: 'u-outro' }),
+    vPort(V_PORT_C2, { cliente_id: C2 }),
+    vPort(V_PAINEL_5, { origem: 'painel' }),
   ],
 };
 
@@ -41,10 +56,14 @@ function stub(rel, exports) {
 
 // Query builder falso: grava a operação e resolve filtrando TABELAS por eq().
 function tabela(nome) {
-  const op = { tabela: nome, modo: 'select', filtros: [], patch: null };
+  const op = { tabela: nome, modo: 'select', filtros: [], patch: null, colunas: null };
   estado.ops.push(op);
   const linhas = () => (TABELAS[nome] || []).filter((l) =>
-    op.filtros.every(([tipo, c, v]) => (tipo === 'eq' ? l[c] === v : tipo === 'is' ? l[c] === v : true)));
+    op.filtros.every(([tipo, c, v]) => {
+      if (tipo === 'eq' || tipo === 'is') return l[c] === v;
+      if (tipo === 'gte') return String(l[c]) >= String(v);
+      return true;
+    }));
   const resultado = (unico) => {
     if (op.modo === 'delete') return { data: null, error: null };
     const ls = linhas().map((l) => (op.patch ? { ...l, ...op.patch } : l));
@@ -52,12 +71,13 @@ function tabela(nome) {
     return { data: ls, error: null };
   };
   const q = {
-    select() { return q; },
+    select(cols) { op.colunas = cols; return q; },
     update(p) { op.modo = 'update'; op.patch = p; return q; },
     insert(p) { op.modo = 'insert'; op.patch = p; return q; },
     delete() { op.modo = 'delete'; return q; },
     eq(c, v) { op.filtros.push(['eq', c, v]); return q; },
     is(c, v) { op.filtros.push(['is', c, v]); return q; },
+    gte(c, v) { op.filtros.push(['gte', c, v]); return q; },
     in(c, v) { op.filtros.push(['in', c, v]); return q; },
     ilike(c, v) { op.filtros.push(['ilike', c, v]); return q; },
     order() { return q; },
@@ -79,7 +99,7 @@ stub('lib/auth-middleware', {
   supabase: {
     from: tabela,
     rpc: async (fn, args) => {
-      estado.rpc.push({ fn, args });
+      estado.rpc.push({ fn, args, opsAntes: estado.ops.length });
       if (estado.erroRpc) return { data: null, error: estado.erroRpc };
       return { data: { id: 'novo', cliente_id: args.p_cliente_id, placa: args.p_placa }, error: null };
     },
@@ -214,11 +234,89 @@ console.error = () => {};
     const r = await chamar('portaria', 'GET', { query: { cliente_id: C1 } });
     assert.strictEqual(r.code, 200);
     assert.ok(estado.ops[0].filtros.some(([t, c, v]) => t === 'is' && c === 'encerrado_em' && v === null));
-    assert.deepStrictEqual(r.body.map((v) => v.id), [V_VIGENTE]);
+    const doC1 = TABELAS.veiculos.filter((v) => v.cliente_id === C1);
+    assert.deepStrictEqual(r.body.map((v) => v.id), doC1.filter((v) => v.encerrado_em === null).map((v) => v.id));
     const h = await chamar('admin', 'GET', { query: { cliente_id: C1, historico: '1' } });
     assert.strictEqual(h.code, 200);
     assert.ok(!estado.ops[0].filtros.some(([t, c]) => t === 'is' && c === 'encerrado_em'));
-    assert.strictEqual(h.body.length, 2);
+    assert.strictEqual(h.body.length, doC1.length);
+    assert.ok(/\bmarca\b/.test(estado.ops[0].colunas), 'admin continua vendo marca no histórico');
+  });
+  await caso('GET portaria historico=1 traz só as colunas de sugestão (sem marca/cor/origem)', async () => {
+    const h = await chamar('portaria', 'GET', { query: { cliente_id: C1, historico: '1' } });
+    assert.strictEqual(h.code, 200);
+    const cols = estado.ops[0].colunas.split(',').map((c) => c.trim());
+    assert.deepStrictEqual(cols, ['id', 'placa', 'nome_morador', 'unidade', 'unidade_id', 'tipo_pessoa',
+      'vigente_desde', 'encerrado_em', 'criado_em', 'cadastrado_por']);
+    assert.ok(!estado.ops[0].filtros.some(([t, c]) => t === 'is' && c === 'encerrado_em'));
+    const v = await chamar('portaria', 'GET', { query: { cliente_id: C1 } });
+    assert.strictEqual(v.code, 200);
+    assert.ok(/\bmarca\b/.test(estado.ops[0].colunas), 'vigentes da portaria sem mudança');
+  });
+
+  // ---------- POST com substitui_id (correção da portaria) ----------
+  const corrige = (id, extra) => base({ placa: 'QWE1R24', porteiro_id: PORTEIRO_C1, substitui_id: id, ...extra });
+  await caso('portaria corrige o próprio cadastro de 5 min: encerra e depois vincula a placa nova', async () => {
+    const r = await chamar('portaria', 'POST', { body: corrige(V_PORT_5) });
+    assert.strictEqual(r.code, 201);
+    const ws = escritas();
+    assert.strictEqual(ws.length, 1);
+    assert.strictEqual(ws[0].modo, 'update');
+    assert.deepStrictEqual(Object.keys(ws[0].patch), ['encerrado_em']);
+    assert.ok(!Number.isNaN(Date.parse(ws[0].patch.encerrado_em)));
+    const f = ws[0].filtros;
+    assert.ok(f.some(([t, c, v]) => t === 'eq' && c === 'id' && v === V_PORT_5));
+    assert.ok(f.some(([t, c, v]) => t === 'eq' && c === 'cliente_id' && v === C1));
+    assert.ok(f.some(([t, c, v]) => t === 'eq' && c === 'cadastrado_por_usuario' && v === 'u-port'));
+    assert.ok(f.some(([t, c, v]) => t === 'eq' && c === 'origem' && v === 'portaria'));
+    assert.ok(f.some(([t, c, v]) => t === 'is' && c === 'encerrado_em' && v === null));
+    assert.ok(f.some(([t, c]) => t === 'gte' && c === 'criado_em'));
+    assert.strictEqual(estado.rpc.length, 1);
+    assert.strictEqual(estado.rpc[0].args.p_placa, 'QWE1R24');
+    assert.ok(estado.ops.indexOf(ws[0]) < estado.rpc[0].opsAntes, 'encerra antes de vincular');
+    const acoes = estado.auditoria.map((a) => a.acao);
+    assert.deepStrictEqual(acoes, ['encerrar', 'vincular']);
+    assert.strictEqual(estado.auditoria[0].registroId, V_PORT_5);
+    assert.strictEqual(estado.auditoria[1].detalhes.substitui_id, V_PORT_5);
+  });
+  const recusa = async (nome, perfil, body) => caso(nome, async () => {
+    const r = await chamar(perfil, 'POST', { body });
+    assert.strictEqual(r.code, 400);
+    assert.ok(typeof r.body.error === 'string' && r.body.error.length > 0);
+    assert.strictEqual(escritas().length, 0);
+    assert.strictEqual(estado.rpc.length, 0);
+    assert.strictEqual(estado.auditoria.length, 0);
+  });
+  await recusa('portaria com substitui_id de 20 min → 400 sem escrita', 'portaria', corrige(V_PORT_20));
+  await recusa('portaria com substitui_id de outro usuário → 400 sem escrita', 'portaria', corrige(V_PORT_OUTRO));
+  await recusa('portaria com substitui_id de outro cliente → 400 sem escrita', 'portaria', corrige(V_PORT_C2));
+  await recusa('portaria com substitui_id de origem painel → 400 sem escrita', 'portaria', corrige(V_PAINEL_5));
+  await recusa('portaria com substitui_id já encerrado → 400 sem escrita', 'portaria', corrige(V_ENCERRADO));
+  await recusa('portaria com substitui_id inexistente → 400 sem escrita', 'portaria', corrige('f0000000-0000-4000-8000-0000000000ff'));
+  await recusa('portaria com substitui_id inválido → 400 sem escrita', 'portaria', corrige('nao-e-uuid'));
+  await recusa('admin_cliente com substitui_id → 400 sem escrita', 'admin', corrige(V_PORT_5, { porteiro_id: undefined }));
+  await recusa('super_admin com substitui_id → 400 sem escrita', 'super', corrige(V_PORT_5, { porteiro_id: undefined }));
+  await caso('falha da RPC depois de encerrar reabre o cadastro original e não vaza erro', async () => {
+    estado.erroRpc = { code: '42501', message: SEGREDO };
+    const r = await chamar('portaria', 'POST', { body: corrige(V_PORT_5) });
+    estado.erroRpc = null;
+    assert.strictEqual(r.code, 500);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    const ws = escritas();
+    assert.strictEqual(ws.length, 2);
+    assert.ok(ws[0].patch.encerrado_em);
+    assert.deepStrictEqual(ws[1].patch, { encerrado_em: null });
+    assert.ok(ws[1].filtros.some(([t, c, v]) => t === 'eq' && c === 'id' && v === V_PORT_5));
+    assert.ok(ws[1].filtros.some(([t, c, v]) => t === 'eq' && c === 'encerrado_em' && v === ws[0].patch.encerrado_em));
+    assert.deepStrictEqual(estado.auditoria.map((a) => a.acao), ['encerrar', 'reabrir']);
+  });
+  await caso('erro 22023 da RPC na correção → 400 e reabre o original', async () => {
+    estado.erroRpc = { code: '22023', message: SEGREDO };
+    const r = await chamar('portaria', 'POST', { body: corrige(V_PORT_5) });
+    estado.erroRpc = null;
+    assert.strictEqual(r.code, 400);
+    assert.ok(!JSON.stringify(r.body).includes(SEGREDO));
+    assert.deepStrictEqual(escritas()[1].patch, { encerrado_em: null });
   });
 
   // ---------- PUT ----------
