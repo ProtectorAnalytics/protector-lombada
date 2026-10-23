@@ -136,6 +136,8 @@
     }
     .erro { color: var(--red-texto); font-weight: 600; min-height: 0; }
     .erro:empty { display: none; }
+    /* Anti-robô (Turnstile): invisível; só aparece se a Cloudflare pedir um clique */
+    .captcha-box:empty { display: none; }
     .mudo { color: var(--text-secondary); }
     .aviso { border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; font-weight: 600; }
     .aviso.sucesso { background: var(--tint-green); border: 1px solid var(--green); }
@@ -236,6 +238,7 @@
         <label class="rotulo" for="login-senha">Senha</label>
         <input id="login-senha" class="campo" type="password" autocomplete="current-password" required>
       </div>
+      <div id="captcha-login" class="captcha-box"></div>
       <p id="login-erro" class="erro" role="alert"></p>
       <button type="submit" id="botao-entrar" class="botao primario largo">Entrar</button>
     </form>
@@ -341,6 +344,7 @@
   <div id="camera-raiz"></div>
 
   <script src="/js/placa.js"></script>
+  <script src="/js/captcha.js"></script>
   <script src="/js/vinculo-placa.js"></script>
   <script src="/js/texto-seguro.js"></script>
   <script src="/js/usuario-portaria.js"></script>
@@ -524,6 +528,8 @@
 
   const $ = (id) => document.getElementById(id);
   let sb = null;
+  // Anti-robô do login (inerte até o /api/config trazer a site key do Turnstile)
+  let captcha = captchaLib.criarCaptcha({});
   let perfil = null;
   let cliente = null;
   let modo = 'negado';
@@ -596,11 +602,12 @@
       if (!sb) {
         const cfg = await (await fetch('/api/config')).json();
         sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+        captcha = captchaLib.criarCaptcha({ siteKey: cfg.turnstileSiteKey, container: 'captcha-login' });
         sb.auth.onAuthStateChange((evento) => { if (evento === 'SIGNED_OUT') sairDaPagina(); });
       }
       const { data: { session } } = await sb.auth.getSession();
       if (session && session.user) await carregarPerfil(session.user);
-      else mostrarTela('tela-login');
+      else { mostrarTela('tela-login'); captcha.iniciar().catch(() => {}); }
     } catch (e) {
       falhaAoCarregar('Sem conexão com o servidor. Confira a internet.');
     }
@@ -617,8 +624,13 @@
     try {
       // Porteiro entra com o usuário (sem "@"): vira o e-mail técnico do Auth
       const email = usuarioPortariaLib.paraLogin(entrada);
-      const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-      if (error) { erro.textContent = 'Usuário (ou e-mail) ou senha incorretos.'; return; }
+      let captchaToken;
+      try { captchaToken = await captcha.obterToken(); } catch (_) { erro.textContent = captchaLib.MSG_FALHA; return; }
+      const { data, error } = await sb.auth.signInWithPassword(captchaLib.credenciais({ email, password: senha }, captchaToken));
+      if (error) {
+        erro.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Usuário (ou e-mail) ou senha incorretos.';
+        return;
+      }
       $('login-senha').value = '';
       await carregarPerfil(data.user);
     } catch (e) {
@@ -689,6 +701,7 @@
     recomecar();
     $('lista-sem').innerHTML = '';
     mostrarTela('tela-login');
+    captcha.iniciar().catch(() => {});
   }
 
   function abrirApp() {

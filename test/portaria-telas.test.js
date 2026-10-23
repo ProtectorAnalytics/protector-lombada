@@ -14,6 +14,7 @@ const PAINEL = ler('dashboard/index.html');
 const MIGRATION = ler('sql/migration-portaria-base.sql');
 const TESTE_SQL = ler('test/sql/portaria-base.sql');
 const usuarioPortariaLib = require('../site/js/usuario-portaria');
+const captchaLib = require('../site/js/captcha');
 // As funções extraídas das páginas usam window.unidadeLib (rotuloUnidade).
 globalThis.unidadeLib = require('../site/js/unidade');
 
@@ -146,17 +147,20 @@ caso('painel: link "Abrir a portaria" só para o perfil portaria', () => {
 });
 
 // ---- 2.1: login do painel aceita o usuário do porteiro (sem "@")
-async function loginDoPainel(valor) {
+// captcha: sem site key é o inerte da lib (token null); com token, um stub.
+async function loginDoPainel(valor, captcha = captchaLib.criarCaptcha({}), resposta = { data: { user: { id: 'a1' } }, error: null }) {
   const els = { 'login-email': { value: valor }, 'login-password': { value: 'segredo1' }, 'login-error': { textContent: '' } };
   const chamadas = [];
   let perfis = 0;
-  const doLogin = new Function('document', 'sb', 'usuarioPortariaLib', 'loadProfile', 'console',
+  const doLogin = new Function('document', 'sb', 'usuarioPortariaLib', 'loadProfile', 'console', 'captchaLib', 'captcha',
     `let currentUser = null; ${extrair(PAINEL, 'async function doLogin(')}; return doLogin;`)(
     { getElementById: (id) => els[id] },
-    { auth: { signInWithPassword: async (cred) => { chamadas.push(cred); return { data: { user: { id: 'a1' } }, error: null }; } } },
+    { auth: { signInWithPassword: async (cred) => { chamadas.push(cred); return resposta; } } },
     usuarioPortariaLib,
     async () => { perfis++; },
     { error() {} },
+    captchaLib,
+    captcha,
   );
   await doLogin();
   return { chamadas, perfis, els };
@@ -171,6 +175,21 @@ pendentes.push(['painel: login com "José.PraiaDoCastelo" usa o e-mail técnico'
 pendentes.push(['painel: login com e-mail continua igual (minúsculas, sem espaços)', async () => {
   const { chamadas } = await loginDoPainel('  Sindica@Exemplo.com ');
   assert.strictEqual(chamadas[0].email, 'sindica@exemplo.com');
+}]);
+pendentes.push(['painel: com captcha ligado, o login manda o token', async () => {
+  const { chamadas } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok-1' });
+  assert.deepStrictEqual(chamadas, [{ email: 'sindica@exemplo.com', password: 'segredo1', options: { captchaToken: 'tok-1' } }]);
+}]);
+pendentes.push(['painel: captcha falhou no aparelho → mensagem anti-robô e não chama o Supabase', async () => {
+  const { chamadas, els } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => { throw new Error('x'); } });
+  assert.strictEqual(chamadas.length, 0);
+  assert.strictEqual(els['login-error'].textContent, captchaLib.MSG_FALHA);
+}]);
+pendentes.push(['painel: Supabase recusou o captcha → mensagem anti-robô', async () => {
+  const { els, perfis } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok' },
+    { data: {}, error: { code: 'captcha_failed', message: 'captcha protection: request disallowed' } });
+  assert.strictEqual(els['login-error'].textContent, captchaLib.MSG_FALHA);
+  assert.strictEqual(perfis, 0);
 }]);
 pendentes.push(['painel: login vazio não chama o Supabase', async () => {
   const { chamadas, els } = await loginDoPainel('  ');
