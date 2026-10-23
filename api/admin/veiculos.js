@@ -11,6 +11,7 @@ const { isValidPlaca, normalizePlaca, sanitize, isValidUUID } = require('../../l
 const { limpar } = require('../../site/js/placa');
 const { TIPOS_PESSOA } = require('../../site/js/vinculo-placa');
 const { ErroHttp, exigirCorrigivel, substituirComCorrecao } = require('../../lib/correcao-portaria');
+const { diferencaCadastro } = require('../../site/js/historico-cadastro');
 
 const ROLES_LEITURA = ['super_admin', 'admin_cliente', 'operador', 'portaria'];
 const ROLES_CADASTRO = ['super_admin', 'admin_cliente', 'operador', 'portaria'];
@@ -76,7 +77,7 @@ async function lerCorpo(req) {
 async function buscarVinculo(id) {
   if (!isValidUUID(id)) throw new ErroHttp(400, 'ID do veículo inválido');
   const { data, error } = await supabase
-    .from('veiculos').select('id, cliente_id, placa, encerrado_em, cadastrado_por_usuario').eq('id', id).maybeSingle();
+    .from('veiculos').select(`${COLUNAS}, cliente_id, cadastrado_por_usuario`).eq('id', id).maybeSingle();
   if (error) throw error;
   if (!data) throw new ErroHttp(404, 'Veículo não encontrado');
   return data;
@@ -138,6 +139,16 @@ function comMeu(linha, usuarioId) {
   return { ...resto, meu: Boolean(autor) && autor === usuarioId };
 }
 
+// Vínculo lido por buscarVinculo, no formato da resposta do PUT
+function linhaDaResposta(linha, profile) {
+  if (profile.role === 'portaria') {
+    const { cliente_id: _c, ...resto } = linha;
+    return comMeu(resto, profile.id);
+  }
+  const { cliente_id: _c, cadastrado_por_usuario: _u, ...resto } = linha;
+  return resto;
+}
+
 async function vincular(args) {
   const { data, error } = await supabase.rpc('vincular_placa', args);
   if (error && error.code === ERRO_ENTRADA_INVALIDA) {
@@ -197,6 +208,11 @@ async function cadastrar(req, res) {
       cliente_id: clienteId, placa: args.p_placa, tipo_pessoa: args.p_tipo, nome_morador: args.p_nome,
       unidade_id: unidadeId, origem: args.p_origem,
       substitui_id: original ? original.id : undefined,
+      // Para o histórico de alterações: o cadastro como ficou
+      depois: {
+        tipo_pessoa: args.p_tipo, nome_morador: args.p_nome, unidade: args.p_unidade,
+        marca: args.p_marca, cor: args.p_cor,
+      },
     },
     ip: ipDe(req),
   });
@@ -247,6 +263,10 @@ async function atualizar(req, res) {
   if (existente.encerrado_em) throw new ErroHttp(409, 'Este vínculo já foi encerrado e não pode ser alterado');
 
   const campos = await camposDaEdicao(body, existente.cliente_id);
+  const { antes, depois } = diferencaCadastro(existente, campos);
+  // Nada mudou: não grava nem audita (o histórico só mostra mudança de verdade)
+  if (Object.keys(depois).length === 0) return res.status(200).json(linhaDaResposta(existente, profile));
+
   let query = supabase
     .from('veiculos')
     .update(campos)
@@ -257,16 +277,16 @@ async function atualizar(req, res) {
   const { data: gravado, error } = await query
     .select(ehPortaria ? `${COLUNAS}, cadastrado_por_usuario` : COLUNAS)
     .maybeSingle();
-  const data = gravado && ehPortaria ? comMeu(gravado, profile.id) : gravado;
   if (error) throw error;
-  if (!data) throw new ErroHttp(409, 'Este vínculo já foi encerrado e não pode ser alterado');
+  if (!gravado) throw new ErroHttp(409, 'Este vínculo já foi encerrado e não pode ser alterado');
+  const data = ehPortaria ? comMeu(gravado, profile.id) : gravado;
 
   await registrarAuditoria({
     usuarioId: profile.id,
     acao: 'atualizar',
     tabela: 'veiculos',
     registroId: id,
-    detalhes: { cliente_id: existente.cliente_id, ...campos },
+    detalhes: { cliente_id: existente.cliente_id, placa: existente.placa, ...campos, antes, depois },
     ip: ipDe(req),
   });
   return res.status(200).json(data);

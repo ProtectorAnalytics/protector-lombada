@@ -14,13 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.11.1',
+    versao: '1.12.0',
     data: '2026-10-23',
-    titulo: 'Confirmações na própria tela e exclusão de cliente mais segura',
+    titulo: 'Editar o cadastro da placa e ver o histórico de alterações',
     itens: Object.freeze([
-      'Confirmações e avisos do painel aparecem na própria tela, sem janelas do navegador',
-      'Ao encerrar o vínculo de uma placa, a placa aparece em destaque na confirmação',
-      'Exclusão de condomínio é feita de uma só vez: se algo falhar, nada é apagado',
+      'Editar o cadastro da placa direto nos detalhes da passagem e na lista de veículos',
+      'Histórico de alterações: veja quem cadastrou, alterou ou encerrou cada placa, e o que mudou',
+      'Síndico, operador e equipe Protector podem corrigir tipo, nome, unidade, marca e cor',
     ]),
   });
 });
