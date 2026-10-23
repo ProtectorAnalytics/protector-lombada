@@ -266,3 +266,21 @@ quem instala o quadro no PC.
   porteiro, ou parte entra direto (TAG, controle, placa)? Se parte entra
   direto, a lista "Passaram sem cadastro" pesa mais.
 - Conta e caminho de rede do Condfy para a Parte 4.
+
+## 11. Projeto 2.1 — porteiro com login e unidades em massa (decidido em 22–23/10/2026)
+
+### 11.1 Porteiro é usuário (CEO)
+- Cada porteiro tem **login próprio**, criado na aba Usuários/Portaria do admin com o perfil **Portaria** (role `portaria`, já existente).
+- **Usuário simples, sem e-mail** (CEO): ex. `jose.praiadocastelo`. Por baixo, o login usa o e-mail técnico `<usuario>@porteiro.invalid` (domínio reservado que nunca recebe nada). As telas de entrada (painel, portaria) aceitam o usuário sem "@". **Decisão minha:** usuário em minúsculas, `a–z 0–9 .`, 3 a 40 caracteres, único no sistema; sugestão automática `primeironome.condominio`.
+- Sem e-mail não há "esqueci minha senha": a senha é definida e trocada no admin.
+- O cadastro na portaria sai **no nome do login**; a escolha de nome no turno e a lista de porteiros deixam de existir. A correção dos 15 minutos já é por login.
+- **Decisão minha:** só a Protector (admin) cria porteiros nesta etapa; o síndico pode ganhar isso depois. O acesso único "da portaria" criado na Parte 1 continua funcionando (cadastros saem no nome dele).
+- A tabela `porteiros` fica sem uso (não é apagada nesta etapa).
+
+### 11.2 Unidades em massa (CEO, referência: tela "Blocos e unidades" do EasyAlert)
+- **Agrupador opcional** com nome livre: Bloco, Torre ou **Quadra**. Unidades podem ficar sem agrupador.
+- Em cada agrupador, as unidades entram **em lote** (ex.: `101 102 103` ou `101-104`) e aparecem como etiquetas removíveis; **andar** opcional.
+- **Tipo da unidade** (CEO): Apartamento, Casa, Sala, Loja, Lote e **"FIP (Fração Ideal)"** (rótulo exato, sem abreviar). **Decisão minha:** o tipo é escolhido para o lote que está sendo adicionado (padrão Apartamento) e pode ser trocado por unidade.
+- **Planilha** (.xlsx): baixar modelo, importar e exportar, colunas Bloco/Torre/Quadra (opcional), Unidade, Andar (opcional), Tipo. A importação carrega o editor para **conferir antes de salvar**.
+- Rótulo exibido: `Torre 1 · 101` (sem agrupador: só `101`).
+- **Decisão minha:** a Protector (admin) e o síndico (painel do condomínio) podem editar as unidades.
