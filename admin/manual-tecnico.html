@@ -670,7 +670,7 @@
     </ul>
 
     <blockquote>
-        <p><strong>Tabela antiga:</strong> <code>email_destinatarios</code> ficou no banco só como cópia de segurança da lista anterior. <strong>Nenhum envio lê essa tabela</strong> e o admin não grava mais nela. Na migração para a 1.11.0, cada destinatário ativo virou a opção marcada no usuário do mesmo e-mail do cliente, ou um contato "Só recebe e-mail". Apagar a tabela depende de autorização.</p>
+        <p><strong>Tabela antiga:</strong> <code>email_destinatarios</code> foi apagada em 23/10/2026, com autorização. Na migração para a 1.11.0, cada destinatário ativo virou a opção marcada no usuário do mesmo e-mail do cliente, ou um contato "Só recebe e-mail".</p>
     </blockquote>
 
     <hr>
@@ -869,7 +869,7 @@
         </thead>
         <tbody>
             <tr><td>Plataforma</td><td>Supabase (PostgreSQL)</td></tr>
-            <tr><td>Tabelas principais</td><td><code>clientes</code>, <code>cameras</code>, <code>capturas</code>, <code>veiculos</code>, <code>usuarios</code> (inclui quem recebe os e-mails); <code>email_destinatarios</code> fica só como cópia antiga, sem uso</td></tr>
+            <tr><td>Tabelas principais</td><td><code>clientes</code>, <code>cameras</code>, <code>capturas</code>, <code>veiculos</code>, <code>usuarios</code> (inclui quem recebe os e-mails)</td></tr>
             <tr><td>Armazenamento de fotos</td><td>Supabase Storage (bucket <code>capturas-fotos</code>)</td></tr>
         </tbody>
     </table>
