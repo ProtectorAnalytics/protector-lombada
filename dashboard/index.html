@@ -96,11 +96,13 @@
       --green: #22C55E;
       --orange: #F97316;
       --red: #EF4444;
-      /* Tipo de pessoa (portaria): ≥4,5:1 em #080C14/#111827/#1A2235; prestador é verde-azulado, nunca o vermelho de alerta */
-      --tipo-morador: #60A5FA;
-      --tipo-proprietario: #C4B5FD;
-      --tipo-visitante: #FBBF24;
-      --tipo-prestador: #2DD4BF;
+      /* Tipo de pessoa (portaria): morador verde, proprietário azul, visitante amarelo,
+         prestador laranja claro (≠ --orange/--red de velocidade), sem cadastro cinza.
+         ≥6,2:1 em #080C14/#111827/#1A2235 */
+      --tipo-morador: #4ADE80;
+      --tipo-proprietario: #60A5FA;
+      --tipo-visitante: #FACC15;
+      --tipo-prestador: #FDBA74;
       --tipo-sem: #94A3B8;
       --red-dark: #DC2626;
       --red-texto: #F87171;                     /* número vermelho sobre campo (#1A2235 + tinta): ≥4,5:1 */
@@ -168,11 +170,12 @@
       --green: #15803D;
       --orange: #C2410C;
       --red: #B91C1C;
-      /* Tipo de pessoa: mesmos tons do admin, ≥4,5:1 em #FFFFFF/#F2F4F7/#F1F4F8 */
-      --tipo-morador: #046bd2;
-      --tipo-proprietario: #7c3aed;
-      --tipo-visitante: #b45309;
-      --tipo-prestador: #0f766e;
+      /* Tipo de pessoa: mesmos tons do admin; amarelo escurecido para ler no claro.
+         ≥4,5:1 em #FFFFFF/#F2F4F7/#F1F4F8 */
+      --tipo-morador: #15803D;
+      --tipo-proprietario: #1D4ED8;
+      --tipo-visitante: #856A00;
+      --tipo-prestador: #B45309;
       --tipo-sem: #475569;
       --red-dark: #B91C1C;
       --red-texto: #B91C1C;
@@ -2771,11 +2774,13 @@
         --border: rgba(255,255,255,0.35);
         --text-secondary: #CBD5E1;
         --text-muted: #94A3B8;
+        --tipo-morador: #86EFAC; --tipo-proprietario: #93C5FD; --tipo-visitante: #FDE047; --tipo-prestador: #FED7AA; --tipo-sem: #CBD5E1;
       }
       :root[data-theme="light"] {
         --border: rgba(15,23,42,0.45);
         --text-secondary: #334155;
         --text-muted: #475569;
+        --tipo-morador: #166534; --tipo-proprietario: #1E40AF; --tipo-visitante: #6B5400; --tipo-prestador: #92400E; --tipo-sem: #334155;
       }
       /* Materiais quase sólidos e com borda definida */
       .topbar, .modal-content, .vm-box { background: var(--bg-card); }

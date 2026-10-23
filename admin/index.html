@@ -28,11 +28,13 @@
       --orange: #ea580c;
       --red: #dc2626;
       --blue: #046bd2;
-      /* Tipo de pessoa (ícone + rótulo sempre juntos); contraste >= 4.5:1 sobre branco */
-      --tipo-morador: #046bd2;
-      --tipo-proprietario: #7c3aed;
-      --tipo-visitante: #b45309;
-      --tipo-prestador: #0f766e;
+      /* Tipo de pessoa (ícone + rótulo sempre juntos): morador verde, proprietário azul,
+         visitante amarelo escurecido, prestador laranja (≠ --orange/--red), sem cadastro cinza.
+         Contraste >= 4.5:1 sobre #FFFFFF e #F0F5FA */
+      --tipo-morador: #15803D;
+      --tipo-proprietario: #1D4ED8;
+      --tipo-visitante: #856A00;
+      --tipo-prestador: #B45309;
       --tipo-sem: #475569;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
       --shadow-md: 0 4px 12px rgba(4,107,210,0.08), 0 2px 4px rgba(0,0,0,0.04);
@@ -631,7 +633,7 @@
     /* Contraste alto: texto secundário mais escuro e bordas definidas */
     @media (prefers-contrast: more) {
       :root { --text-secondary: #334155; --text-muted: #475569; --border: #94a3b8;
-        --tipo-morador: #034e9a; --tipo-proprietario: #5b21b6; --tipo-visitante: #8a3f06; --tipo-prestador: #0b5e57; --tipo-sem: #334155; }
+        --tipo-morador: #166534; --tipo-proprietario: #1E40AF; --tipo-visitante: #6B5400; --tipo-prestador: #92400E; --tipo-sem: #334155; }
       .btn-ghost, .btn-danger { border-color: currentColor; }
       .topbar { background: #FFFFFF; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--border); }
       .sidebar-nav { box-shadow: inset -1px 0 0 var(--border); }
