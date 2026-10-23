@@ -256,6 +256,10 @@ module.exports = async function handler(req, res) {
       if (data.tipo === 'eliminacao' && data.status === 'atendida' && data.placa_veiculo) {
         const m = paraMercosul(data.placa_veiculo);
         if (m) {
+          // Vínculos (vigentes e encerrados, de qualquer condomínio): o direito do titular vale para a placa.
+          const vinc = await supabase.from('veiculos').delete()
+            .in('placa', [m, paraAntiga(m)].filter(Boolean));
+          if (vinc.error) throw vinc.error;
           const del = await supabase.from('veiculos_base').delete().eq('placa', m);
           if (del.error) throw del.error;
           // O extrato fica (cobrança), mas sem a placa, nas duas grafias.

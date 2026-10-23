@@ -131,6 +131,7 @@ A Operadora aplica a seguinte política técnica de retenção, **executada auto
 | **Log de depuração técnica** (`debug_log`) | **24 horas** | pg_cron `cleanup_debug_log` — a cada 6 horas |
 | **Histórico arquivado** (`capturas_historico`) — metadados | **6 meses** | pg_cron `cleanup_old_capturas_historico` — diário às 04:05 UTC |
 | **Dados técnicos do veículo** (base interna `veiculos_base`) | **6 meses após a última passagem**, em qualquer condomínio | Rotina de limpeza da base; o pedido de eliminação atendido no painel do DPO apaga também a placa |
+| **Vínculo de placa encerrado** (`veiculos`, histórico de vínculos) | **6 meses após o encerramento** | pg_cron `cleanup_vinculos_encerrados`; o pedido de eliminação atendido no painel do DPO apaga todos os vínculos da placa (vigentes e encerrados) |
 
 **Nota técnica:** A limpeza de fotos usa Vercel Cron (não pg_cron) porque o Supabase aplica uma trigger de proteção (`storage.protect_objects_delete`) que bloqueia exclusão direta de objetos do Storage via SQL. O endpoint `api/cron-limpeza` usa a Storage API do SDK `@supabase/supabase-js`, que contorna a trigger de forma segura.
 

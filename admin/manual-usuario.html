@@ -310,11 +310,27 @@
             a { color: #000; text-decoration: none; }
             .main h2:first-of-type { margin-top: 24px; }
         }
+
+        /* Tipos de pessoa (mesmos ícones e cores do painel) */
+        .tipo-pessoa { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+        .tipo-pessoa svg { width: 18px; height: 18px; flex: none; }
+        .tipo-morador { color: #15803D; } .tipo-proprietario { color: #1D4ED8; } .tipo-visitante { color: #856A00; }
+        .tipo-prestador { color: #B45309; } .tipo-sem { color: #475569; }
+        :root[data-theme="dark"] .tipo-morador { color: #4ADE80; } :root[data-theme="dark"] .tipo-proprietario { color: #60A5FA; }
+        :root[data-theme="dark"] .tipo-visitante { color: #FACC15; } :root[data-theme="dark"] .tipo-prestador { color: #FDBA74; }
+        :root[data-theme="dark"] .tipo-sem { color: #94A3B8; }
     </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <script src="/js/spring.js"></script>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="ic-casa" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="ic-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12 20 3M16 7l3 3M14 9l2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="ic-cracha" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 17c.8-2 2.2-3 4-3s3.2 1 4 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="ic-ferramenta" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0 4.8 4.8L11 19.6a2.1 2.1 0 0 1-3-3l8.3-8.3A4 4 0 0 0 14.5 6.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="ic-interrogacao" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</defs></svg>
 
 <!-- Navbar -->
 <nav class="navbar">
@@ -350,6 +366,8 @@
     <a href="#gerenciar-veiculos">6. Gerenciar Veículos</a>
     <a href="#importar-veiculos-por-excel">7. Importar Veículos por Excel</a>
     <a href="#exportar-veiculos-para-excel">8. Exportar Veículos para Excel</a>
+    <a href="#tipos-de-pessoa">Tipos de pessoa e histórico</a>
+    <a href="#portaria">Portaria: unidades, porteiros e acesso</a>
     <a href="#emails-de-alerta">9. Emails de Alerta</a>
     <a href="#notificacoes-automaticas">10. Notificações Automáticas</a>
     <a href="#recuperar-senha">11. Recuperar Senha</a>
@@ -363,7 +381,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.7.3 | Outubro 2026</p>
+    <p class="version">Versão 1.8.0 | Outubro 2026</p>
 
     <hr>
 
@@ -564,7 +582,8 @@
     <p>Mostra todos os veículos cadastrados com:</p>
     <ul>
         <li><strong>Placa</strong></li>
-        <li><strong>Nome do morador</strong></li>
+        <li><strong>Tipo</strong> (com ícone e nome escrito)</li>
+        <li><strong>Nome</strong></li>
         <li><strong>Unidade</strong></li>
         <li><strong>Marca</strong></li>
         <li><strong>Cor</strong></li>
@@ -573,7 +592,7 @@
     <ul>
         <li><strong>Filtrar:</strong> Digite no campo de busca para filtrar por placa, morador, unidade ou marca</li>
         <li><strong>Paginação:</strong> Navega entre as páginas (10 veículos por página)</li>
-        <li><strong>Excluir:</strong> Clique em "Excluir" para remover um veículo</li>
+        <li><strong>Encerrar vínculo:</strong> encerra o cadastro e mantém o histórico</li>
     </ul>
 
     <h3>Aba "Cadastrar"</h3>
@@ -583,6 +602,7 @@
         <li>Preencha:
             <ul>
                 <li><strong>Placa</strong> (obrigatório) - formato ABC1D23 ou ABC1234</li>
+                <li><strong>Tipo</strong> (obrigatório) - Morador, Proprietário, Visitante ou Prestador</li>
                 <li><strong>Nome do Morador</strong> - nome completo do proprietário</li>
                 <li><strong>Unidade</strong> - ex: "Bloco A - Apt 101"</li>
                 <li><strong>Marca</strong> - ex: "Fiat Argo"</li>
@@ -611,11 +631,11 @@
 
     <table>
         <thead>
-            <tr><th>PLACA</th><th>MORADOR</th><th>UNIDADE</th><th>MARCA</th><th>COR</th></tr>
+            <tr><th>PLACA</th><th>TIPO</th><th>MORADOR</th><th>UNIDADE</th><th>MARCA</th><th>COR</th></tr>
         </thead>
         <tbody>
-            <tr><td>ABC1D23</td><td>João Silva</td><td>Bloco A - 101</td><td>Honda Civic</td><td>Prata</td></tr>
-            <tr><td>XYZ9876</td><td>Maria Santos</td><td>Bloco B - 202</td><td>Toyota Corolla</td><td>Branco</td></tr>
+            <tr><td>ABC1D23</td><td>Morador</td><td>João Silva</td><td>Bloco A - 101</td><td>Honda Civic</td><td>Prata</td></tr>
+            <tr><td>XYZ9876</td><td>Visitante</td><td>Maria Santos</td><td>Bloco B - 202</td><td>Toyota Corolla</td><td>Branco</td></tr>
         </tbody>
     </table>
 
@@ -646,7 +666,51 @@
         <li>Clique em <strong>"Exportar Excel"</strong></li>
         <li>O arquivo <code>.xlsx</code> será baixado automaticamente</li>
     </ol>
-    <p>O arquivo exportado contém todas as colunas: PLACA, MORADOR, UNIDADE, MARCA e COR.</p>
+    <p>O arquivo exportado contém todas as colunas: PLACA, TIPO, MORADOR, UNIDADE, MARCA e COR.</p>
+
+    <hr>
+
+    <h2 id="tipos-de-pessoa">Tipos de pessoa e histórico do veículo</h2>
+    <p>Cada veículo cadastrado tem um tipo. O tipo aparece com ícone, cor e nome escrito, na lista de veículos e em cada passagem.</p>
+    <table>
+        <thead><tr><th>Tipo</th><th>Para quem é</th></tr></thead>
+        <tbody>
+            <tr><td><span class="tipo-pessoa tipo-morador"><svg aria-hidden="true" focusable="false"><use href="#ic-casa"/></svg>Morador</span></td><td>Quem mora no condomínio. É o tipo padrão.</td></tr>
+            <tr><td><span class="tipo-pessoa tipo-proprietario"><svg aria-hidden="true" focusable="false"><use href="#ic-chave"/></svg>Proprietário</span></td><td>Dono da unidade que não mora nela.</td></tr>
+            <tr><td><span class="tipo-pessoa tipo-visitante"><svg aria-hidden="true" focusable="false"><use href="#ic-cracha"/></svg>Visitante</span></td><td>Quem vem de visita, inclusive carro de aluguel.</td></tr>
+            <tr><td><span class="tipo-pessoa tipo-prestador"><svg aria-hidden="true" focusable="false"><use href="#ic-ferramenta"/></svg>Prestador</span></td><td>Quem presta serviço no condomínio.</td></tr>
+            <tr><td><span class="tipo-pessoa tipo-sem"><svg aria-hidden="true" focusable="false"><use href="#ic-interrogacao"/></svg>Sem cadastro</span></td><td>Placa que não estava ligada a ninguém na hora da passagem.</td></tr>
+        </tbody>
+    </table>
+    <p>Para cadastrar, escolha o <strong>Tipo</strong> no formulário de veículo (campo obrigatório). A <strong>Unidade</strong> pode ser escolhida numa lista, quando o condomínio tem unidades cadastradas pela Protector. Sem lista, você digita a unidade.</p>
+
+    <h3>Quando o carro troca de responsável</h3>
+    <p>Um carro pode mudar de mãos, como um carro alugado que volta para outro visitante. Cadastre a mesma placa para a nova pessoa. O sistema encerra o cadastro anterior e guarda os dois no histórico.</p>
+    <p>Cada passagem mostra quem estava ligado à placa <strong>naquele momento</strong>, e não quem está hoje. Para Visitante e Prestador, a passagem mostra também <strong>"cadastrado em DD/MM às HH:MM por Nome"</strong>, para saber quem fez o cadastro.</p>
+
+    <h3>Encerrar um cadastro</h3>
+    <p>Para tirar um veículo da lista, use o botão <strong>"Encerrar vínculo"</strong>. Isso <strong>encerra</strong> o cadastro, não apaga: as passagens antigas continuam mostrando quem estava ligado à placa. As novas passagens daquela placa aparecem como <strong>Sem cadastro</strong>.</p>
+
+    <h3>Planilha com a coluna TIPO</h3>
+    <p>Na importação e na exportação do Excel, as colunas são <strong>PLACA | TIPO | MORADOR | UNIDADE | MARCA | COR</strong>. A coluna TIPO é opcional: use Morador, Proprietário, Visitante ou Prestador. Se ficar vazia, o veículo entra como Morador.</p>
+
+    <hr>
+
+    <h2 id="portaria">Portaria: unidades, porteiros e acesso</h2>
+    <p>No painel de administração, a aba <strong>Portaria</strong> prepara o condomínio para o uso na portaria. Escolha o cliente e abra a aba.</p>
+    <h3>Unidades</h3>
+    <p>Em <strong>"Cole as unidades (uma por linha)"</strong>, cole a lista (por exemplo, Casa 1, Casa 2, Bloco A - 101) e clique em <strong>"Adicionar unidades"</strong>. Essas unidades passam a aparecer numa lista de escolha no cadastro de veículos. Para tirar uma unidade, use <strong>Remover</strong> ao lado do nome. Os cadastros já feitos são mantidos.</p>
+    <h3>Porteiros</h3>
+    <p>Em <strong>"Cole os porteiros (um por linha)"</strong>, cole os nomes e clique em <strong>"Adicionar porteiros"</strong>. O nome do porteiro fica registrado em cada cadastro feito por ele.</p>
+    <h3>Criar acesso da portaria</h3>
+    <p>Clique em <strong>"Criar acesso da portaria"</strong> para criar o login usado na portaria. Ele recebe o perfil <strong>Portaria</strong>.</p>
+    <h3>O perfil Portaria</h3>
+    <ul>
+        <li>Vê as passagens e quem estava ligado a cada placa.</li>
+        <li>Por enquanto só consulta os veículos: cadastrar, importar e encerrar vínculo ficam com o síndico e a Protector. O cadastro feito pela portaria chega numa próxima versão.</li>
+        <li>Não vê os e-mails de alerta nem os dados de contato do condomínio.</li>
+        <li>Não altera configurações.</li>
+    </ul>
 
     <hr>
 
@@ -723,7 +787,7 @@
     <p>A velocidade é medida pelo <strong>radar integrado</strong> à câmera ALPHADIGI. A precisão depende da calibração do equipamento e das condições de instalação.</p>
 
     <h3>Posso cadastrar veículos de visitantes?</h3>
-    <p>Sim. Você pode cadastrar qualquer placa no sistema. Recomendamos preencher o campo "Nome do Morador" com "Visitante" e a unidade com o morador responsável.</p>
+    <p>Sim. Você pode cadastrar qualquer placa no sistema. Escolha o tipo <strong>Visitante</strong> (ou <strong>Prestador</strong>, para quem presta serviço) e informe a unidade visitada.</p>
 
     <h3>O sistema funciona 24 horas?</h3>
     <p>Sim. O sistema opera 24 horas por dia, 7 dias por semana. As câmeras capturam veículos durante o dia e a noite (com iluminação infravermelha).</p>
@@ -776,7 +840,7 @@
     <hr>
 
     <p style="text-align:center; color:#888; font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.7.3 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.8.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 

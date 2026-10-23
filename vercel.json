@@ -18,6 +18,8 @@
     { "src": "/api/admin/usuarios", "dest": "/api/admin/usuarios.js" },
     { "src": "/api/admin/emails", "dest": "/api/admin/emails.js" },
     { "src": "/api/admin/veiculos", "dest": "/api/admin/veiculos.js" },
+    { "src": "/api/admin/unidades", "dest": "/api/admin/unidades.js" },
+    { "src": "/api/admin/porteiros", "dest": "/api/admin/porteiros.js" },
     { "src": "/api/admin/dashboard", "dest": "/api/admin/dashboard.js" },
     { "src": "/api/admin/direitos", "dest": "/api/admin/direitos.js" },
     { "src": "/api/admin/camera-health", "dest": "/api/admin/camera-health.js" },

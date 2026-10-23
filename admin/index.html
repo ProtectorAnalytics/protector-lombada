@@ -28,6 +28,14 @@
       --orange: #ea580c;
       --red: #dc2626;
       --blue: #046bd2;
+      /* Tipo de pessoa (ícone + rótulo sempre juntos): morador verde, proprietário azul,
+         visitante amarelo escurecido, prestador laranja (≠ --orange/--red), sem cadastro cinza.
+         Contraste >= 4.5:1 sobre #FFFFFF e #F0F5FA */
+      --tipo-morador: #15803D;
+      --tipo-proprietario: #1D4ED8;
+      --tipo-visitante: #856A00;
+      --tipo-prestador: #B45309;
+      --tipo-sem: #475569;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
       --shadow-md: 0 4px 12px rgba(4,107,210,0.08), 0 2px 4px rgba(0,0,0,0.04);
       --shadow-hover: 0 8px 20px rgba(4,107,210,0.15), 0 4px 8px rgba(0,0,0,0.06);
@@ -562,6 +570,16 @@
       background: var(--accent);
     }
 
+    /* Tipo de pessoa: ícone + rótulo */
+    .tipo-pessoa { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+    .tipo-pessoa svg { width: 18px; height: 18px; flex: none; }
+    .unidade-antiga { color: var(--text-secondary); font-style: italic; }
+    .portaria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .portaria-bloco textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-primary); font: inherit; resize: vertical; }
+    .portaria-resultado { margin-top: 8px; font-size: .875rem; color: var(--text-secondary); min-height: 1.3em; }
+    .portaria-lista { list-style: none; margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .portaria-lista li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-card); }
+
     /* Badge de status com melhor hierarquia */
     .badge-active, .badge-inactive, .badge-role, .badge-tipo {
       white-space: nowrap;
@@ -614,7 +632,8 @@
     }
     /* Contraste alto: texto secundário mais escuro e bordas definidas */
     @media (prefers-contrast: more) {
-      :root { --text-secondary: #334155; --text-muted: #475569; --border: #94a3b8; }
+      :root { --text-secondary: #334155; --text-muted: #475569; --border: #94a3b8;
+        --tipo-morador: #166534; --tipo-proprietario: #1E40AF; --tipo-visitante: #6B5400; --tipo-prestador: #92400E; --tipo-sem: #334155; }
       .btn-ghost, .btn-danger { border-color: currentColor; }
       .topbar { background: #FFFFFF; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--border); }
       .sidebar-nav { box-shadow: inset -1px 0 0 var(--border); }
@@ -625,8 +644,17 @@
   <script src="/js/spring.js"></script>
   <script src="/js/grafico-acessivel.js"></script>
   <script src="/js/acesso-painel.js"></script>
+  <script src="/js/placa.js"></script>
+  <script src="/js/vinculo-placa.js"></script>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-casa" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12 20 3M16 7l3 3M14 9l2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-cracha" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 17c.8-2 2.2-3 4-3s3.2 1 4 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ic-ferramenta" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0 4.8 4.8L11 19.6a2.1 2.1 0 0 1-3-3l8.3-8.3A4 4 0 0 0 14.5 6.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-interrogacao" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
 
   <!-- LOGIN -->
   <div id="login-screen">
@@ -820,6 +848,7 @@
             <button class="tab-btn" onclick="showTab('emails')">E-mails</button>
             <button class="tab-btn" onclick="showTab('relatorio')">Relatório</button>
             <button class="tab-btn" onclick="showTab('veiculos')">Veículos</button>
+            <button class="tab-btn" onclick="showTab('portaria')">Portaria</button>
             <button class="tab-btn" onclick="showTab('usuarios-cli')">Usuários</button>
           </div>
 
@@ -963,11 +992,42 @@
           <div class="tab-panel" id="tab-veiculos">
             <div class="toolbar">
               <input class="toolbar-search" id="search-veiculos" placeholder="Buscar placa..." oninput="renderVeiculos()" style="width:180px">
+              <label style="display:inline-flex;align-items:center;gap:6px;font-size:.875rem"><input type="checkbox" id="veiculos-historico" onchange="loadVeiculos()"> Mostrar vínculos encerrados</label>
               <button class="btn btn-primary btn-sm" onclick="openVeiculoModal()">+ Novo Veículo</button>
             </div>
-            <table class="data-table"><thead><tr><th>Placa</th><th>Morador</th><th>Unidade</th><th>Marca</th><th>Cor</th><th>Status</th><th>Ações</th></tr></thead>
-              <tbody id="veiculos-body"><tr><td colspan="7" class="table-empty">Carregando...</td></tr></tbody>
+            <table class="data-table"><thead><tr><th>Placa</th><th>Tipo</th><th>Nome</th><th>Unidade</th><th>Marca</th><th>Cor</th><th>Situação</th><th>Ações</th></tr></thead>
+              <tbody id="veiculos-body"><tr><td colspan="8" class="table-empty">Carregando...</td></tr></tbody>
             </table>
+          </div>
+
+          <!-- Tab: Portaria -->
+          <div class="tab-panel" id="tab-portaria">
+            <div class="toolbar">
+              <span>Unidades e porteiros usados no tablet da portaria.</span>
+              <button class="btn btn-primary btn-sm" onclick="openUsuarioModal(null, 'portaria')">Criar acesso da portaria</button>
+            </div>
+            <div class="portaria-grid">
+              <section class="portaria-bloco" aria-labelledby="pt-unidades-t">
+                <h3 id="pt-unidades-t">Unidades</h3>
+                <div class="form-group">
+                  <label for="pt-unidades-texto">Cole as unidades (uma por linha)</label>
+                  <textarea id="pt-unidades-texto" placeholder="Casa 1&#10;Casa 2&#10;Bloco A - 101"></textarea>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="comLoading(this, () => adicionarListaPortaria('unidades'))">Adicionar unidades</button>
+                <div class="portaria-resultado" id="pt-unidades-res" role="status" aria-live="polite"></div>
+                <ul class="portaria-lista" id="pt-unidades-lista"></ul>
+              </section>
+              <section class="portaria-bloco" aria-labelledby="pt-porteiros-t">
+                <h3 id="pt-porteiros-t">Porteiros</h3>
+                <div class="form-group">
+                  <label for="pt-porteiros-texto">Cole os porteiros (um por linha)</label>
+                  <textarea id="pt-porteiros-texto" placeholder="Seu José&#10;Dona Maria"></textarea>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="comLoading(this, () => adicionarListaPortaria('porteiros'))">Adicionar porteiros</button>
+                <div class="portaria-resultado" id="pt-porteiros-res" role="status" aria-live="polite"></div>
+                <ul class="portaria-lista" id="pt-porteiros-lista"></ul>
+              </section>
+            </div>
           </div>
 
           <!-- Tab: Usuários do Cliente -->
@@ -1133,6 +1193,8 @@ let usuariosData = [];
 let camerasData = [];
 let emailsData = [];
 let veiculosData = [];
+let unidadesData = [];
+let porteirosData = [];
 let usuariosCliData = [];
 
 const API = '/api/admin';
@@ -2314,7 +2376,7 @@ async function openClienteDetail(id, opts = {}) {
   showTab('cameras');
   loadCameras(id);
   loadEmails(id);
-  loadVeiculos(id);
+  loadPortaria(id).then(() => loadVeiculos(id));
   loadUsuariosCli(id);
   loadPdfConfig();
   loadRelatorioConfig();
@@ -2717,11 +2779,26 @@ async function savePdfConfig() {
 // ============================================
 // VEICULOS
 // ============================================
+// Ícone + rótulo do tipo de pessoa (sempre juntos). Valores vêm da lib, mas passam por esc().
+function seloTipoPessoa(id) {
+  const t = vinculoPlacaLib.tipoPessoa(id);
+  return `<span class="tipo-pessoa" style="color:var(${esc(t.cor)})"><svg aria-hidden="true"><use href="#ic-${esc(t.icone)}"/></svg>${esc(t.rotulo)}</span>`;
+}
+
 async function loadVeiculos(clienteId) {
+  const historico = document.getElementById('veiculos-historico')?.checked ? '&historico=1' : '';
   try {
-    veiculosData = await api('/veiculos?cliente_id=' + (clienteId || currentDetailCliente.id));
+    veiculosData = await api('/veiculos?cliente_id=' + (clienteId || currentDetailCliente.id) + historico);
     renderVeiculos();
-  } catch (err) { console.error(err); erroNaTabela('veiculos-body', 7, 'loadVeiculos()'); }
+  } catch (err) { console.error(err); erroNaTabela('veiculos-body', 8, 'loadVeiculos()'); }
+}
+
+function unidadeDoVeiculo(v) {
+  if (v.unidade_id) {
+    const u = unidadesData.find(x => x.id === v.unidade_id);
+    return u ? esc(u.nome) : `<span class="unidade-antiga">${esc(v.unidade || 'Unidade')} (removida)</span>`;
+  }
+  return v.unidade ? `<span class="unidade-antiga" title="Unidade antiga (texto livre)">${esc(v.unidade)} (antiga)</span>` : '—';
 }
 
 function renderVeiculos() {
@@ -2729,64 +2806,108 @@ function renderVeiculos() {
   const filtered = veiculosData.filter(v => v.placa.includes(search));
   const tbody = document.getElementById('veiculos-body');
 
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Nenhum veículo</td></tr>'; return; }
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Nenhum veículo</td></tr>'; return; }
 
-  tbody.innerHTML = filtered.map(v => `<tr>
+  tbody.innerHTML = filtered.map(v => {
+    const vigente = !v.encerrado_em;
+    return `<tr>
     <td><strong style="letter-spacing:.08em">${esc(v.placa)}</strong></td>
+    <td>${seloTipoPessoa(v.tipo_pessoa)}</td>
     <td>${esc(v.nome_morador || '—')}</td>
-    <td>${esc(v.unidade || '—')}</td>
+    <td>${unidadeDoVeiculo(v)}</td>
     <td>${esc(v.marca || '—')}</td>
     <td>${esc(v.cor || '—')}</td>
-    <td>${v.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
-    <td class="actions-cell">
-      <button class="btn btn-ghost btn-sm" onclick="openVeiculoModal(veiculosData.find(x=>x.id==='${v.id}'))">Editar</button>
-      ${v.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleVeiculo('${v.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleVeiculo('${v.id}',true)">Ativar</button>`}
-      <button class="btn btn-danger-solid btn-sm" onclick="deleteVeiculo('${v.id}','${esc(v.placa)}')">Excluir</button>
+    <td>${vigente ? '<span class="badge-active">Vigente</span>' : `<span class="badge-inactive">Encerrado em ${esc(fmtDate(v.encerrado_em))}</span>`}</td>
+    <td class="actions-cell">${vigente ? `
+      <button class="btn btn-ghost btn-sm" onclick="openVeiculoModal(veiculosData.find(x=>x.id==='${esc(v.id)}'))">Editar</button>
+      <button class="btn btn-danger btn-sm" onclick="encerrarVinculo('${esc(v.id)}','${esc(v.placa)}')">Encerrar vínculo</button>` : ''}
     </td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
+}
+
+// <option>s do campo unidade. A unidade atual que saiu da lista (removida)
+// continua como opção selecionada, para salvar não zerar o vínculo sem querer.
+function opcoesUnidadeVeiculo(veiculo, unidades) {
+  const atual = veiculo && veiculo.unidade_id;
+  const removida = atual && !unidades.some(u => u.id === atual)
+    ? `<option value="${esc(atual)}" selected>${esc(veiculo.unidade ? veiculo.unidade + ' (removida)' : 'Unidade removida')}</option>`
+    : '';
+  return '<option value="">— Sem unidade —</option>' + removida + unidades.map(u =>
+    `<option value="${esc(u.id)}" ${atual === u.id ? 'selected' : ''}>${esc(u.nome)}</option>`).join('');
+}
+
+// Campos de unidade do corpo do POST/PUT: só vão se o campo mudou. Unidade
+// escolhida leva o nome da lista (o texto livre antigo não fica para trás).
+function camposUnidadeDoVeiculo(valor, atual, unidades) {
+  const inicial = (atual && atual.unidade_id) || '';
+  if (valor === inicial) return {};
+  if (!valor) return { unidade_id: null, unidade: null };
+  const u = unidades.find(x => x.id === valor);
+  return { unidade_id: valor, unidade: u ? u.nome : null };
 }
 
 function openVeiculoModal(veiculo = null) {
   const isEdit = !!veiculo;
-  openModal(isEdit ? 'Editar Veículo' : 'Novo Veículo', `
+  const tipoAtual = veiculo?.tipo_pessoa || '';
+  const tipoOptions = vinculoPlacaLib.TIPOS_PESSOA.map(t =>
+    `<option value="${esc(t.id)}" ${tipoAtual === t.id ? 'selected' : ''}>${esc(t.rotulo)}</option>`).join('');
+  const temUnidades = unidadesData.length > 0;
+  const unidadeCampo = temUnidades
+    ? `<select id="f-vei-unidade">${opcoesUnidadeVeiculo(veiculo, unidadesData)}</select>`
+      + (veiculo && !veiculo.unidade_id && veiculo.unidade ? `<small class="unidade-antiga">Unidade antiga: ${esc(veiculo.unidade)} — escolha uma da lista.</small>` : '')
+    : `<input id="f-vei-unidade" value="${esc(veiculo?.unidade || '')}">`;
+  openModal(isEdit ? 'Editar Vínculo' : 'Novo Veículo', `
     <div class="form-row">
-      <div class="form-group"><label>Placa *</label><input id="f-vei-placa" value="${esc(veiculo?.placa || '')}" maxlength="7" style="text-transform:uppercase"></div>
-      <div class="form-group"><label>Morador</label><input id="f-vei-morador" value="${esc(veiculo?.nome_morador || '')}"></div>
+      <div class="form-group"><label>Placa *</label><input id="f-vei-placa" value="${esc(veiculo?.placa || '')}" maxlength="7" style="text-transform:uppercase" ${isEdit ? 'disabled' : ''}></div>
+      <div class="form-group"><label>Tipo *</label><select id="f-vei-tipo"><option value="">Selecione...</option>${tipoOptions}</select></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Unidade</label><input id="f-vei-unidade" value="${esc(veiculo?.unidade || '')}"></div>
+      <div class="form-group"><label>Nome</label><input id="f-vei-morador" value="${esc(veiculo?.nome_morador || '')}"></div>
+      <div class="form-group"><label>Unidade</label>${unidadeCampo}</div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>Marca</label><input id="f-vei-marca" value="${esc(veiculo?.marca || '')}"></div>
+      <div class="form-group"><label>Cor</label><input id="f-vei-cor" value="${esc(veiculo?.cor || '')}"></div>
     </div>
-    <div class="form-group"><label>Cor</label><input id="f-vei-cor" value="${esc(veiculo?.cor || '')}"></div>
     <div class="form-error" id="f-vei-error"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="comLoading(this, () => saveVeiculo(${isEdit ? `'${veiculo.id}'` : 'null'}))">${isEdit ? 'Salvar' : 'Cadastrar'}</button>
+      <button class="btn btn-primary" onclick="comLoading(this, () => saveVeiculo(${isEdit ? `'${esc(veiculo.id)}'` : 'null'}))">${isEdit ? 'Salvar' : 'Cadastrar'}</button>
     </div>
   `);
 }
 
 async function saveVeiculo(id) {
+  const atual = id ? veiculosData.find(x => x.id === id) : null;
+  const unidadeValor = document.getElementById('f-vei-unidade').value.trim();
   const body = {
-    placa: document.getElementById('f-vei-placa').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''),
+    tipo_pessoa: document.getElementById('f-vei-tipo').value,
     nome_morador: document.getElementById('f-vei-morador').value.trim(),
-    unidade: document.getElementById('f-vei-unidade').value.trim(),
     marca: document.getElementById('f-vei-marca').value.trim(),
     cor: document.getElementById('f-vei-cor').value.trim(),
   };
+  if (unidadesData.length) {
+    Object.assign(body, camposUnidadeDoVeiculo(unidadeValor, atual, unidadesData));
+  } else {
+    body.unidade = unidadeValor;
+  }
+  const placa = id ? '' : document.getElementById('f-vei-placa').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   limparErrosCampo();
-  if (aplicarErrosCampo(
-    !body.placa ? [['f-vei-placa', 'Informe a placa']]
-    : !PLACA_RE.test(body.placa) ? [['f-vei-placa', 'Placa inválida — use ABC1234 ou ABC1D23']]
-    : []
-  )) return;
+  const erros = [];
+  if (!id) {
+    if (!placa) erros.push(['f-vei-placa', 'Informe a placa']);
+    else if (!PLACA_RE.test(placa)) erros.push(['f-vei-placa', 'Placa inválida — use ABC1234 ou ABC1D23']);
+  }
+  if (!body.tipo_pessoa) erros.push(['f-vei-tipo', 'Escolha o tipo: morador, proprietário, visitante ou prestador']);
+  if (aplicarErrosCampo(erros)) return;
 
   try {
     if (id) {
-      body.id = id;
-      await api('/veiculos', 'PUT', body);
-      toast('Veículo atualizado!');
+      await api('/veiculos?id=' + encodeURIComponent(id), 'PUT', body);
+      toast('Vínculo atualizado!');
     } else {
+      body.placa = placa;
       body.cliente_id = currentDetailCliente.id;
       await api('/veiculos', 'POST', body);
       toast('Veículo cadastrado!');
@@ -2796,26 +2917,84 @@ async function saveVeiculo(id) {
   } catch (err) { document.getElementById('f-vei-error').textContent = err.message; }
 }
 
-async function toggleVeiculo(id, ativar) {
-  try {
-    if (ativar) { await api('/veiculos', 'PUT', { id, ativo: true }); toast('Veículo ativado!'); }
-    else { await api('/veiculos?id=' + id, 'DELETE'); toast('Veículo desativado!'); }
-    loadVeiculos();
-  } catch (err) { toast(err.message, true); }
-}
-
-async function deleteVeiculo(id, placa) {
+async function encerrarVinculo(id, placa) {
   const confirmado = await confirmarAcao({
-    titulo: 'Excluir veículo permanentemente?',
-    mensagem: `Você vai excluir o veículo com placa <strong>${esc(placa)}</strong> do cadastro.<br><br>Esta ação <strong>não pode ser desfeita</strong>.`,
-    textoOk: 'Sim, excluir',
+    titulo: 'Encerrar vínculo?',
+    mensagem: `O vínculo da placa <strong>${esc(placa)}</strong> será encerrado a partir de agora. O histórico de passagens é mantido.`,
+    textoOk: 'Sim, encerrar',
     textoCancel: 'Cancelar',
   });
   if (!confirmado) return;
   try {
-    await api('/veiculos?id=' + id + '&permanent=true', 'DELETE');
-    toast('Veículo excluído permanentemente!');
+    await api('/veiculos?id=' + encodeURIComponent(id), 'DELETE');
+    toast('Vínculo encerrado!');
     loadVeiculos();
+  } catch (err) { toast(err.message, true); }
+}
+
+// ============================================
+// PORTARIA (unidades e porteiros)
+// ============================================
+const ROTULO_LISTA_PORTARIA = { unidades: 'unidade', porteiros: 'porteiro' };
+
+async function loadPortaria(clienteId) {
+  const cid = clienteId || currentDetailCliente.id;
+  const [un, po] = await Promise.allSettled([
+    api('/unidades?cliente_id=' + cid),
+    api('/porteiros?cliente_id=' + cid),
+  ]);
+  unidadesData = un.status === 'fulfilled' ? un.value : [];
+  porteirosData = po.status === 'fulfilled' ? po.value : [];
+  if (un.status === 'rejected') erroNoBloco('pt-unidades-lista', 'loadPortaria()');
+  else renderListaPortaria('unidades');
+  if (po.status === 'rejected') erroNoBloco('pt-porteiros-lista', 'loadPortaria()');
+  else renderListaPortaria('porteiros');
+}
+
+function renderListaPortaria(tipo) {
+  const dados = tipo === 'unidades' ? unidadesData : porteirosData;
+  const ul = document.getElementById('pt-' + tipo + '-lista');
+  if (!ul) return;
+  if (!dados.length) { ul.innerHTML = `<li style="border:0;color:var(--text-secondary)">Nenhum${tipo === 'unidades' ? 'a' : ''} cadastrad${tipo === 'unidades' ? 'a' : 'o'}.</li>`; return; }
+  ul.innerHTML = dados.map(d => `<li><span>${esc(d.nome)}</span>
+    <button type="button" class="btn btn-ghost btn-sm" aria-label="Remover ${esc(d.nome)}" onclick="removerItemPortaria('${tipo}','${esc(d.id)}')">Remover</button></li>`).join('');
+}
+
+// A API devolve `ignoradas` como lista (linhas longas demais); mostra quantas e quais
+function resumoListaPortaria(r) {
+  const ignoradas = Array.isArray(r.ignoradas) ? r.ignoradas : [];
+  const base = `${r.criadas} criadas · ${r.ja_existiam} já existiam · ${ignoradas.length} ignoradas`;
+  return ignoradas.length ? `${base} (nome longo demais): ${ignoradas.join(', ')}` : base;
+}
+
+async function adicionarListaPortaria(tipo) {
+  const area = document.getElementById('pt-' + tipo + '-texto');
+  const res = document.getElementById('pt-' + tipo + '-res');
+  const texto = area.value;
+  if (!texto.trim()) { res.textContent = 'Cole ao menos um nome.'; return; }
+  try {
+    const r = await api('/' + tipo, 'POST', { cliente_id: currentDetailCliente.id, texto });
+    res.textContent = resumoListaPortaria(r); // textContent: nomes ignorados são texto, nunca HTML
+    area.value = '';
+    await loadPortaria();
+  } catch (err) { res.textContent = err.message; }
+}
+
+async function removerItemPortaria(tipo, id) {
+  const lista = tipo === 'unidades' ? unidadesData : porteirosData;
+  const item = lista.find(x => x.id === id);
+  const confirmado = await confirmarAcao({
+    titulo: `Remover ${ROTULO_LISTA_PORTARIA[tipo]}?`,
+    mensagem: `<strong>${esc(item?.nome || '')}</strong> deixa de aparecer na portaria. Os vínculos e registros já feitos são mantidos.`,
+    textoOk: 'Sim, remover',
+    textoCancel: 'Cancelar',
+  });
+  if (!confirmado) return;
+  try {
+    await api('/' + tipo + '?id=' + encodeURIComponent(id), 'DELETE');
+    toast('Removido!');
+    await loadPortaria();
+    renderVeiculos();
   } catch (err) { toast(err.message, true); }
 }
 
@@ -2833,7 +3012,7 @@ function renderUsuariosCli() {
   const tbody = document.getElementById('usuarios-cli-body');
   if (!usuariosCliData.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Nenhum usuário</td></tr>'; return; }
 
-  const roleLabel = { super_admin: 'Super Admin', admin_cliente: 'Admin Cliente', operador: 'Operador' };
+  const roleLabel = { super_admin: 'Super Admin', admin_cliente: 'Admin Cliente', operador: 'Operador', portaria: 'Portaria' };
   tbody.innerHTML = usuariosCliData.map(u => `<tr>
     <td><strong>${esc(u.nome)}</strong></td>
     <td>${esc(u.email)}</td>
@@ -2864,7 +3043,7 @@ function renderUsuariosGlobal() {
 
   if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Nenhum usuário</td></tr>'; return; }
 
-  const roleLabel = { super_admin: 'Super Admin', admin_cliente: 'Admin Cliente', operador: 'Operador' };
+  const roleLabel = { super_admin: 'Super Admin', admin_cliente: 'Admin Cliente', operador: 'Operador', portaria: 'Portaria' };
   tbody.innerHTML = filtered.map(u => `<tr>
     <td><strong>${esc(u.nome)}</strong></td>
     <td>${esc(u.email)}</td>
@@ -2879,7 +3058,7 @@ function renderUsuariosGlobal() {
   </tr>`).join('');
 }
 
-function openUsuarioModal(usuario = null) {
+function openUsuarioModal(usuario = null, roleInicial = null) {
   const isEdit = !!usuario;
   const clienteOptions = clientesData.map(c => `<option value="${c.id}" ${usuario?.cliente_id === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('');
 
@@ -2894,6 +3073,7 @@ function openUsuarioModal(usuario = null) {
         <select id="f-usr-role">
           <option value="admin_cliente" ${usuario?.role === 'admin_cliente' ? 'selected' : ''}>Admin Cliente</option>
           <option value="operador" ${usuario?.role === 'operador' ? 'selected' : ''}>Operador (somente leitura)</option>
+          <option value="portaria" ${(usuario?.role || roleInicial) === 'portaria' ? 'selected' : ''}>Portaria</option>
           <option value="super_admin" ${usuario?.role === 'super_admin' ? 'selected' : ''}>Super Admin</option>
         </select>
       </div>
@@ -2929,6 +3109,7 @@ async function saveUsuario(id) {
   if (!nome) erros.push(['f-usr-nome', 'Informe o nome']);
   if (!id && !email) erros.push(['f-usr-email', 'Informe o e-mail']);
   else if (!id && !EMAIL_RE.test(email)) erros.push(['f-usr-email', 'E-mail inválido']);
+  if (role !== 'super_admin' && !cliente_id) erros.push(['f-usr-cliente', 'Escolha o cliente deste perfil']);
   if (!id && !senha) erros.push(['f-usr-senha', 'Defina uma senha']);
   else if (senha && senha.length < SENHA_MIN) erros.push(['f-usr-senha', `A senha precisa ter pelo menos ${SENHA_MIN} caracteres`]);
   if (aplicarErrosCampo(erros)) return;
