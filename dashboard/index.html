@@ -256,7 +256,7 @@
     }
 
     /* Anti-robô (Turnstile): invisível; só aparece se a Cloudflare pedir um clique */
-    .captcha-box { margin: 0 0 8px; }
+    .captcha-box { margin: 0 0 8px; max-width: 100%; overflow-x: auto; }
     .captcha-box:empty { margin: 0; }
     .login-box .login-logo {
       width: 220px;
@@ -3513,6 +3513,7 @@
           console.error('Login error:', error);
           return;
         }
+        captcha.parar();
 
         currentUser = data.user;
         await loadProfile();
@@ -3862,6 +3863,7 @@
       document.getElementById('topbar-email').textContent = '';
       document.getElementById('dashboard-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
+      captcha.iniciar().catch(() => {});
     }
 
     // Sessão do painel: muda a cada sair/entrar. Resposta que chega depois de

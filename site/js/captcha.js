@@ -30,7 +30,9 @@
     iniciar: () => Promise.resolve(),
     obterToken: () => Promise.resolve(null),
     resetar() {},
+    parar() {},
   });
+  const LARGURA_MINIMA = 300; // 'flexible'/'normal' pedem 300 px; abaixo disso, 'compact'
 
   /** Site key válida (string não vazia) ou null. */
   function normalizarChave(chave) {
@@ -114,6 +116,12 @@
       setTimeout(resetar, 0);
     }
 
+    /** 'compact' em tela estreita (celular 320–360 px); senão ocupa a largura. */
+    function tamanho(el) {
+      const largura = el.clientWidth || 0;
+      return largura && largura < LARGURA_MINIMA ? 'compact' : 'flexible';
+    }
+
     function desenhar(ts) {
       const el = typeof cfg.container === 'string' ? doc.getElementById(cfg.container) : cfg.container;
       if (!el) throw new Error(MSG_FALHA);
@@ -121,12 +129,18 @@
         sitekey: siteKey,
         appearance: 'interaction-only',
         language: 'pt-br',
-        size: 'flexible',
+        size: tamanho(el),
         'refresh-expired': 'auto',
         callback: aoReceber,
         'expired-callback': () => { token = null; },
         'timeout-callback': () => { token = null; },
-        'error-callback': () => { token = null; falhar(); return true; },
+        'error-callback': () => {
+          token = null;
+          falhar();
+          // Próxima tentativa já ganha um desafio novo (sem esperar o limite)
+          setTimeout(resetar, 0);
+          return true;
+        },
       });
     }
 
@@ -137,8 +151,21 @@
       return iniciando;
     }
 
+    /** Logado: tira o widget para não ficar renovando token à toa. */
+    function parar() {
+      falhar();
+      token = null;
+      if (widgetId !== null && win.turnstile && win.turnstile.remove) {
+        try { win.turnstile.remove(widgetId); } catch (_) { /* já removido */ }
+      }
+      widgetId = null;
+      iniciando = null;
+    }
+
     async function obterToken() {
-      await iniciar();
+      // Script bloqueado/sem rede: segue sem token. Se o Supabase exigir o
+      // captcha, a recusa dele vira a mensagem anti-robô na tela.
+      try { await iniciar(); } catch (_) { return null; }
       if (token) {
         const pronto = token;
         resetar();
@@ -155,7 +182,7 @@
       });
     }
 
-    return Object.freeze({ ativo: true, iniciar, obterToken, resetar });
+    return Object.freeze({ ativo: true, iniciar, obterToken, resetar, parar });
   }
 
   return Object.freeze({

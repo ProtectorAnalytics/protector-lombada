@@ -177,7 +177,7 @@ pendentes.push(['painel: login com e-mail continua igual (minúsculas, sem espa�
   assert.strictEqual(chamadas[0].email, 'sindica@exemplo.com');
 }]);
 pendentes.push(['painel: com captcha ligado, o login manda o token', async () => {
-  const { chamadas } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok-1' });
+  const { chamadas } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok-1', parar() {} });
   assert.deepStrictEqual(chamadas, [{ email: 'sindica@exemplo.com', password: 'segredo1', options: { captchaToken: 'tok-1' } }]);
 }]);
 pendentes.push(['painel: captcha falhou no aparelho → mensagem anti-robô e não chama o Supabase', async () => {
@@ -186,7 +186,7 @@ pendentes.push(['painel: captcha falhou no aparelho → mensagem anti-robô e n�
   assert.strictEqual(els['login-error'].textContent, captchaLib.MSG_FALHA);
 }]);
 pendentes.push(['painel: Supabase recusou o captcha → mensagem anti-robô', async () => {
-  const { els, perfis } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok' },
+  const { els, perfis } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok', parar() {} },
     { data: {}, error: { code: 'captcha_failed', message: 'captcha protection: request disallowed' } });
   assert.strictEqual(els['login-error'].textContent, captchaLib.MSG_FALHA);
   assert.strictEqual(perfis, 0);

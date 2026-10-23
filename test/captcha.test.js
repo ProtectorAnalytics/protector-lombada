@@ -117,20 +117,58 @@ caso('erro do widget rejeita com a mensagem em PT-BR', async () => {
   assert.strictEqual(MSG_FALHA, 'Não foi possível confirmar que você não é um robô. Tente de novo.');
 });
 
-caso('script bloqueado rejeita e permite tentar de novo', async () => {
+caso('script bloqueado: obterToken devolve null (login segue) e a próxima tentativa injeta de novo', async () => {
   const doc = docFalso();
   const c = criarCaptcha({ siteKey: 'k', container: 'c', win: {}, doc });
   const p = c.obterToken();
   doc.scripts[0].onerror();
-  await assert.rejects(p, { message: MSG_FALHA });
+  assert.strictEqual(await p, null);
   c.iniciar().catch(() => {});
   assert.strictEqual(doc.scripts.length, 2, 'segunda tentativa injeta de novo');
+});
+
+caso('erro do widget reseta para a próxima tentativa não esperar o limite', async () => {
+  const ts = turnstileFalso();
+  const c = criarCaptcha({ siteKey: 'k', container: 'c', win: { turnstile: ts }, doc: docFalso() });
+  await c.iniciar();
+  ts.params['error-callback']();
+  await tick();
+  assert.strictEqual(ts.resets, 1);
+  const p = c.obterToken();
+  ts.params.callback('tok-novo');
+  assert.strictEqual(await p, 'tok-novo');
+});
+
+caso('container estreito (< 300 px) usa o widget compacto; largo ou oculto usa flexível', async () => {
+  for (const [largura, esperado] of [[280, 'compact'], [320, 'flexible'], [0, 'flexible']]) {
+    const ts = turnstileFalso();
+    const doc = { ...docFalso(), getElementById: () => ({ clientWidth: largura }) };
+    await criarCaptcha({ siteKey: 'k', container: 'c', win: { turnstile: ts }, doc }).iniciar();
+    assert.strictEqual(ts.params.size, esperado, `largura ${largura}`);
+  }
+});
+
+caso('parar remove o widget; iniciar desenha de novo (depois de sair)', async () => {
+  const ts = turnstileFalso();
+  const removidos = [];
+  ts.remove = (id) => removidos.push(id);
+  const c = criarCaptcha({ siteKey: 'k', container: 'c', win: { turnstile: ts }, doc: docFalso() });
+  await c.iniciar();
+  ts.params.callback('tok');
+  c.parar();
+  assert.deepStrictEqual(removidos, ['w1']);
+  c.resetar(); // sem widget: não chama reset
+  assert.strictEqual(ts.resets, 0);
+  await c.iniciar();
+  assert.strictEqual(ts.renders, 2);
+  criarCaptcha({}).parar(); // inerte também tem parar
 });
 
 caso('reconhece a recusa do Supabase por captcha', () => {
   assert.strictEqual(ehErroDeCaptcha({ code: 'captcha_failed', message: 'x' }), true);
   assert.strictEqual(ehErroDeCaptcha({ message: 'captcha protection: request disallowed (no captcha response)' }), true);
   assert.strictEqual(ehErroDeCaptcha({ code: 'invalid_credentials', message: 'Invalid login credentials' }), false);
+  assert.strictEqual(ehErroDeCaptcha({ message: 'captcha protection: request disallowed (no captcha response)', code: 'captcha_failed' }), true);
   assert.strictEqual(ehErroDeCaptcha(null), false);
 });
 

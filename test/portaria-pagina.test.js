@@ -341,7 +341,7 @@ caso('login com e-mail normal continua valendo (síndico)', async () => {
 });
 
 caso('com captcha ligado, o porteiro entra mandando o token', async () => {
-  const { chamadas } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok-9' });
+  const { chamadas } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok-9', parar() {} });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(chamadas)),
     [{ email: 'jose.castelo@porteiro.invalid', password: 'segredo1', options: { captchaToken: 'tok-9' } }]);
 });
@@ -354,7 +354,7 @@ caso('captcha falhou → mensagem anti-robô, botão volta e não chama o Supaba
 });
 
 caso('Supabase recusou o captcha → mensagem anti-robô', async () => {
-  const { els, perfis } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok' },
+  const { els, perfis } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok', parar() {} },
     { data: {}, error: { code: 'captcha_failed', message: 'captcha protection: request disallowed' } });
   assert.strictEqual(els['login-erro'].textContent, captchaLib.MSG_FALHA);
   assert.strictEqual(perfis.length, 0);

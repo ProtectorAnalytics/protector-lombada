@@ -137,6 +137,7 @@
     .erro { color: var(--red-texto); font-weight: 600; min-height: 0; }
     .erro:empty { display: none; }
     /* Anti-robô (Turnstile): invisível; só aparece se a Cloudflare pedir um clique */
+    .captcha-box { max-width: 100%; overflow-x: auto; }
     .captcha-box:empty { display: none; }
     .mudo { color: var(--text-secondary); }
     .aviso { border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; font-weight: 600; }
@@ -631,6 +632,7 @@
         erro.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Usuário (ou e-mail) ou senha incorretos.';
         return;
       }
+      captcha.parar();
       $('login-senha').value = '';
       await carregarPerfil(data.user);
     } catch (e) {

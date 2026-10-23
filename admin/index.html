@@ -78,7 +78,7 @@
     }
 
     /* Anti-robô (Turnstile): invisível; só aparece se a Cloudflare pedir um clique */
-    .captcha-box { margin: 0 0 8px; }
+    .captcha-box { margin: 0 0 8px; max-width: 100%; overflow-x: auto; }
     .captcha-box:empty { margin: 0; }
     .login-box .login-logo { width: 220px; margin-bottom: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
     .login-box h1 { color: var(--accent); font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; letter-spacing: .05em; }
@@ -1370,6 +1370,7 @@ async function entrar() {
     errorEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'E-mail ou senha incorretos.';
     return;
   }
+  captcha.parar();
 
   authToken = data.session.access_token;
   await loadProfile();
@@ -1407,6 +1408,7 @@ async function doLogout() {
   currentProfile = null;
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
+  captcha.iniciar().catch(() => {});
 }
 
 // ============================================
