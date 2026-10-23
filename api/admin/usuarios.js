@@ -45,12 +45,12 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Campos obrigatórios: email, senha, nome, role' });
       }
 
-      if (!['super_admin', 'admin_cliente', 'operador'].includes(role)) {
+      if (!['super_admin', 'admin_cliente', 'operador', 'portaria'].includes(role)) {
         return res.status(400).json({ error: 'Role inválido' });
       }
 
       if (role !== 'super_admin' && !cliente_id) {
-        return res.status(400).json({ error: 'cliente_id obrigatório para admin_cliente e operador' });
+        return res.status(400).json({ error: 'cliente_id obrigatório para admin_cliente, operador e portaria' });
       }
 
       // Criar usuário no Supabase Auth
