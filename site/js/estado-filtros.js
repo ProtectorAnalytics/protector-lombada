@@ -30,7 +30,7 @@
   const RE_DATA = /^\d{4}-\d{2}-\d{2}$/;
   const RE_HORA = /^\d{2}:\d{2}$/;
   const ANO_MINIMO_PERIODO = 2000;
-  const MAX_DIAS_PERIODO = 31; // lista limitada a 300 passagens: período curto
+  const MAX_DIAS_PERIODO = 31; // período de até um mês (lista paginada no servidor)
   const VEL_MAXIMA = 300;
   const DIA_MS = 86400000;
 
@@ -100,7 +100,7 @@
   /**
    * Campos crus do formulário → estado congelado (invertidos são trocados).
    * @param {object} campos dataInicio, horaInicio, dataFim, horaFim, placa,
-   *   velMin, velMax, cameraId, soAlertas, naoCadastrados, tipoCadastro, unidade,
+   *   velMin, velMax, cameraId, soAlertas, tipoCadastro, unidade,
    *   veiculo (já montado por filtro-veiculo)
    * @param {string} hoje 'AAAA-MM-DD' local
    */
@@ -126,7 +126,6 @@
       velMax,
       cameraId: texto(c.cameraId),
       soAlertas: c.soAlertas === true,
-      naoCadastrados: c.naoCadastrados === true,
       // Cadastro na hora da passagem: tipo ('morador'…'prestador', 'sem') e unidade (rótulo)
       tipoCadastro: filtroCadastro.normalizarTipo(c.tipoCadastro),
       unidade: filtroCadastro.textoUnidade(c.unidade),
@@ -221,7 +220,7 @@
   }
 
   // ---------------------------------------------------------------------
-  // Atalhos de período. Sem "30 dias": a lista traz no máximo 300 passagens.
+  // Atalhos de período.
   // ---------------------------------------------------------------------
   const ATALHOS = Object.freeze(['hoje', 'ontem', '7d']);
 
@@ -265,7 +264,6 @@
     periodo: (hoje) => periodoDoAtalho('hoje', hoje),
     camera: () => ({ cameraId: '' }),
     alerta: () => ({ soAlertas: false }),
-    naoCadastrados: () => ({ naoCadastrados: false }),
     placa: () => ({ placa: '' }),
     tipoCadastro: () => ({ tipoCadastro: '' }),
     unidade: () => ({ unidade: '' }),
@@ -296,7 +294,8 @@
     { id: 'ontem', rotulo: 'Ontem', mudancas: (h) => periodoDoAtalho('ontem', h) },
     { id: 'acima-hoje', rotulo: 'Acima do limite hoje', mudancas: () => ({ soAlertas: true }) },
     { id: '7d', rotulo: 'Últimos 7 dias', mudancas: (h) => periodoDoAtalho('7d', h) },
-    { id: 'nao-cadastrados', rotulo: 'Não cadastrados', mudancas: () => ({ naoCadastrados: true }) },
+    // Regra única: sem vínculo NA HORA da passagem (o mesmo filtro "Sem cadastro")
+    { id: 'nao-cadastrados', rotulo: 'Não cadastrados', mudancas: () => ({ tipoCadastro: filtroCadastro.TIPO_SEM }) },
   ].map(Object.freeze));
 
   function estadoDaVisao(id, hoje) {
@@ -338,7 +337,6 @@
     if (v.anoDe || v.anoAte) q.set('ano', `${v.anoDe || ''}-${v.anoAte || ''}`);
     if (f.velMin > 0) q.set('vmin', String(f.velMin));
     if (f.velMax) q.set('vmax', String(f.velMax));
-    if (f.naoCadastrados) q.set('nc', '1');
     if (f.tipoCadastro) q.set('tipo', f.tipoCadastro);
     if (f.unidade) q.set('unidade', f.unidade);
     return q.toString().replace(/\+/g, '%20');
@@ -385,8 +383,8 @@
     return montarFiltros(Object.assign(periodoDaUrl(q, hoje), {
       cameraId: RE_CAMERA.test(cam) ? cam : '',
       soAlertas: q.get('alerta') === '1',
-      naoCadastrados: q.get('nc') === '1',
-      tipoCadastro: q.get('tipo'),
+      // Link antigo (?nc=1) vira o filtro exato "Sem cadastro"
+      tipoCadastro: q.get('tipo') || (q.get('nc') === '1' ? filtroCadastro.TIPO_SEM : ''),
       unidade: q.get('unidade'),
       placa: q.get('placa'),
       velMin: velocidadeDaUrl(q.get('vmin')),

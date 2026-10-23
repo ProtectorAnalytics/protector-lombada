@@ -1,7 +1,7 @@
 /**
  * barra-filtros.js — regras puras da barra de filtros do painel do síndico:
  * rótulo do período, chips dos filtros ativos, busca tipada (sugestões e
- * decisão do Enter), texto do resultado e o critério "não cadastrados".
+ * decisão do Enter) e texto do resultado.
  *
  * Tudo lê o estado único de estado-filtros.js; nada aqui toca no DOM.
  *
@@ -58,7 +58,6 @@
     if (estado.atalhoDoPeriodo(f, hoje) !== 'hoje') add('periodo', rotuloDoPeriodo(f, hoje));
     if (f.cameraId) add('camera', `Câmera: ${nomeCamera(f.cameraId) || f.cameraId}`);
     if (f.soAlertas) add('alerta', 'Acima do limite');
-    if (f.naoCadastrados) add('naoCadastrados', 'Não cadastrados');
     if (f.placa) add('placa', `Placa contém ${f.placa}`);
     if (f.tipoCadastro) add('tipoCadastro', `Cadastro: ${filtroCadastro.rotuloTipo(f.tipoCadastro)}`);
     if (f.unidade) add('unidade', `Unidade: ${f.unidade}`);
@@ -120,7 +119,7 @@
 
   /**
    * Anúncio do resultado: "Nenhuma passagem", "1 passagem", "36 passagens";
-   * no limite da consulta, "300+ passagens" (há mais do que o carregado).
+   * conferência parcial do cadastro, "50000+ passagens" (há mais do que o conferido).
    */
   function textoResultado(n, noLimite) {
     if (!n) return 'Nenhuma passagem';
@@ -128,21 +127,8 @@
     return n === 1 ? `1${mais} passagem` : `${n}${mais} passagens`;
   }
 
-  // Mesma placa nas duas grafias (antiga/Mercosul) vira a mesma chave
-  const chavePlaca = (p) => placaLib.paraMercosul(p) || placaLib.limpar(p);
-
-  /** Placas do cadastro de moradores, nas duas grafias. */
-  function conjuntoCadastradas(placas) {
-    return new Set((placas || []).map(chavePlaca).filter(Boolean));
-  }
-
-  /** Só as passagens cuja placa não está no cadastro (lista nova). */
-  function filtrarNaoCadastradas(linhas, cadastradas) {
-    return (linhas || []).filter((l) => !cadastradas.has(chavePlaca(l && l.placa)));
-  }
-
   return {
     rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
-    conjuntoCadastradas, filtrarNaoCadastradas, SUGESTOES_MAX, BUSCA_MIN,
+    SUGESTOES_MAX, BUSCA_MIN,
   };
 });
