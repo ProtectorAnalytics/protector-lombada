@@ -118,5 +118,36 @@ caso('selects de cameras do painel ⊆ grant de cameras (sem token) e copiados n
   }
 });
 
+// ---- Task 7: perfil portaria só consulta; ganha atalho para a página da portaria
+caso('painel: portaria não vê "É a mesma placa"/"É outro carro"; quem edita vê', () => {
+  const montar = (pode) => new Function('estadoSelo', 'podeEditarVeiculos', 'esc', 'htmlQuadroVeiculo',
+    `${extrair(PAINEL, 'function htmlBaseVeiculo(')}; return htmlBaseVeiculo;`)(() => 'suspeita', () => pode, (s) => String(s), () => '');
+  const args = [{ status: 'x' }, 'ABC1D23', { placa: 'ABC1D24', timestamp: 1 }];
+  const porteiro = montar(false)(...args);
+  assert.ok(!porteiro.includes('data-acao="mesma-placa"'), porteiro);
+  assert.ok(!porteiro.includes('data-acao="outro-carro"'), porteiro);
+  assert.ok(porteiro.includes('Verificar leitura'), 'o aviso de suspeita continua visível');
+  const sindico = montar(true)(...args);
+  assert.ok(sindico.includes('data-acao="mesma-placa"') && sindico.includes('data-acao="outro-carro"'));
+});
+
+caso('painel: link "Abrir a portaria" só para o perfil portaria', () => {
+  assert.match(PAINEL, /<a [^>]*id="conta-portaria"[^>]*href="\/portaria"[^>]*hidden|<a [^>]*href="\/portaria"[^>]*id="conta-portaria"[^>]*hidden/);
+  assert.ok(PAINEL.includes('Abrir a portaria'));
+  const fn = extrair(PAINEL, 'function aplicarPermissaoVeiculos(');
+  assert.ok(/conta-portaria/.test(fn), 'aplicarPermissaoVeiculos não controla o link');
+  const el = { hidden: true };
+  const rodar = (role) => {
+    el.hidden = true;
+    new Function('document', 'podeEditarVeiculos', 'currentProfile',
+      `${fn}; aplicarPermissaoVeiculos();`)(
+      { getElementById: (id) => (id === 'conta-portaria' ? el : { hidden: false }) },
+      () => role !== 'portaria', { role });
+    return el.hidden;
+  };
+  assert.strictEqual(rodar('portaria'), false);
+  assert.strictEqual(rodar('sindico'), true);
+});
+
 console.log(`${passou} casos passaram${falhou ? `, ${falhou} falharam` : ''}`);
 if (falhou) process.exit(1);

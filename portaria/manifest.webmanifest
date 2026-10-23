@@ -1,0 +1,16 @@
+{
+  "name": "Lombada · Portaria",
+  "short_name": "Portaria",
+  "description": "Cadastro rápido de placas na portaria",
+  "lang": "pt-BR",
+  "start_url": "/portaria",
+  "scope": "/portaria",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080C14",
+  "theme_color": "#080C14",
+  "icons": [
+    { "src": "/portaria/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/portaria/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

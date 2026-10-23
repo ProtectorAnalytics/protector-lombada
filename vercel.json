@@ -4,7 +4,8 @@
     { "src": "api/**/*.js", "use": "@vercel/node" },
     { "src": "site/**", "use": "@vercel/static" },
     { "src": "dashboard/**", "use": "@vercel/static" },
-    { "src": "admin/**", "use": "@vercel/static" }
+    { "src": "admin/**", "use": "@vercel/static" },
+    { "src": "portaria/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/config", "dest": "/api/config.js" },
@@ -37,6 +38,8 @@
     { "src": "/dashboard", "dest": "/dashboard/index.html" },
     { "src": "/dashboard/novidades", "dest": "/dashboard/novidades.html" },
     { "src": "/dashboard/(.*)", "dest": "/dashboard/$1" },
+    { "src": "/portaria", "dest": "/portaria/index.html" },
+    { "src": "/portaria/(.*)", "dest": "/portaria/$1" },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
     { "src": "/privacidade", "dest": "/site/privacidade.html" },
     { "src": "/direitos-titular", "dest": "/site/direitos-titular.html" },

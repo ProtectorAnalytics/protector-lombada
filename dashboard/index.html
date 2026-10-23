@@ -511,6 +511,18 @@
       margin-bottom: 4px;
       overflow-wrap: anywhere;
     }
+    .conta-link {
+      display: flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 10px;
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .conta-link[hidden] { display: none; }
     .conta-sair {
       width: 100%;
       min-height: 36px;
@@ -2858,7 +2870,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.8.0 &middot; 2026-10-22
+        v1.9.0 &middot; 2026-10-22
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2890,6 +2902,7 @@
           </button>
           <div class="conta-menu" id="conta-menu">
             <div class="conta-email" id="topbar-email"></div>
+            <a class="conta-link" id="conta-portaria" href="/portaria" hidden>Abrir a portaria</a>
             <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
           </div>
         </div>
@@ -3098,7 +3111,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.8.0
+      Protector Traffic Control &middot; v1.9.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3388,6 +3401,11 @@
     let placasCadastradas = new Set();
     // Todos os vínculos (vigentes e encerrados) por placa: "quem estava na hora"
     let indiceVinculos = new Map();
+    // Painel aberto acompanha cadastros novos (ex.: portaria): ver recarregarVinculosSePreciso
+    const RECARGA_VINCULOS_MIN_MS = 60 * 1000;
+    const RECARGA_VINCULOS_PERIODO_MS = 5 * 60 * 1000;
+    let vinculosCargaEm = 0;
+    let vinculosRecarregando = null;
     // Unidades do condomínio (lista do admin); vazia = campo de texto livre
     let unidadesLista = [];
     // Estado do cadastro de moradores: 'carregando' | 'ok' | 'erro'
@@ -3683,6 +3701,7 @@
       document.getElementById('vm-tab-cadastrar').hidden = !pode;
       document.getElementById('vm-body-cadastrar').hidden = !pode;
       document.getElementById('vm-importar-bloco').hidden = !pode;
+      document.getElementById('conta-portaria').hidden = pode;
     }
 
     function aplicarModoAdmin() {
@@ -3973,6 +3992,7 @@
       const comPeriodo = forcarPeriodo
         || precisaRecarregarPeriodo(filtrosAtivos, chavePeriodoCarregado, new Date());
       dot.classList.add('ativo');
+      recarregarVinculosSePreciso([]); // a cada 5 min (o ciclo só roda com a aba visível)
       try {
         await Promise.all([
           loadStats(),
@@ -3996,6 +4016,7 @@
     // Paginado (max-rows do PostgREST). Falha não é "ninguém cadastrado":
     // fica registrada em `cadastro` e o filtro "Não cadastrados" avisa e não filtra.
     async function loadVeiculosCache() {
+      vinculosCargaEm = Date.now();
       const sessao = marcaDaSessao();
       const clienteId = sessao.clienteId;
       try {
@@ -4017,6 +4038,37 @@
         console.error('Erro ao carregar o cadastro de moradores:', err);
         if (sessaoValida(sessao)) cadastro = { estado: 'erro' };
       }
+    }
+
+    /**
+     * Recarregar os vínculos? Nunca antes de 60 s da última carga nem com outra
+     * em curso; sim a cada 5 min, ou quando chega uma passagem (depois da última
+     * carga) de placa válida sem vínculo vigente no índice — pode ser um
+     * cadastro recém-feito (spec §5.1.6: a próxima passagem já aparece identificada).
+     */
+    function deveRecarregarVinculos({ capturas, indice, ultimaCargaMs, agoraMs, emCurso }) {
+      if (emCurso) return false;
+      const desde = agoraMs - ultimaCargaMs;
+      if (desde < RECARGA_VINCULOS_MIN_MS) return false;
+      if (desde >= RECARGA_VINCULOS_PERIODO_MS) return true;
+      return (capturas || []).some((c) => {
+        const t = Date.parse(c && c.timestamp);
+        return t > ultimaCargaMs && placaLib.ehPlaca(placaLib.limpar(c.placa))
+          && !vinculoPlacaLib.vinculoVigente(indice, c.placa);
+      });
+    }
+
+    // Uma carga por vez; quem chega no meio espera a mesma promessa.
+    function recarregarVinculosSePreciso(capturas) {
+      if (vinculosRecarregando) return vinculosRecarregando;
+      const deve = deveRecarregarVinculos({
+        capturas, indice: indiceVinculos, ultimaCargaMs: vinculosCargaEm, agoraMs: Date.now(), emCurso: false,
+      });
+      if (!deve) return undefined;
+      const carga = loadVeiculosCache().finally(() => { vinculosRecarregando = null; });
+      vinculosRecarregando = carga;
+      veiculosCachePronto = carga;
+      return carga;
     }
 
     // Lista de unidades do condomínio (admin). Falha = sem lista: o campo vira texto livre.
@@ -4469,6 +4521,9 @@
         .order('timestamp', { ascending: false })
         .limit(60);
       if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
+      // Passagem de placa recém-cadastrada: recarrega os vínculos antes de desenhar
+      await recarregarVinculosSePreciso(rawData || []);
+      if (!sessaoValida(sessao)) return;
 
       const container = document.getElementById('recent-cards');
 
@@ -6537,10 +6592,10 @@
         return `<div class="vb-quadro vb-suspeita" role="group" aria-labelledby="vb-suspeita-titulo">
           <h4 id="vb-suspeita-titulo">⚠ Verificar leitura</h4>
           <p>A câmera leu <strong>${esc(captura.placa)}</strong>, mas parece ser <strong>${esc(suspeita)}</strong>, que passa com frequência aqui. Confira na foto.</p>
-          <div class="vb-acoes">
+          ${podeEditarVeiculos() ? `<div class="vb-acoes">
             <button type="button" class="btn-zoom" data-acao="mesma-placa">É a mesma placa (${esc(suspeita)})</button>
             <button type="button" class="btn-zoom" data-acao="outro-carro">É outro carro</button>
-          </div>
+          </div>` : ''}
           <div class="vb-erro" role="alert"></div>
         </div>`;
       }

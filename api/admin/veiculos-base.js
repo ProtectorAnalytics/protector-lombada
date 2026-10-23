@@ -1,6 +1,7 @@
 /**
  * Painel → base de veículos.
- * - GET: marca/cor para preencher o cadastro (só placa capturada no próprio cliente)
+ * - GET: marca/cor para preencher o cadastro (só placa capturada no próprio cliente);
+ *   também para a portaria (só leitura)
  * - POST mesma_placa: corrige a leitura da captura para a placa frequente
  * - POST outro_carro: libera a suspeita e consulta (pago, respeita travas)
  */
@@ -13,6 +14,8 @@ const { paraMercosul, paraAntiga } = require('../../site/js/placa');
 const { nomeVeiculo } = require('../../site/js/nome-veiculo');
 
 const PAPEIS = ['super_admin', 'admin_cliente', 'operador'];
+// A portaria só lê (GET): a lista "Passaram sem cadastro" pergunta de quem é a suspeita.
+const PAPEIS_LEITURA = [...PAPEIS, 'portaria'];
 const JANELA_DIAS = 30;
 
 async function lerCorpo(req) {
@@ -113,7 +116,7 @@ async function outroCarro({ body, profile, ip, res }) {
 
 module.exports = async function handler(req, res) {
   try {
-    const { profile } = await autenticar(req, PAPEIS);
+    const { profile } = await autenticar(req, req.method === 'GET' ? PAPEIS_LEITURA : PAPEIS);
     const ip = req.headers['x-forwarded-for'] || null;
 
     if (req.method === 'GET') return await buscarMarcaCor(req, res, profile);

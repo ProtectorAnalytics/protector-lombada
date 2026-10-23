@@ -10,6 +10,7 @@ const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = req
 const { isValidPlaca, normalizePlaca, sanitize, isValidUUID } = require('../../lib/validators');
 const { limpar } = require('../../site/js/placa');
 const { TIPOS_PESSOA } = require('../../site/js/vinculo-placa');
+const { ErroHttp, exigirCorrigivel, substituirComCorrecao } = require('../../lib/correcao-portaria');
 
 const ROLES_LEITURA = ['super_admin', 'admin_cliente', 'operador', 'portaria'];
 const ROLES_CADASTRO = ['super_admin', 'admin_cliente', 'operador', 'portaria'];
@@ -17,12 +18,10 @@ const ROLES_EDICAO = ['super_admin', 'admin_cliente', 'operador'];
 const TIPOS_VALIDOS = new Set(TIPOS_PESSOA.map((t) => t.id));
 const CAMPOS_EDITAVEIS = ['tipo_pessoa', 'nome_morador', 'unidade', 'unidade_id', 'marca', 'cor'];
 const COLUNAS = 'id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, marca, cor, vigente_desde, encerrado_em, criado_em, origem, cadastrado_por';
+// Portaria no histórico: só o necessário para sugerir nomes (sem marca/cor/origem).
+const COLUNAS_HISTORICO_PORTARIA = 'id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, vigente_desde, encerrado_em, criado_em, cadastrado_por';
 const MAX_TEXTO = 80;
 const ERRO_ENTRADA_INVALIDA = '22023';
-
-class ErroHttp extends Error {
-  constructor(status, mensagem) { super(mensagem); this.status = status; this.error = mensagem; }
-}
 
 const ipDe = (req) => req.headers['x-forwarded-for'] || req.socket?.remoteAddress;
 
@@ -86,6 +85,24 @@ function exigirAcesso(profile, clienteId) {
   if (!verificarAcessoCliente(profile, clienteId)) throw new ErroHttp(403, 'Sem acesso a este cliente');
 }
 
+// PostgREST corta cada resposta em max-rows (1000): lê em lotes até acabar.
+const LOTE = 1000;
+const TETO_LINHAS = 20000;
+
+async function lerEmLotes(montarQuery) {
+  const linhas = [];
+  while (linhas.length < TETO_LINHAS) {
+    const ini = linhas.length;
+    const fim = Math.min(ini + LOTE, TETO_LINHAS) - 1;
+    const { data, error } = await montarQuery().range(ini, fim);
+    if (error) throw error;
+    const lote = data || [];
+    linhas.push(...lote);
+    if (lote.length < fim - ini + 1) break;
+  }
+  return linhas;
+}
+
 // GET: vigentes (padrão) ou histórico completo (historico=1)
 async function listar(req, res) {
   const { profile } = await autenticar(req, ROLES_LEITURA);
@@ -93,19 +110,32 @@ async function listar(req, res) {
   if (!clienteId) return res.status(400).json({ error: 'cliente_id obrigatório' });
   exigirAcesso(profile, clienteId);
 
-  const query = supabase
-    .from('veiculos')
-    .select(COLUNAS)
-    .eq('cliente_id', clienteId)
-    .order('criado_em', { ascending: false });
-  if (req.query.historico !== '1') query.is('encerrado_em', null);
-
+  const historico = req.query.historico === '1';
+  const colunas = historico && profile.role === 'portaria' ? COLUNAS_HISTORICO_PORTARIA : COLUNAS;
   const placa = limpar(req.query.placa);
-  if (placa) query.ilike('placa', `%${placa}%`);
+  // Ordem estável entre lotes: criado_em e, no empate, id.
+  const montarQuery = () => {
+    let query = supabase
+      .from('veiculos')
+      .select(colunas)
+      .eq('cliente_id', clienteId)
+      .order('criado_em', { ascending: false })
+      .order('id', { ascending: true });
+    if (!historico) query = query.is('encerrado_em', null);
+    if (placa) query = query.ilike('placa', `%${placa}%`);
+    return query;
+  };
 
-  const { data, error } = await query;
+  return res.status(200).json(await lerEmLotes(montarQuery));
+}
+
+async function vincular(args) {
+  const { data, error } = await supabase.rpc('vincular_placa', args);
+  if (error && error.code === ERRO_ENTRADA_INVALIDA) {
+    throw new ErroHttp(400, 'Não foi possível gravar: confira a placa e a unidade');
+  }
   if (error) throw error;
-  return res.status(200).json(data);
+  return data;
 }
 
 // POST: vincula a placa via RPC (histórico preservado pelo banco)
@@ -119,11 +149,19 @@ async function cadastrar(req, res) {
   validarTipo(body.tipo_pessoa);
   exigirAcesso(profile, clienteId);
 
+  const substituiId = body.substitui_id;
+  const temSubstituicao = substituiId !== undefined && substituiId !== null && substituiId !== '';
+  if (temSubstituicao && profile.role !== 'portaria') {
+    throw new ErroHttp(400, 'Para corrigir um cadastro, edite ou exclua o vínculo na lista de veículos');
+  }
+
   const unidadeId = body.unidade_id || null;
   if (unidadeId) await exigirUnidadeDoCliente(unidadeId, clienteId);
   const cadastradoPor = profile.role === 'portaria'
     ? await nomeDoPorteiro(body.porteiro_id, clienteId)
     : profile.nome || null;
+  const ctx = { profile, clienteId, req };
+  const original = temSubstituicao ? await exigirCorrigivel(substituiId, body.placa, ctx) : null;
 
   const args = {
     p_cliente_id: clienteId,
@@ -138,11 +176,9 @@ async function cadastrar(req, res) {
     p_cadastrado_por: cadastradoPor,
     p_usuario: profile.id,
   };
-  const { data, error } = await supabase.rpc('vincular_placa', args);
-  if (error && error.code === ERRO_ENTRADA_INVALIDA) {
-    throw new ErroHttp(400, 'Não foi possível gravar: confira a placa e a unidade');
-  }
-  if (error) throw error;
+  const data = original
+    ? await substituirComCorrecao(original, () => vincular(args), ctx)
+    : await vincular(args);
 
   await registrarAuditoria({
     usuarioId: profile.id,
@@ -152,6 +188,7 @@ async function cadastrar(req, res) {
     detalhes: {
       cliente_id: clienteId, placa: args.p_placa, tipo_pessoa: args.p_tipo, nome_morador: args.p_nome,
       unidade_id: unidadeId, origem: args.p_origem, porteiro_id: profile.role === 'portaria' ? body.porteiro_id : undefined,
+      substitui_id: original ? original.id : undefined,
     },
     ip: ipDe(req),
   });
