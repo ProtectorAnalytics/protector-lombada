@@ -4118,6 +4118,7 @@
       vmListaFiltered = [];
       lista = { modo: 'servidor', total: 0, semVel: 0, incompleta: false, consulta: null, conferidas: null };
       capturasHoje = [];
+      conferenciaCache = null;
       resumoHoje = null; // a faixa de tipos não mostra números do condomínio anterior
       porDiaCache = null;
       recentCardsData = [];
@@ -4357,6 +4358,7 @@
         if (!sessaoValida(sessao)) return; // trocou de condomínio ou saiu
         const vigentes = data.filter((v) => !v.encerrado_em);
         indiceVinculos = vinculoPlacaLib.indexarVinculos(data);
+        vinculosVersao++; // a conferência guardada do cadastro da hora deixa de valer
         veiculosCache = {};
         vigentes.forEach((v) => { veiculosCache[v.placa] = v; });
         loadUnidades(sessao);
@@ -5091,10 +5093,11 @@
     let porDiaCache = null; // { chave, em, primeiras }
     let porDiaSemRpc = false;
 
+    const MAX_PAGINAS_PORDIA = 50;
     async function primeirasPelaRpc(clienteId, desde, ate) {
-      const linhas = await coletarPaginado((de, fim) => sb.rpc('primeiras_passagens_por_dia', {
+      const { linhas } = await veiculosDoDia.lerAteOTeto((de, fim) => sb.rpc('primeiras_passagens_por_dia', {
         p_cliente: clienteId, p_desde: desde, p_ate: ate,
-      }).range(de, fim));
+      }).range(de, fim), TAMANHO_PAGINA, MAX_PAGINAS_PORDIA);
       return linhas.map((l) => ({ dia: String(l.dia), placa: l.placa, primeira: l.primeira, passagens: l.passagens }));
     }
 
@@ -5113,15 +5116,19 @@
       const desde = veiculosDoDia.inicioDoDiaIso(dias[0]);
       const ate = veiculosDoDia.inicioDoDiaIso(veiculosDoDia.somarDias(dias[dias.length - 1], 1));
       let primeiras = null;
+      let guardar = true;
       if (!porDiaSemRpc) {
         try {
           primeiras = await primeirasPelaRpc(sessao.clienteId, desde, ate);
-        } catch {
-          porDiaSemRpc = true; // função ausente no banco: agrupa no navegador
+        } catch (err) {
+          // Função ausente (migration não aplicada): agrupa no navegador daqui em diante.
+          // Outra falha é passageira: agrupa agora, sem guardar, e tenta a função de novo na próxima.
+          if (veiculosDoDia.rpcAusente(err)) porDiaSemRpc = true;
+          else { guardar = false; console.warn('Veículos por dia: a função falhou agora; tenta de novo na próxima atualização.', err); }
         }
       }
       if (!primeiras) primeiras = await primeirasNoNavegador(sessao.clienteId, desde, ate);
-      if (sessaoValida(sessao)) porDiaCache = { chave, em: Date.now(), primeiras };
+      if (guardar && sessaoValida(sessao)) porDiaCache = { chave, em: Date.now(), primeiras };
       return primeiras;
     }
 
@@ -5256,13 +5263,49 @@
     // Filtro de cadastro que não coube na URL (ou "Sem cadastro"): lê o período
     // em páginas só com id/placa/hora/velocidade e confere cada passagem pelo
     // cadastro da hora. Parou no teto de páginas: avisa (nunca "lista completa").
-    async function conferirNoCliente(f, fv, fc) {
+    // O polling não relê o período inteiro: o que já foi conferido fica guardado
+    // por filtro + filtro de veículo + versão dos vínculos (cadastro ou edição
+    // muda a versão); a cada ciclo só as passagens a partir da mais nova já lida
+    // (menos a margem de atraso da câmera) são lidas e conferidas.
+    let conferenciaCache = null; // { chave, linhas, lidoAte, incompleta }
+    let vinculosVersao = 0;
+
+    async function lerEConferir(f, fv, fc, desde) {
+      let lidoAte = -Infinity;
       const r = await filtroCadastroLib.conferirEmPaginas(
-        (de, ate) => ordenarLista(consultaDaLista(f, fv, fc, 'id, placa, timestamp, velocidade')).range(de, ate),
-        (linhas) => filtrarNoCliente(f, linhas),
+        (de, ate) => {
+          const q = consultaDaLista(f, fv, fc, 'id, placa, timestamp, velocidade');
+          return ordenarLista(desde ? q.gte('timestamp', desde) : q).range(de, ate);
+        },
+        (linhas) => {
+          linhas.forEach((l) => { lidoAte = Math.max(lidoAte, Date.parse(l.timestamp)); });
+          return filtrarNoCliente(f, linhas);
+        },
         { limite: Infinity, tamanho: TAMANHO_PAGINA, maxPaginas: MAX_PAGINAS_CONFERENCIA });
-      const visiveis = listaMostraSemVel() ? r.linhas : r.linhas.filter((c) => c.velocidade > 0);
-      return { conferidas: visiveis, total: visiveis.length, semVel: r.linhas.length - r.linhas.filter((c) => c.velocidade > 0).length, incompleta: r.incompleta };
+      return { linhas: r.linhas, incompleta: r.incompleta, lidoAte };
+    }
+
+    async function conferirNoCliente(f, fv, fc) {
+      const chave = filtroCadastroLib.chaveConferencia([currentCliente.id, f], fv && fv.placas, vinculosVersao);
+      const anterior = conferenciaCache && conferenciaCache.chave === chave ? conferenciaCache : null;
+      const desde = anterior ? filtroCadastroLib.inicioIncremental(anterior.lidoAte) : null;
+      let atual = null;
+      if (desde) {
+        const r = await lerEConferir(f, fv, fc, desde);
+        // Releitura que bateu no teto (algo muito fora do normal): confere tudo de novo
+        if (!r.incompleta) {
+          atual = {
+            linhas: filtroCadastroLib.mesclarConferidas(anterior.linhas, r.linhas),
+            lidoAte: Math.max(anterior.lidoAte, r.lidoAte), incompleta: anterior.incompleta,
+          };
+        }
+      }
+      if (!atual) atual = await lerEConferir(f, fv, fc, null);
+      conferenciaCache = { chave, ...atual };
+      const todas = atual.linhas;
+      const comVel = todas.filter((c) => c.velocidade > 0);
+      const visiveis = listaMostraSemVel() ? todas : comVel;
+      return { conferidas: visiveis, total: visiveis.length, semVel: todas.length - comVel.length, incompleta: atual.incompleta };
     }
 
     // Lista vazia por um motivo (filtro sem resultado ou falha): nada velho fica na tela
@@ -5394,22 +5437,21 @@
       if (comPlaca.every((c) => idsHoje.has(c.id) && veiculosDoDia.diaDe(c.timestamp) === hoje)) {
         return veiculosDoDia.ordinaisNoDia(comPlaca, capturasHoje);
       }
-      const grafias = [...new Set(comPlaca.flatMap((c) => {
-        const chave = veiculosDoDia.chaveVeiculo(c.placa);
-        return [chave, placaLib.paraAntiga(chave), placaLib.limpar(c.placa)];
-      }).filter(Boolean))];
-      const dias = comPlaca.map((c) => veiculosDoDia.diaDe(c.timestamp)).sort();
-      const ate = new Date(Math.max(...comPlaca.map((c) => Date.parse(c.timestamp)))).toISOString();
-      try {
-        const passagens = await coletarPaginado((de, fim) => sb.from('capturas').select('id, placa, timestamp')
-          .eq('cliente_id', currentCliente.id).in('placa', grafias)
-          .gte('timestamp', veiculosDoDia.inicioDoDiaIso(dias[0])).lte('timestamp', ate)
-          .order('timestamp').order('id').range(de, fim), MAX_PAGINAS_ORDINAL);
-        return veiculosDoDia.ordinaisNoDia(comPlaca, passagens);
-      } catch (err) {
-        console.error('Erro ao contar as passagens do dia:', err); // o selo é extra: a lista segue sem ele
-        return new Map();
-      }
+      // Uma leitura por dia da página, cada uma limitada a MAX_PAGINAS_ORDINAL:
+      // dia que bate no teto (ou falha) fica sem selo — nunca um número errado
+      const leituras = await Promise.all(veiculosDoDia.janelasPorDia(comPlaca).map(async (janela) => {
+        try {
+          const r = await veiculosDoDia.lerAteOTeto((de, fim) => sb.from('capturas').select('id, placa, timestamp')
+            .eq('cliente_id', currentCliente.id).in('placa', janela.grafias)
+            .gte('timestamp', janela.desde).lte('timestamp', janela.ate)
+            .order('timestamp').order('id').range(de, fim), TAMANHO_PAGINA, MAX_PAGINAS_ORDINAL);
+          return { janela, linhas: r.linhas, completa: r.completa };
+        } catch (err) {
+          console.error('Erro ao contar as passagens do dia:', err); // o selo é extra: a lista segue sem ele
+          return { janela, linhas: [], completa: false };
+        }
+      }));
+      return veiculosDoDia.ordinaisDasLeituras(leituras);
     }
 
     // Placa (com o selo "Nª hoje"), velocidade (▲ no alerta), hora, radar,
@@ -7562,6 +7604,7 @@
       try {
         const r = await chamarApiPainel('/api/admin/veiculos-base', 'POST', { acao: 'mesma_placa', captura_id: captura.id });
         esquecerPlacaBase(captura.placa);
+        conferenciaCache = null; // a passagem mudou de placa: confere o período de novo
         closeModal();
         mostrarAviso(`Leitura corrigida para ${r.placa}.`);
         loadRecentCards();

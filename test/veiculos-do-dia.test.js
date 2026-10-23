@@ -12,7 +12,12 @@ const lib = require('../site/js/veiculos-do-dia');
 const vinculoLib = require('../site/js/vinculo-placa');
 
 let passou = 0;
-function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
+const pendentes = [];
+function caso(nome, fn) {
+  const r = fn();
+  const ok = () => { passou++; console.log(`ok - ${nome}`); };
+  if (r && typeof r.then === 'function') pendentes.push(r.then(ok)); else ok();
+}
 
 const cap = (id, placa, ts, extra) => Object.assign({ id, placa, timestamp: ts }, extra || {});
 
@@ -161,6 +166,53 @@ caso('barra fina por tipo: só os tipos com veículo, em %', () => {
   assert.deepStrictEqual(lib.fatiasDaBarra({}, 0), []);
 });
 
+caso('"Nª hoje": uma janela por dia da página, até a mais nova daquele dia', () => {
+  const j = lib.janelasPorDia([
+    cap('a', 'TST1A11', '2026-10-23T15:00:00Z'),
+    cap('b', 'XYZ9B87', '2026-10-23T12:00:00Z'),
+    cap('c', 'TST1011', '2026-10-22T20:00:00Z'),
+    cap('d', 'SEM PLACA', '2026-10-22T21:00:00Z'),
+  ]);
+  assert.deepStrictEqual(j.map((x) => [x.dia, x.desde, x.ate]), [
+    ['2026-10-22', '2026-10-22T03:00:00.000Z', '2026-10-22T20:00:00.000Z'],
+    ['2026-10-23', '2026-10-23T03:00:00.000Z', '2026-10-23T15:00:00.000Z'],
+  ]);
+  assert.deepStrictEqual(j[0].grafias.sort(), ['TST1011', 'TST1A11']);
+  assert.deepStrictEqual(j[1].grafias.sort(), ['TST1011', 'TST1A11', 'XYZ9187', 'XYZ9B87']);
+  assert.deepStrictEqual(j[1].linhas.map((l) => l.id), ['a', 'b']);
+});
+
+caso('leitura limitada: parar no teto com página cheia é "incompleta"', async () => {
+  const dados = Array.from({ length: 25 }, (_, i) => ({ id: i }));
+  const buscar = async (de, ate) => ({ data: dados.slice(de, ate + 1), error: null });
+  const cheia = await lib.lerAteOTeto(buscar, 10, 2);
+  assert.strictEqual(cheia.completa, false);
+  assert.strictEqual(cheia.linhas.length, 20);
+  const ok = await lib.lerAteOTeto(buscar, 10, 3);
+  assert.strictEqual(ok.completa, true);
+  assert.strictEqual(ok.linhas.length, 25);
+  await assert.rejects(lib.lerAteOTeto(async () => ({ data: null, error: { code: 'PGRST202', message: 'x' }, status: 404 }), 10, 2),
+    (e) => e.code === 'PGRST202' && e.status === 404);
+});
+
+caso('dia que bateu no teto fica sem selo; os outros dias seguem certos', () => {
+  const dia23 = { janela: { linhas: [cap('a', 'TST1A11', '2026-10-23T15:00:00Z')] },
+    linhas: [cap('x', 'TST1A11', '2026-10-23T10:00:00Z'), cap('a', 'TST1A11', '2026-10-23T15:00:00Z')], completa: true };
+  const dia22 = { janela: { linhas: [cap('c', 'TST1A11', '2026-10-22T20:00:00Z')] },
+    linhas: [cap('c', 'TST1A11', '2026-10-22T20:00:00Z')], completa: false }; // cortado: as mais novas faltariam
+  const o = lib.ordinaisDasLeituras([dia23, dia22]);
+  assert.strictEqual(o.get('a'), 2);
+  assert.strictEqual(o.has('c'), false);
+});
+
+caso('função ausente (PGRST202 / 404) ≠ falha passageira', () => {
+  assert.strictEqual(lib.rpcAusente({ code: 'PGRST202' }), true);
+  assert.strictEqual(lib.rpcAusente({ status: 404 }), true);
+  assert.strictEqual(lib.rpcAusente({ code: '57014', status: 500 }), false); // timeout
+  assert.strictEqual(lib.rpcAusente(new Error('Failed to fetch')), false);
+  assert.strictEqual(lib.rpcAusente(null), false);
+});
+
 caso('lib carrega no browser (window.veiculosDoDiaLib)', () => {
   const ctx = vm.createContext({ Intl });
   ctx.window = ctx;
@@ -169,4 +221,4 @@ caso('lib carrega no browser (window.veiculosDoDiaLib)', () => {
   assert.strictEqual(ctx.veiculosDoDiaLib.chaveVeiculo('TST1011'), 'TST1A11');
 });
 
-console.log(`\n${passou} casos ok`);
+Promise.all(pendentes).then(() => console.log(`\n${passou} casos ok`), (err) => { console.error(err); process.exit(1); });

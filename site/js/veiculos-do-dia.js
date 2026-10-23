@@ -182,6 +182,72 @@
     return r;
   }
 
+  /**
+   * Uma janela de leitura por dia distinto da página, para o "Nª hoje": do
+   * início do dia (São Paulo) até a passagem mais nova da página naquele dia,
+   * só com as grafias das placas daquele dia. Cada dia é lido (e limitado)
+   * sozinho: o teto de um dia não corta outro.
+   * @returns {Array<{ dia, desde, ate, grafias: string[], linhas }>}
+   */
+  function janelasPorDia(linhas) {
+    const porDia = new Map();
+    for (const l of linhas || []) {
+      const chave = l && chaveVeiculo(l.placa);
+      const t = l ? ms(l.timestamp) : NaN;
+      if (!chave || Number.isNaN(t)) continue;
+      const dia = diaDe(t);
+      if (!porDia.has(dia)) porDia.set(dia, { dia, max: t, grafias: new Set(), linhas: [] });
+      const j = porDia.get(dia);
+      j.max = Math.max(j.max, t);
+      [chave, placaLib.paraAntiga(chave), placaLib.limpar(l.placa)].filter(Boolean).forEach((g) => j.grafias.add(g));
+      j.linhas.push(l);
+    }
+    return [...porDia.values()].sort((a, b) => (a.dia < b.dia ? -1 : 1)).map((j) => ({
+      dia: j.dia, desde: inicioDoDiaIso(j.dia), ate: new Date(j.max).toISOString(), grafias: [...j.grafias], linhas: j.linhas,
+    }));
+  }
+
+  /**
+   * Lê páginas (buscarPagina(de, ate) → { data, error }) até `maxPaginas`.
+   * `completa: false` quando parou no teto com a última página cheia (sobrou
+   * linha sem ler): quem usa não pode tirar conclusão desse conjunto.
+   */
+  async function lerAteOTeto(buscarPagina, tamanho, maxPaginas) {
+    let linhas = [];
+    for (let p = 0; p < maxPaginas; p++) {
+      const { data, error, status } = await buscarPagina(p * tamanho, (p + 1) * tamanho - 1);
+      if (error || !data) {
+        // Guarda o código do PostgREST e o status HTTP (ver rpcAusente)
+        const e = new Error((error && error.message) || 'falha ao ler página ' + p);
+        e.code = error && error.code;
+        e.status = status;
+        throw e;
+      }
+      linhas = linhas.concat(data);
+      if (data.length < tamanho) return { linhas, completa: true };
+    }
+    return { linhas, completa: false };
+  }
+
+  /**
+   * Ordem no dia só para os dias lidos por inteiro; dia que bateu no teto
+   * fica sem selo (nunca um número errado). leituras: [{ janela, linhas, completa }].
+   */
+  function ordinaisDasLeituras(leituras) {
+    const r = new Map();
+    (leituras || []).filter((x) => x.completa)
+      .forEach((x) => ordinaisNoDia(x.janela.linhas, x.linhas).forEach((n, id) => r.set(id, n)));
+    return r;
+  }
+
+  /**
+   * A função do banco não existe (migration não aplicada): PostgREST responde
+   * PGRST202 / HTTP 404. Qualquer outro erro é passageiro (tenta de novo).
+   */
+  function rpcAusente(erro) {
+    return Boolean(erro && (erro.code === 'PGRST202' || erro.status === 404));
+  }
+
   /** Selo "Nª hoje" (ou "Nª no dia" fora de hoje); só da 2ª passagem em diante. */
   function textoOrdinal(n, dia, hoje) {
     if (!Number.isInteger(n) || n < 2) return '';
@@ -232,6 +298,6 @@
   return Object.freeze({
     FUSO, TIPOS, chaveVeiculo, diaDe, inicioDoDiaIso, somarDias, ultimosDias, rotuloDiaLongo, rotuloDiaCurto,
     primeirasDoDia, tipoNaPrimeira, resumirPrimeiras, resumoDoDia, serieVeiculosPorDia,
-    ordinaisNoDia, textoOrdinal, comCabecalhosDeDia, indicadoresDeVelocidade, fatiasDaBarra,
+    ordinaisNoDia, janelasPorDia, lerAteOTeto, ordinaisDasLeituras, rpcAusente, textoOrdinal, comCabecalhosDeDia, indicadoresDeVelocidade, fatiasDaBarra,
   });
 });

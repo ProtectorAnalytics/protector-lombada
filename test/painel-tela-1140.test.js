@@ -20,7 +20,12 @@ const severidade = require('../site/js/severidade-velocidade');
 const PAINEL = fs.readFileSync(path.join(__dirname, '..', 'dashboard', 'index.html'), 'utf8');
 
 let passou = 0;
-function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
+const pendentes = [];
+function caso(nome, fn) {
+  const r = fn();
+  const ok = () => { passou++; console.log(`ok - ${nome}`); };
+  if (r && typeof r.then === 'function') pendentes.push(r.then(ok)); else ok();
+}
 
 function extrair(inicio) {
   const i = PAINEL.indexOf(inicio);
@@ -159,7 +164,7 @@ caso('gráfico com abas "Por hora" e "Por dia" (RPC com recuo no navegador)', ()
   assert.ok(PAINEL.includes('role="tab" id="aba-por-hora"') && PAINEL.includes('role="tab" id="aba-por-dia"'));
   assert.ok(PAINEL.includes('role="tabpanel" id="painel-por-dia"'));
   assert.ok(PAINEL.includes("sb.rpc('primeiras_passagens_por_dia', {"));
-  assert.ok(PAINEL.includes('porDiaSemRpc = true; // função ausente no banco: agrupa no navegador'));
+  assert.ok(PAINEL.includes('if (veiculosDoDia.rpcAusente(err)) porDiaSemRpc = true;'));
   assert.ok(PAINEL.includes('veiculosDoDia.serieVeiculosPorDia(anteriores.concat(deHoje), indiceVinculos, dias, hoje)'));
   assert.ok(PAINEL.includes('const DIAS_POR_DIA = 8;'));
 });
@@ -171,4 +176,145 @@ caso('scripts das libs novas na ordem certa', () => {
   assert.deepStrictEqual([...ordem].sort((a, b) => a - b), ordem);
 });
 
-console.log(`\n${passou} casos ok`);
+// ---------------------------------------------------------------- revisão do PR #89
+const filtroCadastroLib = require('../site/js/filtro-cadastro');
+
+// Consulta falsa de capturas: registra gte('timestamp') e devolve as linhas do período, mais nova primeiro
+function capturasFalsas(linhas, leituras) {
+  return () => {
+    let desde = null;
+    const q = {
+      gte(campo, v) { if (campo === 'timestamp') desde = v; return q; },
+      range(de, ate) {
+        leituras.push(desde);
+        const todas = linhas()
+          .filter((l) => !desde || l.timestamp >= desde)
+          .sort(filtroCadastroLib.compararLista);
+        return Promise.resolve({ data: todas.slice(de, ate + 1), error: null });
+      },
+    };
+    return q;
+  };
+}
+
+caso('conferência no polling: só relê a partir da mais nova já lida (com margem) e mescla', async () => {
+  const banco = [
+    { id: 'a', placa: 'SEMCAD1', timestamp: '2026-10-23T10:00:00.000Z', velocidade: 20 },
+    { id: 'b', placa: 'COMCAD1', timestamp: '2026-10-23T11:00:00.000Z', velocidade: 20 },
+    { id: 'c', placa: 'SEMCAD2', timestamp: '2026-10-23T12:00:00.000Z', velocidade: 0 },
+  ];
+  const leituras = [];
+  const ctx = vm.createContext({
+    filtroCadastroLib, TAMANHO_PAGINA: 1000, MAX_PAGINAS_CONFERENCIA: 50, currentCliente: { id: 'cli' },
+    conferenciaCache: null, vinculosVersao: 1, listaMostraSemVel: () => false, Date, Math, JSON,
+    consultaDaLista: capturasFalsas(() => banco, leituras), ordenarLista: (q) => q,
+    filtrarNoCliente: (f, linhas) => linhas.filter((l) => l.placa.startsWith('SEM')),
+  });
+  vm.runInContext(extrair('async function lerEConferir('), ctx);
+  vm.runInContext(extrair('async function conferirNoCliente('), ctx);
+  const f = { tipoCadastro: 'sem', tsStart: '2026-10-23T03:00:00.000Z' };
+  const fv = { ativo: false };
+
+  const r1 = await ctx.conferirNoCliente(f, fv, { ativo: true, ou: null });
+  assert.deepStrictEqual(r1.conferidas.map((l) => l.id), ['a']); // 'c' é sem velocidade (oculta)
+  assert.strictEqual(r1.semVel, 1);
+  assert.deepStrictEqual(leituras, [null]); // primeira vez: o período inteiro
+
+  // Polling: passagem nova + uma atrasada dentro da margem de 10 min
+  banco.push({ id: 'd', placa: 'SEMCAD3', timestamp: '2026-10-23T12:30:00.000Z', velocidade: 25 });
+  banco.push({ id: 'e', placa: 'SEMCAD4', timestamp: '2026-10-23T11:55:00.000Z', velocidade: 25 });
+  const r2 = await ctx.conferirNoCliente(f, fv, { ativo: true, ou: null });
+  assert.strictEqual(leituras[1], '2026-10-23T11:50:00.000Z', 'só a partir da mais nova lida, menos 10 min');
+  assert.deepStrictEqual(r2.conferidas.map((l) => l.id), ['d', 'e', 'a']);
+  assert.strictEqual(r2.total, 3);
+  assert.strictEqual(r2.semVel, 1); // 'c' relida na margem não conta duas vezes
+
+  // Cadastro novo/editado (versão dos vínculos) ou outro filtro: confere tudo de novo
+  ctx.vinculosVersao = 2;
+  await ctx.conferirNoCliente(f, fv, { ativo: true, ou: null });
+  assert.strictEqual(leituras[2], null);
+  await ctx.conferirNoCliente({ ...f, tsStart: '2026-10-22T03:00:00.000Z' }, fv, { ativo: true, ou: null });
+  assert.strictEqual(leituras[3], null);
+  await ctx.conferirNoCliente({ ...f, tsStart: '2026-10-22T03:00:00.000Z' }, fv, { ativo: true, ou: null });
+  assert.notStrictEqual(leituras[4], null); // mesmo filtro de novo: incremental
+  // Cadastro (loadVeiculosCache) sobe a versão; correção de leitura zera o guardado
+  assert.ok(PAINEL.includes('vinculosVersao++; // a conferência guardada do cadastro da hora deixa de valer'));
+  assert.ok(PAINEL.includes('conferenciaCache = null; // a passagem mudou de placa: confere o período de novo'));
+});
+
+caso('conferência guardada: mescla sem repetir e na ordem da lista', () => {
+  const m = filtroCadastroLib.mesclarConferidas(
+    [{ id: 'a', timestamp: '2026-10-23T10:00:00Z' }],
+    [{ id: 'b', timestamp: '2026-10-23T11:00:00Z' }, { id: 'a', timestamp: '2026-10-23T10:00:00Z' }]);
+  assert.deepStrictEqual(m.map((l) => l.id), ['b', 'a']);
+  assert.strictEqual(filtroCadastroLib.inicioIncremental(-Infinity), null);
+  assert.strictEqual(filtroCadastroLib.inicioIncremental(Date.parse('2026-10-23T12:00:00Z'), 0), '2026-10-23T12:00:00.000Z');
+  assert.notStrictEqual(filtroCadastroLib.chaveConferencia({ a: 1 }, null, 1), filtroCadastroLib.chaveConferencia({ a: 1 }, null, 2));
+});
+
+caso('"Nª hoje": uma leitura limitada por dia; dia no teto fica sem selo', async () => {
+  const consultas = [];
+  const sbFalso = {
+    from: () => {
+      const reg = {};
+      const q = {
+        select: () => q, eq: () => q, in: (c, v) => { reg.grafias = v; return q; },
+        gte: (c, v) => { reg.desde = v; return q; }, lte: (c, v) => { reg.ate = v; return q; }, order: () => q,
+        range: (de, ate) => {
+          consultas.push({ ...reg, de });
+          // Dia 22: lotado (página sempre cheia → bate no teto); dia 23: duas passagens
+          if (reg.desde.startsWith('2026-10-22')) return Promise.resolve({ data: Array.from({ length: 1000 }, (_, i) => ({ id: `x${de + i}`, placa: 'TST1A11', timestamp: '2026-10-22T05:00:00Z' })), error: null });
+          return Promise.resolve({ data: [{ id: 'p1', placa: 'TST1A11', timestamp: '2026-10-23T10:00:00Z' }, { id: 'a', placa: 'TST1A11', timestamp: '2026-10-23T15:00:00Z' }], error: null });
+        },
+      };
+      return q;
+    },
+  };
+  const ctx = vm.createContext({
+    veiculosDoDia: veiculosDoDiaLib, capturasHoje: [], currentCliente: { id: 'cli' }, sb: sbFalso,
+    TAMANHO_PAGINA: 1000, MAX_PAGINAS_ORDINAL: 5, console: { error() {} }, Date, Promise, Set,
+  });
+  vm.runInContext(extrair('async function ordinaisDaPagina('), ctx);
+  const o = await ctx.ordinaisDaPagina([
+    { id: 'a', placa: 'TST1A11', timestamp: '2026-10-23T15:00:00Z' },
+    { id: 'c', placa: 'TST1A11', timestamp: '2026-10-22T20:00:00Z' },
+  ]);
+  assert.strictEqual(o.get('a'), 2);
+  assert.strictEqual(o.has('c'), false, 'dia cortado no teto: sem selo');
+  assert.strictEqual(consultas.filter((c) => c.desde.startsWith('2026-10-22')).length, 5); // limitado
+  assert.ok(consultas.every((c) => c.desde.slice(0, 10) === c.ate.slice(0, 10)), 'cada leitura fica no seu dia');
+});
+
+caso('"Por dia": só a função ausente vira recuo permanente; falha passageira tenta de novo', async () => {
+  let resposta = { data: null, error: { code: 'PGRST202', message: 'função não encontrada' }, status: 404 };
+  let chamadasRpc = 0;
+  const vazio = { select: () => vazio, eq: () => vazio, gte: () => vazio, lt: () => vazio, order: () => vazio, range: () => Promise.resolve({ data: [], error: null }) };
+  const ctx = vm.createContext({
+    veiculosDoDia: veiculosDoDiaLib, TAMANHO_PAGINA: 1000, PORDIA_TTL_MS: 1800000, porDiaCache: null, porDiaSemRpc: false,
+    sessaoValida: () => true, coletarPaginado: require('../site/js/filtro-veiculo').coletarPaginado, console: { warn() {} }, Date,
+    sb: { rpc: () => ({ range: () => { chamadasRpc++; return Promise.resolve(resposta); } }), from: () => vazio },
+  });
+  ['const MAX_PAGINAS_PORDIA', 'async function primeirasPelaRpc(', 'async function primeirasNoNavegador(', 'async function primeirasDosDiasAnteriores(']
+    .forEach((f) => vm.runInContext(f.startsWith('const') ? 'var MAX_PAGINAS_PORDIA = 50;' : extrair(f), ctx));
+  const dias = ['2026-10-16', '2026-10-22'];
+  const sessao = { clienteId: 'cli' };
+
+  resposta = { data: null, error: { code: '57014', message: 'tempo esgotado' }, status: 500 };
+  await ctx.primeirasDosDiasAnteriores(sessao, dias);
+  assert.strictEqual(ctx.porDiaSemRpc, false, 'falha passageira não desliga a função');
+  assert.strictEqual(ctx.porDiaCache, null, 'resultado do recuo passageiro não fica guardado');
+  resposta = { data: [{ dia: '2026-10-22', placa: 'TST1A11', primeira: '2026-10-22T10:00:00Z', passagens: 2 }], error: null, status: 200 };
+  const r = await ctx.primeirasDosDiasAnteriores(sessao, dias);
+  assert.strictEqual(chamadasRpc, 2, 'tentou a função de novo');
+  assert.deepStrictEqual(r.map((p) => p.placa), ['TST1A11']);
+
+  ctx.porDiaCache = null;
+  resposta = { data: null, error: { code: 'PGRST202', message: 'função não encontrada' }, status: 404 };
+  await ctx.primeirasDosDiasAnteriores(sessao, dias);
+  assert.strictEqual(ctx.porDiaSemRpc, true, 'função ausente: agrupa no navegador daqui em diante');
+  ctx.porDiaCache = null;
+  await ctx.primeirasDosDiasAnteriores(sessao, dias);
+  assert.strictEqual(chamadasRpc, 3, 'não chama mais a função ausente');
+});
+
+Promise.all(pendentes).then(() => console.log(`\n${passou} casos ok`), (err) => { console.error(err); process.exit(1); });
