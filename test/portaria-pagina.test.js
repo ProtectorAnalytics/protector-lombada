@@ -14,6 +14,7 @@ const vinculoPlacaLib = require('../site/js/vinculo-placa');
 const { esc } = require('../site/js/texto-seguro');
 const usuarioPortariaLib = require('../site/js/usuario-portaria');
 const unidadeLib = require('../site/js/unidade');
+const captchaLib = require('../site/js/captcha');
 
 const ler = (rel) => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
 const PAGINA = ler('portaria/index.html');
@@ -310,7 +311,7 @@ caso('perfil operador vê "Este acesso não é da portaria" com link para o pain
 });
 
 // ---- Login próprio do porteiro (sem escolha de turno no aparelho)
-function rodarEntrar(valor, senha = 'segredo1') {
+function rodarEntrar(valor, senha = 'segredo1', captcha = captchaLib.criarCaptcha({}), resposta = { data: { user: { id: 'auth-1' } }, error: null }) {
   const els = {
     'login-email': { value: valor }, 'login-senha': { value: senha },
     'login-erro': { textContent: '' }, 'botao-entrar': { disabled: false },
@@ -320,8 +321,10 @@ function rodarEntrar(valor, senha = 'segredo1') {
   const { f } = carregarComContexto(['entrar'], {
     $: (id) => els[id],
     usuarioPortariaLib,
-    sb: { auth: { signInWithPassword: async (cred) => { chamadas.push(cred); return { data: { user: { id: 'auth-1' } }, error: null }; } } },
+    sb: { auth: { signInWithPassword: async (cred) => { chamadas.push(cred); return resposta; } } },
     carregarPerfil: async (u) => { perfis.push(u); },
+    captchaLib,
+    captcha,
   });
   return f.entrar({ preventDefault() {} }).then(() => ({ chamadas, perfis, els }));
 }
@@ -335,6 +338,26 @@ caso('login com "José.PraiaDoCastelo" entra com o e-mail técnico', async () =>
 caso('login com e-mail normal continua valendo (síndico)', async () => {
   const { chamadas } = await rodarEntrar(' Sindica@Exemplo.com.br ');
   assert.strictEqual(chamadas[0].email, 'sindica@exemplo.com.br');
+});
+
+caso('com captcha ligado, o porteiro entra mandando o token', async () => {
+  const { chamadas } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok-9', parar() {} });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(chamadas)),
+    [{ email: 'jose.castelo@porteiro.invalid', password: 'segredo1', options: { captchaToken: 'tok-9' } }]);
+});
+
+caso('captcha falhou → mensagem anti-robô, botão volta e não chama o Supabase', async () => {
+  const { chamadas, els } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => { throw new Error('x'); } });
+  assert.strictEqual(chamadas.length, 0);
+  assert.strictEqual(els['login-erro'].textContent, captchaLib.MSG_FALHA);
+  assert.strictEqual(els['botao-entrar'].disabled, false);
+});
+
+caso('Supabase recusou o captcha → mensagem anti-robô', async () => {
+  const { els, perfis } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok', parar() {} },
+    { data: {}, error: { code: 'captcha_failed', message: 'captcha protection: request disallowed' } });
+  assert.strictEqual(els['login-erro'].textContent, captchaLib.MSG_FALHA);
+  assert.strictEqual(perfis.length, 0);
 });
 
 caso('login vazio não chama o Supabase', async () => {

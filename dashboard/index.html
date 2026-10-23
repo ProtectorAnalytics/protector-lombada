@@ -255,6 +255,9 @@
       box-shadow: var(--shadow-lg);
     }
 
+    /* Anti-robô (Turnstile): invisível; só aparece se a Cloudflare pedir um clique */
+    .captcha-box { margin: 0 0 8px; max-width: 100%; overflow-x: auto; }
+    .captcha-box:empty { margin: 0; }
     .login-box .login-logo {
       width: 220px;
       margin-bottom: 12px;
@@ -2808,6 +2811,7 @@
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <script src="/js/camera-status.js"></script>
+  <script src="/js/captcha.js"></script>
   <script src="/js/spring.js"></script>
   <script src="/js/grafico-acessivel.js"></script>
   <script src="/js/placa.js"></script>
@@ -2851,6 +2855,7 @@
       <input type="text" id="login-email" placeholder="E-mail ou usuário" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="E-mail ou usuário de acesso">
       <label for="login-password" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Senha</label>
       <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password" aria-label="Senha de acesso" onkeydown="if(event.key==='Enter')doLogin()">
+      <div id="captcha-login" class="captcha-box"></div>
       <button type="button" onclick="doLogin()">ENTRAR</button>
       <div class="login-error" id="login-error" role="alert" aria-live="polite"></div>
       <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:0.8125rem;text-decoration:none;">Esqueci minha senha</a>
@@ -2879,7 +2884,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.10.0 &middot; 2026-10-23
+        v1.10.1 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -3121,7 +3126,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.10.0
+      Protector Traffic Control &middot; v1.10.1
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3354,6 +3359,8 @@
     // CONFIG
     // ============================================
     let sb = null;
+    // Anti-robô do login (inerte até o /api/config trazer a site key do Turnstile)
+    let captcha = captchaLib.criarCaptcha({});
     let currentUser = null;
     let currentCliente = null;
     let currentProfile = null;
@@ -3458,6 +3465,7 @@
         const resp = await fetch('/api/config');
         const cfg = await resp.json();
         sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+        captcha = captchaLib.criarCaptcha({ siteKey: cfg.turnstileSiteKey, container: 'captcha-login' });
 
         sb.auth.onAuthStateChange((event) => {
           if (event === 'PASSWORD_RECOVERY') mostrarNovaSenha();
@@ -3469,6 +3477,8 @@
         } else if (session?.user) {
           currentUser = session.user;
           await loadProfile();
+        } else {
+          captcha.iniciar().catch(() => {});
         }
       } catch (err) {
         document.getElementById('login-error').textContent = 'Erro ao conectar ao servidor.';
@@ -3495,12 +3505,15 @@
       try {
         // Porteiro entra com o usuário (sem "@"): vira o e-mail técnico do Auth
         const email = usuarioPortariaLib.paraLogin(entrada);
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        let captchaToken;
+        try { captchaToken = await captcha.obterToken(); } catch { errorEl.textContent = captchaLib.MSG_FALHA; return; }
+        const { data, error } = await sb.auth.signInWithPassword(captchaLib.credenciais({ email, password }, captchaToken));
         if (error) {
-          errorEl.textContent = 'Usuário (ou e-mail) ou senha incorretos.';
+          errorEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Usuário (ou e-mail) ou senha incorretos.';
           console.error('Login error:', error);
           return;
         }
+        captcha.parar();
 
         currentUser = data.user;
         await loadProfile();
@@ -3623,13 +3636,19 @@
       }
 
       try {
-        const { error } = await sb.auth.resetPasswordForEmail(email, {
+        let captchaToken;
+        try { captchaToken = await captcha.obterToken(); } catch {
+          msgEl.style.color = 'var(--red)';
+          msgEl.textContent = captchaLib.MSG_FALHA;
+          return;
+        }
+        const { error } = await sb.auth.resetPasswordForEmail(email, captchaLib.opcoes({
           redirectTo: window.location.origin + '/dashboard/',
-        });
+        }, captchaToken));
 
         if (error) {
           msgEl.style.color = 'var(--red)';
-          msgEl.textContent = 'Erro ao enviar. Tente novamente.';
+          msgEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Erro ao enviar. Tente novamente.';
           return;
         }
 
@@ -3844,6 +3863,7 @@
       document.getElementById('topbar-email').textContent = '';
       document.getElementById('dashboard-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
+      captcha.iniciar().catch(() => {});
     }
 
     // Sessão do painel: muda a cada sair/entrar. Resposta que chega depois de

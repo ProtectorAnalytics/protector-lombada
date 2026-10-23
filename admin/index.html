@@ -77,6 +77,9 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 
+    /* Anti-robô (Turnstile): invisível; só aparece se a Cloudflare pedir um clique */
+    .captcha-box { margin: 0 0 8px; max-width: 100%; overflow-x: auto; }
+    .captcha-box:empty { margin: 0; }
     .login-box .login-logo { width: 220px; margin-bottom: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
     .login-box h1 { color: var(--accent); font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; letter-spacing: .05em; }
     .login-box .subtitle { color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 8px; }
@@ -637,6 +640,7 @@
   </style>
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <script src="/js/camera-status.js"></script>
+  <script src="/js/captcha.js"></script>
   <script src="/js/spring.js"></script>
   <script src="/js/grafico-acessivel.js"></script>
   <script src="/js/acesso-painel.js"></script>
@@ -668,6 +672,7 @@
       <input type="email" id="login-email" placeholder="E-mail" autocomplete="email" aria-label="E-mail administrativo">
       <label for="login-password" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Senha</label>
       <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password" aria-label="Senha administrativa" onkeydown="if(event.key==='Enter')doLogin()">
+      <div id="captcha-login" class="captcha-box"></div>
       <button type="button" onclick="doLogin()">ENTRAR</button>
       <div class="login-error" id="login-error" role="alert" aria-live="polite"></div>
       <a href="#" onclick="showResetPassword(event)" style="display:block;margin-top:16px;color:var(--accent);font-size:0.8125rem;text-decoration:none;">Esqueci minha senha</a>
@@ -1162,6 +1167,8 @@
 // STATE
 // ============================================
 let sb = null;
+// Anti-robô do login (inerte até o /api/config trazer a site key do Turnstile)
+let captcha = captchaLib.criarCaptcha({});
 let authToken = null;
 let currentProfile = null;
 let currentDetailCliente = null;
@@ -1189,6 +1196,7 @@ async function initApp() {
     const resp = await fetch('/api/config');
     const cfg = await resp.json();
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    captcha = captchaLib.criarCaptcha({ siteKey: cfg.turnstileSiteKey, container: 'captcha-login' });
 
     // Detectar recuperação de senha
     sb.auth.onAuthStateChange((event) => {
@@ -1202,6 +1210,8 @@ async function initApp() {
       authToken = session.access_token;
       await loadProfile();
       avisarRetornoDoPainel();
+    } else {
+      captcha.iniciar().catch(() => {});
     }
   } catch (err) {
     document.getElementById('login-error').textContent = 'Erro ao conectar ao servidor.';
@@ -1265,13 +1275,19 @@ async function doResetPassword() {
   }
 
   try {
-    const { error } = await sb.auth.resetPasswordForEmail(email, {
+    let captchaToken;
+    try { captchaToken = await captcha.obterToken(); } catch {
+      msgEl.style.color = 'var(--red)';
+      msgEl.textContent = captchaLib.MSG_FALHA;
+      return;
+    }
+    const { error } = await sb.auth.resetPasswordForEmail(email, captchaLib.opcoes({
       redirectTo: window.location.origin + '/admin/',
-    });
+    }, captchaToken));
 
     if (error) {
       msgEl.style.color = 'var(--red)';
-      msgEl.textContent = 'Erro ao enviar. Tente novamente.';
+      msgEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Erro ao enviar. Tente novamente.';
       return;
     }
 
@@ -1347,8 +1363,14 @@ async function entrar() {
 
   if (!email || !password) { errorEl.textContent = 'Preencha e-mail e senha.'; return; }
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) { errorEl.textContent = 'E-mail ou senha incorretos.'; return; }
+  let captchaToken;
+  try { captchaToken = await captcha.obterToken(); } catch { errorEl.textContent = captchaLib.MSG_FALHA; return; }
+  const { data, error } = await sb.auth.signInWithPassword(captchaLib.credenciais({ email, password }, captchaToken));
+  if (error) {
+    errorEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'E-mail ou senha incorretos.';
+    return;
+  }
+  captcha.parar();
 
   authToken = data.session.access_token;
   await loadProfile();
@@ -1386,6 +1408,7 @@ async function doLogout() {
   currentProfile = null;
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
+  captcha.iniciar().catch(() => {});
 }
 
 // ============================================
