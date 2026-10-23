@@ -368,7 +368,7 @@
     <a href="#exportar-veiculos-para-excel">8. Exportar Veículos para Excel</a>
     <a href="#tipos-de-pessoa">Tipos de pessoa e histórico</a>
     <a href="#portaria">Portaria: unidades, porteiros e acesso</a>
-    <a href="#emails-de-alerta">9. Emails de Alerta</a>
+    <a href="#avisos-por-email">9. Avisos por e-mail</a>
     <a href="#notificacoes-automaticas">10. Notificações Automáticas</a>
     <a href="#recuperar-senha">11. Recuperar Senha</a>
     <a href="#faq">12. Perguntas Frequentes (FAQ)</a>
@@ -381,7 +381,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.10.1 | Outubro 2026</p>
+    <p class="version">Versão 1.11.0 | Outubro 2026</p>
 
     <hr>
 
@@ -728,29 +728,47 @@
     <ul>
         <li>Vê as passagens e quem estava ligado a cada placa.</li>
         <li>No painel, só consulta os veículos: cadastrar, importar e encerrar vínculo ficam com o síndico e a Protector. A decisão "É a mesma placa / É outro carro" também não aparece para esse perfil.</li>
+        <li>Na página da portaria, corrige a qualquer momento o nome, a unidade e o tipo de pessoa dos cadastros que ele mesmo fez. A placa não: só a correção de 1 caractere nos primeiros 15 minutos.</li>
         <li>O cadastro rápido é feito na <strong>página da portaria</strong> (endereço <code>/portaria</code>), pelo celular. No menu da conta do painel há o atalho <strong>"Abrir a portaria"</strong>. Veja o <a href="/portaria/manual.html">manual da portaria</a>.</li>
-        <li>Não vê os e-mails de alerta nem os dados de contato do condomínio.</li>
+        <li>Nunca recebe os avisos por e-mail e não vê os dados de contato do condomínio.</li>
         <li>Não altera configurações.</li>
     </ul>
 
     <hr>
 
     <!-- Section 9 -->
-    <h2 id="emails-de-alerta">9. Emails de Alerta</h2>
+    <h2 id="avisos-por-email">9. Avisos por e-mail</h2>
 
     <h3>O que são</h3>
-    <p>Quando um veículo é detectado acima do limite de velocidade, o sistema envia automaticamente um email de alerta para os destinatários cadastrados.</p>
+    <p>Quando um veículo passa acima do limite de velocidade, o sistema envia na hora um e-mail de alerta. Também sai periodicamente um relatório com o resumo das passagens. Quem recebe cada um é escolhido no <strong>cadastro de usuários</strong> do condomínio.</p>
 
-    <h3>Quem recebe</h3>
-    <p>A lista de quem recebe os e-mails é cadastrada pela <strong>equipe Protector</strong>. Para incluir, trocar ou remover um destinatário, fale com o suporte informando nome, e-mail e o que a pessoa deve receber:</p>
+    <h3>As duas opções</h3>
+    <p>Cada usuário do condomínio tem duas caixas:</p>
     <ul>
-        <li><strong>Alerta:</strong> avisos de excesso de velocidade</li>
-        <li><strong>Relatório:</strong> relatórios periódicos</li>
-        <li><strong>Todos:</strong> tudo</li>
+        <li><strong>Recebe alertas de excesso:</strong> e-mail a cada passagem acima do limite, com o PDF da ocorrência.</li>
+        <li><strong>Recebe relatório periódico:</strong> o resumo das passagens do período.</li>
+    </ul>
+    <p>Usuário novo começa com as duas desmarcadas. Marcou ou desmarcou, já está valendo: não precisa salvar. Porteiros (perfil Portaria) nunca recebem e não mostram as opções; o perfil Super Admin também não.</p>
+
+    <h3>Onde marcar</h3>
+    <ul>
+        <li><strong>Síndico:</strong> no painel, menu da conta (círculo com a inicial), <strong>"Avisos por e-mail"</strong>. Ele liga e desliga as opções dos usuários do próprio condomínio e cria, edita, desativa e reativa os contatos "Só recebe e-mail". Os demais usuários ele não altera por ali.</li>
+        <li><strong>Protector (administrador):</strong> no cliente, aba <strong>Usuários</strong>. As caixas aparecem em cada linha da lista.</li>
     </ul>
 
-    <h3>Conteúdo do email de alerta</h3>
-    <p>Cada email de alerta inclui um <strong>PDF anexo</strong> com:</p>
+    <h3>Tipo "Só recebe e-mail"</h3>
+    <p>Para quem precisa acompanhar os avisos mas não usa o painel (conselho, administradora, zelador). Na aba <strong>Usuários</strong>, clique em <strong>"+ Novo Usuário"</strong> e escolha o tipo <strong>"Só recebe e-mail (sem login)"</strong>: basta nome e e-mail, sem senha.</p>
+    <ul>
+        <li>Não tem senha e não entra no painel nem na portaria.</li>
+        <li>Recebe só o que estiver marcado nele.</li>
+        <li>Se o e-mail já for de um usuário ativo do condomínio, o sistema recusa: marque as opções nesse usuário.</li>
+        <li>Desativado, para de receber. Ao reativar, o sistema confere de novo se o e-mail não passou a ser de um usuário ativo.</li>
+    </ul>
+
+    <blockquote><p>Quem recebia os e-mails pela lista antiga continua recebendo: na passagem para esta versão, as opções foram marcadas nos usuários com o mesmo e-mail, e quem não tinha login virou contato "Só recebe e-mail". Se ninguém estiver marcado, ninguém recebe.</p></blockquote>
+
+    <h3>Conteúdo do e-mail de alerta</h3>
+    <p>Cada e-mail de alerta inclui um <strong>PDF anexo</strong> com:</p>
     <ul>
         <li>Foto do veículo</li>
         <li>Placa e velocidade registrada</li>
@@ -771,7 +789,7 @@
         <li>Se a velocidade for <strong>acima do limite configurado</strong>:
             <ul>
                 <li>Gera um PDF com os dados da infração</li>
-                <li>Envia email para todos os destinatários de alerta</li>
+                <li>Envia e-mail para quem tem "Recebe alertas de excesso" marcado</li>
             </ul>
         </li>
         <li>O dashboard é atualizado em tempo real</li>
@@ -833,8 +851,8 @@
     <h3>O sistema funciona só com o teclado?</h3>
     <p>Sim. Capturas, cards e linhas da tabela abrem com <strong>Enter</strong> ou <strong>Espaço</strong>, os filtros aplicam sozinhos e a tecla <strong>Esc</strong> fecha a janela aberta (foto ampliada, menu Exportar, veículos, detalhes — nessa ordem).</p>
 
-    <h3>Quantos emails de alerta posso cadastrar?</h3>
-    <p>Não há limite. Peça à equipe Protector para incluir os destinatários.</p>
+    <h3>Quantas pessoas podem receber os avisos por e-mail?</h3>
+    <p>Não há limite. Marque as opções nos usuários ou crie contatos "Só recebe e-mail" (veja a seção 9).</p>
 
     <h3>Como alterar o limite de velocidade?</h3>
     <p>O limite de velocidade é configurado pelo administrador do sistema. Entre em contato com a Protector Sistemas para solicitar alterações.</p>
@@ -863,7 +881,7 @@
     <hr>
 
     <p style="text-align:center; color:#888; font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.10.1 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.11.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 
