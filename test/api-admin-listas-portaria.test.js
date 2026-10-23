@@ -1,5 +1,6 @@
 /**
- * APIs /api/admin/unidades e /api/admin/porteiros (offline, módulos stubados).
+ * API /api/admin/unidades (offline, módulos stubados). Porteiros viraram
+ * usuários: ver test/api-admin-porteiros-usuarios.test.js.
  * Uso: node test/api-admin-listas-portaria.test.js
  */
 const assert = require('node:assert');
@@ -9,8 +10,6 @@ const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
 const U_C1 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const U_C2 = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
-const P_C1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-const P_C2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const SEGREDO = 'detalhe-interno-secreto';
 
 let tabelas;
@@ -22,11 +21,6 @@ function reset() {
       { id: U_C1, cliente_id: C1, nome: 'Casa 1', ordem: 4, ativo: true },
       { id: 'u-velha', cliente_id: C1, nome: 'Casa Velha', ordem: 2, ativo: false },
       { id: U_C2, cliente_id: C2, nome: 'Casa 9', ordem: 0, ativo: true },
-    ],
-    porteiros: [
-      { id: P_C1, cliente_id: C1, nome: 'Seu Zé', ativo: true },
-      { id: 'p-ant', cliente_id: C1, nome: 'Antigo', ativo: false },
-      { id: P_C2, cliente_id: C2, nome: 'Outro Zé', ativo: true },
     ],
   };
 }
@@ -75,7 +69,6 @@ stub('lib/auth-middleware', {
 });
 
 const unidades = require('../api/admin/unidades');
-const porteiros = require('../api/admin/porteiros');
 
 const PERFIS = {
   admin: { id: 'u-admin', role: 'admin_cliente', cliente_id: C1 },
@@ -103,7 +96,7 @@ async function caso(nome, fn) { reset(); estado.erro = null; await fn(); passou+
 console.error = () => {};
 
 (async () => {
-  for (const [nomeApi, h, tab] of [['unidades', unidades, 'unidades'], ['porteiros', porteiros, 'porteiros']]) {
+  for (const [nomeApi, h, tab] of [['unidades', unidades, 'unidades']]) {
     await caso(`${nomeApi}: portaria faz POST → 403 sem escrever`, async () => {
       const r = await chamar(h, 'portaria', 'POST', { body: { cliente_id: C1, texto: 'X' } });
       assert.strictEqual(r.code, 403);
@@ -111,7 +104,7 @@ console.error = () => {};
     });
     await caso(`${nomeApi}: operador faz POST e DELETE → 403`, async () => {
       assert.strictEqual((await chamar(h, 'operador', 'POST', { body: { cliente_id: C1, texto: 'X' } })).code, 403);
-      assert.strictEqual((await chamar(h, 'operador', 'DELETE', { query: { id: P_C1 } })).code, 403);
+      assert.strictEqual((await chamar(h, 'operador', 'DELETE', { query: { id: U_C1 } })).code, 403);
     });
     await caso(`${nomeApi}: GET de outro cliente → 403`, async () => {
       assert.strictEqual((await chamar(h, 'portaria', 'GET', { query: { cliente_id: C2 } })).code, 403);
@@ -169,7 +162,7 @@ console.error = () => {};
       assert.strictEqual(r.body.criadas, 1);
     });
     await caso(`${nomeApi}: DELETE de id de outro cliente → 403 sem escrever`, async () => {
-      const r = await chamar(h, 'admin', 'DELETE', { query: { id: tab === 'unidades' ? U_C2 : P_C2 } });
+      const r = await chamar(h, 'admin', 'DELETE', { query: { id: U_C2 } });
       assert.strictEqual(r.code, 403);
       assert.strictEqual(escritas().length, 0);
     });
@@ -196,15 +189,6 @@ console.error = () => {};
     assert.strictEqual(r.code, 200);
     assert.strictEqual(tabelas.unidades.find((l) => l.id === U_C1).ativo, false);
     assert.strictEqual(estado.auditoria[0].acao, 'desativar');
-  });
-  await caso('porteiros: DELETE do próprio cliente → ativo=false', async () => {
-    const r = await chamar(porteiros, 'admin', 'DELETE', { query: { id: P_C1 } });
-    assert.strictEqual(r.code, 200);
-    assert.strictEqual(tabelas.porteiros.find((l) => l.id === P_C1).ativo, false);
-  });
-  await caso('porteiros: não manda coluna ordem', async () => {
-    await chamar(porteiros, 'admin', 'POST', { body: { cliente_id: C1, texto: 'Novo' } });
-    assert.ok(!('ordem' in tabelas.porteiros.find((l) => l.nome === 'Novo')));
   });
   await caso('método inválido → 405', async () => {
     assert.strictEqual((await chamar(unidades, 'admin', 'PUT', {})).code, 405);
