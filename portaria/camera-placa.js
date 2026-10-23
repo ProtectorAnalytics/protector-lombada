@@ -3,9 +3,10 @@
  *
  * A imagem nunca sai do aparelho (LGPD): cada quadro é recortado na moldura,
  * reduzido a 128×64 e passado ao modelo fast-plate-ocr (cct-s-v2-global) via
- * onnxruntime-web. Nenhum quadro é gravado nem enviado.
+ * onnxruntime-web (build "wasm", hospedado no próprio site em
+ * /portaria/vendor/ort-1.30.0/). Nenhum quadro é gravado nem enviado.
  *
- * Browser: window.cameraPlaca = { regiaoMoldura, dimensoesMoldura, abrirLeitor }.
+ * Browser: window.cameraPlaca = { regiaoMoldura, dimensoesMoldura, abrirLeitor, preCarregar }.
  * Node (testes): module.exports com as mesmas funções.
  */
 (function (root, factory) {
@@ -17,9 +18,10 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (libInicial) {
   'use strict';
 
+  // Hospedado aqui (sem CDN de terceiros em tempo de execução); ver NOTICE.txt da pasta.
   const ORT_VERSAO = '1.30.0';
-  const ORT_BASE = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSAO}/dist/`;
-  const ORT_SCRIPT = `${ORT_BASE}ort.min.js`;
+  const ORT_BASE = `/portaria/vendor/ort-${ORT_VERSAO}/`;
+  const ORT_SCRIPT = `${ORT_BASE}ort.wasm.min.js`;
   const LIB_SCRIPT = '/js/leitor-placa.js';
   const MODELO_URL = '/modelos/leitor-placa.onnx';
   const INTERVALO_MS = 180;
@@ -33,6 +35,7 @@
   const CENTRO_Y_REL = 0.42;
   const ESTILO_ID = 'camera-placa-estilo';
   const TEXTO_DICA = 'Encaixe a placa dentro da moldura';
+  const TEXTO_PREPARANDO = 'Preparando o leitor (só na primeira vez)…';
   const TEXTO_FALHA = 'Leitura automática com problema. Toque em Digitar.';
   const FALHAS_AVISO = 10;
 
@@ -99,19 +102,30 @@
   }
 
   let sessaoPromessa = null;
+  let sessaoPronta = false;
   /** Sessão ONNX carregada uma única vez e reaproveitada entre aberturas. */
   function obterSessao(url) {
     if (!sessaoPromessa) {
       sessaoPromessa = (async () => {
         if (!window.ort) await carregarScript(ORT_SCRIPT);
         const ort = window.ort;
-        ort.env.wasm.wasmPaths = ORT_BASE;
+        // URL absoluta: o .mjs é importado de dentro do ort.wasm.min.js.
+        ort.env.wasm.wasmPaths = new URL(ORT_BASE, window.location.href).href;
         ort.env.wasm.numThreads = 1;
         const sessao = await ort.InferenceSession.create(url, { executionProviders: ['wasm'] });
+        sessaoPronta = true;
         return { ort, sessao };
       })().catch((e) => { sessaoPromessa = null; throw e; });
     }
     return sessaoPromessa;
+  }
+
+  /**
+   * Baixa o ORT e o modelo em segundo plano (depois do login), para a primeira
+   * abertura da câmera não esperar. Nunca lança: true se ficou pronto.
+   */
+  function preCarregar(modeloUrl) {
+    return Promise.all([obterLib(), obterSessao(modeloUrl || MODELO_URL)]).then(() => true, () => false);
   }
 
   // ---------------------------------------------------------------- tela
@@ -154,7 +168,7 @@
     const mascara = criarEl('div', 'cp-mascara', { 'aria-hidden': 'true' });
     const moldura = criarEl('div', 'cp-moldura', { 'aria-hidden': 'true' });
     const dica = criarEl('p', 'cp-dica');
-    dica.textContent = TEXTO_DICA;
+    dica.textContent = sessaoPronta ? TEXTO_DICA : TEXTO_PREPARANDO;
     const aoVivo = criarEl('p', 'cp-ao-vivo', { 'aria-live': 'polite' });
     const botoes = criarEl('div', 'cp-botoes');
     const digitar = criarEl('button', 'cp-botao', { type: 'button' });
@@ -274,6 +288,8 @@
   }
 
   async function iniciarLeitura(estado, opcoes) {
+    // Primeira vez no aparelho: o leitor (~19 MB) ainda está baixando.
+    if (!sessaoPronta) estado.tela.dica.textContent = TEXTO_PREPARANDO;
     try {
       estado.lib = await obterLib();
       estado.modelo = await obterSessao(opcoes.modeloUrl || MODELO_URL);
@@ -284,6 +300,7 @@
       return;
     }
     if (estado.fechado) return;
+    estado.tela.dica.textContent = TEXTO_DICA;
     estado.estabilizador = estado.lib.criarEstabilizador();
     agendar(estado);
   }
@@ -355,5 +372,5 @@
     };
   }
 
-  return { regiaoMoldura, dimensoesMoldura, abrirLeitor };
+  return { regiaoMoldura, dimensoesMoldura, abrirLeitor, preCarregar, ORT_BASE, ORT_SCRIPT };
 });

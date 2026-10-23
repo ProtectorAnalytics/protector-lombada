@@ -129,6 +129,106 @@ caso('abrirLeitor: fechar antes da câmera responder solta as trilhas que chegar
   });
 });
 
+// ---------------------------------------------------------------- ORT local e "Preparando"
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const VENDOR = path.join(__dirname, '..', 'portaria', 'vendor', 'ort-1.30.0');
+
+caso('ORT hospedado no próprio site (build wasm 1.30.0), nada de CDN', () => {
+  assert.strictEqual(cameraPlaca.ORT_BASE, '/portaria/vendor/ort-1.30.0/');
+  assert.strictEqual(cameraPlaca.ORT_SCRIPT, '/portaria/vendor/ort-1.30.0/ort.wasm.min.js');
+  const fonte = fs.readFileSync(path.join(__dirname, '..', 'portaria', 'camera-placa.js'), 'utf8');
+  assert.ok(!/cdn\.jsdelivr|unpkg|cdnjs/.test(fonte), 'sem CDN no código');
+});
+
+caso('vendor/ort-1.30.0: arquivos do NOTICE existem com o tamanho e SHA-256 anotados', () => {
+  const notice = fs.readFileSync(path.join(VENDOR, 'NOTICE.txt'), 'utf8');
+  assert.match(notice, /MIT License/);
+  assert.match(notice, /Microsoft Corporation/);
+  const linhas = [...notice.matchAll(/^(\S+\.(?:js|mjs|wasm))\s+(\d+)\s+([0-9a-f]{64})$/gm)];
+  assert.deepStrictEqual(linhas.map((l) => l[1]).sort(),
+    ['ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm', 'ort.wasm.min.js']);
+  for (const [, nome, bytes, sha] of linhas) {
+    const buf = fs.readFileSync(path.join(VENDOR, nome));
+    assert.strictEqual(buf.length, Number(bytes), `${nome}: tamanho`);
+    assert.strictEqual(crypto.createHash('sha256').update(buf).digest('hex'), sha, `${nome}: SHA-256`);
+  }
+  // O build wasm só pede o .mjs/.wasm que estão na pasta
+  const js = fs.readFileSync(path.join(VENDOR, 'ort.wasm.min.js'), 'utf8');
+  assert.ok(js.includes('ort-wasm-simd-threaded.mjs'));
+});
+
+// DOM mínimo para abrir o leitor no Node
+function elFalso(tag) {
+  const el = {
+    tag, style: {}, children: [], attrs: {}, textContent: '', hidden: false, clientWidth: 412, clientHeight: 915,
+    classList: { add() {}, remove() {} },
+    setAttribute(k, v) { el.attrs[k] = v; }, getAttribute(k) { return el.attrs[k]; },
+    addEventListener() {}, append(...c) { el.children.push(...c); }, appendChild(c) { el.children.push(c); },
+    remove() {}, getContext: () => ({}), play: async () => {}, readyState: 0, videoWidth: 0,
+  };
+  return el;
+}
+function comDom(ort, fn) {
+  const antes = { window: globalThis.window, document: globalThis.document };
+  globalThis.document = { hidden: false, head: elFalso('head'), getElementById: () => null, createElement: elFalso };
+  globalThis.window = { ort, addEventListener() {}, removeEventListener() {}, location: { href: 'https://lombada.test/portaria' } };
+  return Promise.resolve().then(fn).finally(() => {
+    globalThis.window = antes.window; globalThis.document = antes.document;
+  });
+}
+function ortFalso() {
+  const o = { criadas: 0, liberar: null, env: { wasm: {} } };
+  o.InferenceSession = { create: (url) => { o.criadas++; o.url = url; return new Promise((r) => { o.liberar = () => r({ inputNames: ['x'], outputNames: ['plate'], run: async () => ({}) }); }); } };
+  return o;
+}
+const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+const stream = { getTracks: () => [], getVideoTracks: () => [] };
+
+caso('primeira abertura mostra "Preparando o leitor (só na primeira vez)…" até a sessão ficar pronta', () => {
+  const ort = ortFalso();
+  return comDom(ort, () => comNavegador({ mediaDevices: { getUserMedia: async () => stream } }, async () => {
+    const container = elFalso('div');
+    const leitor = cameraPlaca.abrirLeitor({ container, aoLer: () => {}, aoFalhar: () => {} });
+    await espera(20);
+    const palco = container.children[0];
+    const dica = palco.children.find((c) => c.className === 'cp-dica');
+    assert.strictEqual(dica.textContent, 'Preparando o leitor (só na primeira vez)…');
+    assert.strictEqual(ort.env.wasm.wasmPaths, 'https://lombada.test/portaria/vendor/ort-1.30.0/');
+    ort.liberar();
+    await espera(20);
+    assert.strictEqual(dica.textContent, 'Encaixe a placa dentro da moldura');
+    leitor.fechar();
+    // Sessão reaproveitada: a segunda abertura já começa com a dica normal
+    const c2 = elFalso('div');
+    const l2 = cameraPlaca.abrirLeitor({ container: c2, aoLer: () => {}, aoFalhar: () => {} });
+    await espera(20);
+    assert.strictEqual(c2.children[0].children.find((c) => c.className === 'cp-dica').textContent, 'Encaixe a placa dentro da moldura');
+    assert.strictEqual(ort.criadas, 1);
+    l2.fechar();
+  }));
+});
+
+caso('preCarregar: baixa ORT e modelo em segundo plano, uma vez só, e não lança', () => {
+  const ort = ortFalso();
+  return comDom(ort, async () => {
+    const isolado = (() => { delete require.cache[require.resolve('../portaria/camera-placa.js')]; return require('../portaria/camera-placa.js'); })();
+    const p1 = isolado.preCarregar();
+    const p2 = isolado.preCarregar();
+    assert.ok(p1 && typeof p1.then === 'function');
+    ort.liberar();
+    assert.strictEqual(await p1, true);
+    assert.strictEqual(await p2, true);
+    assert.strictEqual(ort.criadas, 1);
+    assert.strictEqual(ort.url, '/modelos/leitor-placa.onnx');
+    const quebrado = { env: { wasm: {} }, InferenceSession: { create: () => Promise.reject(new Error('rede')) } };
+    globalThis.window.ort = quebrado;
+    delete require.cache[require.resolve('../portaria/camera-placa.js')];
+    assert.strictEqual(await require('../portaria/camera-placa.js').preCarregar(), false);
+  });
+});
+
 fila.then(() => {
   console.log(`\n${passou} ok, ${falhou} falharam`);
   if (falhou) process.exit(1);
