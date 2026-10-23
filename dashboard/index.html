@@ -96,6 +96,12 @@
       --green: #22C55E;
       --orange: #F97316;
       --red: #EF4444;
+      /* Tipo de pessoa (portaria): ≥4,5:1 em #080C14/#111827/#1A2235; prestador é verde-azulado, nunca o vermelho de alerta */
+      --tipo-morador: #60A5FA;
+      --tipo-proprietario: #C4B5FD;
+      --tipo-visitante: #FBBF24;
+      --tipo-prestador: #2DD4BF;
+      --tipo-sem: #94A3B8;
       --red-dark: #DC2626;
       --red-texto: #F87171;                     /* número vermelho sobre campo (#1A2235 + tinta): ≥4,5:1 */
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
@@ -162,6 +168,12 @@
       --green: #15803D;
       --orange: #C2410C;
       --red: #B91C1C;
+      /* Tipo de pessoa: mesmos tons do admin, ≥4,5:1 em #FFFFFF/#F2F4F7/#F1F4F8 */
+      --tipo-morador: #046bd2;
+      --tipo-proprietario: #7c3aed;
+      --tipo-visitante: #b45309;
+      --tipo-prestador: #0f766e;
+      --tipo-sem: #475569;
       --red-dark: #B91C1C;
       --red-texto: #B91C1C;
       --shadow-sm: 0 1px 2px rgba(15,23,42,0.05), 0 1px 3px rgba(15,23,42,0.07);
@@ -720,6 +732,19 @@
       font-size: 0.6875rem; color: var(--text-secondary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    /* Tipo de pessoa: ícone + rótulo sempre juntos (não depende só da cor) */
+    .tipo-pessoa { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; white-space: nowrap; vertical-align: middle; }
+    .tipo-pessoa svg, .tipo-ic { width: 14px; height: 14px; flex: none; }
+    .tipo-ic { display: inline-block; vertical-align: -2px; margin-right: 3px; }
+    .morador-tipo { font-size: 0.6875rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .morador-nc .tipo-pessoa { font-weight: 500; }
+    .vb-form select {
+      flex: 1 1 160px; min-width: 0; min-height: 44px; box-sizing: border-box;
+      padding: 10px 12px; font-family: var(--font-sans); font-size: 0.875rem;
+      color: var(--text-primary); background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .vb-form select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); outline: none; }
     /* Base de veículos (APIPLACAS): quadro, cadastro e suspeita */
     .vb-quadro {
       margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--border);
@@ -1978,8 +2003,9 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
-    .vm-field input {
+    .vm-field input, .vm-field select {
       width: 100%;
+      color: var(--text-primary);
       padding: 10px 14px;
       background: var(--bg-input);
       border: 1px solid var(--border);
@@ -1990,7 +2016,7 @@
       transition: border-color 0.2s;
       box-sizing: border-box;
     }
-    .vm-field input:focus {
+    .vm-field input:focus, .vm-field select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(4,107,210,0.1);
     }
@@ -2763,6 +2789,7 @@
   <script src="/js/spring.js"></script>
   <script src="/js/grafico-acessivel.js"></script>
   <script src="/js/placa.js"></script>
+  <script src="/js/vinculo-placa.js"></script>
   <script src="/js/novidades-atual.js"></script>
   <script src="/js/texto-seguro.js"></script>
   <script src="/js/nome-veiculo.js"></script>
@@ -2777,6 +2804,14 @@
   <script src="/js/miniatura.js"></script>
 </head>
 <body>
+  <!-- Ícones do tipo de pessoa (os mesmos do admin) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="ic-casa" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12 20 3M16 7l3 3M14 9l2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-cracha" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 17c.8-2 2.2-3 4-3s3.2 1 4 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-ferramenta" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0 4.8 4.8L11 19.6a2.1 2.1 0 0 1-3-3l8.3-8.3A4 4 0 0 0 14.5 6.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-interrogacao" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  </svg>
 
   <!-- ===== LOGIN ===== -->
   <div id="login-screen">
@@ -2973,7 +3008,7 @@
               <div>Radar</div>
               <div>Veículo</div>
               <div>Data / Hora</div>
-              <div>Morador</div>
+              <div>Cadastro</div>
               <div>Status</div>
             </div>
             <div class="table-body" id="table-body">
@@ -3104,12 +3139,22 @@
           <input type="text" id="vf-placa" placeholder="ABC1D23" maxlength="7" style="text-transform:uppercase">
         </div>
         <div class="vm-field">
-          <label>Nome do Morador</label>
+          <label for="vf-tipo">Tipo *</label>
+          <select id="vf-tipo" required>
+            <option value="">Selecione o tipo…</option>
+            <option value="morador">Morador</option>
+            <option value="proprietario">Proprietário</option>
+            <option value="visitante">Visitante</option>
+            <option value="prestador">Prestador</option>
+          </select>
+        </div>
+        <div class="vm-field">
+          <label for="vf-morador">Nome</label>
           <input type="text" id="vf-morador" placeholder="Nome completo">
         </div>
         <div class="vm-field">
-          <label>Unidade</label>
-          <input type="text" id="vf-unidade" placeholder="Ex: Bloco A - Apt 101">
+          <label for="vf-unidade">Unidade</label>
+          <div id="vf-unidade-campo"><input type="text" id="vf-unidade" placeholder="Ex: Bloco A - Apt 101"></div>
         </div>
         <div class="vm-row">
           <div class="vm-field">
@@ -3138,7 +3183,8 @@
         <div style="border-top:1px solid var(--border);padding-top:20px">
           <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:8px;color:var(--text-primary)">Importar Veículos</h4>
           <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:6px">Envie um arquivo Excel (.xlsx) com as colunas:</p>
-          <p style="font-size:0.75rem;color:var(--accent);font-weight:600;margin-bottom:10px;font-family:var(--font-mono)">PLACA | MORADOR | UNIDADE | MARCA | COR</p>
+          <p style="font-size:0.75rem;color:var(--accent);font-weight:600;margin-bottom:4px;font-family:var(--font-mono)">PLACA | TIPO | MORADOR | UNIDADE | MARCA | COR</p>
+          <p style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:10px">TIPO é opcional: Morador, Proprietário, Visitante ou Prestador (vazio = Morador).</p>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
             <button class="vm-btn-primary" onclick="document.getElementById('vm-import-file').click()" style="width:auto;padding:10px 20px;background:var(--green)">Selecionar Arquivo</button>
             <span id="vm-import-filename" style="font-size:0.75rem;color:var(--text-secondary)">Nenhum arquivo selecionado</span>
@@ -3333,6 +3379,10 @@
     // Cadastro carregado: "Não cadastrados" espera por ele (senão tudo pareceria não cadastrado)
     let veiculosCachePronto = Promise.resolve();
     let placasCadastradas = new Set();
+    // Todos os vínculos (vigentes e encerrados) por placa: "quem estava na hora"
+    let indiceVinculos = new Map();
+    // Unidades do condomínio (lista do admin); vazia = campo de texto livre
+    let unidadesLista = [];
     // Estado do cadastro de moradores: 'carregando' | 'ok' | 'erro'
     let cadastro = { estado: 'carregando' };
     // Cartões "Agora" esperando dados (limpeza do painel e reabrir as fotos)
@@ -3708,6 +3758,8 @@
       fotosQueFalharam = new Set();
       veiculosCache = {};
       placasCadastradas = new Set();
+      indiceVinculos = new Map();
+      unidadesLista = [];
       cadastro = { estado: 'carregando' };
       veiculosCachePronto = Promise.resolve();
       veiculosBaseCache = {};
@@ -3920,20 +3972,74 @@
       const sessao = marcaDaSessao();
       const clienteId = sessao.clienteId;
       try {
+        // Vigentes E encerrados: a passagem antiga mostra quem estava ligado à placa
         const data = await coletarPaginado((de, ate) => sb.from('veiculos')
-          .select('placa, nome_morador, unidade, marca, cor')
+          .select('id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, marca, cor, vigente_desde, encerrado_em, criado_em, origem, cadastrado_por')
           .eq('cliente_id', clienteId)
-          .eq('ativo', true)
-          .order('placa').range(de, ate));
+          .order('placa').order('id').range(de, ate));
         if (!sessaoValida(sessao)) return; // trocou de condomínio ou saiu
+        const vigentes = data.filter((v) => !v.encerrado_em);
+        indiceVinculos = vinculoPlacaLib.indexarVinculos(data);
         veiculosCache = {};
-        data.forEach((v) => { veiculosCache[v.placa] = v; });
-        placasCadastradas = conjuntoCadastradas(data.map((v) => v.placa));
+        vigentes.forEach((v) => { veiculosCache[v.placa] = v; });
+        // "Não cadastrados" = fora dos vínculos vigentes (encerrado não conta)
+        placasCadastradas = conjuntoCadastradas(vigentes.map((v) => v.placa));
+        loadUnidades(sessao);
         cadastro = { estado: 'ok' };
       } catch (err) {
         console.error('Erro ao carregar o cadastro de moradores:', err);
         if (sessaoValida(sessao)) cadastro = { estado: 'erro' };
       }
+    }
+
+    // Lista de unidades do condomínio (admin). Falha = sem lista: o campo vira texto livre.
+    async function loadUnidades(sessao) {
+      try {
+        const lista = await chamarApiPainel(`/api/admin/unidades?cliente_id=${encodeURIComponent(sessao.clienteId)}`, 'GET');
+        if (!sessaoValida(sessao)) return;
+        unidadesLista = Array.isArray(lista)
+          ? [...lista].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'))
+          : [];
+      } catch (err) {
+        console.error('Erro ao carregar unidades:', err);
+        if (sessaoValida(sessao)) unidadesLista = [];
+      }
+      renderCampoUnidadeForm();
+    }
+
+    // <option>s do tipo de pessoa; sem seleção padrão (quem cadastra escolhe)
+    function opcoesTipoPessoa() {
+      return '<option value="">Selecione o tipo…</option>'
+        + vinculoPlacaLib.TIPOS_PESSOA.map((t) => `<option value="${esc(t.id)}">${esc(t.rotulo)}</option>`).join('');
+    }
+
+    // Campo de unidade: lista quando o condomínio tem unidades, senão texto livre
+    function htmlCampoUnidade(attrs) {
+      if (!unidadesLista.length) {
+        return `<input ${attrs} placeholder="Unidade (ex.: Bloco A - Apto 101)" maxlength="40" autocomplete="off">`;
+      }
+      return `<select ${attrs}><option value="">— Sem unidade —</option>`
+        + unidadesLista.map((u) => `<option value="${esc(u.id)}">${esc(u.nome)}</option>`).join('') + '</select>';
+    }
+
+    // Lê o campo de unidade (select ou input) no formato da API
+    function valorUnidade(el) {
+      if (!el) return {};
+      const v = el.value.trim();
+      if (el.tagName !== 'SELECT') return { unidade: v || null };
+      if (!v) return {};
+      const u = unidadesLista.find((x) => x.id === v);
+      return { unidade_id: v, unidade: u ? u.nome : null };
+    }
+
+    function renderCampoUnidadeForm() {
+      const box = document.getElementById('vf-unidade-campo');
+      if (!box) return;
+      const atual = document.getElementById('vf-unidade');
+      const valorAntes = atual ? atual.value : '';
+      box.innerHTML = htmlCampoUnidade('id="vf-unidade" aria-label="Unidade"');
+      const novo = document.getElementById('vf-unidade');
+      if (valorAntes && (novo.tagName !== 'SELECT' || unidadesLista.some((u) => u.id === valorAntes))) novo.value = valorAntes;
     }
 
     // ============================================
@@ -4076,13 +4182,45 @@
         + (sub ? `<div class="vb-linha" title="${esc(sub)}">${bolinhaCor(info.hex)}<span class="vb-txt">${esc(sub)}</span></div>` : '');
     }
 
-    // Morador cadastrado (nome + unidade) ou "Não cadastrado" em cinza neutro
-    function celulaMorador(placa) {
-      const m = veiculosCache[placa];
-      if (!m) return '<div class="morador-nc">Não cadastrado</div>';
+    // Vínculo que valia no instante da passagem (não o de hoje)
+    function vinculoDaPassagem(placa, capturaTs) {
+      return vinculoPlacaLib.vinculoNaHora(indiceVinculos, placa, capturaTs);
+    }
+
+    // Ícone + rótulo do tipo de pessoa; valores da lib passam por esc() mesmo assim
+    function seloTipoPessoa(id) {
+      const t = vinculoPlacaLib.tipoPessoa(id);
+      return `<span class="tipo-pessoa" style="color:var(${esc(t.cor)})"><svg aria-hidden="true" focusable="false"><use href="#ic-${esc(t.icone)}"/></svg>${esc(t.rotulo)}</span>`;
+    }
+
+    // Só o ícone (cartões): o rótulo vai no aria-label/title
+    function iconeTipoPessoa(id) {
+      const t = vinculoPlacaLib.tipoPessoa(id);
+      return `<svg class="tipo-ic" role="img" aria-label="${esc(t.rotulo)}" style="color:var(${esc(t.cor)})"><title>${esc(t.rotulo)}</title><use href="#ic-${esc(t.icone)}"/></svg>`;
+    }
+
+    const TIPOS_COM_ROTULO_CADASTRO = new Set(['visitante', 'prestador']);
+
+    // Texto da unidade; vínculo só com unidade_id (cadastrado pelo admin) usa o nome da lista
+    function nomeUnidade(v) {
+      if (!v) return '';
+      if (v.unidade) return v.unidade;
+      const u = v.unidade_id && unidadesLista.find((x) => x.id === v.unidade_id);
+      return u ? u.nome : '';
+    }
+
+    // Tipo + nome + unidade de quem estava ligado à placa na hora; sem vínculo: "Sem cadastro" (cinza)
+    function celulaMorador(placa, capturaTs) {
+      const m = vinculoDaPassagem(placa, capturaTs);
+      if (!m) return `<div class="morador-nc">${seloTipoPessoa(null)}</div>`;
       const nome = m.nome_morador || '—';
-      return `<div class="morador-nome" title="${esc(nome)}">${esc(nome)}</div>`
-        + (m.unidade ? `<div class="morador-sub" title="${esc(m.unidade)}">${esc(m.unidade)}</div>` : '');
+      const t = vinculoPlacaLib.tipoPessoa(m.tipo_pessoa);
+      const sub = TIPOS_COM_ROTULO_CADASTRO.has(t.id) ? vinculoPlacaLib.rotuloCadastro(m) : '';
+      const unidade = nomeUnidade(m);
+      return `<div class="morador-tipo">${seloTipoPessoa(m.tipo_pessoa)}</div>`
+        + `<div class="morador-nome" title="${esc(nome)}">${esc(nome)}</div>`
+        + (unidade ? `<div class="morador-sub" title="${esc(unidade)}">${esc(unidade)}</div>` : '')
+        + (sub ? `<div class="morador-sub" title="${esc(sub)}">${esc(sub)}</div>` : '');
     }
 
     // ============================================
@@ -4364,8 +4502,9 @@
         const ts = new Date(c.timestamp);
         const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const data_str = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        const veiculo = veiculosCache[c.placa];
-        const morador = veiculo ? veiculo.nome_morador || veiculo.unidade || '' : '';
+        const veiculo = vinculoDaPassagem(c.placa, c.timestamp);
+        const morador = veiculo
+          ? veiculo.nome_morador || nomeUnidade(veiculo) || vinculoPlacaLib.tipoPessoa(veiculo.tipo_pessoa).rotulo : '';
 
         // Cartões ficam no topo: só os que podem estar fora da tela (ou
         // ocultos pelo CSS, 4º em diante na largura média) são adiados
@@ -4393,7 +4532,7 @@
           ? botaoFiltro('alerta', '1', badgeText, `${badgeText} — filtrar só acima do limite`, `rc-badge ${badgeClass}`)
           : `<div class="rc-badge ${badgeClass}">${badgeText}</div>`;
         // Sem morador, o nome mostrado é o do radar: vira "filtrar pela câmera"
-        const nomeHtml = morador ? esc(morador)
+        const nomeHtml = morador ? `${iconeTipoPessoa(veiculo.tipo_pessoa)}${esc(morador)}`
           : radarNome ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`)
           : '<span style="color:var(--text-muted)">N/C</span>';
         // O card não é botão (teria botões dentro): o detalhe abre pela foto,
@@ -4699,7 +4838,7 @@
           <div class="celula-radar" title="${esc(radarNome)}">${radarHtml}</div>
           <div class="veiculo-info">${celulaVeiculoTabela(c.placa, c.timestamp)}</div>
           <div class="datetime"><button type="button" class="dd dd-detalhe" aria-label="${esc(`${dt} — ver detalhes da passagem ${c.placa}`)}">${dt}</button></div>
-          <div class="morador-info">${celulaMorador(c.placa)}</div>
+          <div class="morador-info">${celulaMorador(c.placa, c.timestamp)}</div>
           <div style="text-align:center;font-size:0.75rem;font-weight:600;color:${statusCor}">${statusHtml}</div>
         </div>`;
       }).join('');
@@ -5471,7 +5610,7 @@
         if (!sessaoValida(sessao)) return; // trocou de condomínio no meio
 
         if (Array.isArray(data)) {
-          veiculosList = data.filter(v => v.ativo !== false);
+          veiculosList = data; // GET devolve só os vínculos vigentes
           renderVeiculos();
         }
       } catch (err) {
@@ -5512,6 +5651,7 @@
 
     function limparFormVeiculo() {
       document.getElementById('vf-placa').value = '';
+      document.getElementById('vf-tipo').value = '';
       document.getElementById('vf-morador').value = '';
       document.getElementById('vf-unidade').value = '';
       document.getElementById('vf-marca').value = '';
@@ -5561,10 +5701,10 @@
       const pageData = data.slice(start, start + VM_PER_PAGE);
 
       lista.innerHTML = pageData.map(v => {
-        const info = [v.nome_morador, v.unidade, v.marca, v.cor].filter(Boolean).join(' | ');
+        const info = [v.nome_morador, nomeUnidade(v), v.marca, v.cor].filter(Boolean).join(' | ');
         return `<div class="vm-lista-item">
           <span class="vm-li-placa">${esc(v.placa)}</span>
-          <span class="vm-li-info">${esc(info) || '—'}</span>
+          <span class="vm-li-info">${seloTipoPessoa(v.tipo_pessoa)} ${esc(info) || '—'}</span>
           <button class="vm-li-del" data-id="${esc(v.id)}" data-placa="${esc(v.placa)}" onclick="removerVeiculo(this.dataset.id, this.dataset.placa)" title="Remover">Excluir</button>
         </div>`;
       }).join('');
@@ -5607,13 +5747,14 @@
       await lazyLoadExportLibs();
       const rows = veiculosList.map(v => ({
         PLACA: v.placa,
+        TIPO: vinculoPlacaLib.tipoPessoa(v.tipo_pessoa).rotulo,
         MORADOR: v.nome_morador || '',
-        UNIDADE: v.unidade || '',
+        UNIDADE: nomeUnidade(v),
         MARCA: v.marca || '',
         COR: v.cor || '',
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{ wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 12 }];
+      ws['!cols'] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 12 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Veiculos');
       XLSX.writeFile(wb, `veiculos_${currentCliente.nome.replace(/\s/g, '_')}.xlsx`);
@@ -5626,17 +5767,25 @@
     async function gerarModeloExcel() {
       await lazyLoadExportLibs();
       const rows = [
-        { PLACA: 'ABC1D23', MORADOR: 'Joao Silva', UNIDADE: 'Bloco A - 101', MARCA: 'Honda Civic', COR: 'Prata' },
-        { PLACA: 'XYZ9876', MORADOR: 'Maria Santos', UNIDADE: 'Bloco B - 202', MARCA: 'Toyota Corolla', COR: 'Branco' },
+        { PLACA: 'ABC1D23', TIPO: 'Morador', MORADOR: 'Joao Silva', UNIDADE: 'Bloco A - 101', MARCA: 'Honda Civic', COR: 'Prata' },
+        { PLACA: 'XYZ9876', TIPO: 'Prestador', MORADOR: 'Maria Santos', UNIDADE: 'Bloco B - 202', MARCA: 'Toyota Corolla', COR: 'Branco' },
       ];
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{ wch: 10 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 12 }];
+      ws['!cols'] = [{ wch: 10 }, { wch: 14 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 12 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
       XLSX.writeFile(wb, 'modelo_veiculos.xlsx');
     }
 
     let importQueue = [];
+
+    // TIPO da planilha (sem acento também). Vazio = morador; desconhecido = null.
+    const TIPO_PLANILHA = { MORADOR: 'morador', PROPRIETARIO: 'proprietario', VISITANTE: 'visitante', PRESTADOR: 'prestador' };
+    function tipoDaPlanilha(valor) {
+      const k = String(valor || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (!k) return 'morador';
+      return TIPO_PLANILHA[k] || null;
+    }
 
     async function previewImport(input) {
       const file = input.files[0];
@@ -5677,14 +5826,17 @@
             return obj;
           });
 
-          // Map columns
-          importQueue = normalized.map(r => ({
+          // Map columns (TIPO opcional: vazio = morador; valor desconhecido = linha recusada)
+          const lidas = normalized.map(r => ({
             placa: (r.PLACA || '').toUpperCase().replace(/[-\s]/g, ''),
+            tipo_pessoa: tipoDaPlanilha(r.TIPO),
             nome_morador: r.MORADOR || r.NOME || r['NOME DO MORADOR'] || r['NOME_MORADOR'] || '',
             unidade: r.UNIDADE || r.APTO || r.APARTAMENTO || '',
             marca: r.MARCA || r.MODELO || r['MARCA / MODELO'] || r['MARCA/MODELO'] || '',
             cor: r.COR || '',
           })).filter(r => r.placa.length >= 7);
+          const tipoInvalido = lidas.filter(r => !r.tipo_pessoa);
+          importQueue = lidas.filter(r => r.tipo_pessoa);
 
           // Check existing
           const existing = new Set(veiculosList.map(v => v.placa));
@@ -5697,6 +5849,7 @@
               <div style="margin-bottom:6px"><strong>${rows.length}</strong> linhas lidas do arquivo</div>
               <div style="margin-bottom:6px;color:var(--green)"><strong>${newOnes.length}</strong> novos veículos para importar</div>
               ${dupes > 0 ? `<div style="color:var(--orange)"><strong>${dupes}</strong> já cadastrados (serão ignorados)</div>` : ''}
+              ${tipoInvalido.length > 0 ? `<div style="color:var(--orange)"><strong>${tipoInvalido.length}</strong> com TIPO desconhecido (ignorados): ${tipoInvalido.slice(0, 5).map(r => esc(r.placa)).join(', ')}${tipoInvalido.length > 5 ? '…' : ''}</div>` : ''}
               ${importQueue.length > 0 ? `
                 <div style="margin-top:10px">
                   <button class="vm-btn-primary" onclick="executarImport()" style="width:auto;padding:10px 24px">
@@ -5736,10 +5889,12 @@
             body: JSON.stringify({
               cliente_id: currentCliente.id,
               placa: v.placa,
+              tipo_pessoa: v.tipo_pessoa,
               nome_morador: v.nome_morador || null,
               unidade: v.unidade || null,
               marca: v.marca || null,
               cor: v.cor || null,
+              origem: 'planilha',
             }),
           });
           if (resp.ok) {
@@ -5798,8 +5953,9 @@
 
     async function salvarVeiculo() {
       const placa = document.getElementById('vf-placa').value.trim().toUpperCase().replace(/[-\s]/g, '');
+      const tipo_pessoa = document.getElementById('vf-tipo').value;
       const nome_morador = document.getElementById('vf-morador').value.trim();
-      const unidade = document.getElementById('vf-unidade').value.trim();
+      const unidadeCampos = valorUnidade(document.getElementById('vf-unidade'));
       const marca = document.getElementById('vf-marca').value.trim();
       const cor = document.getElementById('vf-cor').value.trim();
       const errorEl = document.getElementById('vf-error');
@@ -5812,6 +5968,12 @@
 
       if (!isValidPlacaLocal(placa)) {
         errorEl.textContent = 'Placa inválida. Use formato ABC1234 ou ABC1D23.';
+        return;
+      }
+
+      if (!tipo_pessoa) {
+        errorEl.textContent = 'Escolha o tipo: morador, proprietário, visitante ou prestador.';
+        document.getElementById('vf-tipo').focus();
         return;
       }
 
@@ -5842,8 +6004,9 @@
           body: JSON.stringify({
             cliente_id: currentCliente.id,
             placa,
+            tipo_pessoa,
             nome_morador: nome_morador || null,
-            unidade: unidade || null,
+            ...unidadeCampos,
             marca: marca || null,
             cor: cor || null,
           }),
@@ -5890,7 +6053,7 @@
     }
 
     async function removerVeiculo(id, placa) {
-      if (!confirm(`Remover o veículo ${placa}?\n\nAs capturas dessa placa passam a aparecer como "Veículo não cadastrado".`)) return;
+      if (!confirm(`Remover o veículo ${placa}?\n\nAs passagens antigas continuam mostrando quem estava ligado à placa; as novas aparecem como "Sem cadastro".`)) return;
 
       const token = (await sb.auth.getSession()).data.session?.access_token;
       if (!token) return;
@@ -6008,7 +6171,7 @@
       const limite = currentCliente.limite_velocidade;
       const rows = capturas.map(c => {
         const ts = new Date(c.timestamp);
-        const veiculo = veiculosCache[c.placa];
+        const veiculo = vinculoDaPassagem(c.placa, c.timestamp);
         const vb = dadosVeiculoExport(c.placa);
         return {
           'Placa': c.placa,
@@ -6017,8 +6180,9 @@
           'Data': ts.toLocaleDateString('pt-BR'),
           'Hora': ts.toLocaleTimeString('pt-BR'),
           'Status': acimaDoLimite(c.velocidade, limite) ? 'ALERTA' : 'OK',
+          'Tipo': vinculoPlacaLib.tipoPessoa(veiculo?.tipo_pessoa).rotulo,
           'Morador': veiculo?.nome_morador || '',
-          'Unidade': veiculo?.unidade || '',
+          'Unidade': nomeUnidade(veiculo),
           'Tipo (câmera)': c.tipo_veiculo || '',
           'Cor (câmera)': c.cor_veiculo || '',
           'Marca': vb.marca,
@@ -6171,7 +6335,7 @@
         doc.rect(margin, y, usableW, rowH, 'F');
 
         const ts = new Date(c.timestamp);
-        const veiculo = veiculosCache[c.placa];
+        const veiculo = vinculoDaPassagem(c.placa, c.timestamp);
         const values = [
           c.placa,
           `${c.velocidade} km/h`,
@@ -6180,7 +6344,7 @@
           ts.toLocaleDateString('pt-BR'),
           ts.toLocaleTimeString('pt-BR'),
           veiculo?.nome_morador || '—',
-          veiculo?.unidade || '—',
+          nomeUnidade(veiculo) || '—',
           c.tipo_veiculo || '—',
           c.cor_veiculo || '—',
         ];
@@ -6245,7 +6409,9 @@
       ]);
       if (abertura !== aberturaModalSeq || !sessaoValida(sessao)) return;
 
-      const veiculo = veiculosCache[captura.placa];
+      // Quem estava ligado à placa na hora da passagem; sem isso, o vínculo de hoje (se houver)
+      const veiculo = vinculoDaPassagem(captura.placa, captura.timestamp);
+      const vigenteHoje = veiculo ? null : vinculoPlacaLib.vinculoVigente(indiceVinculos, captura.placa);
       const vb = veiculoBaseDe(captura.placa);
 
       // Build modal content
@@ -6292,7 +6458,9 @@
 
       // Base de veículos (APIPLACAS) + morador cadastrado ou cadastro direto
       html += htmlBaseVeiculo(vb, suspeita, captura);
-      html += veiculo ? htmlVeiculoCadastrado(veiculo) : htmlCadastroDaPassagem(vb);
+      html += veiculo ? htmlVeiculoCadastrado(veiculo)
+        : vigenteHoje ? htmlVeiculoCadastrado(vigenteHoje, 'Sem cadastro na hora da passagem — vínculo atual')
+        : htmlCadastroDaPassagem(vb);
 
       // Historico de velocidades
       if (historico && historico.length > 1) {
@@ -6365,10 +6533,13 @@
         </div><div class="vb-fonte">Fonte: APIPLACAS${data ? ` · consultado em ${data}` : ''}</div></div>`;
     }
 
-    function htmlVeiculoCadastrado(v) {
-      return `<div class="modal-morador"><h4>Veículo cadastrado</h4><div class="morador-grid">
-          <div><span>Morador</span><strong>${esc(v.nome_morador) || '—'}</strong></div>
-          <div><span>Unidade</span><strong>${esc(v.unidade) || '—'}</strong></div>
+    function htmlVeiculoCadastrado(v, titulo = 'Cadastro na hora da passagem') {
+      const t = vinculoPlacaLib.tipoPessoa(v.tipo_pessoa);
+      const rotulo = TIPOS_COM_ROTULO_CADASTRO.has(t.id) ? vinculoPlacaLib.rotuloCadastro(v) : '';
+      return `<div class="modal-morador"><h4>${esc(titulo)}</h4><div class="morador-grid">
+          <div><span>Tipo</span><strong>${seloTipoPessoa(v.tipo_pessoa)}</strong>${rotulo ? `<small class="morador-sub" style="display:block;white-space:normal">${esc(rotulo)}</small>` : ''}</div>
+          <div><span>Nome</span><strong>${esc(v.nome_morador) || '—'}</strong></div>
+          <div><span>Unidade</span><strong>${esc(nomeUnidade(v)) || '—'}</strong></div>
           <div><span>Veículo</span><strong>${esc([v.marca, v.cor].filter(Boolean).join(' ')) || '—'}</strong></div>
         </div></div>`;
     }
@@ -6378,10 +6549,11 @@
       const marcaPre = consultado ? nomeVeiculo(vb) : '';
       const corPre = consultado ? vb.cor || '' : '';
       return `<form class="vb-quadro" data-acao="cadastrar" novalidate>
-          <h4>Veículo não cadastrado — cadastrar morador</h4>
+          <h4>Placa sem cadastro — cadastrar</h4>
           <div class="vb-form">
-            <input name="nome_morador" placeholder="Nome do morador" aria-label="Nome do morador" maxlength="120" autocomplete="off" required>
-            <input name="unidade" placeholder="Unidade (ex.: Bloco A - Apto 101)" aria-label="Unidade" maxlength="40" autocomplete="off">
+            <select name="tipo_pessoa" aria-label="Tipo" required>${opcoesTipoPessoa()}</select>
+            <input name="nome_morador" placeholder="Nome" aria-label="Nome" maxlength="120" autocomplete="off" required>
+            ${htmlCampoUnidade('name="unidade" aria-label="Unidade"')}
             <input name="marca" value="${esc(marcaPre)}" placeholder="Marca e modelo" aria-label="Marca e modelo" maxlength="60" autocomplete="off">
             <input name="cor" value="${esc(corPre)}" placeholder="Cor" aria-label="Cor" maxlength="30" autocomplete="off">
             <button type="submit" class="btn-pdf">Salvar</button>
@@ -6473,19 +6645,22 @@
       const erro = f.querySelector('.vb-erro');
       const valor = (nome) => f.elements[nome].value.trim();
       const nome = valor('nome_morador');
+      const tipo = valor('tipo_pessoa');
       erro.textContent = '';
-      if (!nome) { erro.textContent = 'Informe o nome do morador.'; f.elements.nome_morador.focus(); return; }
-      const dados = { nome_morador: nome, unidade: valor('unidade'), marca: valor('marca'), cor: valor('cor') };
+      if (!tipo) { erro.textContent = 'Escolha o tipo: morador, proprietário, visitante ou prestador.'; f.elements.tipo_pessoa.focus(); return; }
+      if (!nome) { erro.textContent = 'Informe o nome.'; f.elements.nome_morador.focus(); return; }
+      const unidadeCampos = valorUnidade(f.elements.unidade);
+      const dados = { tipo_pessoa: tipo, nome_morador: nome, ...unidadeCampos, marca: valor('marca'), cor: valor('cor') };
       const placa = String(captura.placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       botao.disabled = true;
       botao.textContent = 'Salvando…';
       try {
-        await chamarApiPainel('/api/admin/veiculos', 'POST', {
-          cliente_id: currentCliente.id, placa, nome_morador: dados.nome_morador,
-          unidade: dados.unidade || null, marca: dados.marca || null, cor: dados.cor || null,
+        const novo = await chamarApiPainel('/api/admin/veiculos', 'POST', {
+          cliente_id: currentCliente.id, placa, tipo_pessoa: dados.tipo_pessoa, nome_morador: dados.nome_morador,
+          ...unidadeCampos, marca: dados.marca || null, cor: dados.cor || null,
         });
         const quadro = document.createElement('div');
-        quadro.innerHTML = htmlVeiculoCadastrado(dados);
+        quadro.innerHTML = htmlVeiculoCadastrado(novo && novo.placa ? novo : dados, 'Cadastro atual');
         f.replaceWith(quadro.firstElementChild);
         mostrarAviso(`Veículo ${placa} cadastrado.`);
         await loadVeiculosCache();
@@ -7102,7 +7277,7 @@
       const doc = new jsPDF('p', 'mm', 'a4');
       const limite = currentCliente.limite_velocidade;
       const ts = new Date(captura.timestamp);
-      const veiculo = veiculosCache[captura.placa];
+      const veiculo = vinculoDaPassagem(captura.placa, captura.timestamp);
       const velReport = captura.velocidade <= 10 ? 1 : captura.velocidade;
       const pageW = 210;
       const pageH = 297;
@@ -7229,7 +7404,7 @@
       doc.setFontSize(usaCorpoCustom ? 9 : 10);
       doc.setTextColor(0, 0, 0);
       doc.text(veiculo?.nome_morador || '—', margin + col3 * 1.5, y, { align: 'center' });
-      doc.text(veiculo?.unidade || '—', margin + col3 * 2.5, y, { align: 'center' });
+      doc.text(nomeUnidade(veiculo) || '—', margin + col3 * 2.5, y, { align: 'center' });
 
       // "Veículo: …" da base APIPLACAS (mesma regra do PDF do servidor),
       // só quando a placa foi consultada

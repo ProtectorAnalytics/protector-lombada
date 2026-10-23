@@ -59,4 +59,20 @@ caso('TIPOS_PESSOA na ordem combinada e congelado', () => {
   assert.deepStrictEqual(TIPOS_PESSOA.map((t) => t.icone), ['casa', 'chave', 'cracha', 'ferramenta']);
 });
 
+caso('2 000 vínculos: vinculoNaHora em média < 5 ms por chamada', () => {
+  const linhas = [];
+  for (let i = 0; i < 2000; i++) {
+    const placa = `ABC${String(i).padStart(4, '0')}`;
+    linhas.push({ placa, nome_morador: `N${i}`, vigente_desde: null, encerrado_em: i % 2 ? TROCA : null });
+    if (i % 2) linhas.push({ placa, nome_morador: `M${i}`, vigente_desde: TROCA, encerrado_em: null });
+  }
+  const idx = indexarVinculos(linhas);
+  const N = 2000;
+  const t0 = process.hrtime.bigint();
+  for (let i = 0; i < N; i++) vinculoNaHora(idx, `ABC${String(i).padStart(4, '0')}`, '2026-10-24T00:00:00Z');
+  const mediaMs = Number(process.hrtime.bigint() - t0) / 1e6 / N;
+  assert.ok(mediaMs < 5, `média ${mediaMs.toFixed(3)} ms`);
+  assert.strictEqual(vinculoNaHora(idx, 'ABC0001', '2026-10-24T00:00:00Z').nome_morador, 'M1');
+});
+
 console.log(`${passou} casos passaram`);
