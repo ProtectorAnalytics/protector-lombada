@@ -5,7 +5,7 @@
 const assert = require('node:assert');
 const path = require('node:path');
 
-const estado = { solicitacao: null, anonimizados: [], apagados: [], erroDelete: null, erroInterno: 'detalhe-interno-secreto' };
+const estado = { solicitacao: null, anonimizados: [], apagados: [], apagadosIn: [], erroVinculos: false, erroDelete: null, erroInterno: 'detalhe-interno-secreto' };
 
 function stub(rel, exports) {
   const id = require.resolve(path.join('..', rel));
@@ -20,6 +20,11 @@ function tabela(nome) {
     update(p) { modo = 'update'; patch = p; return q; },
     delete() { modo = 'delete'; return q; },
     in(c, vs) {
+      if (modo === 'delete') {
+        if (estado.erroDelete || (estado.erroVinculos && nome === 'veiculos')) return Promise.resolve({ error: { message: estado.erroInterno } });
+        estado.apagadosIn.push({ tabela: nome, coluna: c, valores: vs });
+        return Promise.resolve({ error: null });
+      }
       if (modo === 'update' && nome === 'apiplacas_consultas') {
         if (estado.erroDelete) return Promise.resolve({ error: { message: estado.erroInterno } });
         estado.anonimizados.push({ patch, coluna: c, valores: vs });
@@ -60,9 +65,10 @@ function resp() {
 const put = (body) => ({ method: 'PUT', headers: {}, query: {}, body });
 
 let passou = 0;
-async function caso(nome, solicitacao, body, fn, falhaDelete = false) {
+async function caso(nome, solicitacao, body, fn, falhaDelete = false, falhaVinculos = false) {
   estado.solicitacao = solicitacao;
-  estado.apagados = []; estado.anonimizados = []; estado.erroDelete = falhaDelete;
+  estado.apagados = []; estado.apagadosIn = []; estado.erroVinculos = false; estado.anonimizados = []; estado.erroDelete = falhaDelete;
+  estado.erroVinculos = falhaVinculos;
   const r = resp();
   await handler(put(body), r);
   fn(r);
@@ -77,6 +83,23 @@ console.error = () => {};
     assert.strictEqual(r.code, 200);
     assert.deepStrictEqual(estado.apagados, [{ tabela: 'veiculos_base', coluna: 'placa', valor: 'ABC1C34' }]);
   });
+  await caso('eliminação atendida apaga os vínculos da placa nas duas grafias', sol(), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(estado.apagadosIn, [{ tabela: 'veiculos', coluna: 'placa', valores: ['ABC1C34', 'ABC1234'] }]);
+  });
+  await caso('eliminação de placa só Mercosul apaga vínculos só dessa grafia', sol({ placa_veiculo: 'ABC1K23' }), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(estado.apagadosIn, [{ tabela: 'veiculos', coluna: 'placa', valores: ['ABC1K23'] }]);
+  });
+  await caso('status diferente de atendida não apaga vínculos', sol(), { id: 's1', status: 'em_analise' }, (r) => {
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(estado.apagadosIn.length, 0);
+  });
+  await caso('erro ao apagar vínculos vira 500 sem mensagem interna e não apaga a base', sol(), { id: 's1', status: 'atendida' }, (r) => {
+    assert.strictEqual(r.code, 500);
+    assert.ok(!JSON.stringify(r.body).includes(estado.erroInterno));
+    assert.strictEqual(estado.apagados.length, 0);
+  }, false, true);
   await caso('eliminação atendida tira a placa do extrato nas duas grafias (F7)', sol(), { id: 's1', status: 'atendida' }, (r) => {
     assert.strictEqual(r.code, 200);
     assert.deepStrictEqual(estado.anonimizados, [{ patch: { placa: null }, coluna: 'placa', valores: ['ABC1C34', 'ABC1234'] }]);
