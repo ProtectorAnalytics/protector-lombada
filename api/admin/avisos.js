@@ -87,12 +87,13 @@ async function usuariosDoCliente(clienteId) {
   }
 }
 
-/** 409 se o e-mail já é de um so_email (mesmo inativo) ou de outro usuário do cliente. */
+/** 409 se o e-mail já é de um so_email (mesmo inativo) ou de outro usuário ATIVO do cliente. */
 async function conferirEmailLivre(clienteId, email, ignorarId) {
   const iguais = (await usuariosDoCliente(clienteId))
     .filter((u) => u.id !== ignorarId && avisosLib.normalizarEmail(u.email) === email);
   if (iguais.some((u) => u.role === ROLE_CONTATO)) throw new ErroHttp(409, MSG_CONTATO_EXISTE);
-  if (iguais.length) throw new ErroHttp(409, MSG_DE_USUARIO);
+  // Dono inativo não recebe: aceita o contato (mesma regra da migração da Task 1).
+  if (iguais.some((u) => u.ativo)) throw new ErroHttp(409, MSG_DE_USUARIO);
 }
 
 function erroDeEscrita(error) {

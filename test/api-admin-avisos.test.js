@@ -16,6 +16,7 @@ const SO_INATIVO = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
 const OP_C2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const SUPER = '99999999-9999-4999-8999-999999999999';
 const SUPER_C1 = '88888888-8888-4888-8888-888888888888';
+const OP_INATIVO = '77777777-7777-4777-8777-777777777777';
 const SEGREDO = 'detalhe-interno-secreto';
 
 let usuarios;
@@ -32,6 +33,7 @@ function reset() {
     { ...base, id: OP_C2, cliente_id: C2, nome: 'Outro', email: 'outro@exemplo.test', role: 'operador' },
     { ...base, id: SUPER, cliente_id: null, nome: 'Super', email: 'super@exemplo.test', role: 'super_admin' },
     { ...base, id: SUPER_C1, cliente_id: C1, nome: 'Super C1', email: 'superc1@exemplo.test', role: 'super_admin' },
+    { ...base, id: OP_INATIVO, cliente_id: C1, nome: 'Ex-operador', email: 'ex@exemplo.test', role: 'operador', ativo: false },
   ];
   Object.assign(estado, { perfil: null, ops: [], auditoria: [], erroLeitura: null, erroInsert: null, erroUpdate: null, authUsado: false });
 }
@@ -136,7 +138,7 @@ console.error = () => {};
     const r = await chamar('admin', 'GET', { query: { cliente_id: C1 } });
     assert.strictEqual(r.code, 200);
     const ids = r.body.map((x) => x.id).sort();
-    assert.deepStrictEqual(ids, [OP_C1, ADM_C1, SO_C1, SO_INATIVO, SUPER_C1].sort());
+    assert.deepStrictEqual(ids, [OP_C1, ADM_C1, SO_C1, SO_INATIVO, SUPER_C1, OP_INATIVO].sort());
     const inativo = r.body.find((x) => x.id === SO_INATIVO);
     assert.strictEqual(inativo.ativo, false);
     assert.deepStrictEqual(Object.keys(r.body[0]).sort(), ['ativo', 'email', 'id', 'nome', 'recebe_alertas', 'recebe_relatorio', 'role']);
@@ -218,6 +220,19 @@ console.error = () => {};
     assert.strictEqual(r.code, 409);
     assert.strictEqual(r.body.error, 'Este e-mail já é de um usuário; ligue as opções nele');
     semEscrita();
+  });
+
+  await caso('POST com e-mail só de usuário INATIVO do cliente cria o so_email', async () => {
+    const r = await chamar('admin', 'POST', { body: { ...NOVO, email: ' EX@exemplo.test ' } });
+    assert.strictEqual(r.code, 201);
+    assert.strictEqual(linha('novo-id').email, 'ex@exemplo.test');
+    assert.strictEqual(linha('novo-id').role, 'so_email');
+    assert.strictEqual(linha(OP_INATIVO).ativo, false);
+  });
+
+  await caso('PUT para e-mail só de usuário INATIVO do cliente é aceito', async () => {
+    assert.strictEqual((await chamar('admin', 'PUT', { query: { id: SO_C1 }, body: { email: 'ex@exemplo.test' } })).code, 200);
+    assert.strictEqual(linha(SO_C1).email, 'ex@exemplo.test');
   });
 
   await caso('POST com e-mail de usuário de OUTRO cliente é permitido', async () => {
