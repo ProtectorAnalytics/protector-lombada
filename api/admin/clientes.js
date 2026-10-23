@@ -8,6 +8,25 @@ async function comContagemDestinatarios(clientes) {
   return clientes.map((c) => ({ ...c, destinatarios_email: contagem.get(c.id) || 0 }));
 }
 
+/**
+ * Apaga o que pertence ao cliente, parando no primeiro erro (supabase-js não
+ * lança). so_email (sem login) vem antes dos demais usuários: a FK de
+ * usuarios.cliente_id é ON DELETE SET NULL, e so_email sem cliente viola o
+ * check da 2.2.
+ */
+async function excluirDadosDoCliente(clienteId) {
+  const etapas = [
+    () => supabase.from('veiculos').delete().eq('cliente_id', clienteId),
+    () => supabase.from('usuarios').delete().eq('cliente_id', clienteId).eq('role', 'so_email'),
+    () => supabase.from('cameras').delete().eq('cliente_id', clienteId),
+    () => supabase.from('usuarios').delete().eq('cliente_id', clienteId),
+  ];
+  for (const etapa of etapas) {
+    const { error } = await etapa();
+    if (error) throw error;
+  }
+}
+
 module.exports = async function handler(req, res) {
   try {
     const { method } = req;
@@ -189,16 +208,12 @@ module.exports = async function handler(req, res) {
       if (!clienteId) return res.status(400).json({ error: 'ID do cliente obrigatório' });
 
       if (permanent) {
-        // Exclusão permanente: remove veículos, emails, câmeras e o cliente
-        const { data: cliente } = await supabase.from('clientes').select('nome').eq('id', clienteId).single();
-        await supabase.from('veiculos').delete().eq('cliente_id', clienteId);
-        // so_email (sem login) primeiro: a FK de usuarios.cliente_id é
-        // ON DELETE SET NULL, e so_email sem cliente viola o check da 2.2.
-        const { error: soEmailErr } = await supabase
-          .from('usuarios').delete().eq('cliente_id', clienteId).eq('role', 'so_email');
-        if (soEmailErr) throw soEmailErr;
-        await supabase.from('cameras').delete().eq('cliente_id', clienteId);
-        await supabase.from('usuarios').delete().eq('cliente_id', clienteId);
+        // Exclusão permanente: remove veículos, contatos, câmeras, usuários e o
+        // cliente, nesta ordem; qualquer erro para tudo antes de apagar o cliente.
+        const { data: cliente, error: leituraErr } = await supabase
+          .from('clientes').select('nome').eq('id', clienteId).maybeSingle();
+        if (leituraErr) throw leituraErr;
+        await excluirDadosDoCliente(clienteId);
         const { error } = await supabase.from('clientes').delete().eq('id', clienteId);
         if (error) throw error;
 
@@ -223,7 +238,8 @@ module.exports = async function handler(req, res) {
       if (error) throw error;
 
       // Desativar câmeras do cliente
-      await supabase.from('cameras').update({ ativa: false }).eq('cliente_id', clienteId);
+      const { error: camErr } = await supabase.from('cameras').update({ ativa: false }).eq('cliente_id', clienteId);
+      if (camErr) throw camErr;
 
       await registrarAuditoria({
         usuarioId: profile.id,

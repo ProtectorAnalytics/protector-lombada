@@ -23,6 +23,7 @@ const ROLES_GESTAO = ['super_admin', 'admin_cliente'];
 const ROLE_CONTATO = 'so_email';
 const ROLES_INTOCAVEIS = ['super_admin', 'portaria'];
 const UNICA_VIOLADA = '23505';
+const FK_VIOLADA = '23503';
 const PAGINA = 1000;
 const COLUNAS = 'id, cliente_id, nome, email, role, ativo, recebe_alertas, recebe_relatorio';
 const CAMPOS_PROIBIDOS = ['role', 'auth_id', 'senha'];
@@ -126,6 +127,7 @@ async function criar(req, res) {
   exigirAcesso(profile, novo.cliente_id);
   await conferirEmailLivre(novo.cliente_id, novo.email, null);
   const { data, error } = await supabase.from('usuarios').insert(novo).select(COLUNAS).single();
+  if (error?.code === FK_VIOLADA) throw new ErroHttp(404, 'Cliente não encontrado');
   if (error) throw erroDeEscrita(error);
   await registrarAuditoria({
     usuarioId: profile.id, acao: 'criar', tabela: 'usuarios', registroId: data.id,
@@ -181,8 +183,12 @@ async function atualizar(req, res) {
   const { profile } = await autenticar(req, ROLES_GESTAO);
   const alvo = await carregarAlvo(profile, req.query.id);
   const mudancas = lerAlteracoes(await lerCorpo(req), alvo);
-  if (mudancas.email !== undefined && mudancas.email !== avisosLib.normalizarEmail(alvo.email)) {
-    await conferirEmailLivre(alvo.cliente_id, mudancas.email, alvo.id);
+  const emailAtual = avisosLib.normalizarEmail(alvo.email);
+  const emailFinal = mudancas.email !== undefined ? mudancas.email : emailAtual;
+  // Reativar um so_email vale como criar: o e-mail pode ter virado de um usuário ativo.
+  const reativando = mudancas.ativo === true && !alvo.ativo;
+  if (emailFinal !== emailAtual || reativando) {
+    await conferirEmailLivre(alvo.cliente_id, emailFinal, alvo.id);
   }
   const atual = await gravar(alvo, mudancas);
   await auditar(req, profile, 'atualizar', alvo, mudancas);

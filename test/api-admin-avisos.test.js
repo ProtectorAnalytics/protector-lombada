@@ -361,6 +361,36 @@ console.error = () => {};
     assert.strictEqual(estado.auditoria.length, 0);
   });
 
+  await caso('PUT reativando so_email cujo e-mail agora é de usuário ATIVO do cliente → 409 sem escrita', async () => {
+    linha(OP_C1).email = ' Antigo@Exemplo.test';
+    const r = await chamar('admin', 'PUT', { query: { id: SO_INATIVO }, body: { ativo: true } });
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(r.body.error, 'Este e-mail já é de um usuário; ligue as opções nele');
+    semEscrita();
+    assert.strictEqual(linha(SO_INATIVO).ativo, false);
+  });
+
+  await caso('PUT reativando so_email com e-mail livre (dono inativo não conta) → 200', async () => {
+    linha(OP_INATIVO).email = 'antigo@exemplo.test';
+    const r = await chamar('admin', 'PUT', { query: { id: SO_INATIVO }, body: { ativo: true } });
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(linha(SO_INATIVO).ativo, true);
+  });
+
+  await caso('PUT reativando com e-mail novo confere o e-mail novo', async () => {
+    const r = await chamar('admin', 'PUT', { query: { id: SO_INATIVO }, body: { ativo: true, email: 'operador@exemplo.test' } });
+    assert.strictEqual(r.code, 409);
+    semEscrita();
+  });
+
+  await caso('POST com cliente_id UUID válido que não existe (23503) → 404 "Cliente não encontrado"', async () => {
+    estado.erroInsert = { code: '23503', message: SEGREDO };
+    const r = await chamar('super', 'POST', { body: { ...NOVO, cliente_id: '44444444-4444-4444-8444-444444444444' } });
+    assert.strictEqual(r.code, 404);
+    assert.strictEqual(r.body.error, 'Cliente não encontrado');
+    assert.strictEqual(estado.auditoria.length, 0);
+  });
+
   // --- DELETE ---
   await caso('DELETE desativa so_email, auditado', async () => {
     const r = await chamar('admin', 'DELETE', { query: { id: SO_C1 } });

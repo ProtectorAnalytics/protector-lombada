@@ -57,13 +57,20 @@ function origemDe(profile, origemEnviada) {
   return profile.role === 'super_admin' ? 'admin' : 'painel';
 }
 
+const ehObjetoJson = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** Corpo tem de ser um objeto JSON; null, lista, texto ou número → 400 (não 500). */
 async function lerCorpo(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
-  try {
-    return JSON.parse(await readBody(req) || '{}');
-  } catch {
-    throw new ErroHttp(400, 'Corpo da requisição inválido');
+  let corpo = req.body;
+  if (corpo === undefined) {
+    try {
+      corpo = JSON.parse(await readBody(req) || '{}');
+    } catch {
+      throw new ErroHttp(400, 'Corpo inválido');
+    }
   }
+  if (!ehObjetoJson(corpo)) throw new ErroHttp(400, 'Corpo inválido');
+  return corpo;
 }
 
 async function buscarVinculo(id) {

@@ -1816,8 +1816,8 @@ async function loadDashboard() {
       tbody.innerHTML = data.clientes.map(c => {
         const st = statusPorCliente[c.id] || { online: 0, total: 0 };
         const statusColor = st.total === 0 ? 'var(--text-muted)' : (st.online === st.total ? 'var(--green)' : (st.online > 0 ? '#b45309' : 'var(--red)'));
-        return `<tr style="cursor:pointer" onclick="openClienteDetail('${c.id}')">
-        <td><a href="#cliente/${c.id}" onclick="event.stopPropagation();openClienteDetail('${c.id}');return false" style="color:var(--text-primary);text-decoration:none;font-weight:700">${esc(c.nome)}</a></td>
+        return `<tr style="cursor:pointer" data-cli-acao="abrir" data-id="${esc(c.id)}">
+        <td><a href="#cliente/${esc(c.id)}" data-cli-acao="abrir" data-id="${esc(c.id)}" style="color:var(--text-primary);text-decoration:none;font-weight:700">${esc(c.nome)}</a></td>
         <td>${esc(c.cidade_uf || '')}</td>
         <td>${c.cameras?.[0]?.count || 0}</td>
         <td><span style="color:${statusColor};font-weight:600">${st.online}/${st.total}</span></td>
@@ -2104,7 +2104,7 @@ function renderClientes() {
   if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Nenhum cliente encontrado</td></tr>'; return; }
 
   tbody.innerHTML = filtered.map(c => `<tr>
-    <td><a href="#" onclick="openClienteDetail('${c.id}');return false" style="color:var(--accent);text-decoration:none;font-weight:600">${esc(c.nome)}</a></td>
+    <td><a href="#" data-cli-acao="abrir" data-id="${esc(c.id)}" style="color:var(--accent);text-decoration:none;font-weight:600">${esc(c.nome)}</a></td>
     <td>${esc(c.cidade_uf || '')}</td>
     <td>${esc(c.cnpj || '—')}</td>
     <td>${c.limite_velocidade} km/h</td>
@@ -2112,12 +2112,29 @@ function renderClientes() {
     <td>${c.ativo ? '<span class="badge-active">Ativo</span>' : '<span class="badge-inactive">Inativo</span>'}</td>
     <td class="actions-cell">
       ${c.ativo ? `<a class="btn btn-ghost btn-sm" style="text-decoration:none" href="${esc(acessoPainel.urlDoPainel(c.id))}" target="_blank" rel="noopener" aria-label="${esc(`Abrir painel de ${c.nome}`)}">Abrir painel</a>` : ''}
-      <button class="btn btn-ghost btn-sm" onclick="openClienteModal(clientesData.find(x=>x.id==='${c.id}'))">Editar</button>
-      ${c.ativo ? `<button class="btn btn-danger btn-sm" onclick="toggleCliente('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCliente('${c.id}',true)">Ativar</button>`}
-      <button class="btn btn-danger-solid btn-sm" onclick="deleteCliente('${c.id}','${esc(c.nome)}')">Excluir</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-cli-acao="editar" data-id="${esc(c.id)}">Editar</button>
+      ${c.ativo ? `<button type="button" class="btn btn-danger btn-sm" data-cli-acao="desativar" data-id="${esc(c.id)}">Desativar</button>` : `<button type="button" class="btn btn-ghost btn-sm" data-cli-acao="ativar" data-id="${esc(c.id)}">Ativar</button>`}
+      <button type="button" class="btn btn-danger-solid btn-sm" data-cli-acao="excluir" data-id="${esc(c.id)}">Excluir</button>
     </td>
   </tr>`).join('');
 }
+
+// Um ouvinte para as ações das listas de clientes (aba Clientes e início):
+// nada do cliente vai para JS inline; o registro sai da lista pelo id.
+document.addEventListener('click', (e) => {
+  const botao = e.target.closest('#clientes-body [data-cli-acao], #dash-clientes-body [data-cli-acao]');
+  if (!botao) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const id = botao.dataset.id;
+  const acao = botao.dataset.cliAcao;
+  if (acao === 'abrir') return openClienteDetail(id);
+  const c = clientesData.find((x) => x.id === id);
+  if (!c) return;
+  if (acao === 'editar') openClienteModal(c);
+  else if (acao === 'desativar' || acao === 'ativar') toggleCliente(c.id, acao === 'ativar');
+  else if (acao === 'excluir') deleteCliente(c.id, c.nome);
+});
 
 function openClienteModal(cliente = null) {
   const isEdit = !!cliente;
@@ -2338,7 +2355,7 @@ async function deleteCliente(id, nome) {
   });
   if (!confirmado) return;
   try {
-    await api('/clientes?id=' + id + '&permanent=true', 'DELETE');
+    await api('/clientes?id=' + encodeURIComponent(id) + '&permanent=true', 'DELETE');
     toast('Cliente excluído permanentemente!');
     loadClientes();
     loadDashboard();
@@ -2417,14 +2434,26 @@ function renderCameras() {
     <td>${c.ativa ? '<span class="badge-active">Ativa</span>' : '<span class="badge-inactive">Inativa</span>'}</td>
     <td>${fmtDate(c.criado_em)}</td>
     <td class="actions-cell">
-      <a class="btn btn-info btn-sm" href="/admin/camera-saude.html?id=${c.id}" target="_blank" title="Painel de saúde, telemetria e diagnóstico">Saúde</a>
-      <button class="btn btn-ghost btn-sm" onclick="openCameraModal(camerasData.find(x=>x.id==='${c.id}'))">Editar</button>
-      ${c.ativa ? `<button class="btn btn-danger btn-sm" onclick="toggleCamera('${c.id}',false)">Desativar</button>` : `<button class="btn btn-ghost btn-sm" onclick="toggleCamera('${c.id}',true)">Ativar</button>`}
-      <button class="btn btn-danger-solid btn-sm" onclick="deleteCamera('${c.id}','${esc(c.nome)}')">Excluir</button>
+      <a class="btn btn-info btn-sm" href="/admin/camera-saude.html?id=${encodeURIComponent(c.id)}" target="_blank" title="Painel de saúde, telemetria e diagnóstico">Saúde</a>
+      <button type="button" class="btn btn-ghost btn-sm" data-cam-acao="editar" data-id="${esc(c.id)}">Editar</button>
+      ${c.ativa ? `<button type="button" class="btn btn-danger btn-sm" data-cam-acao="desativar" data-id="${esc(c.id)}">Desativar</button>` : `<button type="button" class="btn btn-ghost btn-sm" data-cam-acao="ativar" data-id="${esc(c.id)}">Ativar</button>`}
+      <button type="button" class="btn btn-danger-solid btn-sm" data-cam-acao="excluir" data-id="${esc(c.id)}">Excluir</button>
     </td>
   </tr>`;
   }).join('');
 }
+
+// Ações da lista de câmeras: só o id escapado no HTML; a câmera sai da lista.
+document.addEventListener('click', (e) => {
+  const botao = e.target.closest('#cameras-body [data-cam-acao]');
+  if (!botao) return;
+  const c = camerasData.find((x) => x.id === botao.dataset.id);
+  if (!c) return;
+  const acao = botao.dataset.camAcao;
+  if (acao === 'editar') openCameraModal(c);
+  else if (acao === 'desativar' || acao === 'ativar') toggleCamera(c.id, acao === 'ativar');
+  else if (acao === 'excluir') deleteCamera(c.id, c.nome);
+});
 
 function openCameraModal(camera = null) {
   const isEdit = !!camera;
@@ -2494,7 +2523,7 @@ async function deleteCamera(id, nome) {
   });
   if (!confirmado) return;
   try {
-    await api('/cameras?id=' + id + '&permanent=true', 'DELETE');
+    await api('/cameras?id=' + encodeURIComponent(id) + '&permanent=true', 'DELETE');
     toast('Câmera excluída permanentemente!');
     loadCameras();
   } catch (err) { toast(err.message, true); }
@@ -2716,8 +2745,8 @@ function renderVeiculos() {
     <td>${esc(v.cor || '—')}</td>
     <td>${vigente ? '<span class="badge-active">Vigente</span>' : `<span class="badge-inactive">Encerrado em ${esc(fmtDate(v.encerrado_em))}</span>`}</td>
     <td class="actions-cell">${vigente ? `
-      <button class="btn btn-ghost btn-sm" onclick="openVeiculoModal(veiculosData.find(x=>x.id==='${esc(v.id)}'))">Editar</button>
-      <button class="btn btn-danger btn-sm" onclick="encerrarVinculo('${esc(v.id)}','${esc(v.placa)}')">Encerrar vínculo</button>` : ''}
+      <button type="button" class="btn btn-ghost btn-sm" data-vei-acao="editar" data-id="${esc(v.id)}">Editar</button>
+      <button type="button" class="btn btn-danger btn-sm" data-vei-acao="encerrar" data-id="${esc(v.id)}">Encerrar vínculo</button>` : ''}
     </td>
   </tr>`;
   }).join('');
@@ -2813,6 +2842,16 @@ async function saveVeiculo(id) {
     loadVeiculos();
   } catch (err) { document.getElementById('f-vei-error').textContent = err.message; }
 }
+
+// Ações da lista de veículos: só o id escapado no HTML; o vínculo sai da lista.
+document.addEventListener('click', (e) => {
+  const botao = e.target.closest('#veiculos-body [data-vei-acao]');
+  if (!botao) return;
+  const v = veiculosData.find((x) => x.id === botao.dataset.id);
+  if (!v) return;
+  if (botao.dataset.veiAcao === 'editar') openVeiculoModal(v);
+  else if (botao.dataset.veiAcao === 'encerrar') encerrarVinculo(v.id, v.placa);
+});
 
 async function encerrarVinculo(id, placa) {
   const confirmado = await confirmarAcao({

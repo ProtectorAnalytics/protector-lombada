@@ -84,9 +84,14 @@ async function caso(nome, fn) { await fn(); passou++; console.log(`ok - ${nome}`
     await assert.rejects(() => criarDestinatarios(db).destinatariosDoCliente(CLI, 'alerta'), /conexão caiu/);
   });
 
-  await caso('sem ninguém marcado, usa o legado clientes.emails_notificacao', async () => {
+  await caso('sem ninguém marcado, ninguém recebe (sem cair no legado clientes.emails_notificacao)', async () => {
     const db = mockDb({ usuarios: [u({ email: 'nenhum@exemplo.com' })], clientes: [{ id: CLI, emails_notificacao: ['legado@exemplo.com'] }] });
-    assert.deepStrictEqual(await criarDestinatarios(db).destinatariosDoCliente(CLI, 'alerta'), ['legado@exemplo.com']);
+    assert.deepStrictEqual(await criarDestinatarios(db).destinatariosDoCliente(CLI, 'alerta'), []);
+  });
+
+  await caso('lib não consulta mais clientes.emails_notificacao', async () => {
+    const fonte = require('node:fs').readFileSync(require.resolve('../lib/destinatarios'), 'utf8');
+    assert.doesNotMatch(fonte, /emails_notificacao|from\('clientes'\)/);
   });
 
   await caso('tipo inválido é recusado', async () => {

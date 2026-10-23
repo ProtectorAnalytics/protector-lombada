@@ -620,6 +620,18 @@ console.error = () => {};
     assert.ok(!op.filtros.some(([, c]) => c === 'ativo'));
   });
 
+  await caso('corpo que não é objeto JSON (null, lista, texto, número) → 400 "Corpo inválido" sem escrita', async () => {
+    for (const body of [null, [], [base()], 'ABC1234', 42, true]) {
+      for (const [perfil, method, query] of [['admin', 'POST', {}], ['admin', 'PUT', { id: V_VIGENTE }], ['portaria', 'PUT', { id: V_VIGENTE }]]) {
+        const r = await chamar(perfil, method, { query, body });
+        assert.strictEqual(r.code, 400, `${method} ${JSON.stringify(body)}`);
+        assert.strictEqual(r.body.error, 'Corpo inválido');
+        assert.strictEqual(escritas().length, 0);
+        assert.strictEqual(estado.rpc.length, 0);
+      }
+    }
+  });
+
   console.error = originalError;
   console.log(`${passou} testes passaram`);
 })().catch((e) => { console.error = originalError; console.error(e); process.exit(1); });
