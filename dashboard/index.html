@@ -3762,7 +3762,7 @@
       if (gestaoPortaria && gestaoPortaria.temAlteracoes()) {
         const ok = await portariaGestao.confirmarNaPagina({
           titulo: 'Sair sem salvar?',
-          mensagem: 'As alterações nas unidades ainda não foram salvas e serão perdidas.',
+          texto: 'As alterações nas unidades ainda não foram salvas e serão perdidas.',
           textoOk: 'Sair sem salvar',
           textoCancel: 'Continuar editando',
         });

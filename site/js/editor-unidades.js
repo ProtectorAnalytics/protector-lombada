@@ -268,8 +268,13 @@
     const removidas = new Set(pendentes.removidas || []);
     const patches = new Map((pendentes.alteradas || []).map((a) => [a.id, a.patch]));
     let itens = e.itens.filter((u) => !removidas.has(u.id)).map((u) => (patches.has(u.id) ? { ...u, ...patches.get(u.id) } : u));
+    // POST que gravou mas cuja resposta se perdeu: a releitura já traz a unidade.
+    const presentes = new Set(itens.map(chaveDe));
     (pendentes.novas || []).forEach((u) => {
-      const n = novoItem(e, { bloco: u.bloco || '', nome: u.nome, andar: u.andar || '', tipo: tipoId(u.tipo) });
+      const campos = { bloco: limpar(u.bloco), nome: limpar(u.nome), andar: limpar(u.andar), tipo: tipoId(u.tipo) };
+      if (presentes.has(chaveDe(campos))) return;
+      presentes.add(chaveDe(campos));
+      const n = novoItem(e, campos);
       e = { ...e, seq: n.seq };
       itens = [...itens, n.item];
     });

@@ -220,6 +220,17 @@ caso('reaplicar pendentes após salvar com falha: o que não foi salvo volta ao 
   assert.deepStrictEqual(ed.diffParaSalvar(e), pend);
 });
 
+caso('reaplicar pendentes: nova que a releitura já trouxe (POST gravou, resposta perdida) não duplica', () => {
+  const relida = [...SERVIDOR, { id: 'a9', bloco: 'Torre 1', nome: '103', andar: null, tipo: 'casa' }];
+  const pend = {
+    novas: [{ bloco: 'torre 1', nome: ' 103 ', andar: '', tipo: 'casa' }, { bloco: 'Torre 1', nome: '104', andar: '', tipo: '' }],
+    removidas: [], alteradas: [],
+  };
+  const e = ed.reaplicarPendentes(relida, pend);
+  assert.deepStrictEqual(nomesDo(e, 'Torre 1'), ['101', '102', '103', '104']);
+  assert.deepStrictEqual(ed.diffParaSalvar(e).novas, [{ bloco: 'Torre 1', nome: '104', andar: '', tipo: 'apartamento' }]);
+});
+
 // ---------------------------------------------------------------- HTML seguro
 
 caso('HTML do editor escapa bloco e unidade (XSS)', () => {
@@ -314,6 +325,46 @@ caso('telas: admin e painel carregam os scripts da gestão; sem confirm() nativo
   const portaria = ler('portaria/index.html');
   assert.ok(portaria.includes("localStorage.removeItem('lombada-portaria-porteiro')"));
   assert.ok(portaria.includes('<script src="/js/unidade.js"></script>'));
+});
+
+/** Recorta a função que começa em `inicio` até a chave que fecha o corpo. */
+function corpoDaFuncao(fonte, i) {
+  let nivel = 0;
+  const abre = fonte.indexOf('{', fonte.indexOf(')', i));
+  for (let j = abre; j < fonte.length; j++) {
+    if (fonte[j] === '{') nivel++;
+    else if (fonte[j] === '}' && --nivel === 0) return fonte.slice(i, j + 1);
+  }
+  throw new Error('chaves desbalanceadas');
+}
+
+caso('controlador: editor travado durante o Salvar (inert + guarda nos eventos)', () => {
+  const ctl = ler('site/js/portaria-gestao.js');
+  const salvar = corpoDaFuncao(ctl, ctl.indexOf('async function salvar('));
+  assert.ok(/travarEditor\(U, true\)[\s\S]*finally[\s\S]*travarEditor\(U, false\)/.test(salvar), salvar);
+  const travar = corpoDaFuncao(ctl, ctl.indexOf('function travarEditor('));
+  assert.ok(travar.includes('secao.inert = travar'));
+  ['function aoMudarUnidades(', 'function aoTeclarUnidades(', 'function ligarEventosUnidades(', 'async function importar(']
+    .forEach((f) => assert.ok(corpoDaFuncao(ctl, ctl.indexOf(f)).includes('U.salvando'), f));
+});
+
+caso('controlador: nenhuma função com 50 linhas ou mais', () => {
+  const ctl = ler('site/js/portaria-gestao.js');
+  const inicio = ctl.indexOf('{', ctl.indexOf("'use strict'") - 30);
+  const corpo = ctl.slice(inicio + 1);
+  const grandes = [...corpo.matchAll(/^ {2}(?:async )?function (\w+)\(/gm)]
+    .map((m) => [m[1], corpoDaFuncao(corpo, m.index).split('\n').length])
+    .filter(([, n]) => n >= 50);
+  assert.deepStrictEqual(grandes, []);
+});
+
+caso('confirmarNaPagina põe título e texto por textContent (sem HTML do chamador)', () => {
+  const ctl = ler('site/js/portaria-gestao.js');
+  const preencher = corpoDaFuncao(ctl, ctl.indexOf('function preencherDialogo('));
+  assert.ok(!preencher.includes('innerHTML'));
+  assert.ok(preencher.includes('textContent = titulo'));
+  const dialogo = corpoDaFuncao(ctl, ctl.indexOf('function htmlDialogo('));
+  assert.ok(!dialogo.includes('${'), 'o HTML fixo do diálogo não interpola nada');
 });
 
 caso('scripts inline de admin, painel e portaria compilam (node --check)', () => {
