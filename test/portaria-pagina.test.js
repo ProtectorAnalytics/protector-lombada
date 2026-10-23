@@ -35,12 +35,13 @@ function extrair(fonte, inicio) {
 }
 
 /** Roda as funções pedidas num contexto isolado com os stubs dados; devolve as funções. */
-function carregar(nomes, extras = {}) {
+function carregarComContexto(nomes, extras = {}) {
   const ctx = vm.createContext({ placaLib, vinculoPlacaLib, esc, Date, Promise, JSON, Set, Map, ...extras });
-  const codigo = nomes.map((n) => extrair(FONTE, `function ${n}(`)).join('\n');
+  const codigo = nomes.map((n) => extrair(FONTE, FONTE.includes(`async function ${n}(`) ? `async function ${n}(` : `function ${n}(`)).join('\n');
   vm.runInContext(`${codigo}\nthis.__f = { ${nomes.join(', ')} };`, ctx);
-  return ctx.__f;
+  return { f: ctx.__f, ctx };
 }
+const carregar = (nomes, extras) => carregarComContexto(nomes, extras).f;
 
 let passou = 0;
 let falhou = 0;
@@ -205,6 +206,47 @@ caso('estado devolvido é cópia (mexer nele não muda o cadastro)', () => {
   assert.strictEqual(c.estado().placa, 'ABC1D23');
 });
 
+caso('trocar um cadastro existente exige unidade ou nome (não grava vínculo vazio)', async () => {
+  const { c, chamadas } = novoCadastro(ctxPortaria);
+  c.definirPlaca('ABC1D23');
+  c.formularioNovo({ temVinculo: true });
+  assert.strictEqual(c.estado().tipo, '', 'tipo não pode vir pré-marcado ao trocar');
+  c.escolherTipo('visitante');
+  let r = await c.salvar();
+  assert.strictEqual(r.ok, false);
+  assert.match(r.erro, /já tem cadastro.*unidade.*nome/);
+  assert.strictEqual(chamadas.length, 0);
+  c.definirNome('Ana');
+  r = await c.salvar();
+  assert.strictEqual(r.ok, true);
+  const d = novoCadastro(ctxPortaria);
+  d.c.definirPlaca('ABC1D23');
+  d.c.formularioNovo({ temVinculo: true });
+  d.c.escolherTipo('morador');
+  d.c.escolherUnidade('u1');
+  assert.strictEqual((await d.c.salvar()).ok, true);
+});
+
+caso('placa sem cadastro grava só com o tipo (formulário novo zera o resto e mantém a placa)', async () => {
+  const { c, chamadas } = novoCadastro(ctxPortaria);
+  c.definirPlaca('ABC1D23');
+  c.escolherTipo('morador');
+  c.definirNome('X');
+  c.formularioNovo({});
+  const e = c.estado();
+  assert.deepStrictEqual([e.placa, e.tipo, e.nome, e.temVinculo], ['ABC1D23', '', '', false]);
+  c.escolherTipo('prestador');
+  assert.strictEqual((await c.salvar()).ok, true);
+  assert.strictEqual(chamadas.length, 1);
+});
+
+caso('"Não"/"Trocar" abre o formulário sem tipo pré-marcado', () => {
+  const linha = FONTE.split('\n').find((l) => l.includes("$('pergunta-nao').addEventListener"));
+  assert.ok(linha, 'listener do pergunta-nao');
+  assert.ok(!/tipo/.test(linha), linha.trim());
+  assert.ok(/temVinculo/.test(linha), linha.trim());
+});
+
 // ---- Vínculo vigente
 const fnsVinculo = () => carregar(['htmlVinculo', 'perguntaDoVinculo', 'nomeUnidadeDe']);
 
@@ -290,6 +332,71 @@ caso('rede de segurança: lombada leu 1 caractere diferente e a cadastrada não 
   assert.strictEqual(correcaoSugerida('ABC1D23', [cap('SEM PLACA'), cap('')]), null);
   assert.strictEqual(correcaoSugerida('ABC1234', [cap('ABC1284')]), 'ABC1284');
   assert.strictEqual(correcaoSugerida('ABC1D23', []), null);
+});
+
+caso('rede de segurança ignora placa lida que já tem cadastro vigente (outro carro conhecido)', () => {
+  const { correcaoSugerida } = carregar(['correcaoSugerida']);
+  const cap = (placa) => ({ placa, timestamp: '2026-10-22T10:00:00Z' });
+  const indice = vinculoPlacaLib.indexarVinculos([
+    { placa: 'ABC1D28', encerrado_em: null, vigente_desde: null, criado_em: '2026-01-01T00:00:00Z' },
+    { placa: 'ABC1D29', encerrado_em: '2026-05-01T00:00:00Z', vigente_desde: null, criado_em: '2026-01-01T00:00:00Z' },
+  ]);
+  assert.strictEqual(correcaoSugerida('ABC1D23', [cap('ABC1D28')], indice), null);
+  assert.strictEqual(correcaoSugerida('ABC1D23', [cap('ABC1D28'), cap('ABC1D29')], indice), 'ABC1D29'); // encerrado não conta
+  assert.strictEqual(correcaoSugerida('ABC1D23', [cap('ABC1D28')], new Map()), 'ABC1D28');
+});
+
+// ---- Suspeita só do próprio condomínio
+caso('suspeita: só exclui quando a API diz que é deste condomínio; falha da API não exclui; cache na sessão', async () => {
+  const { suspeitasDoCondominio } = carregar(['suspeitasDoCondominio']);
+  const perguntas = [];
+  const respostas = { AAA1A11: { suspeita_de: 'AAA1A17' }, BBB2B22: {}, CCC3C33: 'falha' };
+  const perguntar = async (placa) => {
+    perguntas.push(placa);
+    if (respostas[placa] === 'falha') throw new Error('rede');
+    return respostas[placa];
+  };
+  const cache = new Map();
+  const fora = await suspeitasDoCondominio(['AAA1A11', 'BBB2B22', 'CCC3C33'], perguntar, cache);
+  assert.deepStrictEqual([...fora], ['AAA1A11']);
+  assert.ok(!cache.has('CCC3C33'), 'falha não vai para o cache');
+  const fora2 = await suspeitasDoCondominio(['AAA1A11', 'BBB2B22', 'CCC3C33'], perguntar, cache);
+  assert.deepStrictEqual([...fora2], ['AAA1A11']);
+  assert.deepStrictEqual(perguntas, ['AAA1A11', 'BBB2B22', 'CCC3C33', 'CCC3C33']);
+});
+
+caso('lista sem cadastro: suspeita de outro condomínio continua na lista', async () => {
+  const { suspeitasDoCondominio } = carregar(['suspeitasDoCondominio']);
+  const semCadastroLib = require('../site/js/sem-cadastro');
+  const capturas = [{ placa: 'AAA1A11', timestamp: '2026-10-22T10:00:00Z' }, { placa: 'BBB2B22', timestamp: '2026-10-22T10:01:00Z' }];
+  const suspeitas = await suspeitasDoCondominio(['AAA1A11', 'BBB2B22'], async (p) => (p === 'AAA1A11' ? { suspeita_de: 'X' } : {}), new Map());
+  const lista = semCadastroLib.listarSemCadastro(capturas, new Map(), { suspeitas });
+  assert.deepStrictEqual(lista.map((g) => g.placa), ['BBB2B22']);
+  assert.ok(FONTE.includes('/api/admin/veiculos-base?placa='), 'a página pergunta à API de quem é a suspeita');
+});
+
+// ---- Aparelho compartilhado
+caso('sair/trocar porteiro limpa rede de segurança e avisos', () => {
+  const els = { 'aviso-correcao': { hidden: false }, 'aviso-sucesso': { hidden: false } };
+  const limpos = [];
+  const { f, ctx } = carregarComContexto(['limparAvisos', 'pararRede'], {
+    $: (id) => els[id],
+    rede: { id: 'v1', timer: 7, lida: 'ABC1D28' },
+    timerSucesso: 9,
+    clearInterval: (t) => limpos.push(['i', t]),
+    clearTimeout: (t) => limpos.push(['t', t]),
+  });
+  f.limparAvisos();
+  assert.strictEqual(ctx.rede, null);
+  assert.strictEqual(ctx.timerSucesso, null);
+  assert.strictEqual(els['aviso-correcao'].hidden, true);
+  assert.strictEqual(els['aviso-sucesso'].hidden, true);
+  assert.deepStrictEqual(limpos, [['i', 7], ['t', 9]]);
+  ['function sairDaPagina(', 'function mostrarTurno('].forEach((n) => assert.ok(extrair(FONTE, n).includes('limparAvisos()'), n));
+});
+
+caso('cartão do vínculo sem borda lateral grossa', () => {
+  assert.ok(!/\.vinculo\s*\{[^}]*border-left/.test(PAGINA));
 });
 
 // ---- Estáticos

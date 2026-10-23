@@ -176,7 +176,7 @@
     legend { padding: 0; }
 
     /* Vínculo vigente */
-    .vinculo { border-left: 4px solid var(--cor-tipo); padding: 4px 0 4px 14px; }
+    .vinculo { padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-input); }
     .tipo-selo { display: inline-flex; align-items: center; gap: 8px; color: var(--cor-tipo); font-weight: 700; margin-bottom: 6px; }
     .tipo-selo span { color: var(--text-primary); }
     .vinculo-nome { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; overflow-wrap: anywhere; }
@@ -424,6 +424,10 @@
     if (ehPortaria && !(ctx.porteiro && ctx.porteiro.id)) return { erro: 'Escolha o porteiro do turno antes de salvar.' };
     const unidade = (ctx.unidades || []).find((u) => u.id === estado.unidadeId) || null;
     const nome = String(estado.nome || '').replace(/\s+/g, ' ').trim();
+    // Trocar um cadastro existente por um vazio apagaria quem é o carro.
+    if (estado.temVinculo && !unidade && !nome) {
+      return { erro: 'Esta placa já tem cadastro. Para trocar, escolha a unidade ou digite o nome.' };
+    }
     const corpo = {
       cliente_id: ctx.clienteId,
       placa,
@@ -441,7 +445,7 @@
    */
   function criarCadastro(opcoes) {
     const { contexto, enviar, aoMudar } = opcoes;
-    const VAZIO = { placa: '', unidadeId: '', nome: '', tipo: '', salvando: false, erro: '' };
+    const VAZIO = { placa: '', unidadeId: '', nome: '', tipo: '', temVinculo: false, salvando: false, erro: '' };
     let estado = { ...VAZIO };
     const mudar = (parcial) => {
       estado = { ...estado, ...parcial };
@@ -475,10 +479,32 @@
   }
 
   /**
-   * Rede de segurança: a lombada leu uma placa a 1 caractere da cadastrada e a
-   * cadastrada não passou → devolve a placa lida (como a câmera escreveu); senão null.
+   * Placas em 'suspeita' na base que são suspeita DESTE condomínio (a API
+   * confere suspeita_cliente_id, que o navegador não lê). Resposta guardada na
+   * sessão; falha da API não exclui (a placa aparece na lista).
    */
-  function correcaoSugerida(placaCadastrada, capturas) {
+  async function suspeitasDoCondominio(candidatas, perguntar, cache) {
+    const fora = new Set();
+    await Promise.all(candidatas.map(async (placa) => {
+      if (!cache.has(placa)) {
+        try {
+          const r = await perguntar(placa);
+          cache.set(placa, Boolean(r && r.suspeita_de));
+        } catch (e) {
+          return;
+        }
+      }
+      if (cache.get(placa)) fora.add(placa);
+    }));
+    return fora;
+  }
+
+  /**
+   * Rede de segurança: a lombada leu uma placa a 1 caractere da cadastrada, a
+   * cadastrada não passou e a lida não tem cadastro vigente (é outro carro
+   * conhecido) → devolve a placa lida (como a câmera escreveu); senão null.
+   */
+  function correcaoSugerida(placaCadastrada, capturas, indice) {
     const alvo = placaLib.paraMercosul(placaCadastrada);
     if (!alvo) return null;
     let lida = null;
@@ -486,7 +512,9 @@
       const m = placaLib.paraMercosul((c && c.placa) || '');
       if (!m) continue;
       if (m === alvo) return null;
-      if (!lida && placaLib.difereEmUm(m, alvo)) lida = placaLib.limpar(c.placa);
+      if (lida || !placaLib.difereEmUm(m, alvo)) continue;
+      if (indice && vinculoPlacaLib.vinculoVigente(indice, m)) continue;
+      lida = placaLib.limpar(c.placa);
     }
     return lida;
   }
@@ -525,6 +553,7 @@
   let pedidoConferencia = 0;
   let carregandoSem = false;
   let camerasNome = null;
+  let suspeitaPropria = new Map();
 
   const contextoCadastro = () => ({ clienteId: cliente && cliente.id, role: perfil && perfil.role, porteiro: porteiroAtual, unidades });
   const cadastro = criarCadastro({
@@ -662,10 +691,20 @@
     sairDaPagina();
   }
 
+  // Aparelho compartilhado: aviso de um porteiro não fica para o próximo.
+  function limparAvisos() {
+    pararRede();
+    rede = null;
+    clearTimeout(timerSucesso);
+    timerSucesso = null;
+    $('aviso-correcao').hidden = true;
+    $('aviso-sucesso').hidden = true;
+  }
+
   function sairDaPagina() {
     fecharCamera();
-    pararRede();
-    perfil = null; cliente = null; porteiroAtual = null; camerasNome = null;
+    limparAvisos();
+    perfil = null; cliente = null; porteiroAtual = null; camerasNome = null; suspeitaPropria = new Map();
     unidades = []; porteiros = []; vinculos = []; indiceVinculos = new Map();
     fotosAssinadas.limpar();
     recomecar();
@@ -681,6 +720,7 @@
 
   function mostrarTurno() {
     fecharCamera();
+    limparAvisos();
     $('lista-porteiros').innerHTML = htmlPorteiros(porteiros);
     $('turno-vazio').hidden = porteiros.length > 0;
     $('turno-erro').textContent = '';
@@ -969,7 +1009,7 @@
         .limit(200);
       if (rede !== r || !r.timer || error || !data) return;
       if (data.some((c) => vinculoPlacaLib.mesmaPlaca(c.placa, r.corpo.placa))) { pararRede(); return; }
-      const lida = correcaoSugerida(r.corpo.placa, data);
+      const lida = correcaoSugerida(r.corpo.placa, data, indiceVinculos);
       if (lida) { pararRede(); mostrarCorrecao(r, lida); }
     } catch (e) { /* tenta na próxima volta */ }
   }
@@ -1043,17 +1083,21 @@
     camerasNome = new Map((data || []).map((c) => [c.id, c.nome_exibicao || c.nome]));
   }
 
-  // Leituras duvidosas (base de veículos em 'suspeita') ficam fora da lista.
+  // Leitura duvidosa fica fora da lista só quando a suspeita é DESTE condomínio
+  // (como no painel): a base diz quem está em 'suspeita'; a API diz de quem é.
   async function carregarSuspeitas(capturas) {
     const chaves = [...new Set(capturas.map((c) => placaLib.paraMercosul(c.placa || '')).filter(Boolean))];
-    const suspeitas = new Set();
+    const candidatas = [];
     for (let i = 0; i < chaves.length; i += LOTE_BASE) {
       const { data, error } = await sb.from('veiculos_base')
         .select('placa, status').in('placa', chaves.slice(i, i + LOTE_BASE)).eq('status', 'suspeita');
-      if (error) return suspeitas; // sem o filtro, a lista ainda serve
-      (data || []).forEach((v) => suspeitas.add(v.placa));
+      if (error) return new Set(); // sem o filtro, a lista ainda serve
+      (data || []).forEach((v) => candidatas.push(v.placa));
     }
-    return suspeitas;
+    const clienteId = cliente.id;
+    const perguntar = (placa) => chamarApi(
+      `/api/admin/veiculos-base?placa=${encodeURIComponent(placa)}&cliente_id=${encodeURIComponent(clienteId)}`, 'GET');
+    return suspeitasDoCondominio(candidatas, perguntar, suspeitaPropria);
   }
 
   async function fotosDe(capturas) {
@@ -1142,7 +1186,7 @@
     $('campo-placa').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') confirmarPlaca(); });
     $('botao-confirmar').addEventListener('click', confirmarPlaca);
     $('pergunta-sim').addEventListener('click', manterVinculo);
-    $('pergunta-nao').addEventListener('click', () => abrirFormulario({ tipo: vinculoMostrado ? vinculoMostrado.tipo_pessoa : '' }));
+    $('pergunta-nao').addEventListener('click', () => abrirFormulario({ temVinculo: Boolean(vinculoMostrado) }));
     ligarEventosFormulario();
   }
 

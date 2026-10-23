@@ -42,7 +42,13 @@ function tabela(nome) {
 }
 
 stub('lib/auth-middleware', {
-  autenticar: async () => ({ profile: estado.profile }),
+  autenticar: async (_req, papeis) => {
+    estado.papeisPedidos = papeis;
+    if (estado.profile && !papeis.includes(estado.profile.role)) {
+      const e = new Error('Acesso negado'); e.status = 403; e.error = 'Acesso negado'; throw e;
+    }
+    return { profile: estado.profile };
+  },
   verificarAcessoCliente: (p, c) => p.role === 'super_admin' || p.cliente_id === c,
   registrarAuditoria: async () => {},
   supabase: { from: tabela },
@@ -195,6 +201,39 @@ async function caso(nome, fn) {
     await handler(req({ query: { placa: 'ABC1D28' } }), r);
     assert.strictEqual(r.code, 200);
     assert.deepStrictEqual(r.body, {});
+  });
+
+  await caso('portaria lê (GET) a suspeita do próprio condomínio', async () => {
+    estado.profile = { id: 'up', role: 'portaria', cliente_id: 'c1' };
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    const r = resp();
+    await handler(req({ query: { placa: 'ABC1D28', cliente_id: 'c1' } }), r);
+    assert.strictEqual(r.code, 200);
+    assert.deepStrictEqual(r.body, { suspeita_de: susp });
+  });
+
+  await caso('portaria não lê suspeita levantada por outro condomínio', async () => {
+    estado.profile = { id: 'up', role: 'portaria', cliente_id: 'c2' };
+    estado.tabelas.capturas = [{ id: 'x', cliente_id: 'c2', placa: 'ABC1D28', timestamp: recente() }];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    const r = resp();
+    await handler(req({ query: { placa: 'ABC1D28', cliente_id: 'c2' } }), r);
+    assert.deepStrictEqual(r.body, {});
+  });
+
+  await caso('portaria não usa os POST (mesma_placa / outro_carro): 403 sem mexer em nada', async () => {
+    estado.profile = { id: 'up', role: 'portaria', cliente_id: 'c1' };
+    estado.tabelas.capturas = [capC1('k1', 'ABC1D28')];
+    estado.tabelas.veiculos_base = [vbSusp('c1')];
+    for (const corpo of [{ acao: 'mesma_placa', captura_id: 'k1' }, { acao: 'outro_carro', placa: 'ABC1D28', cliente_id: 'c1' }]) {
+      const r = resp();
+      await handler(post(corpo), r);
+      assert.strictEqual(r.code, 403);
+      assert.ok(!estado.papeisPedidos.includes('portaria'));
+    }
+    assert.strictEqual(estado.updates.length, 0);
+    assert.strictEqual(estado.consultas.length, 0);
   });
 
   await caso('outro_carro em placa não vista no cliente devolve 404 sem chamar a API', async () => {
