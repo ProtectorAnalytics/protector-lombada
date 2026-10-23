@@ -4,7 +4,9 @@
  * Uso: node test/lista-dinamica.test.js
  */
 const assert = require('node:assert');
-const { linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra } = require('../site/js/lista-dinamica');
+const {
+  linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra, faixaDaPagina, textoFaixa,
+} = require('../site/js/lista-dinamica');
 
 let passou = 0;
 function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
@@ -88,6 +90,39 @@ caso('entrada inválida mantém o número atual', () => {
   assert.strictEqual(corrigirPelaSobra(10, NaN, 38, 5, 50), 10);
   assert.strictEqual(corrigirPelaSobra(10, 50, 0, 5, 50), 10);
   assert.strictEqual(corrigirPelaSobra(10, undefined, 38, 5, 50), 10);
+});
+
+// ---- faixaDaPagina / textoFaixa (paginação no servidor, total exato)
+caso('faixa da página vira o .range() do servidor', () => {
+  assert.deepStrictEqual(faixaDaPagina(1, 10, 595),
+    { pagina: 1, totalPaginas: 60, inicio: 0, fim: 10, de: 0, ate: 9, vazia: false });
+  const ultima = faixaDaPagina(60, 10, 595);
+  assert.strictEqual(ultima.inicio, 590);
+  assert.strictEqual(ultima.fim, 595);
+  assert.strictEqual(ultima.ate, 594);
+});
+caso('página além do total volta para a última; abaixo de 1 vai para a 1', () => {
+  assert.strictEqual(faixaDaPagina(99, 10, 25).pagina, 3);
+  assert.strictEqual(faixaDaPagina(0, 10, 25).pagina, 1);
+  assert.strictEqual(faixaDaPagina(NaN, 10, 25).pagina, 1);
+});
+caso('total zero: uma página vazia', () => {
+  const f = faixaDaPagina(3, 10, 0);
+  assert.strictEqual(f.pagina, 1);
+  assert.strictEqual(f.totalPaginas, 1);
+  assert.strictEqual(f.vazia, true);
+});
+caso('sem o teto de 300: 17 mil passagens paginam até o fim', () => {
+  const f = faixaDaPagina(1700, 10, 17000);
+  assert.strictEqual(f.totalPaginas, 1700);
+  assert.strictEqual(f.de, 16990);
+  assert.strictEqual(textoFaixa(f, 17000), '16.991–17.000 de 17.000 passagens');
+});
+caso('texto da faixa: "1–10 de N passagens", singular e aproximado', () => {
+  assert.strictEqual(textoFaixa(faixaDaPagina(1, 10, 595), 595), '1–10 de 595 passagens');
+  assert.strictEqual(textoFaixa(faixaDaPagina(1, 10, 1), 1), '1–1 de 1 passagem');
+  assert.strictEqual(textoFaixa(faixaDaPagina(1, 10, 50000), 50000, true), '1–10 de 50.000+ passagens');
+  assert.strictEqual(textoFaixa(faixaDaPagina(1, 10, 0), 0), 'Nenhuma passagem');
 });
 
 console.log(`\n${passou} casos ok`);
