@@ -310,7 +310,7 @@ caso('perfil operador vê "Este acesso não é da portaria" com link para o pain
 
 // ---- Porteiro do turno no aparelho
 caso('porteiro guardado: só vale se ainda está na lista; storage quebrado não derruba', () => {
-  const { porteiroGuardado } = carregar(['porteiroGuardado']);
+  const { porteiroGuardado } = carregar(['porteiroGuardado'], { CHAVE_PORTEIRO: 'lombada-portaria-porteiro' });
   const lista = [PORTEIRO, { id: 'p2', nome: 'Rita' }];
   const st = (v) => ({ getItem: (k) => (k === 'lombada-portaria-porteiro' ? v : null) });
   assert.deepStrictEqual({ ...porteiroGuardado(st(JSON.stringify({ id: 'p2', clienteId: 'c1' })), lista, 'c1') }, { id: 'p2', nome: 'Rita' });
@@ -319,6 +319,24 @@ caso('porteiro guardado: só vale se ainda está na lista; storage quebrado não
   assert.strictEqual(porteiroGuardado(st('{quebrado'), lista, 'c1'), null);
   assert.strictEqual(porteiroGuardado({ getItem: () => { throw new Error('bloqueado'); } }, lista, 'c1'), null);
   assert.strictEqual(porteiroGuardado(null, lista, 'c1'), null);
+});
+
+caso('porteiroGuardado lê a chave pela constante CHAVE_PORTEIRO (sem texto duplicado)', () => {
+  assert.ok(/const CHAVE_PORTEIRO = 'lombada-portaria-porteiro';/.test(FONTE));
+  const corpo = extrair(FONTE, 'function porteiroGuardado(');
+  assert.ok(corpo.includes('getItem(CHAVE_PORTEIRO)'), 'usa a constante');
+  assert.ok(!corpo.includes("'lombada-portaria-porteiro'"), 'sem a chave escrita de novo');
+});
+
+caso('Sair esquece o porteiro do aparelho; storage quebrado não derruba', () => {
+  const { esquecerPorteiro } = carregar(['esquecerPorteiro'], { CHAVE_PORTEIRO: 'lombada-portaria-porteiro' });
+  const removidas = [];
+  esquecerPorteiro({ removeItem: (k) => removidas.push(k) });
+  assert.deepStrictEqual(removidas, ['lombada-portaria-porteiro']);
+  esquecerPorteiro({ removeItem: () => { throw new Error('bloqueado'); } });
+  esquecerPorteiro(null);
+  const sair = extrair(FONTE, 'async function sair(');
+  assert.ok(sair.includes('esquecerPorteiro(armazenamento())'), 'o botão Sair chama esquecerPorteiro');
 });
 
 // ---- Rede de segurança
@@ -344,6 +362,83 @@ caso('rede de segurança ignora placa lida que já tem cadastro vigente (outro c
   assert.strictEqual(correcaoSugerida('ABC1D23', [cap('ABC1D28')], indice), null);
   assert.strictEqual(correcaoSugerida('ABC1D23', [cap('ABC1D28'), cap('ABC1D29')], indice), 'ABC1D29'); // encerrado não conta
   assert.strictEqual(correcaoSugerida('ABC1D23', [cap('ABC1D28')], new Map()), 'ABC1D28');
+});
+
+caso('rede de segurança só no cadastro feito pela entrada (não pela lista "Sem cadastro")', () => {
+  const { redeSeAplica } = carregar(['redeSeAplica']);
+  const salvo = { id: 'v1' };
+  assert.strictEqual(redeSeAplica('portaria', 'entrada', salvo), true);
+  assert.strictEqual(redeSeAplica('portaria', 'lista', salvo), false);
+  assert.strictEqual(redeSeAplica('admin', 'entrada', salvo), false);
+  assert.strictEqual(redeSeAplica('portaria', 'entrada', null), false);
+  assert.strictEqual(redeSeAplica('portaria', 'entrada', {}), false);
+  const daLista = extrair(FONTE, 'function cadastrarDaLista(');
+  assert.ok(daLista.indexOf("origemCadastro = 'lista'") > daLista.indexOf('recomecar()'), 'marca a origem depois de recomeçar');
+  assert.ok(extrair(FONTE, 'function recomecar(').includes("origemCadastro = 'entrada'"));
+  assert.ok(extrair(FONTE, 'async function aoSalvar(').includes('iniciarRede(r.salvo, c, origemCadastro)'));
+  assert.ok(extrair(FONTE, 'function iniciarRede(').includes('redeSeAplica(modo, origem, salvo)'));
+});
+
+caso('editar a placa com o formulário aberto mantém unidade/nome/tipo e só recarrega o vínculo', () => {
+  const els = {};
+  const el = (id) => els[id] || (els[id] = { id, hidden: true, value: '', textContent: '', innerHTML: '', blur() {} });
+  const { f, ctx } = carregarComContexto(
+    ['aoDigitarPlaca', 'atualizarVinculoNoFormulario', 'desenharVinculoNoFormulario', 'criarCadastro', 'corpoCadastro', 'limparPlacaDigitada',
+      'htmlVinculo', 'nomeUnidadeDe'],
+    {
+      $: el, indiceVinculos: vinculoPlacaLib.indexarVinculos([
+        { placa: 'XYZ9A88', nome_morador: 'Rita', tipo_pessoa: 'morador', encerrado_em: null, vigente_desde: null, criado_em: '2026-01-01T00:00:00Z' },
+      ]),
+      unidades: UNIDADES, vinculoMostrado: null,
+      etapa: (q) => { ctx.etapaAtual = q; }, confirmarPlaca: () => { ctx.confirmou = (ctx.confirmou || 0) + 1; },
+      mostrarConferencia: (p) => { ctx.conferida = p; },
+    },
+  );
+  vm.runInContext("var cadastro = criarCadastro({ contexto: () => ({}), enviar: async () => ({}) });", ctx);
+  const cad = ctx.cadastro;
+  cad.formularioNovo({ placa: 'XYZ9A87' });
+  cad.escolherUnidade('u1'); cad.definirNome('Rita'); cad.escolherTipo('morador');
+  el('etapa-formulario').hidden = false;
+  el('campo-placa').value = 'XYZ9A8';
+  f.aoDigitarPlaca();
+  assert.strictEqual(ctx.confirmou, undefined, 'placa incompleta com formulário aberto não reabre nada');
+  el('campo-placa').value = 'XYZ9A88';
+  f.aoDigitarPlaca();
+  const e = cad.estado();
+  assert.strictEqual(e.placa, 'XYZ9A88');
+  assert.strictEqual(e.unidadeId, 'u1');
+  assert.strictEqual(e.nome, 'Rita');
+  assert.strictEqual(e.tipo, 'morador');
+  assert.strictEqual(e.temVinculo, true, 'a nova placa tem cadastro');
+  assert.strictEqual(ctx.confirmou, undefined, 'não reabre o formulário (que zeraria tudo)');
+  assert.strictEqual(ctx.etapaAtual, undefined, 'formulário continua aberto');
+  assert.strictEqual(el('sem-vinculo').hidden, true);
+  assert.strictEqual(el('form-vinculo').hidden, false);
+  assert.ok(el('form-vinculo').innerHTML.includes('Rita'), 'mostra o cadastro que será trocado');
+  assert.strictEqual(ctx.conferida, 'XYZ9A88');
+  el('campo-placa').value = 'XYZ9A89';
+  f.aoDigitarPlaca();
+  assert.strictEqual(cad.estado().temVinculo, false);
+  assert.strictEqual(cad.estado().unidadeId, 'u1');
+  assert.strictEqual(el('sem-vinculo').hidden, false);
+  assert.strictEqual(el('form-vinculo').hidden, true);
+});
+
+caso('ORT e modelo pré-carregados depois do login, sem bloquear a tela', () => {
+  const abrir = extrair(FONTE, 'function abrirApp(');
+  assert.ok(abrir.includes('preCarregarLeitor()'));
+  const pre = extrair(FONTE, 'function preCarregarLeitor(');
+  assert.ok(pre.includes('cameraPlaca.preCarregar'), 'usa o preCarregar da câmera');
+  assert.ok(/setTimeout|requestIdleCallback/.test(pre), 'fora do caminho da tela');
+  assert.ok(!/await\s+preCarregarLeitor/.test(FONTE), 'ninguém espera o pré-carregamento');
+});
+
+caso('link para o manual na tela de login e na do turno', () => {
+  ['tela-login', 'tela-turno'].forEach((id) => {
+    const i = PAGINA.indexOf(`id="${id}"`);
+    const trecho = PAGINA.slice(i, PAGINA.indexOf('</section>', i));
+    assert.ok(trecho.includes('href="/portaria/manual.html"'), id);
+  });
 });
 
 // ---- Suspeita só do próprio condomínio

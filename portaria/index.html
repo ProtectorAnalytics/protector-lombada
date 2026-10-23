@@ -237,6 +237,7 @@
       <p id="login-erro" class="erro" role="alert"></p>
       <button type="submit" id="botao-entrar" class="botao primario largo">Entrar</button>
     </form>
+    <p class="mudo" style="text-align:center;margin:16px 0 0"><a href="/portaria/manual.html">Manual da portaria</a></p>
   </section>
 
   <section id="tela-aviso" class="tela" hidden>
@@ -258,6 +259,7 @@
     <div class="pilha" style="margin-top:16px">
       <button type="button" class="botao largo" data-acao="sair">Sair</button>
     </div>
+    <p class="mudo" style="text-align:center;margin:16px 0 0"><a href="/portaria/manual.html">Manual da portaria</a></p>
   </section>
 
   <div id="tela-app" hidden>
@@ -309,6 +311,7 @@
 
         <div id="etapa-formulario" class="cartao" hidden>
           <p id="sem-vinculo" class="mudo" hidden>Esta placa não tem cadastro.</p>
+          <div id="form-vinculo" hidden></div>
           <fieldset>
             <legend class="rotulo">Unidade</legend>
             <input id="busca-unidade" class="campo" type="search" placeholder="Buscar unidade" aria-label="Buscar unidade" hidden style="margin-bottom:10px">
@@ -378,13 +381,25 @@
   /** Porteiro lembrado no aparelho; só vale se ainda está ativo na lista deste condomínio. */
   function porteiroGuardado(storage, lista, clienteId) {
     try {
-      const salvo = JSON.parse(storage.getItem('lombada-portaria-porteiro') || 'null');
+      const salvo = JSON.parse(storage.getItem(CHAVE_PORTEIRO) || 'null');
       if (!salvo || salvo.clienteId !== clienteId) return null;
       const p = (lista || []).find((x) => x.id === salvo.id);
       return p ? { id: p.id, nome: p.nome } : null;
     } catch (e) {
       return null;
     }
+  }
+
+  /** "Sair": o próximo a entrar neste aparelho escolhe o porteiro de novo. */
+  function esquecerPorteiro(storage) {
+    try {
+      if (storage) storage.removeItem(CHAVE_PORTEIRO);
+    } catch (e) { /* storage bloqueado: nada guardado para esquecer */ }
+  }
+
+  /** Rede de segurança só para a portaria, no cadastro feito pela entrada (não pela lista). */
+  function redeSeAplica(modo, origem, salvo) {
+    return modo === 'portaria' && origem === 'entrada' && Boolean(salvo && salvo.id);
   }
 
   /** Nome da unidade: o da lista (unidade_id) vale mais que o texto livre antigo. */
@@ -474,6 +489,7 @@
       escolherUnidade: (id) => mudar({ unidadeId: id || '', erro: '' }),
       definirNome: (n) => mudar({ nome: String(n || '') }),
       escolherTipo: (t) => mudar({ tipo: t || '', erro: '' }),
+      marcarVinculo: (tem) => mudar({ temVinculo: Boolean(tem) }),
       formularioNovo: (parcial) => mudar({ ...VAZIO, placa: estado.placa, ...parcial }),
       zerar: () => mudar({ ...VAZIO }),
       salvar,
@@ -548,6 +564,8 @@
   let vinculos = [];
   let indiceVinculos = new Map();
   let vinculoMostrado = null;
+  let origemCadastro = 'entrada'; // 'entrada' (placa lida/digitada) | 'lista' (Sem cadastro)
+  let leitorPreCarregado = false;
   let abaAtual = 'cadastrar';
   let leitor = null;
   let rede = null;
@@ -689,6 +707,7 @@
   }
 
   async function sair() {
+    esquecerPorteiro(armazenamento());
     try { await sb.auth.signOut(); } catch (e) { /* sai da página mesmo assim */ }
     sairDaPagina();
   }
@@ -749,6 +768,14 @@
     $('botao-trocar').hidden = modo !== 'portaria';
     mostrarTela('tela-app');
     trocarAba(abaAtual);
+    preCarregarLeitor();
+  }
+
+  // Depois do login, baixa o leitor de placa em segundo plano (a 1ª câmera não espera).
+  function preCarregarLeitor() {
+    if (leitorPreCarregado || !window.cameraPlaca || !window.cameraPlaca.preCarregar) return;
+    leitorPreCarregado = true;
+    setTimeout(() => { window.cameraPlaca.preCarregar(); }, 1500);
   }
 
   // ---------------------------------------------------------------- abas
@@ -775,6 +802,7 @@
   function recomecar() {
     cadastro.zerar();
     vinculoMostrado = null;
+    origemCadastro = 'entrada';
     pedidoConferencia++;
     $('campo-placa').value = '';
     $('placa-erro').textContent = '';
@@ -790,6 +818,11 @@
     cadastro.definirPlaca(limpa);
     $('placa-erro').textContent = '';
     if (!mudou) return;
+    // Formulário aberto: troca só a placa; unidade, nome e tipo escolhidos ficam.
+    if (!$('etapa-formulario').hidden) {
+      if (limpa.length === 7 && placaLib.ehPlaca(limpa)) atualizarVinculoNoFormulario(limpa);
+      return;
+    }
     etapa('placa');
     $('conferir-veiculo').hidden = true;
     if (limpa.length === 7 && placaLib.ehPlaca(limpa)) confirmarPlaca();
@@ -920,7 +953,7 @@
 
   function abrirFormulario(parcial) {
     cadastro.formularioNovo(parcial);
-    $('sem-vinculo').hidden = Boolean(vinculoMostrado);
+    desenharVinculoNoFormulario();
     $('busca-unidade').hidden = unidades.length <= UNIDADES_COM_BUSCA;
     $('busca-unidade').value = '';
     $('unidades-vazio').hidden = unidades.length > 0;
@@ -930,6 +963,23 @@
     desenharCadastro(cadastro.estado());
     etapa('formulario');
     $('etapa-formulario').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  // Com o formulário aberto: "não tem cadastro" ou o cartão do cadastro que será trocado.
+  function desenharVinculoNoFormulario() {
+    $('sem-vinculo').hidden = Boolean(vinculoMostrado);
+    const caixa = $('form-vinculo');
+    caixa.hidden = !vinculoMostrado;
+    if (vinculoMostrado) caixa.innerHTML = htmlVinculo(vinculoMostrado, unidades);
+    else caixa.innerHTML = '';
+  }
+
+  // Placa editada com o formulário aberto: recarrega só o vínculo exibido.
+  function atualizarVinculoNoFormulario(placa) {
+    vinculoMostrado = vinculoPlacaLib.vinculoVigente(indiceVinculos, placa);
+    cadastro.marcarVinculo(Boolean(vinculoMostrado));
+    desenharVinculoNoFormulario();
+    mostrarConferencia(placa);
   }
 
   function filtrarUnidades() {
@@ -966,7 +1016,7 @@
     if (!r.ok) return;
     const c = r.corpo;
     mostrarSucesso(`Cadastrado: ${[c.placa, c.nome_morador, c.unidade].filter(Boolean).join(' · ')}`);
-    iniciarRede(r.salvo, c);
+    iniciarRede(r.salvo, c, origemCadastro);
     recomecar();
     recarregarVinculos().catch(() => { /* o índice atualiza na próxima carga */ });
   }
@@ -982,11 +1032,12 @@
 
   // ---------------------------------------------------------------- rede de segurança
 
-  function iniciarRede(salvo, corpo) {
+  function iniciarRede(salvo, corpo, origem) {
     pararRede();
     $('aviso-correcao').hidden = true;
-    // A correção (substitui_id) só existe para o acesso da portaria (API).
-    if (modo !== 'portaria' || !salvo || !salvo.id) return;
+    // A correção (substitui_id) só existe para o acesso da portaria (API) e
+    // só vigia o cadastro feito na entrada: quem veio da lista já passou.
+    if (!redeSeAplica(modo, origem, salvo)) return;
     const agora = Date.now();
     rede = { id: salvo.id, corpo, desde: agora - REDE_FOLGA_MS, ate: agora + REDE_MS, lida: null };
     rede.timer = setInterval(verificarRede, REDE_INTERVALO_MS);
@@ -1146,6 +1197,7 @@
   function cadastrarDaLista(placa) {
     trocarAba('cadastrar');
     recomecar();
+    origemCadastro = 'lista';
     preencherPlaca(placa);
     window.scrollTo(0, 0);
     confirmarPlaca();
