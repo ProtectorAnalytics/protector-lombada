@@ -1,13 +1,13 @@
 /**
  * Barra de filtros do painel do síndico: chips, rótulos, busca tipada,
- * "não cadastrados" e texto do resultado.
+ * "Não cadastrados" (= tipo "Sem cadastro") e texto do resultado.
  * Uso: node test/barra-filtros.test.js
  */
 const assert = require('node:assert');
 const {
   rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado,
-  conjuntoCadastradas, filtrarNaoCadastradas,
 } = require('../site/js/barra-filtros');
+const barraLib = require('../site/js/barra-filtros');
 const { filtrosPadrao, comMudancas, estadoDaVisao, montarFiltros } = require('../site/js/estado-filtros');
 
 let passou = 0;
@@ -38,15 +38,15 @@ caso('estado padrão não tem chips', () => {
 });
 caso('um chip por filtro, com o tipo no rótulo', () => {
   const f = comMudancas(estadoDaVisao('ontem', HOJE), {
-    cameraId: 'c1', soAlertas: true, naoCadastrados: true, placa: 'oni', velMin: 30, velMax: 60,
+    cameraId: 'c1', soAlertas: true, tipoCadastro: 'sem', placa: 'oni', velMin: 30, velMax: 60,
     veiculo: { marca: 'CHEVROLET', modelo: 'Onix', cor: 'prata', anoDe: 2019, anoAte: 2023 },
   }, HOJE);
   assert.deepStrictEqual(chipsDosFiltros(f, HOJE, nomes), [
     { chave: 'periodo', rotulo: 'Ontem' },
     { chave: 'camera', rotulo: 'Câmera: Clube Mata' },
     { chave: 'alerta', rotulo: 'Acima do limite' },
-    { chave: 'naoCadastrados', rotulo: 'Não cadastrados' },
     { chave: 'placa', rotulo: 'Placa contém ONI' },
+    { chave: 'tipoCadastro', rotulo: 'Cadastro: Sem cadastro' },
     { chave: 'marca', rotulo: 'Marca: CHEVROLET' },
     { chave: 'modelo', rotulo: 'Modelo: Onix' },
     { chave: 'cor', rotulo: 'Cor: Prata' },
@@ -145,30 +145,16 @@ caso('no limite da consulta o resultado vira "N+"', () => {
   assert.strictEqual(textoResultado(36, false), '36 passagens');
 });
 
-// ---- não cadastrados
-caso('placa cadastrada em qualquer grafia não entra em "não cadastrados"', () => {
-  const cad = conjuntoCadastradas(['ABC1234', 'XYZ9A87']); // antiga e Mercosul
-  const linhas = [
-    { placa: 'ABC1C34' }, // Mercosul de ABC1234 → cadastrada
-    { placa: 'XYZ9087' }, // antiga de XYZ9A87 → cadastrada
-    { placa: 'QWE2E34' }, // não cadastrada
-    { placa: 'abc-1234' }, // grafia suja da cadastrada
-  ];
-  assert.deepStrictEqual(filtrarNaoCadastradas(linhas, cad), [{ placa: 'QWE2E34' }]);
+// ---- não cadastrados = "Sem cadastro" na hora da passagem (uma regra só)
+caso('"Não cadastrados" é o filtro exato tipo=sem, com o mesmo chip', () => {
+  const nc = estadoDaVisao('nao-cadastrados', HOJE);
+  assert.strictEqual(nc.tipoCadastro, 'sem');
+  assert.deepStrictEqual(chipsDosFiltros(nc, HOJE, nomes), [{ chave: 'tipoCadastro', rotulo: 'Cadastro: Sem cadastro' }]);
+  assert.strictEqual('naoCadastrados' in nc, false);
 });
-caso('placa fora do padrão compara pelo texto limpo', () => {
-  const cad = conjuntoCadastradas(['MOTO1']);
-  assert.deepStrictEqual(filtrarNaoCadastradas([{ placa: 'moto1' }, { placa: 'X1' }], cad), [{ placa: 'X1' }]);
-});
-caso('lista vazia ou nula', () => {
-  assert.deepStrictEqual(filtrarNaoCadastradas(null, conjuntoCadastradas([])), []);
-  assert.deepStrictEqual(filtrarNaoCadastradas([{ placa: 'ABC1234' }], conjuntoCadastradas(null)), [{ placa: 'ABC1234' }]);
-});
-caso('não altera a lista recebida', () => {
-  const linhas = [{ placa: 'ABC1234' }, { placa: 'QWE2E34' }];
-  const copia = JSON.parse(JSON.stringify(linhas));
-  filtrarNaoCadastradas(linhas, conjuntoCadastradas(['ABC1234']));
-  assert.deepStrictEqual(linhas, copia);
+caso('a regra antiga (placa fora do cadastro de hoje) saiu da lib', () => {
+  assert.strictEqual(barraLib.filtrarNaoCadastradas, undefined);
+  assert.strictEqual(barraLib.conjuntoCadastradas, undefined);
 });
 
 console.log(`\n${passou} casos passaram`);

@@ -55,7 +55,7 @@
     const [placa, dia] = partes;
     if (!RE_PLACA.test(placa) || !diaValido(dia)) return null;
     return {
-      placa, cameraId: '', soAlertas: false, naoCadastrados: false, tipoCadastro: '', unidade: '',
+      placa, cameraId: '', soAlertas: false, tipoCadastro: '', unidade: '',
       velMin: 0, velMax: null,
       veiculo: { marca: '', modelo: '', cor: '', anoDe: null, anoAte: null },
       dataInicio: dia, horaInicio: '00:00', dataFim: dia, horaFim: '23:59',

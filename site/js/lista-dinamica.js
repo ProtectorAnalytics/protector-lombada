@@ -54,5 +54,32 @@
     return Math.max(min, Math.min(max, novo));
   }
 
-  return Object.freeze({ linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra });
+  /**
+   * Faixa da página no total EXATO do período (paginação no servidor):
+   * página limitada a [1, totalPaginas]; `de`/`ate` são o .range() do
+   * PostgREST (inclusivos, 0-based). Total 0 → página 1 sem linhas.
+   */
+  function faixaDaPagina(pagina, porPagina, total) {
+    const n = numeroValido(total) && total > 0 ? Math.floor(total) : 0;
+    const por = numeroValido(porPagina) && porPagina > 0 ? Math.floor(porPagina) : 1;
+    const totalPaginas = Math.max(1, Math.ceil(n / por));
+    const p = numeroValido(pagina) ? Math.min(Math.max(1, Math.floor(pagina)), totalPaginas) : 1;
+    const inicio = n ? (p - 1) * por : 0;
+    const fim = Math.min(inicio + por, n);
+    return { pagina: p, totalPaginas, inicio, fim, de: inicio, ate: Math.max(inicio, fim - 1), vazia: fim === inicio };
+  }
+
+  const milhar = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  /** "1–10 de 1.234 passagens"; `aproximado` (conferência parcial) acrescenta "+". */
+  function textoFaixa(faixa, total, aproximado) {
+    if (!total) return 'Nenhuma passagem';
+    const mais = aproximado ? '+' : '';
+    const unidade = total === 1 && !aproximado ? 'passagem' : 'passagens';
+    return `${milhar(faixa.inicio + 1)}–${milhar(faixa.fim)} de ${milhar(total)}${mais} ${unidade}`;
+  }
+
+  return Object.freeze({
+    linhasQueCabem, paginaQueContem, primeiroIndiceDaPagina, corrigirPelaSobra, faixaDaPagina, textoFaixa,
+  });
 });

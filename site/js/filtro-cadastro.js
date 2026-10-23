@@ -273,7 +273,42 @@
     return { linhas: achadas.slice(0, limite), limite: incompleta || achadas.length > limite, incompleta };
   }
 
+  // ---------------------------------------------------------------------
+  // Conferência incremental (polling): o que já foi conferido para o mesmo
+  // filtro e a mesma versão dos vínculos fica guardado; a cada ciclo só as
+  // passagens a partir da mais nova já lida (menos a margem de atraso da
+  // câmera) são lidas e conferidas de novo.
+  // ---------------------------------------------------------------------
+  const MARGEM_ATRASO_MS = 10 * 60 * 1000;
+
+  /** Ordem da lista: mais nova primeiro; empate pelo id. */
+  function compararLista(a, b) {
+    const ta = Date.parse(a.timestamp);
+    const tb = Date.parse(b.timestamp);
+    if (ta !== tb) return tb - ta;
+    return String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0;
+  }
+
+  /** Chave do que já foi conferido: filtros + filtro de veículo + versão dos vínculos. */
+  function chaveConferencia(filtros, placasVeiculo, versaoVinculos) {
+    return JSON.stringify([filtros, placasVeiculo || null, versaoVinculos]);
+  }
+
+  /** Releitura começa na passagem mais nova já lida menos a margem; nada lido → null (lê tudo). */
+  function inicioIncremental(lidoAteMs, margemMs) {
+    if (!Number.isFinite(lidoAteMs)) return null;
+    return new Date(lidoAteMs - (margemMs === undefined ? MARGEM_ATRASO_MS : margemMs)).toISOString();
+  }
+
+  /** Junta as já conferidas com as novas, sem repetir id, na ordem da lista (sem alterar as listas). */
+  function mesclarConferidas(anteriores, novas) {
+    const porId = new Map();
+    (anteriores || []).concat(novas || []).forEach((l) => porId.set(l.id, l));
+    return [...porId.values()].sort(compararLista);
+  }
+
   return Object.freeze({
+    MARGEM_ATRASO_MS, compararLista, chaveConferencia, inicioIncremental, mesclarConferidas,
     TIPOS_FILTRO, TIPO_SEM, UNIDADE_MAX, LIMITE_URL_CODIFICADA, tamanhoNaUrl, tamanhoDoFiltroVeiculo, conferirEmPaginas,
     normalizarTipo, rotuloTipo, textoUnidade, chaveUnidade, resolverUnidade, rotuloDoVinculo,
     montarCriterio, vinculoAtende, passagemAtende, filtrarPassagens, janelasDoFiltro, clausulaDoFiltro,

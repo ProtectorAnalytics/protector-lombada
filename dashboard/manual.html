@@ -477,7 +477,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.13.0 | Outubro 2026</p>
+    <p class="version">Versão 1.14.0 | Outubro 2026</p>
 
     <hr>
 
@@ -530,13 +530,15 @@
             <tr><th>Card</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><strong>Passagens Hoje</strong></td><td>Total de passagens do dia e de quantos veículos diferentes (ex.: "171 de 87 veículos": o mesmo carro pode passar várias vezes)</td></tr>
+            <tr><td><strong>Veículos Hoje</strong></td><td>Quantos veículos diferentes passaram hoje (das 00:00 às 23:59). Cada carro conta <strong>uma vez no dia</strong>, mesmo que passe várias vezes ou por vários radares; placa antiga e Mercosul do mesmo carro contam como um só, e leituras sem placa ficam de fora. Embaixo aparece o total de passagens (ex.: "225" e "595 passagens") e uma barra fina com a proporção de cada tipo de cadastro</td></tr>
             <tr><td><strong>Alertas Hoje</strong></td><td>Quantidade de passagens acima do limite de velocidade</td></tr>
-            <tr><td><strong>Vel. Máxima Hoje</strong></td><td>Maior velocidade registrada no dia</td></tr>
-            <tr><td><strong>Limite Configurado</strong></td><td>Limite de velocidade configurado para o local</td></tr>
+            <tr><td><strong>Velocidade Máxima Hoje</strong></td><td>Maior velocidade registrada no dia, com o limite configurado para o local logo abaixo</td></tr>
+            <tr><td><strong>Dentro do Limite Hoje</strong></td><td>Percentual das passagens de hoje dentro do limite, com a velocidade média do dia embaixo (a média conta só as passagens que o radar mediu)</td></tr>
         </tbody>
     </table>
     <p><strong>Importante:</strong> esses números ficam sob o título <strong>"Agora · hoje"</strong> e <strong>não mudam</strong> quando você usa os filtros. As fotos recentes também são sempre as de agora.</p>
+    <h3>Veículos de hoje por tipo</h3>
+    <p>Logo abaixo dos cards, uma faixa mostra quantos veículos de hoje são de <strong>Morador</strong>, <strong>Proprietário</strong>, <strong>Visitante</strong>, <strong>Prestador</strong> e <strong>Sem cadastro</strong>. O tipo de cada veículo é o do cadastro que ele tinha <strong>na primeira passagem do dia</strong>. Clique num tipo para ver na lista só as passagens dele; clique de novo no mesmo tipo para tirar o filtro.</p>
     <p>O botão <strong>"Recolher"</strong>, ao lado do título, esconde as fotos e o status das câmeras para dar mais espaço à lista; <strong>"Mostrar fotos"</strong> traz de volta. O painel lembra a escolha neste navegador.</p>
 
     <hr>
@@ -548,14 +550,16 @@
 
     <h3>Indicadores do Período</h3>
     <ul>
-        <li><strong>Vel. Média:</strong> média das passagens medidas pelo radar, com quantas medições entraram na conta</li>
-        <li><strong>Conformidade:</strong> percentual de passagens dentro do limite, com de quantas passagens</li>
         <li><strong>Hora Pico:</strong> hora do dia com mais passagens</li>
         <li><strong>Reincidentes:</strong> placas com 2 ou mais alertas no período</li>
     </ul>
+    <p>A velocidade média e o percentual dentro do limite de hoje ficam nos cards do topo.</p>
 
-    <h3>Passagens por Hora</h3>
-    <p>Gráfico com a quantidade de passagens em cada hora do período.</p>
+    <h3>Gráfico: "Por hora" e "Por dia"</h3>
+    <ul>
+        <li><strong>Por hora:</strong> quantidade de passagens em cada hora do período (ou em cada dia, quando o período tem mais de um dia). Segue os filtros.</li>
+        <li><strong>Por dia:</strong> quantos veículos diferentes passaram em cada um dos <strong>últimos 8 dias</strong>, com as cores de cada tipo de cadastro. O dia de maior movimento fica em destaque e o dia de hoje aparece mais claro, com "*", porque ainda não terminou. Esse gráfico <strong>não muda</strong> com os filtros.</li>
+    </ul>
 
     <h3>Top 10 Placas</h3>
     <p>As placas que mais passaram no período. Clique numa placa para filtrar as passagens dela.</p>
@@ -567,7 +571,7 @@
 
     <!-- Section 4 -->
     <h2 id="ultimas-capturas">4. Últimas Capturas</h2>
-    <p>A seção principal do dashboard mostra, em "Agora · hoje", as fotos das <strong>últimas passagens</strong> (até 6, uma por placa):</p>
+    <p>A seção principal do dashboard mostra, em "Agora · hoje", as fotos das <strong>últimas passagens</strong> numa faixa só: 6 fotos (uma por placa) em telas largas e 3 em telas menores:</p>
 
     <h3>Informações de cada captura:</h3>
     <ul>
@@ -607,10 +611,10 @@
     </ul>
 
     <h3>Tipo de cadastro e unidade</h3>
-    <p>Em "Mais filtros", o campo <strong>Tipo de cadastro</strong> mostra só as passagens de moradores, proprietários, visitantes, prestadores ou de placas <strong>sem cadastro</strong>. No campo <strong>Unidade</strong>, digite a unidade (por exemplo, "19" ou "019"; as unidades do condomínio aparecem como sugestão). Vale o cadastro que a placa tinha <strong>na hora da passagem</strong>, o mesmo que aparece na coluna "Cadastro": um carro que era de prestador na segunda e passou a ser de morador na quarta conta como prestador só até a troca. Também dá para clicar no tipo ou na unidade de uma passagem, na lista ou nos detalhes, para filtrar por eles.</p>
+    <p>Em "Mais filtros", o campo <strong>Tipo de cadastro</strong> mostra só as passagens de moradores, proprietários, visitantes, prestadores ou de placas <strong>sem cadastro</strong>. No campo <strong>Unidade</strong>, digite a unidade (por exemplo, "19" ou "019"; as unidades do condomínio aparecem como sugestão). Vale o cadastro que a placa tinha <strong>na hora da passagem</strong>, o mesmo que aparece na coluna "Tipo": um carro que era de prestador na segunda e passou a ser de morador na quarta conta como prestador só até a troca. Também dá para clicar no tipo ou na unidade de uma passagem, na lista ou nos detalhes, para filtrar por eles.</p>
 
     <h3>Perguntas prontas</h3>
-    <p>Acima da barra ficam atalhos para as consultas mais comuns, com um toque: <strong>Hoje</strong>, <strong>Ontem</strong>, <strong>Acima do limite hoje</strong>, <strong>Últimos 7 dias</strong> e <strong>Não cadastrados</strong> (veículos que ainda não estão no cadastro de moradores). Aviso: "Não cadastrados" considera as passagens que estão carregadas na tela (até 300).</p>
+    <p>Acima da barra ficam atalhos para as consultas mais comuns, com um toque: <strong>Hoje</strong>, <strong>Ontem</strong>, <strong>Acima do limite hoje</strong>, <strong>Últimos 7 dias</strong> e <strong>Não cadastrados</strong>: as passagens de placas que estavam <strong>sem cadastro na hora da passagem</strong> (é o mesmo filtro "Sem cadastro" do tipo de cadastro).</p>
 
     <h3>Etiquetas dos filtros ativos</h3>
     <ul>
@@ -636,9 +640,16 @@
 
     <h3>Lista de passagens</h3>
     <ul>
-        <li>A lista mostra até as <strong>300 passagens mais recentes</strong> do período. Quando esse limite é atingido, o rodapé avisa "exibindo as 300 mais recentes; refine o período".</li>
+        <li>A lista mostra <strong>todas as passagens do período</strong>, página por página, com o total exato no rodapé (ex.: "1–10 de 595 passagens"). Não há mais o limite de 300.</li>
+        <li>Colunas: <strong>Foto, Placa, Velocidade, Hora, Radar, Veículo, Tipo, Nome e Unidade</strong>. Tipo, Nome e Unidade são do cadastro que a placa tinha <strong>na hora da passagem</strong>. Clique no tipo ou na unidade para filtrar por eles.</li>
+        <li>A lista mostra só a <strong>hora</strong>; o dia aparece numa linha de título (ex.: "Sexta, 23 de outubro") sempre que muda.</li>
+        <li>Passagem <strong>acima do limite</strong> tem a linha com fundo vermelho claro e "▲" antes da velocidade.</li>
+        <li>O selo <strong>"2ª hoje"</strong> (ou "13ª hoje") ao lado da placa mostra que o mesmo veículo já tinha passado naquele dia, e quantas vezes.</li>
+        <li>Placa <strong>sem cadastro</strong> mostra o botão <strong>"+ Cadastrar"</strong> (para quem pode cadastrar veículos): ele abre o detalhe da passagem já no formulário de cadastro, com a placa da passagem.</li>
+        <li>Em telas com menos de 1.200 px de largura (como o tablet da portaria), cada passagem ocupa duas linhas, sem cortar nada.</li>
+        <li>Com o filtro "Sem cadastro" (ou "Não cadastrados") num período muito movimentado, o painel confere o cadastro de cada passagem; se o período for grande demais para conferir tudo, aparece um aviso e a lista mostra as mais recentes conferidas.</li>
         <li>Passagens <strong>sem velocidade</strong> (sem leitura do radar) ficam escondidas. No rodapé aparece o link <strong>"N passagens sem velocidade ocultas · Mostrar"</strong>; clique para vê-las (e em "Ocultar" para esconder de novo). Nada é apagado: elas continuam nos relatórios.</li>
-        <li><strong>"Exportar"</strong> fica junto da lista e oferece Excel (.xlsx) ou PDF com <strong>todas as passagens do período filtrado</strong>, não só as que aparecem na lista. O Excel traz também Marca, Modelo, Cor (cadastro) e Ano. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
+        <li><strong>"Exportar"</strong> fica junto da lista e oferece Excel (.xlsx) ou PDF com <strong>todas as passagens do período filtrado</strong>, não só as que aparecem na lista. O Excel e o PDF trazem as colunas <strong>Tipo, Nome e Unidade</strong> (o cadastro na hora da passagem), e o Excel traz também Marca, Modelo, Cor (cadastro) e Ano. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
     </ul>
 
     <h3>Dados do veículo (marca, modelo, cor e ano)</h3>
@@ -652,7 +663,7 @@
     <p>Enquanto a consulta acontece, aparece <strong>"consultando…"</strong>. Quando os dados da placa lida não combinam bem com o carro da foto, aparece o aviso <strong>"verificar leitura"</strong>. Nesse caso, confira a foto e escolha: <strong>"É a mesma placa"</strong> (a leitura está certa) ou <strong>"É outro carro"</strong> (a placa foi lida errado).</p>
 
     <h3>Cadastrar o morador direto da passagem</h3>
-    <p>Ao abrir os detalhes de uma passagem de um veículo ainda sem cadastro (marcado em cinza como <strong>"Não cadastrado"</strong>), você pode cadastrar o morador ali mesmo. O formulário já vem com a <strong>marca e a cor preenchidas</strong>; basta informar o nome e a unidade.</p>
+    <p>Ao abrir os detalhes de uma passagem de um veículo ainda sem cadastro (marcado em cinza como <strong>"Sem cadastro"</strong>), você pode cadastrar o morador ali mesmo. O formulário já vem com a <strong>marca e a cor preenchidas</strong>; basta informar o nome e a unidade.</p>
 
     <h3>Detalhes da captura e foto ampliada</h3>
     <ul>
@@ -987,7 +998,7 @@
     <hr>
 
     <p style="text-align:center; color:var(--text-muted); font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.13.0 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.14.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 

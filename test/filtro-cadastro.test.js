@@ -386,13 +386,15 @@ caso('painel: campos no "Mais filtros", scripts na ordem e drill-down ligado', (
   assert.ok(!/soNaoCadastradasSeAtivo\(f, await linhasDe/.test(PAINEL));
   assert.strictEqual((PAINEL.match(/filtrarNoCliente\(f, await linhasDe\(montar\)\)/g) || []).length, 4);
   assert.ok(PAINEL.includes("consultaELinhas('placa, velocidade, timestamp')")); // Top 10 precisa da hora
-  assert.ok(PAINEL.includes('fc.ativo && !fc.ou\n        ? await listaConferidaNoCliente(f, fv, fc)'));
+  // Sem `ou` (ou "Sem cadastro") a lista confere no cliente; com `ou` o servidor filtra e pagina
+  assert.ok(PAINEL.includes('const conferir = fc.ativo && !fc.ou;'));
+  assert.ok(PAINEL.includes('r = conferir ? await conferirNoCliente(f, fv, fc) : await contarNoServidor(f, fv, fc);'));
   // Orçamento conjunto com o filtro de veículo e conferência que avisa quando para no teto
   assert.ok(PAINEL.includes('filtroCadastroDoPeriodo(f, fv)'));
   assert.ok(PAINEL.includes('clausulaDoFiltro(janelas, ini, fim, { placasVeiculo })'));
   assert.ok(PAINEL.includes('filtroCadastroLib.conferirEmPaginas('));
-  assert.ok(PAINEL.includes('if (r.incompleta) avisoFiltroVeiculo(MSG_CONFERENCIA_INCOMPLETA);'));
-  assert.ok(PAINEL.includes('return { data: r.linhas, limite: r.limite, error: null };'));
+  assert.ok(PAINEL.includes('if (conferir && r.incompleta) avisoFiltroVeiculo(MSG_CONFERENCIA_INCOMPLETA);'));
+  assert.ok(PAINEL.includes('{ limite: Infinity, tamanho: TAMANHO_PAGINA, maxPaginas: MAX_PAGINAS_CONFERENCIA }'));
 });
 
 caso('libs carregam no browser (window.filtroCadastroLib)', () => {

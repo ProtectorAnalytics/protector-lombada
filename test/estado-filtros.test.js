@@ -50,7 +50,7 @@ caso('padrão: o dia de hoje inteiro, sem nenhum outro filtro', () => {
   const f = filtrosPadrao('2026-10-05');
   assert.deepStrictEqual(f, {
     dataInicio: '2026-10-05', horaInicio: '00:00', dataFim: '2026-10-05', horaFim: '23:59',
-    placa: '', velMin: 0, velMax: null, cameraId: '', soAlertas: false, naoCadastrados: false,
+    placa: '', velMin: 0, velMax: null, cameraId: '', soAlertas: false,
     tipoCadastro: '', unidade: '', veiculo: VEICULO_VAZIO,
   });
 });
@@ -207,10 +207,14 @@ caso('filtro personalizado não vira o dia', () => {
   assert.strictEqual(virarDia(g, '2026-10-05', local('2026-10-06T00:01:00')), g);
 });
 
-// ---- naoCadastrados no estado
-caso('naoCadastrados só liga com true explícito', () => {
-  assert.strictEqual(montarFiltros({ naoCadastrados: true }, '2026-10-05').naoCadastrados, true);
-  assert.strictEqual(montarFiltros({ naoCadastrados: '1' }, '2026-10-05').naoCadastrados, false);
+// ---- "Não cadastrados" = tipo "Sem cadastro" (regra única, na hora da passagem)
+caso('o estado não tem mais o campo naoCadastrados (regra antiga saiu)', () => {
+  assert.strictEqual('naoCadastrados' in montarFiltros({ naoCadastrados: true }, '2026-10-05'), false);
+});
+caso('link antigo ?nc=1 abre o filtro exato tipo=sem', () => {
+  assert.strictEqual(deQueryString('nc=1', '2026-10-05', 2026).tipoCadastro, 'sem');
+  assert.strictEqual(deQueryString('nc=1&tipo=morador', '2026-10-05', 2026).tipoCadastro, 'morador');
+  assert.strictEqual(paraQueryString(deQueryString('nc=1', '2026-10-05', 2026), '2026-10-05'), 'tipo=sem');
 });
 
 // ---- atalhos de período
@@ -255,13 +259,14 @@ caso('comMudancas no veículo mantém os outros campos do veículo', () => {
 });
 caso('removerFiltro tira só o filtro pedido', () => {
   const f = comMudancas(filtrosPadrao(HOJE), {
-    ...periodoDoAtalho('ontem', HOJE), cameraId: 'c1', soAlertas: true, naoCadastrados: true, placa: 'ABC',
+    ...periodoDoAtalho('ontem', HOJE), cameraId: 'c1', soAlertas: true, tipoCadastro: 'sem', placa: 'ABC',
     velMin: 30, velMax: 60, veiculo: { marca: 'FIAT', modelo: 'Uno', cor: 'prata', anoDe: 2019, anoAte: 2023 },
   }, HOJE);
   assert.strictEqual(atalhoDoPeriodo(removerFiltro(f, 'periodo', HOJE), HOJE), 'hoje');
   assert.strictEqual(removerFiltro(f, 'camera', HOJE).cameraId, '');
   assert.strictEqual(removerFiltro(f, 'alerta', HOJE).soAlertas, false);
-  assert.strictEqual(removerFiltro(f, 'naoCadastrados', HOJE).naoCadastrados, false);
+  assert.strictEqual(removerFiltro(f, 'tipoCadastro', HOJE).tipoCadastro, '');
+  assert.strictEqual(removerFiltro(f, 'naoCadastrados', HOJE), f); // chave antiga não existe mais
   assert.strictEqual(removerFiltro(f, 'placa', HOJE).placa, '');
   assert.strictEqual(removerFiltro(f, 'marca', HOJE).veiculo.marca, '');
   assert.strictEqual(removerFiltro(f, 'modelo', HOJE).veiculo.modelo, '');
@@ -287,9 +292,9 @@ caso('Mais filtros (n): conta velocidade, marca, modelo, cor e ano (faixa conta 
   assert.strictEqual(contarMaisFiltros(comMudancas(filtrosPadrao(HOJE), { velMax: 60 }, HOJE)), 1);
   assert.strictEqual(contarMaisFiltros(comMudancas(filtrosPadrao(HOJE), { veiculo: { anoAte: 2020 } }, HOJE)), 1);
 });
-caso('Mais filtros (n) não conta placa, câmera, período, alerta nem não cadastrados', () => {
+caso('Mais filtros (n) não conta placa, câmera, período nem alerta', () => {
   const f = comMudancas(filtrosPadrao(HOJE), {
-    placa: 'ABC', cameraId: 'c1', soAlertas: true, naoCadastrados: true, ...periodoDoAtalho('ontem', HOJE),
+    placa: 'ABC', cameraId: 'c1', soAlertas: true, ...periodoDoAtalho('ontem', HOJE),
   }, HOJE);
   assert.strictEqual(contarMaisFiltros(f), 0);
 });
@@ -307,7 +312,7 @@ caso('cada visão é um estado comum (os mesmos campos do filtro)', () => {
   assert.strictEqual(atalhoDoPeriodo(estadoDaVisao('ontem', HOJE), HOJE), 'ontem');
   assert.strictEqual(atalhoDoPeriodo(estadoDaVisao('7d', HOJE), HOJE), '7d');
   const nc = estadoDaVisao('nao-cadastrados', HOJE);
-  assert.strictEqual(nc.naoCadastrados, true);
+  assert.strictEqual(nc.tipoCadastro, 'sem');
   assert.strictEqual(atalhoDoPeriodo(nc, HOJE), 'hoje');
   assert.strictEqual(estadoDaVisao('reincidentes', HOJE), null);
 });
@@ -331,11 +336,11 @@ caso('atalho de período vai como p=; personalizado como de/ate', () => {
 });
 caso('todos os filtros vão para a URL em ordem fixa', () => {
   const f = comMudancas(estadoDaVisao('ontem', HOJE), {
-    cameraId: 'cam-1', soAlertas: true, placa: 'ONI', velMin: 30, velMax: 60, naoCadastrados: true,
+    cameraId: 'cam-1', soAlertas: true, placa: 'ONI', velMin: 30, velMax: 60, tipoCadastro: 'sem',
     veiculo: { marca: 'CHEVROLET', modelo: 'Onix', cor: 'prata', anoDe: 2019, anoAte: 2023 },
   }, HOJE);
   assert.strictEqual(paraQueryString(f, HOJE),
-    'p=ontem&cam=cam-1&alerta=1&placa=ONI&marca=CHEVROLET&modelo=Onix&cor=prata&ano=2019-2023&vmin=30&vmax=60&nc=1');
+    'p=ontem&cam=cam-1&alerta=1&placa=ONI&marca=CHEVROLET&modelo=Onix&cor=prata&ano=2019-2023&vmin=30&vmax=60&tipo=sem');
 });
 caso('ano com uma ponta só', () => {
   const de = comMudancas(filtrosPadrao(HOJE), { veiculo: { anoDe: 2019 } }, HOJE);
