@@ -100,15 +100,19 @@ console.error = () => {};
   });
 
   await caso('migration da RPC: security definer, search_path vazio, só service_role', async () => {
-    const sql = fs.readFileSync(path.join(__dirname, '..', 'sql', 'migration-excluir-cliente-atomico.sql'), 'utf8');
+    // Definição em vigor: a última migration que recria a função.
+    const sql = fs.readFileSync(path.join(__dirname, '..', 'sql', 'migration-remove-email-destinatarios.sql'), 'utf8');
     assert.match(sql, /create or replace function public\.excluir_cliente_permanente\(p_cliente uuid\)/);
     assert.match(sql, /security definer/);
     assert.match(sql, /set search_path = ''/);
     assert.match(sql, /revoke all on function public\.excluir_cliente_permanente\(uuid\) from public, anon, authenticated;/);
     assert.match(sql, /grant execute on function public\.excluir_cliente_permanente\(uuid\) to service_role;/);
-    for (const t of ['veiculos', 'capturas', 'cameras', 'unidades', 'porteiros', 'email_destinatarios', 'relatorio_envios', 'usuarios', 'clientes']) {
+    for (const t of ['veiculos', 'capturas', 'cameras', 'unidades', 'porteiros', 'relatorio_envios', 'usuarios', 'clientes']) {
       assert.match(sql, new RegExp(`delete from public\\.${t}\\s`), `apaga ${t}`);
     }
+    const corpo = sql.slice(sql.indexOf('create or replace function'), sql.indexOf('drop table'));
+    assert.doesNotMatch(corpo, /email_destinatarios/, 'a função não cita a tabela apagada');
+    assert.match(sql, /drop table if exists public\.email_destinatarios;/);
   });
 
   console.log(`\n${passou} casos ok`);
