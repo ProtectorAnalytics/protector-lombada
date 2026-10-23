@@ -391,6 +391,33 @@ console.error = () => {};
     assert.strictEqual(estado.auditoria.length, 0);
   });
 
+  const encherContatos = (n) => {
+    for (let i = 0; i < n; i++) usuarios.push({ ...base, id: `so-${i}`, auth_id: null, cliente_id: C1, nome: `C ${i}`, email: `c${i}@exemplo.test`, role: 'so_email' });
+  };
+  const MSG_LIMITE = 'Limite de 30 contatos que só recebem e-mail neste condomínio';
+
+  await caso('POST com 30 contatos so_email ativos no cliente → 409 do limite, sem escrita', async () => {
+    encherContatos(29); // + SO_C1 ativo = 30
+    const r = await chamar('admin', 'POST', { body: NOVO });
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(r.body.error, MSG_LIMITE);
+    semEscrita();
+  });
+
+  await caso('POST com 29 contatos ativos (inativos não contam) → 201', async () => {
+    encherContatos(28);
+    assert.strictEqual((await chamar('admin', 'POST', { body: NOVO })).code, 201);
+  });
+
+  await caso('PUT reativando com 30 contatos ativos → 409 do limite; editar contato ativo não esbarra no limite', async () => {
+    encherContatos(29);
+    const r = await chamar('admin', 'PUT', { query: { id: SO_INATIVO }, body: { ativo: true } });
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(r.body.error, MSG_LIMITE);
+    semEscrita();
+    assert.strictEqual((await chamar('admin', 'PUT', { query: { id: SO_C1 }, body: { nome: 'Contato Novo' } })).code, 200);
+  });
+
   // --- DELETE ---
   await caso('DELETE desativa so_email, auditado', async () => {
     const r = await chamar('admin', 'DELETE', { query: { id: SO_C1 } });

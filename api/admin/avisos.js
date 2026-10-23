@@ -18,20 +18,18 @@ const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = req
 const { isValidUUID, isValidEmail } = require('../../lib/validators');
 const { lerCorpo, ErroHttp, ipDe } = require('../../lib/lista-portaria-api');
 const avisosLib = require('../../site/js/avisos-email');
+const contatos = require('../../lib/contatos-so-email');
 
 const ROLES_GESTAO = ['super_admin', 'admin_cliente'];
 const ROLE_CONTATO = 'so_email';
 const ROLES_INTOCAVEIS = ['super_admin', 'portaria'];
 const UNICA_VIOLADA = '23505';
 const FK_VIOLADA = '23503';
-const PAGINA = 1000;
 const COLUNAS = 'id, cliente_id, nome, email, role, ativo, recebe_alertas, recebe_relatorio';
 const CAMPOS_PROIBIDOS = ['role', 'auth_id', 'senha'];
 const CAMPOS_POST = ['cliente_id', 'nome', 'email', 'recebe_alertas', 'recebe_relatorio'];
 const CAMPOS_PUT = ['recebe_alertas', 'recebe_relatorio', 'nome', 'email', 'ativo'];
 const CAMPOS_CONTATO = ['nome', 'email', 'ativo'];
-const MSG_CONTATO_EXISTE = 'Já existe um contato "Só recebe e-mail" com este e-mail';
-const MSG_DE_USUARIO = 'Este e-mail já é de um usuário; ligue as opções nele';
 
 const paraSaida = (u) => ({
   id: u.id, nome: u.nome, email: u.email, role: u.role, ativo: u.ativo,
@@ -74,31 +72,8 @@ function exigirAcesso(profile, clienteId) {
   if (!verificarAcessoCliente(profile, clienteId)) throw new ErroHttp(403, 'Sem acesso a este cliente');
 }
 
-/** Todos os usuários do cliente (o PostgREST corta em 1000 linhas: lê em páginas). */
-async function usuariosDoCliente(clienteId) {
-  const todos = [];
-  for (let de = 0; ; de += PAGINA) {
-    const { data, error } = await supabase.from('usuarios').select(COLUNAS)
-      .eq('cliente_id', clienteId).neq('role', 'portaria')
-      .order('nome', { ascending: true }).order('id', { ascending: true })
-      .range(de, de + PAGINA - 1);
-    if (error) throw error;
-    todos.push(...(data || []));
-    if (!data || data.length < PAGINA) return todos;
-  }
-}
-
-/** 409 se o e-mail já é de um so_email (mesmo inativo) ou de outro usuário ATIVO do cliente. */
-async function conferirEmailLivre(clienteId, email, ignorarId) {
-  const iguais = (await usuariosDoCliente(clienteId))
-    .filter((u) => u.id !== ignorarId && avisosLib.normalizarEmail(u.email) === email);
-  if (iguais.some((u) => u.role === ROLE_CONTATO)) throw new ErroHttp(409, MSG_CONTATO_EXISTE);
-  // Dono inativo não recebe: aceita o contato (mesma regra da migração da Task 1).
-  if (iguais.some((u) => u.ativo)) throw new ErroHttp(409, MSG_DE_USUARIO);
-}
-
 function erroDeEscrita(error) {
-  if (error.code === UNICA_VIOLADA) return new ErroHttp(409, MSG_CONTATO_EXISTE);
+  if (error.code === UNICA_VIOLADA) return new ErroHttp(409, contatos.MSG_CONTATO_EXISTE);
   return error;
 }
 
@@ -107,7 +82,7 @@ async function listar(req, res) {
   const clienteId = req.query.cliente_id || profile.cliente_id;
   if (!isValidUUID(clienteId)) return res.status(400).json({ error: 'cliente_id obrigatório' });
   exigirAcesso(profile, clienteId);
-  return res.status(200).json((await usuariosDoCliente(clienteId)).map(paraSaida));
+  return res.status(200).json((await contatos.usuariosDoCliente(supabase, clienteId)).map(paraSaida));
 }
 
 function lerNovoContato(body, profile) {
@@ -125,7 +100,7 @@ async function criar(req, res) {
   const { profile } = await autenticar(req, ROLES_GESTAO);
   const novo = lerNovoContato(await lerCorpo(req), profile);
   exigirAcesso(profile, novo.cliente_id);
-  await conferirEmailLivre(novo.cliente_id, novo.email, null);
+  await contatos.conferirContato(supabase, novo.cliente_id, novo.email, null, { ativando: true });
   const { data, error } = await supabase.from('usuarios').insert(novo).select(COLUNAS).single();
   if (error?.code === FK_VIOLADA) throw new ErroHttp(404, 'Cliente não encontrado');
   if (error) throw erroDeEscrita(error);
@@ -185,10 +160,11 @@ async function atualizar(req, res) {
   const mudancas = lerAlteracoes(await lerCorpo(req), alvo);
   const emailAtual = avisosLib.normalizarEmail(alvo.email);
   const emailFinal = mudancas.email !== undefined ? mudancas.email : emailAtual;
-  // Reativar um so_email vale como criar: o e-mail pode ter virado de um usuário ativo.
+  // Reativar um so_email vale como criar: o e-mail pode ter virado de um
+  // usuário ativo, e o contato volta a ocupar uma vaga do teto.
   const reativando = mudancas.ativo === true && !alvo.ativo;
   if (emailFinal !== emailAtual || reativando) {
-    await conferirEmailLivre(alvo.cliente_id, emailFinal, alvo.id);
+    await contatos.conferirContato(supabase, alvo.cliente_id, emailFinal, alvo.id, { ativando: reativando });
   }
   const atual = await gravar(alvo, mudancas);
   await auditar(req, profile, 'atualizar', alvo, mudancas);

@@ -665,7 +665,8 @@
         <li>O mesmo e-mail (sem diferença de maiúsculas e espaços) recebe uma vez só, mesmo que apareça em dois usuários.</li>
         <li>Porteiros (perfil Portaria, e-mail <code>@porteiro.invalid</code>) nunca recebem.</li>
         <li>Se ninguém estiver marcado, <strong>ninguém recebe</strong>. Não há lista de reserva (o campo antigo <code>clientes.emails_notificacao</code> não é mais usado).</li>
-        <li>O tipo "Só recebe e-mail" é <code>role = so_email</code>, com <code>auth_id</code> nulo: nunca cria usuário no Auth.</li>
+        <li>O tipo "Só recebe e-mail" é <code>role = so_email</code>, com <code>auth_id</code> nulo: nunca cria usuário no Auth. Até 30 ativos por cliente (<code>MAX_CONTATOS_SO_EMAIL</code>, em <code>lib/contatos-so-email.js</code>).</li>
+        <li>Os alertas saem com os destinatários em cópia oculta (Cco): ninguém vê o e-mail dos outros.</li>
     </ul>
 
     <blockquote>

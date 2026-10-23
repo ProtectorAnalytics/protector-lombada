@@ -18,6 +18,7 @@ function mockDb({ usuarios = [], clientes = [], erroUsuarios = null, erroCliente
     const q = {
       select() { return q; },
       eq(col, val) { filtros.push((r) => r[col] === val); return q; },
+      neq(col, val) { filtros.push((r) => r[col] !== val); return q; },
       in(col, vals) { filtros.push((r) => vals.includes(r[col])); return q; },
       single() { return exec(true); },
       maybeSingle() { return exec(true); },
@@ -60,6 +61,17 @@ async function caso(nome, fn) { await fn(); passou++; console.log(`ok - ${nome}`
       u({ email: 'sindico@exemplo.com', recebe_alertas: true }),
     ] });
     assert.deepStrictEqual(await criarDestinatarios(db).destinatariosDoCliente(CLI, 'alerta'), ['sindico@exemplo.com']);
+  });
+
+  await caso('role portaria nunca recebe, mesmo com e-mail comum (defesa além do @porteiro.invalid)', async () => {
+    const db = mockDb({ usuarios: [
+      u({ email: 'porteiro@exemplo.com', role: 'portaria', recebe_alertas: true, recebe_relatorio: true }),
+      u({ email: 'sindico@exemplo.com', role: 'admin_cliente', recebe_alertas: true }),
+    ] });
+    const d = criarDestinatarios(db);
+    assert.deepStrictEqual(await d.destinatariosDoCliente(CLI, 'alerta'), ['sindico@exemplo.com']);
+    assert.deepStrictEqual(await d.destinatariosComNome(CLI, 'relatorio'), []);
+    assert.strictEqual((await d.contarDestinatarios([CLI])).get(CLI), 1);
   });
 
   await caso('usuário inativo e usuário de outro cliente não recebem', async () => {

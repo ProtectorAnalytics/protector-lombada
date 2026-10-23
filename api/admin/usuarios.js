@@ -1,5 +1,6 @@
 const { autenticar, verificarAcessoCliente, registrarAuditoria, supabase } = require('../../lib/auth-middleware');
 const { erroSenhaPorteiro, usuarioDoEmail } = require('../../site/js/usuario-portaria');
+const { conferirContato } = require('../../lib/contatos-so-email');
 
 // Usuários role 'portaria' criados ou alterados aqui seguem a mesma regra de
 // senha de /api/admin/porteiros e têm as sessões encerradas na troca de senha
@@ -182,6 +183,10 @@ module.exports = async function handler(req, res) {
       if (!atual) return res.status(404).json({ error: 'Usuário não encontrado' });
       const erroContato = erroEdicaoContato(atual, senha, campos);
       if (erroContato) return res.status(400).json({ error: erroContato });
+      // Reativar um so_email: mesma conferência de /api/admin/avisos (e-mail livre e teto).
+      if (atual.role === ROLE_CONTATO && camposFiltrados.ativo === true && !atual.ativo) {
+        await conferirContato(supabase, atual.cliente_id, atual.email, atual.id, { ativando: true });
+      }
       const final = { ...atual, ...camposFiltrados };
       const ehPorteiro = final.role === ROLE_PORTEIRO;
       if (senha) {

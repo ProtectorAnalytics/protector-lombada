@@ -32,7 +32,7 @@ function stub(rel, exports) {
 
 function tabela() {
   const op = { modo: 'select', patch: null, filtros: [] };
-  const casam = () => linhas.filter((l) => op.filtros.every(([c, v]) => l[c] === v));
+  const casam = () => linhas.filter((l) => op.filtros.every(([c, v, neg]) => (neg ? l[c] !== v : l[c] === v)));
   const um = () => {
     if (op.modo === 'insert') return Promise.resolve({ data: { id: 'novo', ...op.patch }, error: null });
     const l = casam()[0];
@@ -43,6 +43,8 @@ function tabela() {
   const q = {
     select() { return q; },
     order() { return q; },
+    neq(c, v) { op.filtros.push([c, v, 'neq']); return q; },
+    range() { return q; },
     insert(p) { op.modo = 'insert'; op.patch = p; estado.inserts.push(p); return q; },
     update(p) { op.modo = 'update'; op.patch = p; estado.updates.push(p); return q; },
     delete() { op.modo = 'delete'; return q; },
@@ -134,6 +136,35 @@ async function caso(nome, fn) { reset(); await fn(); passou++; console.log(`ok -
     assert.deepStrictEqual(estado.updates, []);
     assert.deepStrictEqual(estado.auth, []);
   });
+  await caso('PUT {ativo:true} reativando so_email cujo e-mail é de usuário ATIVO do cliente → 409, nada gravado', async () => {
+    Object.assign(linhas[0], { ativo: false, email: ' ANA@exemplo.test' });
+    const r = await chamar('PUT', { body: { id: 'u-so', ativo: true } });
+    assert.strictEqual(r.code, 409);
+    assert.match(r.body.error, /já é de um usuário/);
+    assert.deepStrictEqual(estado.updates, []);
+    assert.strictEqual(linhas[0].ativo, false);
+  });
+  await caso('PUT {ativo:true} reativando so_email com e-mail livre → 200', async () => {
+    linhas[0].ativo = false;
+    const r = await chamar('PUT', { body: { id: 'u-so', ativo: true } });
+    assert.strictEqual(r.code, 200);
+    assert.strictEqual(linhas[0].ativo, true);
+  });
+  await caso('PUT {ativo:true} com 30 contatos so_email ativos no cliente → 409 do limite', async () => {
+    linhas[0].ativo = false;
+    for (let i = 0; i < 30; i++) linhas.push({ id: `so-${i}`, auth_id: null, cliente_id: C1, nome: `C ${i}`, email: `c${i}@exemplo.test`, role: 'so_email', ativo: true });
+    const r = await chamar('PUT', { body: { id: 'u-so', ativo: true } });
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(r.body.error, 'Limite de 30 contatos que só recebem e-mail neste condomínio');
+    assert.deepStrictEqual(estado.updates, []);
+  });
+  await caso('PUT em operador inativo com {ativo:true} não passa pela conferência de contato', async () => {
+    linhas[1].ativo = false;
+    linhas[0].email = 'ana@exemplo.test';
+    const r = await chamar('PUT', { body: { id: 'u-op', ativo: true } });
+    assert.strictEqual(r.code, 200);
+  });
+
   await caso('PUT em so_email com os mesmos role/e-mail/cliente (sem mudar) e nome novo passa', async () => {
     const r = await chamar('PUT', { body: { id: 'u-so', nome: 'Contato Novo', role: 'so_email', cliente_id: C1 } });
     assert.strictEqual(r.code, 200);
