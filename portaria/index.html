@@ -309,6 +309,7 @@
           <fieldset>
             <legend class="rotulo">Unidade</legend>
             <input id="busca-unidade" class="campo" type="search" placeholder="Buscar unidade" aria-label="Buscar unidade" hidden style="margin-bottom:10px">
+            <p id="unidade-atual" class="mudo" hidden></p>
             <div id="lista-unidades"></div>
             <p id="unidades-vazio" class="mudo" hidden>Nenhuma unidade cadastrada.</p>
           </fieldset>
@@ -414,20 +415,35 @@
     return modo === 'portaria' && Boolean(v) && v.meu === true && !v.encerrado_em;
   }
 
-  /** Corpo do PUT de edição (só nome, unidade e tipo), ou { erro } dizendo o que falta. */
+  /**
+   * Corpo do PUT de edição: só o que mudou em relação ao vínculo carregado
+   * (estado.original), ou { erro }. Sem unidade escolhida, a unidade fica como
+   * está (inclusive o texto livre antigo): a edição nunca apaga o que não mudou.
+   */
   function corpoEdicao(estado, ctx) {
     if (!estado.tipo) return { erro: 'Escolha o tipo: Morador, Proprietário, Visitante ou Prestador.' };
+    const o = estado.original || {};
     const unidade = (ctx.unidades || []).find((u) => u.id === estado.unidadeId) || null;
-    const nome = String(estado.nome || '').replace(/\s+/g, ' ').trim();
-    if (!unidade && !nome) return { erro: 'Escolha a unidade ou digite o nome.' };
-    return {
-      corpo: {
-        nome_morador: nome || null,
-        unidade: unidade ? unidadeLib.rotuloUnidade(unidade) : null,
-        unidade_id: unidade ? unidade.id : null,
-        tipo_pessoa: estado.tipo,
-      },
-    };
+    const limpo = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+    const nome = limpo(estado.nome);
+    if (!unidade && !o.unidade_id && !limpo(o.unidade) && !nome) return { erro: 'Escolha a unidade ou digite o nome.' };
+    const corpo = {};
+    if (nome !== limpo(o.nome_morador)) corpo.nome_morador = nome || null;
+    if (unidade && unidade.id !== o.unidade_id) {
+      corpo.unidade = unidadeLib.rotuloUnidade(unidade);
+      corpo.unidade_id = unidade.id;
+    }
+    if (estado.tipo !== o.tipo_pessoa) corpo.tipo_pessoa = estado.tipo;
+    if (Object.keys(corpo).length === 0) return { erro: 'Nada para alterar' };
+    return { corpo };
+  }
+
+  /** Na edição sem unidade da lista marcada: o texto da unidade atual (antigo, livre) para o porteiro ver. */
+  function textoUnidadeAtual(estado) {
+    const o = estado && estado.original;
+    if (!estado || !estado.editandoId || !o || estado.unidadeId) return '';
+    const texto = String(o.unidade || '').trim();
+    return texto ? `Unidade atual: ${texto}` : '';
   }
 
   /** Corpo do POST /api/admin/veiculos, ou { erro } dizendo o que falta. */
@@ -459,7 +475,7 @@
    */
   function criarCadastro(opcoes) {
     const { contexto, enviar, editar, aoMudar } = opcoes;
-    const VAZIO = { placa: '', unidadeId: '', nome: '', tipo: '', temVinculo: false, editandoId: '', salvando: false, erro: '' };
+    const VAZIO = { placa: '', unidadeId: '', nome: '', tipo: '', temVinculo: false, editandoId: '', original: null, salvando: false, erro: '' };
     let estado = { ...VAZIO };
     const mudar = (parcial) => {
       estado = { ...estado, ...parcial };
@@ -850,7 +866,7 @@
     const v = vinculoMostrado;
     if (!podeEditarVinculo(modo, v)) return;
     const unidadeId = v.unidade_id && unidades.some((u) => u.id === v.unidade_id) ? v.unidade_id : '';
-    abrirFormulario({ editandoId: v.id, unidadeId, nome: v.nome_morador || '', tipo: v.tipo_pessoa, temVinculo: true });
+    abrirFormulario({ editandoId: v.id, original: v, unidadeId, nome: v.nome_morador || '', tipo: v.tipo_pessoa, temVinculo: true });
   }
 
   function manterVinculo() {
@@ -1003,6 +1019,9 @@
     botao.disabled = e.salvando;
     botao.textContent = e.salvando ? 'Salvando…' : (e.editandoId ? 'Salvar alterações' : 'Salvar');
     $('form-erro').textContent = e.erro;
+    const atual = textoUnidadeAtual(e);
+    $('unidade-atual').textContent = atual;
+    $('unidade-atual').hidden = !atual;
     marcar('#lista-unidades [data-unidade]', (b) => b.dataset.unidade === e.unidadeId);
     marcar('#tipos [data-tipo]', (b) => b.dataset.tipo === e.tipo);
     marcar('#nomes-sugeridos [data-nome]', (b) => b.dataset.nome === e.nome);
