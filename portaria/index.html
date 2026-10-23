@@ -164,7 +164,7 @@
     }
     .abas button[aria-current="page"] { color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
 
-    /* Listas de escolha (porteiros, unidades, nomes, tipos) */
+    /* Listas de escolha (unidades, nomes, tipos) */
     .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
     .grade .botao { width: 100%; justify-content: flex-start; text-align: left; overflow-wrap: anywhere; }
     .escolha[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-light); box-shadow: inset 0 0 0 2px var(--accent); }
@@ -224,11 +224,11 @@
 
   <section id="tela-login" class="tela" hidden>
     <h1>Portaria</h1>
-    <p class="mudo">Entre com o e-mail e a senha do acesso da portaria. O síndico também pode entrar com o login do painel.</p>
+    <p class="mudo">Entre com o seu usuário (ou e-mail) e a sua senha. Cada porteiro tem o próprio login. O síndico também pode entrar com o login do painel.</p>
     <form id="form-login" class="cartao pilha" novalidate>
       <div>
-        <label class="rotulo" for="login-email">E-mail</label>
-        <input id="login-email" class="campo" type="email" autocomplete="username" inputmode="email" required>
+        <label class="rotulo" for="login-email">E-mail ou usuário</label>
+        <input id="login-email" class="campo" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
       </div>
       <div>
         <label class="rotulo" for="login-senha">Senha</label>
@@ -250,25 +250,12 @@
     </div>
   </section>
 
-  <section id="tela-turno" class="tela" hidden>
-    <h1>Quem está no turno?</h1>
-    <p class="mudo">Toque no seu nome. Os cadastros deste aparelho saem no seu nome até alguém trocar.</p>
-    <div id="lista-porteiros" class="grade"></div>
-    <p id="turno-vazio" class="aviso atencao" hidden>Nenhum porteiro cadastrado. Peça ao síndico ou à Protector para cadastrar os porteiros no painel administrativo.</p>
-    <p id="turno-erro" class="erro" role="alert"></p>
-    <div class="pilha" style="margin-top:16px">
-      <button type="button" class="botao largo" data-acao="sair">Sair</button>
-    </div>
-    <p class="mudo" style="text-align:center;margin:16px 0 0"><a href="/portaria/manual.html">Manual da portaria</a></p>
-  </section>
-
   <div id="tela-app" hidden>
     <header class="topo">
       <div class="topo-texto">
         <strong id="topo-cliente"></strong>
         <span id="topo-quem"></span>
       </div>
-      <button type="button" id="botao-trocar" class="botao">Trocar porteiro</button>
       <button type="button" class="botao" data-acao="sair">Sair</button>
     </header>
 
@@ -354,6 +341,7 @@
   <script src="/js/placa.js"></script>
   <script src="/js/vinculo-placa.js"></script>
   <script src="/js/texto-seguro.js"></script>
+  <script src="/js/usuario-portaria.js"></script>
   <script src="/js/miniatura.js"></script>
   <script src="/js/leitor-placa.js"></script>
   <script src="/js/sugestao-nomes.js"></script>
@@ -362,7 +350,6 @@
   <script>
   'use strict';
   // ================================================================ regras (sem DOM; testadas no Node)
-  const CHAVE_PORTEIRO = 'lombada-portaria-porteiro';
   const esc = textoSeguro.esc;
 
   /** Placa digitada: só A–Z/0–9, maiúsculas, até 7 caracteres. */
@@ -370,31 +357,12 @@
     return String(p || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
   }
 
-  /** 'portaria' | 'admin' (síndico, sem escolher porteiro) | 'negado'. */
+  /** 'portaria' (login do porteiro) | 'admin' (síndico) | 'negado'. */
   function modoDeAcesso(perfil) {
     if (!perfil || !perfil.cliente_id) return 'negado';
     if (perfil.role === 'portaria') return 'portaria';
     if (perfil.role === 'admin_cliente') return 'admin';
     return 'negado';
-  }
-
-  /** Porteiro lembrado no aparelho; só vale se ainda está ativo na lista deste condomínio. */
-  function porteiroGuardado(storage, lista, clienteId) {
-    try {
-      const salvo = JSON.parse(storage.getItem(CHAVE_PORTEIRO) || 'null');
-      if (!salvo || salvo.clienteId !== clienteId) return null;
-      const p = (lista || []).find((x) => x.id === salvo.id);
-      return p ? { id: p.id, nome: p.nome } : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /** "Sair": o próximo a entrar neste aparelho escolhe o porteiro de novo. */
-  function esquecerPorteiro(storage) {
-    try {
-      if (storage) storage.removeItem(CHAVE_PORTEIRO);
-    } catch (e) { /* storage bloqueado: nada guardado para esquecer */ }
   }
 
   /** Rede de segurança só para a portaria, no cadastro feito pela entrada (não pela lista). */
@@ -437,8 +405,6 @@
     const placa = limparPlacaDigitada(estado.placa);
     if (!placaLib.ehPlaca(placa)) return { erro: 'Confira a placa: são 7 caracteres, como ABC1D23 ou ABC1234.' };
     if (!estado.tipo) return { erro: 'Escolha o tipo: Morador, Proprietário, Visitante ou Prestador.' };
-    const ehPortaria = ctx.role === 'portaria';
-    if (ehPortaria && !(ctx.porteiro && ctx.porteiro.id)) return { erro: 'Escolha o porteiro do turno antes de salvar.' };
     const unidade = (ctx.unidades || []).find((u) => u.id === estado.unidadeId) || null;
     const nome = String(estado.nome || '').replace(/\s+/g, ' ').trim();
     // Trocar um cadastro existente por um vazio apagaria quem é o carro.
@@ -453,7 +419,7 @@
       unidade_id: unidade ? unidade.id : null,
       unidade: unidade ? unidade.nome : null,
     };
-    return { corpo: ehPortaria ? { ...corpo, porteiro_id: ctx.porteiro.id } : corpo };
+    return { corpo };
   }
 
   /**
@@ -559,8 +525,6 @@
   let cliente = null;
   let modo = 'negado';
   let unidades = [];
-  let porteiros = [];
-  let porteiroAtual = null;
   let vinculos = [];
   let indiceVinculos = new Map();
   let vinculoMostrado = null;
@@ -575,7 +539,7 @@
   let camerasNome = null;
   let suspeitaPropria = new Map();
 
-  const contextoCadastro = () => ({ clienteId: cliente && cliente.id, role: perfil && perfil.role, porteiro: porteiroAtual, unidades });
+  const contextoCadastro = () => ({ clienteId: cliente && cliente.id, role: perfil && perfil.role, unidades });
   const cadastro = criarCadastro({
     contexto: contextoCadastro,
     enviar: (corpo) => chamarApi('/api/admin/veiculos', 'POST', corpo),
@@ -611,7 +575,7 @@
   }
 
   function mostrarTela(id) {
-    ['tela-carregando', 'tela-login', 'tela-aviso', 'tela-turno', 'tela-app'].forEach((t) => { $(t).hidden = t !== id; });
+    ['tela-carregando', 'tela-login', 'tela-aviso', 'tela-app'].forEach((t) => { $(t).hidden = t !== id; });
     window.scrollTo(0, 0);
   }
 
@@ -641,15 +605,17 @@
 
   async function entrar(ev) {
     ev.preventDefault();
-    const email = $('login-email').value.trim();
+    const entrada = $('login-email').value.trim();
     const senha = $('login-senha').value;
     const erro = $('login-erro');
     erro.textContent = '';
-    if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; return; }
+    if (!entrada || !senha) { erro.textContent = 'Preencha usuário (ou e-mail) e senha.'; return; }
     $('botao-entrar').disabled = true;
     try {
+      // Porteiro entra com o usuário (sem "@"): vira o e-mail técnico do Auth
+      const email = usuarioPortariaLib.paraLogin(entrada);
       const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-      if (error) { erro.textContent = 'E-mail ou senha incorretos.'; return; }
+      if (error) { erro.textContent = 'Usuário (ou e-mail) ou senha incorretos.'; return; }
       $('login-senha').value = '';
       await carregarPerfil(data.user);
     } catch (e) {
@@ -678,20 +644,14 @@
   async function carregarListas() {
     try {
       const q = `?cliente_id=${encodeURIComponent(cliente.id)}`;
-      const [listaUnidades, listaPorteiros] = await Promise.all([
+      const [listaUnidades] = await Promise.all([
         chamarApi(`/api/admin/unidades${q}`, 'GET'),
-        modo === 'portaria' ? chamarApi(`/api/admin/porteiros${q}`, 'GET') : Promise.resolve([]),
         recarregarVinculos(),
       ]);
       unidades = Array.isArray(listaUnidades) ? listaUnidades : [];
-      porteiros = Array.isArray(listaPorteiros) ? listaPorteiros : [];
     } catch (e) {
       falhaAoCarregar(e && e.status ? e.message : 'Sem conexão com o servidor. Confira a internet.');
       return;
-    }
-    if (modo === 'portaria') {
-      porteiroAtual = porteiroGuardado(armazenamento(), porteiros, cliente.id);
-      if (!porteiroAtual) { mostrarTurno(); return; }
     }
     abrirApp();
   }
@@ -702,17 +662,12 @@
     indiceVinculos = vinculoPlacaLib.indexarVinculos(vinculos);
   }
 
-  function armazenamento() {
-    try { return window.localStorage; } catch (e) { return null; }
-  }
-
   async function sair() {
-    esquecerPorteiro(armazenamento());
     try { await sb.auth.signOut(); } catch (e) { /* sai da página mesmo assim */ }
     sairDaPagina();
   }
 
-  // Aparelho compartilhado: aviso de um porteiro não fica para o próximo.
+  // Aparelho compartilhado: aviso de um login não fica para o próximo.
   function limparAvisos() {
     pararRede();
     rede = null;
@@ -725,47 +680,19 @@
   function sairDaPagina() {
     fecharCamera();
     limparAvisos();
-    perfil = null; cliente = null; porteiroAtual = null; camerasNome = null; suspeitaPropria = new Map();
-    unidades = []; porteiros = []; vinculos = []; indiceVinculos = new Map();
+    perfil = null; cliente = null; camerasNome = null; suspeitaPropria = new Map();
+    unidades = []; vinculos = []; indiceVinculos = new Map();
     fotosAssinadas.limpar();
     recomecar();
     $('lista-sem').innerHTML = '';
     mostrarTela('tela-login');
   }
 
-  // ---------------------------------------------------------------- turno
-
-  function htmlPorteiros(lista) {
-    return lista.map((p) => `<button type="button" class="botao escolha" data-porteiro="${esc(p.id)}">${esc(p.nome)}</button>`).join('');
-  }
-
-  function mostrarTurno() {
-    fecharCamera();
-    limparAvisos();
-    $('lista-porteiros').innerHTML = htmlPorteiros(porteiros);
-    $('turno-vazio').hidden = porteiros.length > 0;
-    $('turno-erro').textContent = '';
-    mostrarTela('tela-turno');
-  }
-
-  function escolherPorteiro(id) {
-    const p = porteiros.find((x) => x.id === id);
-    if (!p) return;
-    porteiroAtual = { id: p.id, nome: p.nome };
-    try {
-      armazenamento().setItem(CHAVE_PORTEIRO, JSON.stringify({ id: p.id, clienteId: cliente.id }));
-    } catch (e) {
-      $('turno-erro').textContent = 'Este aparelho não guardou a escolha; ela vale até fechar a página.';
-    }
-    abrirApp();
-  }
-
   function abrirApp() {
     $('topo-cliente').textContent = cliente.nome || 'Portaria';
     $('topo-quem').textContent = modo === 'portaria'
-      ? `Porteiro: ${porteiroAtual.nome}`
+      ? `Porteiro: ${perfil.nome || 'portaria'}`
       : `Cadastrando como ${perfil.nome || 'síndico'}`;
-    $('botao-trocar').hidden = modo !== 'portaria';
     mostrarTela('tela-app');
     trocarAba(abaAtual);
     preCarregarLeitor();
@@ -1221,11 +1148,6 @@
     $('form-login').addEventListener('submit', entrar);
     $('botao-tentar').addEventListener('click', () => (cliente ? carregarListas() : iniciar()));
     document.querySelectorAll('[data-acao="sair"]').forEach((b) => b.addEventListener('click', sair));
-    $('lista-porteiros').addEventListener('click', (ev) => {
-      const b = ev.target.closest('[data-porteiro]');
-      if (b) escolherPorteiro(b.dataset.porteiro);
-    });
-    $('botao-trocar').addEventListener('click', mostrarTurno);
     document.querySelector('.abas').addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-aba]');
       if (b) trocarAba(b.dataset.aba);

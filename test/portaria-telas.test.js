@@ -13,6 +13,7 @@ const ADMIN = ler('admin/index.html');
 const PAINEL = ler('dashboard/index.html');
 const MIGRATION = ler('sql/migration-portaria-base.sql');
 const TESTE_SQL = ler('test/sql/portaria-base.sql');
+const usuarioPortariaLib = require('../site/js/usuario-portaria');
 
 /** Recorta a declaração que começa em `inicio` até a chave que fecha a primeira chave aberta. */
 function extrair(fonte, inicio) {
@@ -149,5 +150,60 @@ caso('painel: link "Abrir a portaria" só para o perfil portaria', () => {
   assert.strictEqual(rodar('sindico'), true);
 });
 
-console.log(`${passou} casos passaram${falhou ? `, ${falhou} falharam` : ''}`);
-if (falhou) process.exit(1);
+// ---- 2.1: login do painel aceita o usuário do porteiro (sem "@")
+async function loginDoPainel(valor) {
+  const els = { 'login-email': { value: valor }, 'login-password': { value: 'segredo1' }, 'login-error': { textContent: '' } };
+  const chamadas = [];
+  let perfis = 0;
+  const doLogin = new Function('document', 'sb', 'usuarioPortariaLib', 'loadProfile', 'console',
+    `let currentUser = null; ${extrair(PAINEL, 'async function doLogin(')}; return doLogin;`)(
+    { getElementById: (id) => els[id] },
+    { auth: { signInWithPassword: async (cred) => { chamadas.push(cred); return { data: { user: { id: 'a1' } }, error: null }; } } },
+    usuarioPortariaLib,
+    async () => { perfis++; },
+    { error() {} },
+  );
+  await doLogin();
+  return { chamadas, perfis, els };
+}
+
+const pendentes = [];
+pendentes.push(['painel: login com "José.PraiaDoCastelo" usa o e-mail técnico', async () => {
+  const { chamadas, perfis } = await loginDoPainel('José.PraiaDoCastelo');
+  assert.deepStrictEqual(chamadas, [{ email: 'jose.praiadocastelo@porteiro.invalid', password: 'segredo1' }]);
+  assert.strictEqual(perfis, 1);
+}]);
+pendentes.push(['painel: login com e-mail continua igual (minúsculas, sem espaços)', async () => {
+  const { chamadas } = await loginDoPainel('  Sindica@Exemplo.com ');
+  assert.strictEqual(chamadas[0].email, 'sindica@exemplo.com');
+}]);
+pendentes.push(['painel: login vazio não chama o Supabase', async () => {
+  const { chamadas, els } = await loginDoPainel('  ');
+  assert.strictEqual(chamadas.length, 0);
+  assert.ok(els['login-error'].textContent);
+}]);
+
+caso('painel: campo de login é texto "E-mail ou usuário" e a lib do usuário é carregada', () => {
+  const tag = PAINEL.match(/<input[^>]*id="login-email"[^>]*>/)[0];
+  assert.ok(/type="text"/.test(tag), tag);
+  assert.ok(/autocapitalize="none"/.test(tag), tag);
+  assert.ok(/autocomplete="username"/.test(tag), tag);
+  assert.ok(/placeholder="E-mail ou usuário"/.test(tag), tag);
+  assert.ok(/<label[^>]*for="login-email"[^>]*>E-mail ou usuário<\/label>/.test(PAINEL));
+  assert.ok(PAINEL.includes('<script src="/js/usuario-portaria.js"></script>'));
+  assert.ok(extrair(PAINEL, 'async function doLogin(').includes('usuarioPortariaLib.paraLogin('));
+});
+
+caso('admin: login continua só por e-mail (super_admin)', () => {
+  assert.ok(!ADMIN.includes('usuarioPortariaLib.paraLogin('));
+  assert.ok(!/E-mail ou usuário/.test(ADMIN));
+});
+
+(async () => {
+  for (const [nome, fn] of pendentes) {
+    try { await fn(); passou++; console.log(`ok - ${nome}`); }
+    catch (e) { falhou++; console.log(`FALHOU - ${nome}\n  ${e.message.split('\n').join('\n  ')}`); }
+  }
+  console.log(`${passou} casos passaram${falhou ? `, ${falhou} falharam` : ''}`);
+  if (falhou) process.exit(1);
+})();

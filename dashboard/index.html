@@ -2821,6 +2821,7 @@
   <script src="/js/lista-dinamica.js"></script>
   <script src="/js/severidade-velocidade.js"></script>
   <script src="/js/miniatura.js"></script>
+  <script src="/js/usuario-portaria.js"></script>
 </head>
 <body>
   <!-- Ícones do tipo de pessoa (os mesmos do admin) -->
@@ -2839,8 +2840,8 @@
       <img class="login-logo" src="https://appps.com.br/assets/logo-protector.png" alt="Protector Sistemas">
       <h1>PROTECTOR TRAFFIC CONTROL</h1>
       <div class="subtitle">Lombada Educativa Inteligente</div>
-      <label for="login-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail</label>
-      <input type="email" id="login-email" placeholder="E-mail" autocomplete="email" aria-label="E-mail de acesso">
+      <label for="login-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">E-mail ou usuário</label>
+      <input type="text" id="login-email" placeholder="E-mail ou usuário" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="E-mail ou usuário de acesso">
       <label for="login-password" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Senha</label>
       <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password" aria-label="Senha de acesso" onkeydown="if(event.key==='Enter')doLogin()">
       <button type="button" onclick="doLogin()">ENTRAR</button>
@@ -3461,20 +3462,22 @@
     // AUTH
     // ============================================
     async function doLogin() {
-      const email = document.getElementById('login-email').value.trim();
+      const entrada = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       const errorEl = document.getElementById('login-error');
       errorEl.textContent = '';
 
-      if (!email || !password) {
-        errorEl.textContent = 'Preencha e-mail e senha.';
+      if (!entrada || !password) {
+        errorEl.textContent = 'Preencha usuário (ou e-mail) e senha.';
         return;
       }
 
       try {
+        // Porteiro entra com o usuário (sem "@"): vira o e-mail técnico do Auth
+        const email = usuarioPortariaLib.paraLogin(entrada);
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-          errorEl.textContent = 'E-mail ou senha incorretos.';
+          errorEl.textContent = 'Usuário (ou e-mail) ou senha incorretos.';
           console.error('Login error:', error);
           return;
         }
