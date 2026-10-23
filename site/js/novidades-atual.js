@@ -14,13 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.11.0',
+    versao: '1.11.1',
     data: '2026-10-23',
-    titulo: 'Avisos por e-mail escolhidos no cadastro de usuários',
+    titulo: 'Confirmações na própria tela e exclusão de cliente mais segura',
     itens: Object.freeze([
-      'Escolha no cadastro de usuários quem recebe os alertas e o relatório',
-      'Novo tipo de contato: Só recebe e-mail, sem acesso ao painel',
-      'O porteiro pode corrigir nome, unidade e tipo dos cadastros que ele fez',
+      'Confirmações e avisos do painel aparecem na própria tela, sem janelas do navegador',
+      'Ao encerrar o vínculo de uma placa, a placa aparece em destaque na confirmação',
+      'Exclusão de condomínio é feita de uma só vez: se algo falhar, nada é apagado',
     ]),
   });
 });

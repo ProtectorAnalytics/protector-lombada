@@ -51,7 +51,7 @@
       window.addEventListener('storage', function (e) { if (e.key === CHAVE) trocarSuave(escolha()); });
     })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
   <!-- jsPDF e XLSX são carregados sob demanda via lazyLoadExportLibs() -->
   <script>
     // Lazy-loader para libs de exportação (jsPDF + XLSX)
@@ -2603,6 +2603,7 @@
       visibility: hidden;
       pointer-events: none;
     }
+    #aviso.erro { border-color: var(--red); }
 
     /* Bottom sheet (tela estreita/toque): ancorado embaixo, arrastar fecha.
        A classe é aplicada pelo JS ao abrir (matchMedia), o movimento é mola. */
@@ -2887,7 +2888,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.11.0 &middot; 2026-10-23
+        v1.11.1 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -3130,7 +3131,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.11.0
+      Protector Traffic Control &middot; v1.11.1
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -5961,7 +5962,7 @@
 
     async function gerarVeiculosExcel() {
       if (veiculosList.length === 0) {
-        alert('Nenhum veículo para exportar.');
+        mostrarAviso('Nenhum veículo para exportar.', { erro: true });
         return;
       }
       await lazyLoadExportLibs();
@@ -6263,9 +6264,11 @@
       el.style.transform = `translate(-50%, ${((1 - p) * 12).toFixed(2)}px)`;
       el.style.visibility = p > 0 ? 'visible' : 'hidden';
     }
-    function mostrarAviso(texto) {
+    // { erro: true } pinta a borda de vermelho (falha, nada a confirmar)
+    function mostrarAviso(texto, { erro = false } = {}) {
       const el = document.getElementById('aviso');
       if (!molaAviso) molaAviso = Spring.create({ value: 0, onUpdate: pintarAviso });
+      el.classList.toggle('erro', erro);
       el.textContent = texto;
       molaAviso.set(1, Spring.DEFAULTS);
       clearTimeout(mostrarAviso._timer);
@@ -6273,7 +6276,14 @@
     }
 
     async function removerVeiculo(id, placa) {
-      if (!confirm(`Encerrar o vínculo da placa ${placa}?\n\nAs passagens antigas continuam mostrando quem estava ligado à placa; as novas aparecem como "Sem cadastro".`)) return;
+      const ok = await portariaGestao.confirmarNaPagina({
+        titulo: 'Encerrar o vínculo da placa?',
+        destaque: placa,
+        texto: 'As passagens antigas continuam mostrando quem estava ligado à placa; as novas aparecem como "Sem cadastro".',
+        textoOk: 'Encerrar vínculo',
+        textoCancel: 'Cancelar',
+      });
+      if (!ok) return;
 
       const token = (await sb.auth.getSession()).data.session?.access_token;
       if (!token) return;
@@ -6290,11 +6300,11 @@
           loadCapturas();
           loadRecentCards();
         } else {
-          const result = await resp.json();
-          alert(result.error || 'Erro ao remover veículo.');
+          const result = await resp.json().catch(() => ({}));
+          mostrarAviso(result.error || 'Erro ao remover veículo.', { erro: true });
         }
       } catch {
-        alert('Erro de conexão.');
+        mostrarAviso('Erro de conexão. Tente de novo.', { erro: true });
       }
     }
 
@@ -6381,7 +6391,7 @@
       // Exporta o período inteiro do filtro, não só as 300 passagens da lista
       const capturas = await capturasParaExportar();
       if (capturas.length === 0) {
-        alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
+        mostrarAviso('Nenhum dado para exportar. Aplique os filtros primeiro.', { erro: true });
         return;
       }
       await lazyLoadExportLibs();
@@ -6437,7 +6447,7 @@
       // Exporta o período inteiro do filtro, não só as 300 passagens da lista
       const capturas = await capturasParaExportar();
       if (capturas.length === 0) {
-        alert('Nenhum dado para exportar. Aplique os filtros primeiro.');
+        mostrarAviso('Nenhum dado para exportar. Aplique os filtros primeiro.', { erro: true });
         return;
       }
       await lazyLoadExportLibs();

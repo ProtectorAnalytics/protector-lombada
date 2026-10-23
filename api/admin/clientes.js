@@ -9,22 +9,15 @@ async function comContagemDestinatarios(clientes) {
 }
 
 /**
- * Apaga o que pertence ao cliente, parando no primeiro erro (supabase-js não
- * lança). so_email (sem login) vem antes dos demais usuários: a FK de
- * usuarios.cliente_id é ON DELETE SET NULL, e so_email sem cliente viola o
- * check da 2.2.
+ * Apaga o cliente e tudo que pertence a ele numa única transação no banco
+ * (RPC excluir_cliente_permanente, sql/migration-excluir-cliente-atomico.sql):
+ * ou sai tudo, ou nada. supabase-js não lança — o erro é conferido aqui.
+ * Devolve as contagens por tabela.
  */
-async function excluirDadosDoCliente(clienteId) {
-  const etapas = [
-    () => supabase.from('veiculos').delete().eq('cliente_id', clienteId),
-    () => supabase.from('usuarios').delete().eq('cliente_id', clienteId).eq('role', 'so_email'),
-    () => supabase.from('cameras').delete().eq('cliente_id', clienteId),
-    () => supabase.from('usuarios').delete().eq('cliente_id', clienteId),
-  ];
-  for (const etapa of etapas) {
-    const { error } = await etapa();
-    if (error) throw error;
-  }
+async function excluirClientePermanente(clienteId) {
+  const { data, error } = await supabase.rpc('excluir_cliente_permanente', { p_cliente: clienteId });
+  if (error) throw error;
+  return data;
 }
 
 module.exports = async function handler(req, res) {
@@ -208,21 +201,19 @@ module.exports = async function handler(req, res) {
       if (!clienteId) return res.status(400).json({ error: 'ID do cliente obrigatório' });
 
       if (permanent) {
-        // Exclusão permanente: remove veículos, contatos, câmeras, usuários e o
-        // cliente, nesta ordem; qualquer erro para tudo antes de apagar o cliente.
+        // Exclusão permanente: tudo numa transação (RPC); falha não deixa
+        // o cliente pela metade.
         const { data: cliente, error: leituraErr } = await supabase
           .from('clientes').select('nome').eq('id', clienteId).maybeSingle();
         if (leituraErr) throw leituraErr;
-        await excluirDadosDoCliente(clienteId);
-        const { error } = await supabase.from('clientes').delete().eq('id', clienteId);
-        if (error) throw error;
+        const removidos = await excluirClientePermanente(clienteId);
 
         await registrarAuditoria({
           usuarioId: profile.id,
           acao: 'excluir',
           tabela: 'clientes',
           registroId: clienteId,
-          detalhes: { nome: cliente?.nome || clienteId },
+          detalhes: { nome: cliente?.nome || clienteId, removidos },
           ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
         });
         return res.status(200).json({ ok: true, message: 'Cliente excluído permanentemente' });

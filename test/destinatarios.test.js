@@ -153,11 +153,13 @@ async function caso(nome, fn) { await fn(); passou++; console.log(`ok - ${nome}`
     assert.match(cron, /destinatariosComNome\(cliente\.id, 'relatorio'\)/);
   });
 
-  await caso('exclusão de cliente apaga os so_email antes do cliente', async () => {
-    const src = ler('api/admin/clientes.js');
-    const iSo = src.indexOf(".eq('role', 'so_email')");
-    const iCli = src.indexOf("from('clientes').delete()");
-    assert.ok(iSo > 0 && iSo < iCli, 'so_email apagado antes do cliente');
+  await caso('exclusão de cliente apaga os usuários (so_email incluso) antes do cliente', async () => {
+    // FK usuarios.cliente_id é SET NULL: so_email sem cliente viola o check da 2.2
+    assert.match(ler('api/admin/clientes.js'), /rpc\('excluir_cliente_permanente'/);
+    const sql = ler('sql/migration-excluir-cliente-atomico.sql');
+    const iUsu = sql.indexOf('delete from public.usuarios where cliente_id = p_cliente');
+    const iCli = sql.indexOf('delete from public.clientes where id = p_cliente');
+    assert.ok(iUsu > 0 && iUsu < iCli, 'usuários apagados antes do cliente');
   });
 
   await caso('nenhum arquivo de api/ e lib/ usa email_destinatarios', async () => {
