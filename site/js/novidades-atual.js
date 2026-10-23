@@ -14,16 +14,14 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.9.0',
-    data: '2026-10-22',
-    titulo: 'Cadastro pela portaria, direto do celular',
+    versao: '1.10.0',
+    data: '2026-10-23',
+    titulo: 'Login próprio para cada porteiro e unidades em massa',
     itens: Object.freeze([
-      'Nova página da portaria: o porteiro lê a placa com a câmera do celular e cadastra o carro em poucos toques.',
-      'A leitura acontece no próprio celular. A imagem não é enviada para lugar nenhum.',
-      'Ao ler a placa, o porteiro já vê se ela tem cadastro e de quem. Para visitante e prestador, basta confirmar se continua com a mesma unidade.',
-      'A página "Passaram sem cadastro" lista as placas das últimas 24 horas que ainda precisam de cadastro.',
-      'Se a câmera da lombada ler a placa com um caractere diferente, o celular oferece a correção.',
-      'A página pode ser instalada na tela inicial do celular e tem manual próprio.',
+      'Cada porteiro agora tem login próprio.',
+      'Cadastre unidades em massa por bloco, torre ou quadra, com o tipo da unidade, inclusive FIP (Fração Ideal).',
+      'Planilha de unidades para importar e exportar.',
+      'Esqueceu a senha? O porteiro pede ao síndico ou à Protector.',
     ]),
   });
 });
