@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual da Portaria · Lombada Educativa</title>
+<meta name="theme-color" content="#080C14">
+<script>
+  (function () {
+    var mq = window.matchMedia('(prefers-color-scheme: light)');
+    var raiz = document.documentElement;
+    var v = 'auto';
+    try { var x = localStorage.getItem('lombada-tema'); if (x === 'light' || x === 'dark') v = x; } catch (e) {}
+    raiz.setAttribute('data-theme', v === 'auto' ? (mq.matches ? 'light' : 'dark') : v);
+  })();
+</script>
+<style>
+  :root {
+    --bg: #080C14; --card: #111827; --text: #F1F5F9; --text-2: #94A3B8; --border: rgba(255,255,255,0.10);
+    --accent: #60A5FA; --tint: rgba(250,204,21,0.12);
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #F2F4F7; --card: #FFFFFF; --text: #0F172A; --text-2: #475569; --border: rgba(15,23,42,0.12);
+    --accent: #1D4ED8; --tint: rgba(133,106,0,0.10);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.6; font-size: 1.0625rem; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.25rem; margin: 36px 0 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  p, li { color: var(--text); }
+  .sub { color: var(--text-2); margin: 0 0 16px; }
+  a { color: var(--accent); }
+  nav.indice { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+  nav.indice ol { margin: 0; padding-left: 20px; }
+  nav.indice a { display: inline-block; padding: 6px 0; }
+  .dica { background: var(--tint); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin: 12px 0; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  .tipo-pessoa { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+  .tipo-pessoa svg { width: 20px; height: 20px; flex: none; }
+  .tipo-morador { color: #4ADE80; } .tipo-proprietario { color: #60A5FA; } .tipo-visitante { color: #FACC15; }
+  .tipo-prestador { color: #FDBA74; } .tipo-sem { color: #94A3B8; }
+  :root[data-theme="light"] .tipo-morador { color: #15803D; } :root[data-theme="light"] .tipo-proprietario { color: #1D4ED8; }
+  :root[data-theme="light"] .tipo-visitante { color: #856A00; } :root[data-theme="light"] .tipo-prestador { color: #B45309; }
+  :root[data-theme="light"] .tipo-sem { color: #475569; }
+  .voltar { display: inline-flex; align-items: center; min-height: 44px; }
+  footer { text-align: center; color: var(--text-2); font-size: 0.875rem; margin-top: 40px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="ic-casa" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="ic-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12 20 3M16 7l3 3M14 9l2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="ic-cracha" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 17c.8-2 2.2-3 4-3s3.2 1 4 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="ic-ferramenta" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0 4.8 4.8L11 19.6a2.1 2.1 0 0 1-3-3l8.3-8.3A4 4 0 0 0 14.5 6.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="ic-interrogacao" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</defs></svg>
+<main>
+  <a class="voltar" href="/portaria">&larr; Voltar para a portaria</a>
+  <h1>Manual da portaria</h1>
+  <p class="sub">Como cadastrar placas pelo celular durante o turno.</p>
+
+  <nav class="indice" aria-label="Índice">
+    <ol>
+      <li><a href="#turno">Começar o turno</a></li>
+      <li><a href="#ler">Ler a placa</a></li>
+      <li><a href="#salvar">Conferir e salvar</a></li>
+      <li><a href="#visitante">Visitante e prestador</a></li>
+      <li><a href="#outro-dono">Placa de outro dono</a></li>
+      <li><a href="#sem-cadastro">Passaram sem cadastro</a></li>
+      <li><a href="#correcao">Correção automática</a></li>
+      <li><a href="#instalar">Instalar na tela inicial</a></li>
+      <li><a href="#privacidade">Privacidade</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="turno">1. Começar o turno</h2>
+  <p>Entre com o e-mail e a senha da portaria. Em seguida, toque no seu nome na lista de porteiros. O sistema guarda quem fez cada cadastro.</p>
+  <p>Na troca de turno, toque em <strong>Trocar porteiro</strong> e escolha o novo nome. Se o seu nome não aparecer, peça ao síndico ou à Protector para cadastrá-lo.</p>
+
+  <h2 id="ler">2. Ler a placa</h2>
+  <p>Toque em <strong>Ler placa</strong>. A câmera abre com uma moldura. Deixe a placa dentro da moldura e aguarde: a leitura é automática.</p>
+  <ul>
+    <li><strong>Digitar:</strong> se preferir, toque em Digitar e escreva a placa. Depois toque em <strong>Confirmar placa</strong>.</li>
+    <li><strong>Lanterna:</strong> se o celular tiver lanterna, o botão aparece na câmera. Toque para ligar ou desligar.</li>
+  </ul>
+  <div class="dica">
+    <strong>Dicas para ler melhor</strong>
+    <ul>
+      <li>Aproxime o celular da placa.</li>
+      <li>Deixe a placa reta, sem inclinar o celular.</li>
+      <li>Mantenha a placa limpa.</li>
+      <li>À noite, use a lanterna.</li>
+    </ul>
+  </div>
+
+  <h2 id="salvar">3. Conferir e salvar</h2>
+  <p>Depois da leitura, o sistema mostra se a placa já tem cadastro e de quem. Confira a placa e siga os passos:</p>
+  <ol>
+    <li>Escolha a <strong>Unidade</strong>. Com muitas unidades, use a busca.</li>
+    <li>Confirme o <strong>Nome</strong>. Toque num nome sugerido ou digite outro.</li>
+    <li>Escolha o <strong>Tipo</strong>.</li>
+    <li>Toque em <strong>Salvar</strong>. Uma mensagem de confirmação aparece na tela.</li>
+  </ol>
+  <table>
+    <tbody>
+      <tr><td><span class="tipo-pessoa tipo-morador"><svg aria-hidden="true" focusable="false"><use href="#ic-casa"/></svg>Morador</span></td><td>Quem mora no condomínio.</td></tr>
+      <tr><td><span class="tipo-pessoa tipo-proprietario"><svg aria-hidden="true" focusable="false"><use href="#ic-chave"/></svg>Proprietário</span></td><td>Dono da unidade que não mora nela.</td></tr>
+      <tr><td><span class="tipo-pessoa tipo-visitante"><svg aria-hidden="true" focusable="false"><use href="#ic-cracha"/></svg>Visitante</span></td><td>Quem vem de visita, inclusive carro de aluguel.</td></tr>
+      <tr><td><span class="tipo-pessoa tipo-prestador"><svg aria-hidden="true" focusable="false"><use href="#ic-ferramenta"/></svg>Prestador</span></td><td>Quem presta serviço no condomínio.</td></tr>
+      <tr><td><span class="tipo-pessoa tipo-sem"><svg aria-hidden="true" focusable="false"><use href="#ic-interrogacao"/></svg>Sem cadastro</span></td><td>Placa que ainda não tem dono. É a que você vai cadastrar.</td></tr>
+    </tbody>
+  </table>
+  <p>Para desistir, toque em <strong>Cancelar</strong>. Nada é salvo.</p>
+
+  <h2 id="visitante">4. Visitante e prestador</h2>
+  <p>Quando a placa já é de um visitante ou prestador, o sistema pergunta <strong>"Continua com a unidade tal?"</strong>.</p>
+  <ul>
+    <li><strong>Sim:</strong> o cadastro é mantido e registra a nova visita.</li>
+    <li><strong>Não:</strong> escolha a nova unidade e salve.</li>
+  </ul>
+  <p>Para os demais tipos, a pergunta é <strong>"Manter este cadastro?"</strong>, com as opções Manter e Trocar.</p>
+
+  <h2 id="outro-dono">5. Placa de outro dono (carro alugado)</h2>
+  <p>Um carro pode mudar de mãos, como um carro alugado. Leia a placa, toque em <strong>Não</strong> (ou <strong>Trocar</strong>), escolha a nova unidade e o nome e salve. O cadastro antigo fica guardado no histórico, e cada passagem mostra quem era o responsável naquele dia.</p>
+
+  <h2 id="sem-cadastro">6. Passaram sem cadastro</h2>
+  <p>Toque na aba <strong>Sem cadastro</strong>, na parte de baixo da tela. Ela lista as placas das últimas 24 horas que passaram pela lombada e ainda não têm cadastro. Toque numa placa para cadastrá-la.</p>
+
+  <h2 id="correcao">7. Correção automática</h2>
+  <p>Depois de salvar, a câmera da lombada pode ler a mesma placa com um caractere diferente. Nesse caso, o celular mostra o aviso <em>"A lombada leu ... Corrigir o cadastro para ...?"</em>.</p>
+  <ul>
+    <li><strong>Corrigir:</strong> o cadastro passa a usar a placa lida pela lombada.</li>
+    <li><strong>Está certo:</strong> o cadastro continua como você salvou.</li>
+  </ul>
+
+  <h2 id="instalar">8. Instalar na tela inicial</h2>
+  <p>Assim a portaria abre como um aplicativo, com um toque.</p>
+  <ul>
+    <li><strong>Android (Chrome):</strong> toque no menu <strong>&#8942;</strong> e depois em <strong>Adicionar à tela inicial</strong>.</li>
+    <li><strong>iPhone (Safari):</strong> toque em <strong>Compartilhar</strong> e depois em <strong>Adicionar à Tela de Início</strong>.</li>
+  </ul>
+
+  <h2 id="privacidade">9. Privacidade</h2>
+  <p>A leitura da placa acontece dentro do seu celular. A imagem da câmera <strong>não sai do aparelho</strong> e não é enviada nem guardada. Só o texto da placa vai para o cadastro.</p>
+  <p>Em celular compartilhado, toque em <strong>Sair</strong> ao fim do turno.</p>
+
+  <footer>
+    <strong>Protector Traffic Control</strong> - v1.9.0 | Outubro 2026<br>
+    <em>Sistema de Lombada Educativa Inteligente</em>
+  </footer>
+</main>
+</body>
+</html>
