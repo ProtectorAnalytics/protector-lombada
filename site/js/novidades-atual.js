@@ -14,13 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.10.1',
+    versao: '1.11.0',
     data: '2026-10-23',
-    titulo: 'Login com verificação anti-robô para proteger as senhas',
+    titulo: 'Avisos por e-mail escolhidos no cadastro de usuários',
     itens: Object.freeze([
-      'O login do painel, da portaria e do administrador passa a confirmar que quem entra é uma pessoa, e não um robô tentando adivinhar senhas.',
-      'Quase sempre a verificação é invisível. Se aparecer uma caixa de confirmação, é só clicar nela.',
-      'O "Esqueci minha senha" ganhou a mesma proteção.',
+      'Escolha no cadastro de usuários quem recebe os alertas e o relatório',
+      'Novo tipo de contato: Só recebe e-mail, sem acesso ao painel',
+      'O porteiro pode corrigir nome, unidade e tipo dos cadastros que ele fez',
     ]),
   });
 });

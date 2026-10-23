@@ -46,7 +46,8 @@ stub('lib/supabase', {
   markNotificado: async () => {},
 });
 stub('lib/pdf-generator', { gerarPDF: async () => Buffer.alloc(0) });
-stub('lib/email-sender', { enviarAlerta: async () => {}, getDestinatarios: async () => [] });
+stub('lib/email-sender', { enviarAlerta: async () => {} });
+stub('lib/destinatarios', { destinatariosDoCliente: async () => [] });
 stub('lib/veiculos-base-repo', { criarRepoSupabase: () => ({ contarPassagens: async () => 0 }) });
 
 const { processarAposResposta } = require('../api/captura');

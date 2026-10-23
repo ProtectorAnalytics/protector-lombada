@@ -25,6 +25,7 @@ const V_ANTERIOR = 'f0000000-0000-4000-8000-000000000009';
 const V_ERRADO_OCUPADA = 'f0000000-0000-4000-8000-00000000000a';
 const V_ANTERIOR_OCUPADA = 'f0000000-0000-4000-8000-00000000000b';
 const V_OUTRO_VIGENTE = 'f0000000-0000-4000-8000-00000000000c';
+const V_PORT_ENCERRADO = 'f0000000-0000-4000-8000-00000000000d';
 const T_DIFERE = '2026-10-22T09:55:00.123456+00:00';
 const T_OCUPADA = '2026-10-22T09:56:00.654321+00:00';
 const minutosAtras = (m) => new Date(Date.now() - m * 60000).toISOString();
@@ -58,6 +59,7 @@ const TABELAS = {
     vPort(V_ERRADO_OCUPADA, { placa: 'MNO3D45', vigente_desde: T_OCUPADA }),
     { id: V_ANTERIOR_OCUPADA, cliente_id: C1, placa: 'MNO3D45', encerrado_em: T_OCUPADA, origem: 'painel' },
     { id: V_OUTRO_VIGENTE, cliente_id: C1, placa: 'MNO3345', encerrado_em: null, origem: 'painel' },
+    vPort(V_PORT_ENCERRADO, { placa: 'PQR4E56', encerrado_em: '2026-01-01T00:00:00Z' }),
   ],
 };
 
@@ -296,7 +298,7 @@ console.error = () => {};
     assert.strictEqual(h.code, 200);
     const cols = estado.ops[0].colunas.split(',').map((c) => c.trim());
     assert.deepStrictEqual(cols, ['id', 'placa', 'nome_morador', 'unidade', 'unidade_id', 'tipo_pessoa',
-      'vigente_desde', 'encerrado_em', 'criado_em', 'cadastrado_por']);
+      'vigente_desde', 'encerrado_em', 'criado_em', 'cadastrado_por', 'cadastrado_por_usuario']);
     assert.ok(!estado.ops[0].filtros.some(([t, c]) => t === 'is' && c === 'encerrado_em'));
     const v = await chamar('portaria', 'GET', { query: { cliente_id: C1 } });
     assert.strictEqual(v.code, 200);
@@ -484,6 +486,93 @@ console.error = () => {};
     assert.strictEqual(escritas().length, 0);
   });
 
+  // ---------- PUT da portaria (edita o próprio cadastro, sem prazo) ----------
+  await caso('GET portaria historico=1 devolve meu (true só no cadastro deste login) sem expor cadastrado_por_usuario', async () => {
+    const h = await chamar('portaria', 'GET', { query: { cliente_id: C1, historico: '1' } });
+    assert.strictEqual(h.code, 200);
+    h.body.forEach((v) => assert.ok(!('cadastrado_por_usuario' in v), `id do usuário exposto em ${v.id}`));
+    const meu = Object.fromEntries(h.body.map((v) => [v.id, v.meu]));
+    assert.strictEqual(meu[V_PORT_5], true);
+    assert.strictEqual(meu[V_PORT_20], true);
+    assert.strictEqual(meu[V_PORT_OUTRO], false);
+    assert.strictEqual(meu[V_VIGENTE], false);
+  });
+  await caso('GET do síndico segue igual (sem meu, colunas completas)', async () => {
+    const h = await chamar('admin', 'GET', { query: { cliente_id: C1, historico: '1' } });
+    assert.ok(h.body.every((v) => !('meu' in v)));
+    assert.ok(!/cadastrado_por_usuario/.test(estado.ops[0].colunas));
+  });
+  const editar = (id, body) => chamar('portaria', 'PUT', { query: { id }, body });
+  const MUDANCA = { nome_morador: 'Rita Teste', unidade: 'Torre 1 · 101', unidade_id: UNIDADE_C1, tipo_pessoa: 'visitante' };
+  await caso('portaria edita nome, unidade e tipo do próprio cadastro vigente (sem prazo) e audita', async () => {
+    const r = await editar(V_PORT_20, MUDANCA);
+    assert.strictEqual(r.code, 200, JSON.stringify(r.body));
+    const ws = escritas();
+    assert.strictEqual(ws.length, 1);
+    assert.deepStrictEqual(ws[0].patch, MUDANCA);
+    const f = ws[0].filtros;
+    assert.ok(f.some(([t, c, v]) => t === 'eq' && c === 'id' && v === V_PORT_20));
+    assert.ok(f.some(([t, c, v]) => t === 'is' && c === 'encerrado_em' && v === null));
+    assert.ok(f.some(([t, c, v]) => t === 'eq' && c === 'cadastrado_por_usuario' && v === 'u-port'), 'update condicionado ao dono');
+    assert.ok(!('cadastrado_por_usuario' in r.body), 'resposta não expõe o id do usuário');
+    assert.strictEqual(estado.auditoria.length, 1);
+    const a = estado.auditoria[0];
+    assert.strictEqual(a.acao, 'atualizar');
+    assert.strictEqual(a.usuarioId, 'u-port');
+    assert.strictEqual(a.registroId, V_PORT_20);
+    assert.deepStrictEqual(a.detalhes, { cliente_id: C1, ...MUDANCA });
+  });
+  await caso('portaria editando cadastro de outro porteiro → 403 sem escrita', async () => {
+    const r = await editar(V_PORT_OUTRO, { nome_morador: 'X' });
+    assert.strictEqual(r.code, 403);
+    assert.strictEqual(r.body.error, 'Só dá para editar cadastros feitos por você');
+    assert.strictEqual(escritas().length, 0);
+    assert.strictEqual(estado.auditoria.length, 0);
+  });
+  await caso('portaria editando cadastro do painel (sem dono) → 403 sem escrita', async () => {
+    const r = await editar(V_VIGENTE, { nome_morador: 'X' });
+    assert.strictEqual(r.code, 403);
+    assert.strictEqual(escritas().length, 0);
+  });
+  await caso('portaria editando o próprio cadastro já encerrado → 409 sem escrita', async () => {
+    const r = await editar(V_PORT_ENCERRADO, { nome_morador: 'X' });
+    assert.strictEqual(r.code, 409);
+    assert.strictEqual(escritas().length, 0);
+  });
+  await caso('portaria editando cadastro de outro cliente → 403 sem escrita', async () => {
+    const r = await editar(V_PORT_C2, { nome_morador: 'X' });
+    assert.strictEqual(r.code, 403);
+    assert.strictEqual(escritas().length, 0);
+  });
+  for (const extra of [{ placa: 'QWE1R24' }, { marca: 'Fiat' }, { cor: 'Prata' }, { cliente_id: C2 }, { encerrado_em: null }]) {
+    const campo = Object.keys(extra)[0];
+    await caso(`portaria mandando ${campo} no PUT → 400 sem escrita`, async () => {
+      const r = await editar(V_PORT_5, { nome_morador: 'X', ...extra });
+      assert.strictEqual(r.code, 400);
+      assert.strictEqual(escritas().length, 0);
+    });
+  }
+  await caso('portaria com unidade_id de outro cliente → 400 sem escrita', async () => {
+    const r = await editar(V_PORT_5, { unidade_id: UNIDADE_C2, unidade: 'Casa 9' });
+    assert.strictEqual(r.code, 400);
+    assert.strictEqual(escritas().length, 0);
+  });
+  await caso('portaria: se o vínculo encerrar entre a leitura e a gravação → 409', async () => {
+    estado.falharUpdate = () => true;
+    try {
+      const r = await editar(V_PORT_5, { nome_morador: 'X' });
+      assert.strictEqual(r.code, 409);
+      assert.strictEqual(estado.auditoria.length, 0);
+    } finally { estado.falharUpdate = null; }
+  });
+  await caso('síndico segue editando marca/cor de qualquer vínculo do cliente', async () => {
+    const r = await chamar('admin', 'PUT', { query: { id: V_PORT_OUTRO }, body: { marca: 'Fiat', cor: 'Prata' } });
+    assert.strictEqual(r.code, 200);
+    const [w] = escritas();
+    assert.deepStrictEqual(w.patch, { marca: 'Fiat', cor: 'Prata' });
+    assert.ok(!w.filtros.some(([, c]) => c === 'cadastrado_por_usuario'));
+  });
+
   // ---------- DELETE ----------
   await caso('DELETE comum encerra com encerrado_em ISO, sem delete()', async () => {
     const r = await chamar('admin', 'DELETE', { query: { id: V_VIGENTE } });
@@ -529,6 +618,18 @@ console.error = () => {};
     assert.ok(op.filtros.some(([t, c, v]) => t === 'is' && c === 'encerrado_em' && v === null));
     assert.ok(op.filtros.some(([t, c, v]) => t === 'in' && c === 'placa' && JSON.stringify(v) === JSON.stringify(['ABC1C34', 'ABC1234'])));
     assert.ok(!op.filtros.some(([, c]) => c === 'ativo'));
+  });
+
+  await caso('corpo que não é objeto JSON (null, lista, texto, número) → 400 "Corpo inválido" sem escrita', async () => {
+    for (const body of [null, [], [base()], 'ABC1234', 42, true]) {
+      for (const [perfil, method, query] of [['admin', 'POST', {}], ['admin', 'PUT', { id: V_VIGENTE }], ['portaria', 'PUT', { id: V_VIGENTE }]]) {
+        const r = await chamar(perfil, method, { query, body });
+        assert.strictEqual(r.code, 400, `${method} ${JSON.stringify(body)}`);
+        assert.strictEqual(r.body.error, 'Corpo inválido');
+        assert.strictEqual(escritas().length, 0);
+        assert.strictEqual(estado.rpc.length, 0);
+      }
+    }
   });
 
   console.error = originalError;

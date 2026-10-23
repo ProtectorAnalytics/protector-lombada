@@ -505,6 +505,148 @@ caso('editar a placa com o formulário aberto mantém unidade/nome/tipo e só re
   assert.strictEqual(el('form-vinculo').hidden, true);
 });
 
+// ---- Porteiro edita o próprio cadastro (2.2)
+const UNIDADES_TORRE = [{ id: 't101', nome: '101', bloco: 'Torre 1' }, { id: 't102', nome: '102', bloco: 'Torre 1' }];
+const V_MEU = { id: 'v-meu', placa: 'QWE1R23', nome_morador: 'Rita', unidade: 'Torre 1 · 101', unidade_id: 't101',
+  tipo_pessoa: 'morador', encerrado_em: null, vigente_desde: null, criado_em: '2026-01-01T00:00:00Z', meu: true };
+
+caso('Editar só aparece para a portaria, no cadastro vigente que é meu', () => {
+  const { podeEditarVinculo } = carregar(['podeEditarVinculo']);
+  assert.strictEqual(podeEditarVinculo('portaria', V_MEU), true);
+  assert.strictEqual(podeEditarVinculo('portaria', { ...V_MEU, meu: false }), false, 'de outro porteiro');
+  assert.strictEqual(podeEditarVinculo('portaria', { ...V_MEU, meu: undefined }), false, 'sem a informação');
+  assert.strictEqual(podeEditarVinculo('portaria', { ...V_MEU, encerrado_em: '2026-01-02T00:00:00Z' }), false, 'encerrado');
+  assert.strictEqual(podeEditarVinculo('admin', V_MEU), false, 'síndico segue com Manter/Trocar');
+  assert.strictEqual(podeEditarVinculo('portaria', null), false);
+});
+
+function telaDoVinculo(v, modoAtual) {
+  const els = {};
+  const el = (id) => els[id] || (els[id] = { id, hidden: true, value: '', textContent: '', innerHTML: '', blur() {}, scrollIntoView() {} });
+  const { f, ctx } = carregarComContexto(
+    ['confirmarPlaca', 'htmlVinculo', 'nomeUnidadeDe', 'perguntaDoVinculo', 'podeEditarVinculo', 'criarCadastro', 'corpoCadastro', 'corpoEdicao', 'limparPlacaDigitada'],
+    {
+      $: el, indiceVinculos: vinculoPlacaLib.indexarVinculos(v ? [v] : []), unidades: UNIDADES_TORRE, vinculoMostrado: null, modo: modoAtual,
+      etapa: (q) => { ctx.etapaAtual = q; }, mostrarConferencia: () => {}, abrirFormulario: () => { ctx.abriu = true; },
+    },
+  );
+  vm.runInContext("var cadastro = criarCadastro({ contexto: () => ({}), enviar: async () => ({}) });", ctx);
+  ctx.cadastro.definirPlaca('QWE1R23');
+  f.confirmarPlaca();
+  return { el, ctx };
+}
+
+caso('placa com cadastro meu vigente: mostra o botão Editar; de outro porteiro, não', () => {
+  const meu = telaDoVinculo(V_MEU, 'portaria');
+  assert.strictEqual(meu.ctx.etapaAtual, 'vinculo');
+  assert.strictEqual(meu.el('botao-editar').hidden, false);
+  const outro = telaDoVinculo({ ...V_MEU, meu: false }, 'portaria');
+  assert.strictEqual(outro.el('botao-editar').hidden, true);
+  const sindico = telaDoVinculo(V_MEU, 'admin');
+  assert.strictEqual(sindico.el('botao-editar').hidden, true);
+});
+
+function cadastroDeEdicao(original, editar) {
+  const { criarCadastro } = carregar(['criarCadastro', 'corpoCadastro', 'corpoEdicao', 'limparPlacaDigitada']);
+  const enviados = []; const editados = [];
+  const c = criarCadastro({
+    contexto: () => ({ clienteId: 'c1', role: 'portaria', unidades: UNIDADES_TORRE }),
+    enviar: async (corpo) => { enviados.push(corpo); return { id: 'novo' }; },
+    editar: editar || (async (id, corpo) => { editados.push([id, JSON.parse(JSON.stringify(corpo))]); return { id }; }),
+  });
+  c.definirPlaca(original.placa);
+  c.formularioNovo({
+    editandoId: original.id, original, unidadeId: original.unidade_id || '', nome: original.nome_morador || '',
+    tipo: original.tipo_pessoa, temVinculo: true,
+  });
+  return { c, enviados, editados };
+}
+
+caso('edição: troca tudo → PUT com nome, unidade (rótulo completo + id) e tipo; vai por editar, não por enviar', async () => {
+  const { c, enviados, editados } = cadastroDeEdicao(V_MEU);
+  c.escolherUnidade('t102'); c.definirNome('  Rita   Souza '); c.escolherTipo('visitante');
+  const r = await c.salvar();
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(r.editado, true);
+  assert.strictEqual(enviados.length, 0);
+  assert.deepStrictEqual(editados, [['v-meu', { nome_morador: 'Rita Souza', unidade: 'Torre 1 · 102', unidade_id: 't102', tipo_pessoa: 'visitante' }]]);
+  c.formularioNovo({});
+  assert.strictEqual(c.estado().editandoId, '', 'formulário novo sai do modo edição');
+  assert.strictEqual(c.estado().original, null);
+});
+
+caso('edição só envia o que mudou (só o tipo → só tipo_pessoa)', async () => {
+  const { c, editados } = cadastroDeEdicao(V_MEU);
+  c.escolherTipo('visitante');
+  assert.strictEqual((await c.salvar()).ok, true);
+  assert.deepStrictEqual(editados, [['v-meu', { tipo_pessoa: 'visitante' }]]);
+});
+
+caso('edição sem mudança nenhuma → "Nada para alterar", sem chamar a API', async () => {
+  const { c, editados } = cadastroDeEdicao(V_MEU);
+  c.definirNome(' Rita ');
+  const r = await c.salvar();
+  assert.strictEqual(r.ok, false);
+  assert.strictEqual(r.erro, 'Nada para alterar');
+  assert.strictEqual(editados.length, 0);
+});
+
+caso('edição de vínculo com unidade antiga em texto livre: sem escolher unidade, mantém o texto (não envia unidade)', async () => {
+  const legado = { ...V_MEU, nome_morador: '', unidade: 'Casa velha 7', unidade_id: null };
+  const { c, editados } = cadastroDeEdicao(legado);
+  c.definirNome('Rita');
+  assert.strictEqual((await c.salvar()).ok, true);
+  assert.deepStrictEqual(editados, [['v-meu', { nome_morador: 'Rita' }]]);
+  const s2 = cadastroDeEdicao(legado);
+  s2.c.escolherTipo('prestador');
+  assert.strictEqual((await s2.c.salvar()).ok, true, 'sem nome, mas a unidade antiga continua');
+  assert.deepStrictEqual(s2.editados, [['v-meu', { tipo_pessoa: 'prestador' }]]);
+  const s3 = cadastroDeEdicao(legado);
+  s3.c.escolherUnidade('t101');
+  await s3.c.salvar();
+  assert.deepStrictEqual(s3.editados, [['v-meu', { unidade: 'Torre 1 · 101', unidade_id: 't101' }]], 'escolher troca o texto pela da lista');
+});
+
+caso('edição: unidade antiga em texto livre aparece no formulário como valor atual', () => {
+  const pagina = extrair(FONTE, 'function desenharCadastro(');
+  assert.ok(PAGINA.includes('id="unidade-atual"'));
+  assert.ok(/unidade-atual'\)\.textContent\s*=/.test(pagina), 'texto via textContent');
+  const { textoUnidadeAtual } = carregar(['textoUnidadeAtual']);
+  const legado = { ...V_MEU, unidade: 'Casa velha 7', unidade_id: null };
+  assert.strictEqual(textoUnidadeAtual({ editandoId: 'v', unidadeId: '', original: legado }), 'Unidade atual: Casa velha 7');
+  assert.strictEqual(textoUnidadeAtual({ editandoId: 'v', unidadeId: 't101', original: legado }), '', 'escolheu outra');
+  assert.strictEqual(textoUnidadeAtual({ editandoId: '', unidadeId: '', original: null }), '', 'cadastro novo');
+  assert.strictEqual(textoUnidadeAtual({ editandoId: 'v', unidadeId: 't101', original: V_MEU }), '', 'unidade da lista já marcada');
+});
+
+caso('edição sem unidade e sem nome em nenhum lugar → erro, nada enviado; erro da API mantém o formulário', async () => {
+  let chamadas = 0;
+  const vazio = { ...V_MEU, nome_morador: '', unidade: null, unidade_id: null };
+  const { c } = cadastroDeEdicao(vazio, async () => { chamadas++; const e = new Error('Só dá para editar cadastros feitos por você'); e.status = 403; throw e; });
+  c.escolherTipo('visitante');
+  const semNada = await c.salvar();
+  assert.strictEqual(semNada.ok, false);
+  assert.strictEqual(chamadas, 0);
+  c.escolherUnidade('t101');
+  const r = await c.salvar();
+  assert.strictEqual(r.ok, false);
+  assert.strictEqual(r.erro, 'Só dá para editar cadastros feitos por você');
+  assert.strictEqual(c.estado().editandoId, 'v-meu');
+});
+
+caso('Editar abre o formulário preenchido; salvar edição recarrega os vínculos e não liga a rede de segurança', () => {
+  const abrir = extrair(FONTE, 'function abrirEdicao(');
+  assert.ok(abrir.includes('editandoId: v.id') && /original: v\b/.test(abrir));
+  assert.ok(/unidadeId\b/.test(abrir) && /nome:/.test(abrir) && /tipo: v\.tipo_pessoa/.test(abrir));
+  assert.ok(extrair(FONTE, 'function abrirFormulario(').includes("$('campo-nome').value = cadastro.estado().nome"));
+  const salvar = extrair(FONTE, 'async function aoSalvar(');
+  const ramo = salvar.slice(0, salvar.indexOf('iniciarRede('));
+  assert.ok(/r\.editado/.test(ramo) && /recarregarVinculos\(\)/.test(ramo), 'edição recarrega antes de sair, sem rede');
+  assert.ok(/\$\('botao-editar'\)\.addEventListener\('click', abrirEdicao\)/.test(FONTE));
+  assert.ok(/chamarApi\(`\/api\/admin\/veiculos\?id=\$\{encodeURIComponent\(id\)\}`, 'PUT', corpo\)/.test(FONTE));
+  assert.ok(PAGINA.includes('id="botao-editar"'));
+});
+
 caso('ORT e modelo pré-carregados depois do login, sem bloquear a tela', () => {
   const abrir = extrair(FONTE, 'function abrirApp(');
   assert.ok(abrir.includes('preCarregarLeitor()'));

@@ -300,6 +300,7 @@
             <button type="button" id="pergunta-sim" class="botao primario"></button>
             <button type="button" id="pergunta-nao" class="botao"></button>
           </div>
+          <button type="button" id="botao-editar" class="botao largo" style="margin-top:10px" hidden>Editar</button>
         </div>
 
         <div id="etapa-formulario" class="cartao" hidden>
@@ -308,6 +309,7 @@
           <fieldset>
             <legend class="rotulo">Unidade</legend>
             <input id="busca-unidade" class="campo" type="search" placeholder="Buscar unidade" aria-label="Buscar unidade" hidden style="margin-bottom:10px">
+            <p id="unidade-atual" class="mudo" hidden></p>
             <div id="lista-unidades"></div>
             <p id="unidades-vazio" class="mudo" hidden>Nenhuma unidade cadastrada.</p>
           </fieldset>
@@ -408,6 +410,42 @@
     return { texto: 'Manter este cadastro?', sim: 'Manter', nao: 'Trocar' };
   }
 
+  /** "Editar" só para o login da portaria, no cadastro vigente feito por ele (`meu` vem da API). */
+  function podeEditarVinculo(modo, v) {
+    return modo === 'portaria' && Boolean(v) && v.meu === true && !v.encerrado_em;
+  }
+
+  /**
+   * Corpo do PUT de edição: só o que mudou em relação ao vínculo carregado
+   * (estado.original), ou { erro }. Sem unidade escolhida, a unidade fica como
+   * está (inclusive o texto livre antigo): a edição nunca apaga o que não mudou.
+   */
+  function corpoEdicao(estado, ctx) {
+    if (!estado.tipo) return { erro: 'Escolha o tipo: Morador, Proprietário, Visitante ou Prestador.' };
+    const o = estado.original || {};
+    const unidade = (ctx.unidades || []).find((u) => u.id === estado.unidadeId) || null;
+    const limpo = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+    const nome = limpo(estado.nome);
+    if (!unidade && !o.unidade_id && !limpo(o.unidade) && !nome) return { erro: 'Escolha a unidade ou digite o nome.' };
+    const corpo = {};
+    if (nome !== limpo(o.nome_morador)) corpo.nome_morador = nome || null;
+    if (unidade && unidade.id !== o.unidade_id) {
+      corpo.unidade = unidadeLib.rotuloUnidade(unidade);
+      corpo.unidade_id = unidade.id;
+    }
+    if (estado.tipo !== o.tipo_pessoa) corpo.tipo_pessoa = estado.tipo;
+    if (Object.keys(corpo).length === 0) return { erro: 'Nada para alterar' };
+    return { corpo };
+  }
+
+  /** Na edição sem unidade da lista marcada: o texto da unidade atual (antigo, livre) para o porteiro ver. */
+  function textoUnidadeAtual(estado) {
+    const o = estado && estado.original;
+    if (!estado || !estado.editandoId || !o || estado.unidadeId) return '';
+    const texto = String(o.unidade || '').trim();
+    return texto ? `Unidade atual: ${texto}` : '';
+  }
+
   /** Corpo do POST /api/admin/veiculos, ou { erro } dizendo o que falta. */
   function corpoCadastro(estado, ctx) {
     const placa = limparPlacaDigitada(estado.placa);
@@ -433,10 +471,11 @@
   /**
    * Estado do formulário de cadastro. Nada vai ao servidor até salvar();
    * dois toques seguidos enviam uma vez; erro mantém tudo preenchido.
+   * Com editandoId, salvar() edita esse vínculo (PUT) em vez de cadastrar.
    */
   function criarCadastro(opcoes) {
-    const { contexto, enviar, aoMudar } = opcoes;
-    const VAZIO = { placa: '', unidadeId: '', nome: '', tipo: '', temVinculo: false, salvando: false, erro: '' };
+    const { contexto, enviar, editar, aoMudar } = opcoes;
+    const VAZIO = { placa: '', unidadeId: '', nome: '', tipo: '', temVinculo: false, editandoId: '', original: null, salvando: false, erro: '' };
     let estado = { ...VAZIO };
     const mudar = (parcial) => {
       estado = { ...estado, ...parcial };
@@ -444,13 +483,14 @@
     };
     async function salvar() {
       if (estado.salvando) return { ok: false, erro: 'Salvando…' };
-      const r = corpoCadastro(estado, contexto());
+      const editando = Boolean(estado.editandoId);
+      const r = editando ? corpoEdicao(estado, contexto()) : corpoCadastro(estado, contexto());
       if (r.erro) { mudar({ erro: r.erro }); return { ok: false, erro: r.erro }; }
       mudar({ salvando: true, erro: '' });
       try {
-        const salvo = await enviar(r.corpo);
+        const salvo = editando ? await editar(estado.editandoId, r.corpo) : await enviar(r.corpo);
         mudar({ salvando: false });
-        return { ok: true, salvo, corpo: r.corpo };
+        return { ok: true, salvo, corpo: r.corpo, editado: editando };
       } catch (e) {
         const erro = e && e.status ? e.message : 'Sem conexão com a internet. Confira a rede e toque em Salvar de novo.';
         mudar({ salvando: false, erro });
@@ -553,6 +593,7 @@
   const cadastro = criarCadastro({
     contexto: contextoCadastro,
     enviar: (corpo) => chamarApi('/api/admin/veiculos', 'POST', corpo),
+    editar: (id, corpo) => chamarApi(`/api/admin/veiculos?id=${encodeURIComponent(id)}`, 'PUT', corpo),
     aoMudar: desenharCadastro,
   });
 
@@ -742,6 +783,8 @@
   function etapa(qual) {
     $('etapa-vinculo').hidden = qual !== 'vinculo';
     $('etapa-formulario').hidden = qual !== 'formulario';
+    // Na edição a placa fica fixa: muda-se só nome, unidade e tipo.
+    $('campo-placa').readOnly = qual === 'formulario' && Boolean(cadastro.estado().editandoId);
   }
 
   function recomecar() {
@@ -794,6 +837,7 @@
     $('pergunta-texto').textContent = p.texto;
     $('pergunta-sim').textContent = p.sim;
     $('pergunta-nao').textContent = p.nao;
+    $('botao-editar').hidden = !podeEditarVinculo(modo, vinculoMostrado);
     etapa('vinculo');
     $('etapa-vinculo').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
@@ -815,6 +859,14 @@
       caixa.textContent = `Base de veículos: ${texto}. Confira com o carro.`;
       caixa.hidden = false;
     } catch (e) { /* sem conferência: o cadastro segue */ }
+  }
+
+  // Porteiro corrige nome/unidade/tipo do próprio cadastro: mesmo formulário, preenchido.
+  function abrirEdicao() {
+    const v = vinculoMostrado;
+    if (!podeEditarVinculo(modo, v)) return;
+    const unidadeId = v.unidade_id && unidades.some((u) => u.id === v.unidade_id) ? v.unidade_id : '';
+    abrirFormulario({ editandoId: v.id, original: v, unidadeId, nome: v.nome_morador || '', tipo: v.tipo_pessoa, temVinculo: true });
   }
 
   function manterVinculo() {
@@ -919,7 +971,7 @@
     $('busca-unidade').value = '';
     $('unidades-vazio').hidden = unidades.length > 0;
     $('lista-unidades').innerHTML = htmlUnidades(unidades);
-    $('campo-nome').value = '';
+    $('campo-nome').value = cadastro.estado().nome;
     desenharNomes();
     desenharCadastro(cadastro.estado());
     etapa('formulario');
@@ -965,8 +1017,11 @@
   function desenharCadastro(e) {
     const botao = $('botao-salvar');
     botao.disabled = e.salvando;
-    botao.textContent = e.salvando ? 'Salvando…' : 'Salvar';
+    botao.textContent = e.salvando ? 'Salvando…' : (e.editandoId ? 'Salvar alterações' : 'Salvar');
     $('form-erro').textContent = e.erro;
+    const atual = textoUnidadeAtual(e);
+    $('unidade-atual').textContent = atual;
+    $('unidade-atual').hidden = !atual;
     marcar('#lista-unidades [data-unidade]', (b) => b.dataset.unidade === e.unidadeId);
     marcar('#tipos [data-tipo]', (b) => b.dataset.tipo === e.tipo);
     marcar('#nomes-sugeridos [data-nome]', (b) => b.dataset.nome === e.nome);
@@ -976,6 +1031,12 @@
     const r = await cadastro.salvar();
     if (!r.ok) return;
     const c = r.corpo;
+    if (r.editado) {
+      mostrarSucesso(`Cadastro atualizado: ${[cadastro.estado().placa, c.nome_morador, c.unidade].filter(Boolean).join(' · ')}`);
+      recomecar();
+      recarregarVinculos().catch(() => { /* o índice atualiza na próxima carga */ });
+      return;
+    }
     mostrarSucesso(`Cadastrado: ${[c.placa, c.nome_morador, c.unidade].filter(Boolean).join(' · ')}`);
     iniciarRede(r.salvo, c, origemCadastro);
     recomecar();
@@ -1197,6 +1258,7 @@
     $('botao-confirmar').addEventListener('click', confirmarPlaca);
     $('pergunta-sim').addEventListener('click', manterVinculo);
     $('pergunta-nao').addEventListener('click', () => abrirFormulario({ temVinculo: Boolean(vinculoMostrado) }));
+    $('botao-editar').addEventListener('click', abrirEdicao);
     ligarEventosFormulario();
   }
 

@@ -1,4 +1,5 @@
 const { autenticar, supabase } = require('../../lib/auth-middleware');
+const { contarDestinatarios } = require('../../lib/destinatarios');
 const { countByStatus, statusByCliente } = require('../../site/js/camera-status');
 
 module.exports = async function handler(req, res) {
@@ -28,12 +29,15 @@ module.exports = async function handler(req, res) {
         id, nome, cidade_uf, ativo, cnpj, criado_em,
         cameras(count),
         capturas(count),
-        email_destinatarios(count),
         usuarios(count)
       `).order('nome'),
       // Câmeras ativas com last_seen para status online/offline
       supabase.from('cameras').select('id, cliente_id, last_seen').eq('ativa', true),
     ]);
+
+    const clientesList = clientesListRes.data || [];
+    const contagemDest = await contarDestinatarios(clientesList.map((c) => c.id));
+    const clientesComContagem = clientesList.map((c) => ({ ...c, destinatarios_email: contagemDest.get(c.id) || 0 }));
 
     // Status online/offline das câmeras: lógica única em
     // site/js/camera-status.js (mesma usada pelo browser do admin e
@@ -119,7 +123,7 @@ module.exports = async function handler(req, res) {
         capturas_hoje: capturasHojeRes.count || 0,
         alertas_hoje: alertasHojeRes.count || 0,
       },
-      clientes: clientesListRes.data || [],
+      clientes: clientesComContagem,
       status_por_cliente: statusPorCliente,
       ultimas_capturas: ultimasCapturas || [],
       top_placas: topPlacas,

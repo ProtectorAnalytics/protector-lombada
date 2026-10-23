@@ -464,7 +464,7 @@
     <a href="#exportar-veiculos-para-excel">8. Exportar Veículos para Excel</a>
     <a href="#tipos-de-pessoa">Tipos de pessoa e histórico</a>
     <a href="#portaria">Portaria: porteiros e unidades</a>
-    <a href="#emails-de-alerta">9. Emails de Alerta</a>
+    <a href="#avisos-por-email">9. Avisos por e-mail</a>
     <a href="#notificacoes-automaticas">10. Notificações Automáticas</a>
     <a href="#recuperar-senha">11. Recuperar Senha</a>
     <a href="#faq">12. Perguntas Frequentes (FAQ)</a>
@@ -477,7 +477,7 @@
 
     <h1>Manual do Usuário</h1>
     <p class="subtitle">Lombada Educativa Inteligente</p>
-    <p class="version">Versão 1.10.1 | Outubro 2026</p>
+    <p class="version">Versão 1.11.0 | Outubro 2026</p>
 
     <hr>
 
@@ -805,6 +805,7 @@
 
     <h3>Porteiros</h3>
     <p>Cada porteiro entra com login próprio, e cada cadastro feito na portaria sai no nome dele.</p>
+    <p>O porteiro pode corrigir, a qualquer momento, o <strong>nome</strong>, a <strong>unidade</strong> e o <strong>tipo de pessoa</strong> dos cadastros que ele mesmo fez. A placa, a marca e a cor não: na placa, a portaria só corrige 1 caractere, nos primeiros 15 minutos depois de salvar. Fora disso, use "Encerrar vínculo" no cadastro errado, na lista de veículos, e cadastre a placa certa.</p>
     <ol>
         <li>Clique em <strong>"Novo porteiro"</strong>.</li>
         <li>Digite o <strong>nome</strong>. O <strong>usuário</strong> é sugerido automaticamente e você pode alterar. Não precisa de e-mail.</li>
@@ -835,21 +836,38 @@
     <hr>
 
     <!-- Section 9 -->
-    <h2 id="emails-de-alerta">9. Emails de Alerta</h2>
+    <h2 id="avisos-por-email">9. Avisos por e-mail</h2>
 
     <h3>O que são</h3>
-    <p>Quando um veículo é detectado acima do limite de velocidade, o sistema envia automaticamente um email de alerta para os destinatários cadastrados.</p>
+    <p>Quando um veículo passa acima do limite de velocidade, o sistema envia na hora um e-mail de alerta. Além disso, sai periodicamente um relatório com o resumo das passagens. Você escolhe quem do condomínio recebe cada um.</p>
 
-    <h3>Quem recebe</h3>
-    <p>A lista de quem recebe os e-mails é cadastrada pela <strong>equipe Protector</strong>. Para incluir, trocar ou remover um destinatário, fale com o suporte informando nome, e-mail e o que a pessoa deve receber:</p>
+    <h3>Onde fica</h3>
+    <p>No painel, clique no <strong>botão da conta</strong> (círculo com a sua inicial, no alto da tela) e depois em <strong>"Avisos por e-mail"</strong>. A opção aparece só para o síndico.</p>
+
+    <h3>As duas opções de cada pessoa</h3>
+    <p>A tela lista os usuários do condomínio. Cada um tem duas caixas para marcar:</p>
     <ul>
-        <li><strong>Alerta:</strong> avisos de excesso de velocidade</li>
-        <li><strong>Relatório:</strong> relatórios periódicos</li>
-        <li><strong>Todos:</strong> tudo</li>
+        <li><strong>Recebe alertas de excesso:</strong> e-mail a cada passagem acima do limite, com o PDF da ocorrência.</li>
+        <li><strong>Recebe relatório periódico:</strong> o resumo das passagens do período.</li>
     </ul>
+    <p>Marcou ou desmarcou, já está valendo: não precisa de botão para salvar. Se aparecer um aviso de erro, a caixa volta como estava; é só tentar de novo.</p>
 
-    <h3>Conteúdo do email de alerta</h3>
-    <p>Cada email de alerta inclui um <strong>PDF anexo</strong> com:</p>
+    <h3>Contato "Só recebe e-mail"</h3>
+    <p>Para quem precisa acompanhar os avisos mas não usa o painel (conselho, administradora, zelador), clique em <strong>"Novo contato (só recebe e-mail)"</strong> e informe nome e e-mail. Esse contato:</p>
+    <ul>
+        <li>não tem senha e não entra no painel;</li>
+        <li>recebe só o que estiver marcado nele;</li>
+        <li>pode ser editado (nome e e-mail), desativado e reativado por você na mesma tela;</li>
+        <li>cada condomínio pode ter até 30 contatos ativos desse tipo.</li>
+    </ul>
+    <p>Se o e-mail já for de um usuário do condomínio, não é preciso criar contato: basta marcar as opções nesse usuário.</p>
+
+    <blockquote><p><strong>Porteiros nunca recebem</strong> os avisos por e-mail e não aparecem nesta lista.</p></blockquote>
+
+    <blockquote><p>Quem já recebia os e-mails antes desta versão continua recebendo: as opções já vieram marcadas.</p></blockquote>
+
+    <h3>Conteúdo do e-mail de alerta</h3>
+    <p>Cada e-mail de alerta inclui um <strong>PDF anexo</strong> com:</p>
     <ul>
         <li>Foto do veículo</li>
         <li>Placa e velocidade registrada</li>
@@ -870,7 +888,7 @@
         <li>Se a velocidade for <strong>acima do limite configurado</strong>:
             <ul>
                 <li>Gera um PDF com os dados da infração</li>
-                <li>Envia email para todos os destinatários de alerta</li>
+                <li>Envia e-mail para quem tem "Recebe alertas de excesso" marcado</li>
             </ul>
         </li>
         <li>O dashboard é atualizado em tempo real</li>
@@ -929,8 +947,8 @@
     <h3>Posso acessar o sistema pelo celular?</h3>
     <p>Sim. O dashboard é responsivo e funciona em qualquer dispositivo com navegador: computador, tablet ou celular.</p>
 
-    <h3>Quantos emails de alerta posso cadastrar?</h3>
-    <p>Não há limite. Peça à equipe Protector para incluir os destinatários.</p>
+    <h3>Quantas pessoas podem receber os avisos por e-mail?</h3>
+    <p>Não há limite. Marque as opções nos usuários ou crie contatos "Só recebe e-mail" em <strong>Avisos por e-mail</strong> (menu da conta).</p>
 
     <h3>Como alterar o limite de velocidade?</h3>
     <p>O limite de velocidade é configurado pelo administrador do sistema. Entre em contato com a Protector Sistemas para solicitar alterações.</p>
@@ -959,7 +977,7 @@
     <hr>
 
     <p style="text-align:center; color:var(--text-muted); font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.10.1 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.11.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 

@@ -15,11 +15,16 @@ const { ErroHttp, exigirCorrigivel, substituirComCorrecao } = require('../../lib
 const ROLES_LEITURA = ['super_admin', 'admin_cliente', 'operador', 'portaria'];
 const ROLES_CADASTRO = ['super_admin', 'admin_cliente', 'operador', 'portaria'];
 const ROLES_EDICAO = ['super_admin', 'admin_cliente', 'operador'];
+// PUT: a portaria também edita, mas só o próprio cadastro (ver exigirEdicaoDaPortaria)
+const ROLES_ATUALIZACAO = [...ROLES_EDICAO, 'portaria'];
 const TIPOS_VALIDOS = new Set(TIPOS_PESSOA.map((t) => t.id));
 const CAMPOS_EDITAVEIS = ['tipo_pessoa', 'nome_morador', 'unidade', 'unidade_id', 'marca', 'cor'];
+const CAMPOS_PORTARIA = new Set(['tipo_pessoa', 'nome_morador', 'unidade', 'unidade_id']);
+const ERRO_NAO_E_MEU = 'Só dá para editar cadastros feitos por você';
 const COLUNAS = 'id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, marca, cor, vigente_desde, encerrado_em, criado_em, origem, cadastrado_por';
 // Portaria no histórico: só o necessário para sugerir nomes (sem marca/cor/origem).
-const COLUNAS_HISTORICO_PORTARIA = 'id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, vigente_desde, encerrado_em, criado_em, cadastrado_por';
+// cadastrado_por_usuario vira `meu` (boolean) antes de sair; o id não é exposto.
+const COLUNAS_HISTORICO_PORTARIA = 'id, placa, nome_morador, unidade, unidade_id, tipo_pessoa, vigente_desde, encerrado_em, criado_em, cadastrado_por, cadastrado_por_usuario';
 const MAX_TEXTO = 80;
 const ERRO_ENTRADA_INVALIDA = '22023';
 
@@ -52,19 +57,26 @@ function origemDe(profile, origemEnviada) {
   return profile.role === 'super_admin' ? 'admin' : 'painel';
 }
 
+const ehObjetoJson = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** Corpo tem de ser um objeto JSON; null, lista, texto ou número → 400 (não 500). */
 async function lerCorpo(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
-  try {
-    return JSON.parse(await readBody(req) || '{}');
-  } catch {
-    throw new ErroHttp(400, 'Corpo da requisição inválido');
+  let corpo = req.body;
+  if (corpo === undefined) {
+    try {
+      corpo = JSON.parse(await readBody(req) || '{}');
+    } catch {
+      throw new ErroHttp(400, 'Corpo inválido');
+    }
   }
+  if (!ehObjetoJson(corpo)) throw new ErroHttp(400, 'Corpo inválido');
+  return corpo;
 }
 
 async function buscarVinculo(id) {
   if (!isValidUUID(id)) throw new ErroHttp(400, 'ID do veículo inválido');
   const { data, error } = await supabase
-    .from('veiculos').select('id, cliente_id, placa, encerrado_em').eq('id', id).maybeSingle();
+    .from('veiculos').select('id, cliente_id, placa, encerrado_em, cadastrado_por_usuario').eq('id', id).maybeSingle();
   if (error) throw error;
   if (!data) throw new ErroHttp(404, 'Veículo não encontrado');
   return data;
@@ -115,7 +127,15 @@ async function listar(req, res) {
     return query;
   };
 
-  return res.status(200).json(await lerEmLotes(montarQuery));
+  const linhas = await lerEmLotes(montarQuery);
+  if (colunas !== COLUNAS_HISTORICO_PORTARIA) return res.status(200).json(linhas);
+  return res.status(200).json(linhas.map((linha) => comMeu(linha, profile.id)));
+}
+
+/** Troca o id de quem cadastrou por `meu` (cadastro deste login). */
+function comMeu(linha, usuarioId) {
+  const { cadastrado_por_usuario: autor, ...resto } = linha;
+  return { ...resto, meu: Boolean(autor) && autor === usuarioId };
 }
 
 async function vincular(args) {
@@ -200,25 +220,44 @@ async function camposDaEdicao(body, clienteId) {
   return campos;
 }
 
+/**
+ * Porteiro: só nome, unidade e tipo (sem prazo) do cadastro feito por este
+ * login. Placa, marca, cor ou qualquer outro campo → 400.
+ */
+function exigirEdicaoDaPortaria(body, existente, profile) {
+  const proibido = Object.keys(body).find((c) => c !== 'id' && !CAMPOS_PORTARIA.has(c));
+  if (proibido === 'placa') throw new ErroHttp(400, 'A placa não pode ser alterada: exclua e cadastre de novo');
+  if (proibido) throw new ErroHttp(400, 'Pela portaria dá para mudar só nome, unidade e tipo');
+  if (!existente.cadastrado_por_usuario || existente.cadastrado_por_usuario !== profile.id) {
+    throw new ErroHttp(403, ERRO_NAO_E_MEU);
+  }
+}
+
 // PUT: corrige dados do vínculo vigente (sem trocar placa)
 async function atualizar(req, res) {
-  const { profile } = await autenticar(req, ROLES_EDICAO);
+  const { profile } = await autenticar(req, ROLES_ATUALIZACAO);
   const body = await lerCorpo(req);
   const id = req.query.id || body.id;
   if (!id) return res.status(400).json({ error: 'ID do veículo obrigatório' });
 
   const existente = await buscarVinculo(id);
   exigirAcesso(profile, existente.cliente_id);
+  const ehPortaria = profile.role === 'portaria';
+  if (ehPortaria) exigirEdicaoDaPortaria(body, existente, profile);
   if (existente.encerrado_em) throw new ErroHttp(409, 'Este vínculo já foi encerrado e não pode ser alterado');
 
   const campos = await camposDaEdicao(body, existente.cliente_id);
-  const { data, error } = await supabase
+  let query = supabase
     .from('veiculos')
     .update(campos)
     .eq('id', id)
-    .is('encerrado_em', null)
-    .select(COLUNAS)
+    .is('encerrado_em', null);
+  // Condicional também no banco: o dono não muda entre a leitura e a gravação.
+  if (ehPortaria) query = query.eq('cadastrado_por_usuario', profile.id);
+  const { data: gravado, error } = await query
+    .select(ehPortaria ? `${COLUNAS}, cadastrado_por_usuario` : COLUNAS)
     .maybeSingle();
+  const data = gravado && ehPortaria ? comMeu(gravado, profile.id) : gravado;
   if (error) throw error;
   if (!data) throw new ErroHttp(409, 'Este vínculo já foi encerrado e não pode ser alterado');
 

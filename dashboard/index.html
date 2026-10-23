@@ -6,6 +6,7 @@
   <title>Protector Traffic Control - Lombada Educativa</title>
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
   <link rel="stylesheet" href="/css/portaria-gestao.css">
+  <link rel="stylesheet" href="/css/avisos-email.css">
   <script>
     // Tema resolvido ANTES de pintar (sem flash). 'auto' segue o sistema.
     // Mesma chave em dashboard/, novidades e manual.
@@ -2833,6 +2834,8 @@
   <script src="/js/editor-unidades.js"></script>
   <script src="/js/gestao-porteiros.js"></script>
   <script src="/js/portaria-gestao.js"></script>
+  <script src="/js/avisos-email.js"></script>
+  <script src="/js/avisos-painel.js"></script>
 </head>
 <body>
   <!-- Ícones do tipo de pessoa (os mesmos do admin) -->
@@ -2884,7 +2887,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.10.1 &middot; 2026-10-23
+        v1.11.0 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2918,6 +2921,7 @@
             <div class="conta-email" id="topbar-email"></div>
             <a class="conta-link" id="conta-portaria" href="/portaria" hidden>Abrir a portaria</a>
             <button type="button" class="conta-link" id="conta-gestao-portaria" onclick="abrirPainelPortaria()" hidden>Portaria: unidades e porteiros</button>
+            <button type="button" class="conta-link" id="conta-avisos-email" onclick="abrirPainelAvisos()" hidden>Avisos por e-mail</button>
             <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
           </div>
         </div>
@@ -3126,7 +3130,7 @@
     </div><!-- fim main-layout -->
 
     <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.10.1
+      Protector Traffic Control &middot; v1.11.0
       <br>
       <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
         <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
@@ -3152,6 +3156,17 @@
         <button type="button" class="modal-close" onclick="fecharPainelPortaria()" aria-label="Fechar">&times;</button>
       </div>
       <div class="vm-body"><div id="painel-portaria-gestao"></div></div>
+    </div>
+  </div>
+
+  <!-- Avisos por e-mail (só síndico/admin_cliente): quem recebe alertas e relatório -->
+  <div class="vm-overlay" id="avisos-overlay" onclick="if(event.target===this)fecharPainelAvisos()">
+    <div class="vm-box" role="dialog" aria-modal="true" aria-labelledby="av-title">
+      <div class="vm-header">
+        <h3 id="av-title">Avisos por e-mail</h3>
+        <button type="button" class="modal-close" onclick="fecharPainelAvisos()" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="vm-body"><div id="painel-avisos-email"></div></div>
     </div>
   </div>
 
@@ -3751,6 +3766,8 @@
       document.getElementById('conta-portaria').hidden = pode;
       // Unidades e porteiros: só o síndico (admin_cliente) do próprio condomínio
       document.getElementById('conta-gestao-portaria').hidden = !(currentProfile && currentProfile.role === 'admin_cliente');
+      // Avisos por e-mail: idem, só o síndico do próprio condomínio
+      document.getElementById('conta-avisos-email').hidden = !(currentProfile && currentProfile.role === 'admin_cliente');
     }
 
     // ============================================
@@ -3795,6 +3812,30 @@
         gestaoPortaria.descartar();
       }
       fecharOverlay(document.getElementById('portaria-overlay'), () => {
+        document.body.style.overflow = '';
+      });
+    }
+
+    // ============================================
+    // AVISOS POR E-MAIL (site/js/avisos-painel.js)
+    // ============================================
+    let telaAvisos = null;
+
+    function abrirPainelAvisos() {
+      if (!currentProfile || currentProfile.role !== 'admin_cliente') return;
+      fecharContaMenu({ semFoco: true });
+      if (!telaAvisos) {
+        telaAvisos = avisosPainel.montar(document.getElementById('painel-avisos-email'), {
+          api: (caminho, metodo = 'GET', corpo) => chamarApiPainel('/api/admin' + caminho, metodo, corpo),
+        });
+      }
+      abrirOverlay(document.getElementById('avisos-overlay'));
+      document.body.style.overflow = 'hidden';
+      telaAvisos.carregar({ clienteId: currentCliente.id });
+    }
+
+    function fecharPainelAvisos() {
+      fecharOverlay(document.getElementById('avisos-overlay'), () => {
         document.body.style.overflow = '';
       });
     }
@@ -7264,6 +7305,7 @@
         return;
       }
       if (overlayAberto(document.getElementById('portaria-overlay'))) return fecharPainelPortaria();
+      if (overlayAberto(document.getElementById('avisos-overlay'))) return fecharPainelAvisos();
       if (overlayAberto(vm)) return fecharModalVeiculo();
       if (overlayAberto(modal)) closeModal();
     });
