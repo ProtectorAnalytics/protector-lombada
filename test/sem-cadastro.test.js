@@ -58,4 +58,12 @@ caso('vínculo na hora da passagem mais recente decide (não o atual)', () => {
   assert.deepStrictEqual(listarSemCadastro(caps, indice, nenhuma), []);
 });
 
+caso('placa recém-cadastrada (vigente_desde depois da passagem) some da lista', () => {
+  const idx = indexarVinculos([
+    { placa: 'JJJ2222', nome_morador: 'Novo', vigente_desde: '2026-10-10T12:00:00Z', encerrado_em: null },
+  ]);
+  const caps = [cap(1, 'JJJ2222', '2026-10-10T10:00:00Z'), cap(2, 'KKK3333', '2026-10-10T09:30:00Z')];
+  assert.deepStrictEqual(listarSemCadastro(caps, idx, nenhuma).map((x) => x.placa), ['KKK3D33']);
+});
+
 console.log(`\n${passou} casos passaram`);

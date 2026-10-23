@@ -39,11 +39,17 @@
     return grupos;
   }
 
-  /** Placas sem vínculo na hora da última passagem e fora das suspeitas, mais recentes primeiro. */
+  /**
+   * Placas sem vínculo na hora da última passagem, sem vínculo vigente hoje
+   * (cadastro recém-feito sai da lista na hora) e fora das suspeitas, mais
+   * recentes primeiro.
+   */
   function listarSemCadastro(capturas, indiceVinculos, { suspeitas } = {}, limite = LIMITE_PADRAO) {
     const fora = suspeitas || new Set();
     return Array.from(agruparPorPlaca(capturas).values())
-      .filter((g) => !fora.has(g.placa) && !vinculoLib.vinculoNaHora(indiceVinculos, g.placa, g.ultima.timestamp))
+      .filter((g) => !fora.has(g.placa)
+        && !vinculoLib.vinculoNaHora(indiceVinculos, g.placa, g.ultima.timestamp)
+        && !vinculoLib.vinculoVigente(indiceVinculos, g.placa))
       .sort((a, b) => tempo(b.ultima.timestamp) - tempo(a.ultima.timestamp))
       .slice(0, limite);
   }
