@@ -1,12 +1,12 @@
 /**
- * casca.js — ponte da página /quadro com o programa do Windows (Tauri v2).
+ * casca.js — ponte da página /quadro com o programa do PC (Windows e macOS, Tauri v2).
  *
  * No navegador comum não há window.__TAURI__: tudo aqui fica inerte (a barra
  * não arrasta, Fixar/minimizar somem, links abrem em nova aba).
  *
  * No programa, a página é remota (https://lombada.appps.com.br/quadro) e só
  * pode chamar o que a capability "quadro-remoto" libera para esta origem:
- * arrastar, minimizar, travar o tamanho, abrir com o Windows e abrir no
+ * arrastar, minimizar, travar o tamanho, abrir ao ligar o PC e abrir no
  * navegador endereços https://lombada.appps.com.br/* (ver quadro-windows/).
  */
 (function (root) {

@@ -14,14 +14,13 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.17.0',
+    versao: '1.18.0',
     data: '2026-10-24',
-    titulo: 'Quadro no PC da portaria',
+    titulo: 'Quadro da portaria também no Mac',
     itens: Object.freeze([
-      'Novo quadro para o PC da portaria: uma janela pequena, sempre por cima das câmeras e do controle de acesso, com a última passagem na lombada ao vivo',
-      'O quadro mostra a foto, a placa, a velocidade e de quem é o carro (Morador, Proprietário, Visitante ou Prestador) ou "Sem cadastro"; acima do limite, fica em vermelho',
-      'As setas voltam nas passagens de hoje e um clique abre o painel completo; o porteiro entra com o próprio login',
-      'Para instalar, abra o menu da conta no painel e clique em "Quadro para o PC da portaria"',
+      'O quadro da portaria agora também funciona no Mac: a mesma janela pequena, sempre por cima, com a última passagem na lombada ao vivo',
+      'Para instalar, abra o menu da conta no painel, clique em "Quadro para o PC da portaria" e depois em "Baixar para Mac"',
+      'A opção do menu do quadro agora se chama "Abrir ao ligar o computador" e vale para Windows e Mac',
     ]),
   });
 });

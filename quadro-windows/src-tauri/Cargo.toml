@@ -1,6 +1,6 @@
 [package]
 name = "quadro-lombada"
-version = "1.0.0"
+version = "1.1.0"
 description = "Quadro da portaria (Lombada Educativa): janela pequena, sempre por cima, com a última passagem"
 authors = ["Protector Sistemas de Segurança"]
 license = "UNLICENSED"

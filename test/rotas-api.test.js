@@ -38,7 +38,7 @@ caso('endereço antigo (protector-lombada.vercel.app) manda painel/admin/portari
   assert.strictEqual(red.length, 1);
   const re = new RegExp(red[0].src);
   ['/dashboard', '/dashboard/', '/admin', '/admin/manual-usuario.html', '/portaria', '/portaria/', '/quadro', '/quadro/app.js'].forEach((u) => assert.ok(re.test(u), u));
-  ['/placa', '/placa/x', '/api/heartbeat', '/api/captura', '/api/config', '/', '/js/captcha.js', '/dashboardx', '/quadrox', '/baixar/quadro-windows'].forEach((u) => assert.ok(!re.test(u), u));
+  ['/placa', '/placa/x', '/api/heartbeat', '/api/captura', '/api/config', '/', '/js/captcha.js', '/dashboardx', '/quadrox', '/baixar/quadro-windows', '/baixar/quadro-macos'].forEach((u) => assert.ok(!re.test(u), u));
   assert.strictEqual(red[0].headers.Location, 'https://lombada.appps.com.br/$1$2');
   assert.strictEqual(routes.indexOf(red[0]), 0, 'antes de qualquer rota');
 });
@@ -62,6 +62,14 @@ caso('/baixar/quadro-windows manda (302) para o instalador do último release no
   assert.ok(r, 'rota de download');
   assert.strictEqual(r.status, 302);
   assert.strictEqual(r.headers.Location, 'https://github.com/ProtectorAnalytics/protector-lombada/releases/latest/download/Quadro-Lombada-Setup.exe');
+  assert.ok(routes.indexOf(r) < routes.findIndex((x) => x.src === '/(.*)'));
+});
+
+caso('/baixar/quadro-macos manda (302) para o .dmg do último release no GitHub', () => {
+  const r = routes.find((x) => x.src === '/baixar/quadro-macos');
+  assert.ok(r, 'rota de download do Mac');
+  assert.strictEqual(r.status, 302);
+  assert.strictEqual(r.headers.Location, 'https://github.com/ProtectorAnalytics/protector-lombada/releases/latest/download/Quadro-Lombada-Mac.dmg');
   assert.ok(routes.indexOf(r) < routes.findIndex((x) => x.src === '/(.*)'));
 });
 

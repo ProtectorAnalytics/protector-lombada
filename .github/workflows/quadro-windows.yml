@@ -1,13 +1,16 @@
-# Programa do Windows do Quadro da portaria (quadro-windows/, Tauri v2).
-# Tag quadro-v* → compila o instalador NSIS e anexa Quadro-Lombada-Setup.exe
-# (e o .sha256) ao Release da tag (o painel baixa por /baixar/quadro-windows →
-# releases/latest/download/Quadro-Lombada-Setup.exe).
-# workflow_dispatch → só compila e guarda o instalador como artefato do run.
-# Dois jobs: a compilação roda só com leitura; quem publica (escrita) só baixa
-# o artefato pronto, sem rodar código do repositório.
+# Programa do PC do Quadro da portaria (quadro-windows/, Tauri v2): Windows e macOS.
+# Tag quadro-v* → compila o instalador NSIS (Quadro-Lombada-Setup.exe) e o
+# .dmg universal do Mac (Quadro-Lombada-Mac.dmg, Intel + Apple Silicon) e anexa
+# os dois (com .sha256) ao Release da tag. O painel baixa por
+# /baixar/quadro-windows e /baixar/quadro-macos → releases/latest/download/….
+# workflow_dispatch → só compila e guarda os instaladores como artefatos do run.
+# A compilação roda só com leitura; quem publica (escrita) só baixa os
+# artefatos prontos, sem rodar código do repositório.
 # Sem assinatura de código por enquanto: o Windows mostra o aviso do
-# SmartScreen ("Mais informações → Executar assim mesmo").
-name: Quadro para Windows
+# SmartScreen ("Mais informações → Executar assim mesmo"); o Mac leva
+# assinatura ad-hoc (sem notarização) e pede "Abrir Mesmo Assim" em
+# Ajustes do Sistema › Privacidade e Segurança.
+name: Quadro para Windows e macOS
 
 on:
   push:
@@ -79,9 +82,61 @@ jobs:
             quadro-windows/Quadro-Lombada-Setup.exe.sha256
           if-no-files-found: error
 
+  compilar-macos:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+        working-directory: quadro-windows
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: quadro-windows/package-lock.json
+
+      - name: Rust ${{ env.RUST_VERSAO }} com os dois alvos do Mac
+        run: |
+          rustup toolchain install "$RUST_VERSAO" --profile minimal --target aarch64-apple-darwin,x86_64-apple-darwin
+          rustup default "$RUST_VERSAO"
+          rustc --version
+
+      - name: Dependências (versões travadas)
+        run: npm ci
+
+      - name: Testes da casca
+        working-directory: quadro-windows/src-tauri
+        run: cargo test --locked
+
+      - name: Compilar .dmg universal (Intel + Apple Silicon)
+        run: npx tauri build --target universal-apple-darwin --bundles dmg -- --locked
+
+      - name: Nome estável e SHA256 do .dmg
+        run: |
+          dmg=$(ls src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg | head -n 1)
+          [ -n "$dmg" ] || { echo '.dmg não encontrado'; exit 1; }
+          cp "$dmg" Quadro-Lombada-Mac.dmg
+          shasum -a 256 Quadro-Lombada-Mac.dmg | tr -d '\n' > Quadro-Lombada-Mac.dmg.sha256
+          cat Quadro-Lombada-Mac.dmg.sha256
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: Quadro-Lombada-Mac
+          path: |
+            quadro-windows/Quadro-Lombada-Mac.dmg
+            quadro-windows/Quadro-Lombada-Mac.dmg.sha256
+          if-no-files-found: error
+
   publicar:
     if: startsWith(github.ref, 'refs/tags/quadro-v')
-    needs: compilar
+    needs: [compilar, compilar-macos]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -92,9 +147,14 @@ jobs:
           name: Quadro-Lombada-Setup
           path: instalador
 
-      - name: Conferir o SHA256 do artefato
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: Quadro-Lombada-Mac
+          path: instalador
+
+      - name: Conferir o SHA256 dos artefatos
         working-directory: instalador
-        run: sha256sum -c Quadro-Lombada-Setup.exe.sha256
+        run: sha256sum -c Quadro-Lombada-Setup.exe.sha256 Quadro-Lombada-Mac.dmg.sha256
 
       - name: Release da tag (cria ou atualiza)
         working-directory: instalador
@@ -105,7 +165,8 @@ jobs:
         run: |
           if ! gh release view "$TAG" > /dev/null 2>&1; then
             gh release create "$TAG" --title "Quadro da portaria $TAG" \
-              --notes "Instalador do Quadro da portaria para Windows. Baixe pelo painel: menu da conta > Quadro para o PC da portaria. SHA256 em Quadro-Lombada-Setup.exe.sha256." \
+              --notes "Instaladores do Quadro da portaria para Windows (.exe) e Mac (.dmg). Baixe pelo painel: menu da conta > Quadro para o PC da portaria. SHA256 nos arquivos .sha256." \
               --latest
           fi
-          gh release upload "$TAG" Quadro-Lombada-Setup.exe Quadro-Lombada-Setup.exe.sha256 --clobber
+          gh release upload "$TAG" Quadro-Lombada-Setup.exe Quadro-Lombada-Setup.exe.sha256 \
+            Quadro-Lombada-Mac.dmg Quadro-Lombada-Mac.dmg.sha256 --clobber

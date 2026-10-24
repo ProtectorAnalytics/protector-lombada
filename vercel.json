@@ -45,6 +45,7 @@
     { "src": "/portaria/(.*)", "dest": "/portaria/$1" },
     { "src": "/quadro", "dest": "/quadro/index.html" },
     { "src": "/quadro/(.*)", "dest": "/quadro/$1" },
+    { "src": "/baixar/quadro-macos", "status": 302, "headers": { "Location": "https://github.com/ProtectorAnalytics/protector-lombada/releases/latest/download/Quadro-Lombada-Mac.dmg", "Cache-Control": "no-store" } },
     { "src": "/baixar/quadro-windows", "status": 302, "headers": { "Location": "https://github.com/ProtectorAnalytics/protector-lombada/releases/latest/download/Quadro-Lombada-Setup.exe", "Cache-Control": "no-store" } },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
     { "src": "/privacidade", "dest": "/site/privacidade.html" },
