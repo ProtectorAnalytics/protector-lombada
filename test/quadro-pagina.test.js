@@ -127,6 +127,8 @@ caso('painel: o quadro explica, baixa para Windows, avisa do SmartScreen e abre 
   assert.ok(bloco.includes('href="/baixar/quadro-windows"'));
   assert.ok(bloco.includes('Baixar para Windows'));
   assert.ok(bloco.includes('Mais informações') && bloco.includes('Executar assim mesmo'));
+  assert.ok(bloco.includes('href="/baixar/quadro-macos"') && bloco.includes('Baixar para Mac'));
+  assert.ok(bloco.includes('Privacidade e Segurança') && bloco.includes('Abrir Mesmo Assim'), 'aviso do Mac sem assinatura');
   assert.ok(bloco.includes('href="/quadro"') && bloco.includes('Ou abrir no navegador'));
   assert.ok(bloco.includes('role="dialog"') && bloco.includes('aria-modal="true"'));
 });
@@ -134,7 +136,7 @@ caso('painel: o quadro explica, baixa para Windows, avisa do SmartScreen e abre 
 caso('manual do painel tem a seção do quadro', () => {
   const manual = ler('dashboard/manual.html');
   assert.ok(manual.includes('id="quadro-pc"'));
-  ['Fixar', 'Abrir com o Windows', 'Mais informações'].forEach((t) => assert.ok(manual.includes(t), t));
+  ['Fixar', 'Abrir ao ligar o computador', 'Mais informações', 'Baixar para Mac', 'Abrir Mesmo Assim'].forEach((t) => assert.ok(manual.includes(t), t));
 });
 
 console.log(`\n${passou} casos ok`);
