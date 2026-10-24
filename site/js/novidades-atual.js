@@ -14,14 +14,15 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.14.0',
+    versao: '1.15.0',
     data: '2026-10-23',
-    titulo: 'Veículos do dia por tipo e nova lista de passagens',
+    titulo: 'Visual novo do painel',
     itens: Object.freeze([
-      'Veículos do dia por tipo: o topo mostra quantos veículos diferentes passaram hoje e quantos são de moradores, proprietários, visitantes, prestadores ou sem cadastro; clique num tipo para filtrar a lista',
-      'Nova lista de passagens: colunas Tipo, Nome e Unidade, só a hora (o dia vira um título), linha vermelha clara no alerta, o selo "2ª hoje" e o botão "+ Cadastrar" para placa sem cadastro',
-      'Lista sem limite de 300: todas as passagens do período, página por página, com o total exato',
-      'Exportação com tipo, nome e unidade: o Excel e o PDF trazem o cadastro da hora da passagem',
+      'Visual novo do painel: os números do dia num quadro só, com a comparação com ontem no mesmo horário; a última passagem em destaque; uma barra de filtros sem botões repetidos; e a lista com a placa no padrão Mercosul e colunas para lombada, veículo, cor, ano, tipo, nome e unidade',
+      'Semana de segunda a domingo: "Veículos por dia" mostra a semana por tipo de cadastro, com setas para as semanas anteriores; clique num número para ver aquelas passagens na lista',
+      'Câmeras no topo: cada câmera vira um ícone na cor do status, com o local e a última leitura ao passar o mouse; o topo fica fixo ao rolar, com Hoje, Ontem, 7 dias ou Escolher…',
+      'Funciona do celular ao monitor grande: os quadros se reorganizam em cada tamanho de tela, as fotos passam com o dedo no celular e cada passagem vira um cartão',
+      'O gráfico "Passagens por hora" saiu da tela; a hora de pico continua nos Indicadores, ao lado dos números do dia',
     ]),
   });
 });

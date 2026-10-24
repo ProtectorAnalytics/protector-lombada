@@ -513,87 +513,87 @@
     <h2 id="tela-inicial-dashboard">2. Tela Inicial (Dashboard)</h2>
     <p>Após o login, você verá o painel principal com as seguintes informações:</p>
 
-    <h3>Barra Superior</h3>
+    <h3>Barra Superior (fica fixa ao rolar a página)</h3>
     <ul>
         <li><strong>Logo e nome do seu condomínio/empresa</strong> em destaque</li>
-        <li><strong>"Atualizado às…"</strong> - horário da última atualização dos dados</li>
+        <li><strong>Período:</strong> <strong>Hoje</strong>, <strong>Ontem</strong>, <strong>7 dias</strong> ou <strong>Escolher…</strong> (abre o calendário com data e hora de início e de fim). O período escolhido vale para a lista, os indicadores e o ranking "Mais passagens"</li>
+        <li><strong>Câmeras:</strong> um ícone por câmera, na cor do status (veja a seção 5). Passe o mouse (ou chegue com a tecla Tab) para ver o local e a última leitura; clique para ver na lista só as passagens daquela câmera</li>
+        <li><strong>"Ao vivo · HH:MM"</strong> - horário da última atualização dos dados</li>
+        <li><strong>Botão "Veículos · N"</strong> - acesso rápido ao cadastro de veículos (N é o total cadastrado)</li>
         <li><strong>Tema</strong> - escolha entre Automático (segue o seu aparelho), Claro ou Escuro; a escolha fica salva neste navegador</li>
-        <li><strong>Botão "Veículos"</strong> - acesso rápido ao cadastro de veículos</li>
         <li><strong>Botão da conta</strong> (círculo com a sua inicial) - mostra o e-mail de login e o botão "Sair"</li>
     </ul>
 
-    <h3>Área de Estatísticas (cards)</h3>
-    <p>Quatro cards com dados atualizados automaticamente:</p>
+    <h3>Números do dia</h3>
+    <p>Um quadro só, com quatro números atualizados automaticamente. Embaixo de cada um, uma linha compara com <strong>ontem no mesmo horário</strong> (por exemplo, "▼ 14 vs ontem"); fica verde quando hoje está melhor que ontem.</p>
 
     <table>
         <thead>
-            <tr><th>Card</th><th>Descrição</th></tr>
+            <tr><th>Número</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><strong>Veículos Hoje</strong></td><td>Quantos veículos diferentes passaram hoje (das 00:00 às 23:59). Cada carro conta <strong>uma vez no dia</strong>, mesmo que passe várias vezes ou por vários radares; placa antiga e Mercosul do mesmo carro contam como um só, e leituras sem placa ficam de fora. Embaixo aparece o total de passagens (ex.: "225" e "595 passagens") e uma barra fina com a proporção de cada tipo de cadastro</td></tr>
-            <tr><td><strong>Alertas Hoje</strong></td><td>Quantidade de passagens acima do limite de velocidade</td></tr>
-            <tr><td><strong>Velocidade Máxima Hoje</strong></td><td>Maior velocidade registrada no dia, com o limite configurado para o local logo abaixo</td></tr>
-            <tr><td><strong>Dentro do Limite Hoje</strong></td><td>Percentual das passagens de hoje dentro do limite, com a velocidade média do dia embaixo (a média conta só as passagens que o radar mediu)</td></tr>
+            <tr><td><strong>Veículos hoje</strong></td><td>Quantos veículos diferentes passaram hoje (das 00:00 às 23:59). Cada carro conta <strong>uma vez no dia</strong>, mesmo que passe várias vezes ou por várias lombadas; placa antiga e Mercosul do mesmo carro contam como um só, e leituras sem placa ficam de fora. Ao lado aparece o total de passagens, e embaixo uma barra com a proporção de cada tipo de cadastro</td></tr>
+            <tr><td><strong>Alertas hoje</strong></td><td>Quantidade de passagens acima do limite de velocidade (o número fica vermelho quando há alertas)</td></tr>
+            <tr><td><strong>Velocidade máxima</strong></td><td>Maior velocidade registrada no dia, com a placa e a hora dessa passagem</td></tr>
+            <tr><td><strong>Dentro do limite</strong></td><td>Percentual das passagens de hoje dentro do limite, com um anel que mostra a proporção e a velocidade média do dia embaixo (a média conta só as passagens que a lombada mediu)</td></tr>
         </tbody>
     </table>
-    <p><strong>Importante:</strong> esses números ficam sob o título <strong>"Agora · hoje"</strong> e <strong>não mudam</strong> quando você usa os filtros. As fotos recentes também são sempre as de agora.</p>
+    <p><strong>Importante:</strong> esses números e as fotos das últimas passagens são sempre os de hoje e <strong>não mudam</strong> quando você usa os filtros.</p>
     <h3>Veículos de hoje por tipo</h3>
-    <p>Logo abaixo dos cards, uma faixa mostra quantos veículos de hoje são de <strong>Morador</strong>, <strong>Proprietário</strong>, <strong>Visitante</strong>, <strong>Prestador</strong> e <strong>Sem cadastro</strong>. O tipo de cada veículo é o do cadastro que ele tinha <strong>na primeira passagem do dia</strong>. Clique num tipo para ver na lista só as passagens dele; clique de novo no mesmo tipo para tirar o filtro.</p>
-    <p>O botão <strong>"Recolher"</strong>, ao lado do título, esconde as fotos e o status das câmeras para dar mais espaço à lista; <strong>"Mostrar fotos"</strong> traz de volta. O painel lembra a escolha neste navegador.</p>
+    <p>Embaixo do número de veículos, a legenda mostra quantos são de <strong>Morador</strong>, <strong>Proprietário</strong>, <strong>Visitante</strong>, <strong>Prestador</strong> e <strong>Sem cadastro</strong>, cada um com o seu ícone (casa, chave, crachá, ferramenta e interrogação). O tipo de cada veículo é o do cadastro que ele tinha <strong>na primeira passagem do dia</strong>. Clique num tipo para ver na lista só as passagens dele; clique de novo no mesmo tipo para tirar o filtro.</p>
 
     <hr>
 
     <!-- Section 3 -->
     <h2 id="indicadores-de-velocidade">3. Indicadores de Velocidade</h2>
 
-    <p>Na lateral direita do painel ficam os quadros abaixo. Todos, exceto "Maiores velocidades", seguem o período e os filtros escolhidos e contam <strong>todas</strong> as passagens do período.</p>
+    <p>Ao lado dos números do dia e das fotos ficam os quadros abaixo. "Indicadores" e "Mais passagens" seguem o período e os filtros escolhidos e contam <strong>todas</strong> as passagens do período.</p>
 
-    <h3>Indicadores do Período</h3>
+    <h3>Indicadores</h3>
     <ul>
-        <li><strong>Hora Pico:</strong> hora do dia com mais passagens</li>
+        <li><strong>Hora de pico:</strong> hora do dia com mais passagens (com mais de um dia no período, o <strong>dia de pico</strong>)</li>
         <li><strong>Reincidentes:</strong> placas com 2 ou mais alertas no período</li>
     </ul>
-    <p>A velocidade média e o percentual dentro do limite de hoje ficam nos cards do topo.</p>
 
-    <h3>Gráfico: "Por hora" e "Por dia"</h3>
+    <h3>Veículos por dia (semana de segunda a domingo)</h3>
+    <p>Uma tabela da semana, de <strong>segunda a domingo</strong>, com o total de veículos diferentes de cada dia e uma linha para cada tipo de cadastro. Quanto mais forte a cor do número, maior o movimento daquele tipo. O dia de hoje fica marcado com "*" (ainda não terminou), os dias que ainda não chegaram mostram "—" e o maior total da semana ganha uma <strong>borda amarela</strong>.</p>
     <ul>
-        <li><strong>Por hora:</strong> quantidade de passagens em cada hora do período (ou em cada dia, quando o período tem mais de um dia). Segue os filtros.</li>
-        <li><strong>Por dia:</strong> quantos veículos diferentes passaram em cada um dos <strong>últimos 8 dias</strong>, com as cores de cada tipo de cadastro. O dia de maior movimento fica em destaque e o dia de hoje aparece mais claro, com "*", porque ainda não terminou. Esse gráfico <strong>não muda</strong> com os filtros.</li>
+        <li>Use as setas <strong>‹ ›</strong> para ver as semanas anteriores (e voltar até a semana atual).</li>
+        <li>Clique num número para ver na lista as passagens <strong>daquele dia e daquele tipo</strong> (o "Total" mostra todas as do dia). Clique de novo para voltar a "Hoje".</li>
+        <li>Essa tabela <strong>não muda</strong> com os filtros.</li>
     </ul>
 
-    <h3>Top 10 Placas</h3>
-    <p>As placas que mais passaram no período. Clique numa placa para filtrar as passagens dela.</p>
-
-    <h3>Maiores velocidades · últimos 6 meses</h3>
-    <p>Os 10 veículos mais rápidos dos últimos 6 meses, cada um uma vez, com a maior velocidade medida e o dia. Esse quadro <strong>não muda</strong> com o período escolhido. Leituras com defeito do radar e placas não lidas ficam de fora. Clique numa placa para ver as passagens dela no dia do recorde, com foto.</p>
+    <h3>Mais passagens e Recordes</h3>
+    <p><strong>Mais passagens</strong> mostra as placas que mais passaram no período, com uma barra (vermelha quando a placa teve alerta) e o número de alertas com "▲". <strong>Recordes · 6 meses</strong> mostra os veículos mais rápidos dos últimos 6 meses, cada um uma vez, com a maior velocidade medida e o dia; esse quadro <strong>não muda</strong> com o período escolhido, e leituras com defeito ou placas não lidas ficam de fora. Aparecem 3 de cada; clique em <strong>"Ver os 10 →"</strong> para ver todos. Clique numa placa para filtrar as passagens dela (no Recorde, no dia do recorde).</p>
+    <p>Em telas de notebook, "Veículos por dia", "Mais passagens" e "Recordes" ficam num quadro só, com abas; em monitor grande e no tablet, aparecem lado a lado.</p>
 
     <hr>
 
     <!-- Section 4 -->
     <h2 id="ultimas-capturas">4. Últimas Capturas</h2>
-    <p>A seção principal do dashboard mostra, em "Agora · hoje", as fotos das <strong>últimas passagens</strong> numa faixa só: 6 fotos (uma por placa) em telas largas e 3 em telas menores:</p>
+    <p>O quadro <strong>"Últimas passagens"</strong> mostra a passagem mais nova <strong>em destaque</strong> (foto maior, com "Agora" quando acabou de passar) e mais quatro fotos menores, uma por placa. No celular, as fotos passam com o dedo.</p>
+    <p>As fotos ficam sempre na proporção da câmera e aproximadas no carro, sem a faixa preta com data e velocidade que a câmera grava no alto da imagem. A foto <strong>inteira</strong>, com essa faixa, aparece nos detalhes da passagem.</p>
 
     <h3>Informações de cada captura:</h3>
     <ul>
         <li><strong>Foto do veículo</strong> capturada pela câmera</li>
-        <li><strong>Placa</strong> do veículo (em destaque)</li>
-        <li><strong>Velocidade</strong> registrada (com indicador de cor)</li>
-        <li><strong>Data e hora</strong> da captura</li>
-        <li><strong>Câmera</strong> que registrou</li>
-        <li><strong>Nome do morador</strong> (se o veículo estiver cadastrado)</li>
-        <li><strong>Unidade</strong> (se cadastrado)</li>
-        <li><strong>Veículo</strong> (marca, modelo, cor e ano), consultado automaticamente pela placa</li>
+        <li><strong>Placa e velocidade</strong> logo abaixo da foto (a velocidade fica vermelha, com "▲", quando passa do limite)</li>
+        <li><strong>Hora</strong> da passagem</li>
+        <li><strong>Veículo</strong> (marca e modelo), consultado automaticamente pela placa, e o <strong>tipo e a unidade</strong> do cadastro</li>
+        <li>Na passagem em destaque: cor e ano do veículo, a <strong>lombada</strong> que registrou e, para placa sem cadastro, o atalho <strong>"+ Cadastrar placa"</strong></li>
     </ul>
 
     <h3>Cores da velocidade:</h3>
     <ul>
         <li><span class="color-dot" style="background:#22c55e"></span> <strong>Verde:</strong> Até o limite - veículo trafegando normalmente</li>
         <li><span class="color-dot" style="background:#ef4444"></span> <strong>Vermelho:</strong> Acima do limite - alerta de excesso de velocidade</li>
-        <li><span class="color-dot" style="background:#9ca3af"></span> <strong>Cinza "—":</strong> Sem velocidade - o radar só mede a partir de 10 km/h</li>
+        <li><span class="color-dot" style="background:#9ca3af"></span> <strong>Cinza "—":</strong> Sem velocidade - a lombada só mede a partir de 10 km/h</li>
     </ul>
 
+    <p>O botão <strong>"Recolher"</strong> esconde as fotos para dar mais espaço à lista; <strong>"Mostrar fotos"</strong> traz de volta. O painel lembra a escolha neste navegador.</p>
+
     <h3>Atualização automática</h3>
-    <p>As capturas são atualizadas automaticamente a cada <strong>30 segundos</strong>. O ponto verde pulsa enquanto o painel busca dados novos, e ao lado aparece <strong>"Atualizado às HH:MM:SS"</strong> com a hora da última atualização.</p>
+    <p>As capturas são atualizadas automaticamente a cada <strong>30 segundos</strong>. O ponto verde pulsa enquanto o painel busca dados novos, e ao lado aparece <strong>"Ao vivo · HH:MM"</strong> com a hora da última atualização. A passagem que acabou de chegar entra no topo da lista com uma <strong>faixa azul</strong> por alguns segundos (sem animação para quem pediu "reduzir movimento" no aparelho).</p>
     <ul>
         <li>Se a atualização falhar (internet ou servidor fora do ar), o texto muda para <strong>"Falha ao atualizar às…"</strong> em laranja, e as listas mostram <strong>"Não foi possível carregar as capturas"</strong> com o botão <strong>"Tentar de novo"</strong>. "Nenhuma captura" aparece só quando realmente não houve passagem.</li>
         <li>A atualização automática não tira você da página em que está na tabela.</li>
@@ -601,62 +601,60 @@
     </ul>
 
     <h3>Filtros: como escolher o que aparece</h3>
-    <p>Logo abaixo das últimas capturas fica a <strong>barra de filtros</strong>, toda em uma linha. Os filtros <strong>aplicam sozinhos</strong>, assim que você escolhe: não existe mais botão "Filtrar" nem "Limpar".</p>
+    <p>Acima da lista fica a <strong>barra de filtros</strong>, toda em uma linha. Os filtros <strong>aplicam sozinhos</strong>, assim que você escolhe:</p>
     <ul>
-        <li><strong>Botão de período:</strong> mostra o período atual (começa em "Hoje"). Ao clicar, aparecem os atalhos <strong>Hoje</strong>, <strong>Ontem</strong> e <strong>Últimos 7 dias</strong>, e a opção <strong>Personalizado</strong>, onde você escolhe data e hora de início e de fim.</li>
-        <li><strong>Busca "Placa, modelo ou marca":</strong> um único campo. Ao digitar 2 letras ou mais, aparecem sugestões separadas por tipo (placas, modelos e marcas). Escolha uma sugestão ou aperte <strong>Enter</strong>.</li>
+        <li><strong>Busca "placa, modelo ou marca":</strong> um único campo (atalho: aperte a tecla <strong>/</strong>). Ao digitar 2 letras ou mais, aparecem sugestões separadas por tipo (placas, modelos e marcas). Escolha uma sugestão ou aperte <strong>Enter</strong>.</li>
         <li><strong>Seletor de câmera:</strong> mostra só as passagens de uma câmera ("Todas as câmeras" volta ao normal).</li>
-        <li><strong>"Todas | Acima do limite":</strong> escolha "Acima do limite" para ver só os veículos que passaram acima da velocidade permitida.</li>
-        <li><strong>"Mais filtros":</strong> abre um quadro com velocidade mínima e máxima, marca, cor, ano (de/até), modelo, tipo de cadastro e unidade. Quando há filtros escolhidos, aparece ao lado do botão um <strong>número</strong> com a quantidade de filtros ativos.</li>
+        <li><strong>"Acima do limite":</strong> liga e desliga; ligado, mostra só os veículos que passaram acima da velocidade permitida.</li>
+        <li><strong>"Filtros":</strong> abre um quadro com velocidade mínima e máxima, marca, cor, ano (de/até), modelo, tipo de cadastro e unidade. Quando há filtros escolhidos, aparece um <strong>número</strong> com a quantidade de filtros ativos.</li>
+        <li><strong>"Exportar":</strong> Excel ou PDF com todas as passagens do período filtrado (veja abaixo).</li>
+        <li>O <strong>período</strong> (Hoje, Ontem, 7 dias ou Escolher…) fica na barra do topo.</li>
     </ul>
 
     <h3>Tipo de cadastro e unidade</h3>
-    <p>Em "Mais filtros", o campo <strong>Tipo de cadastro</strong> mostra só as passagens de moradores, proprietários, visitantes, prestadores ou de placas <strong>sem cadastro</strong>. No campo <strong>Unidade</strong>, digite a unidade (por exemplo, "19" ou "019"; as unidades do condomínio aparecem como sugestão). Vale o cadastro que a placa tinha <strong>na hora da passagem</strong>, o mesmo que aparece na coluna "Tipo": um carro que era de prestador na segunda e passou a ser de morador na quarta conta como prestador só até a troca. Também dá para clicar no tipo ou na unidade de uma passagem, na lista ou nos detalhes, para filtrar por eles.</p>
-
-    <h3>Perguntas prontas</h3>
-    <p>Acima da barra ficam atalhos para as consultas mais comuns, com um toque: <strong>Hoje</strong>, <strong>Ontem</strong>, <strong>Acima do limite hoje</strong>, <strong>Últimos 7 dias</strong> e <strong>Não cadastrados</strong>: as passagens de placas que estavam <strong>sem cadastro na hora da passagem</strong> (é o mesmo filtro "Sem cadastro" do tipo de cadastro).</p>
+    <p>Em "Filtros", o campo <strong>Tipo de cadastro</strong> mostra só as passagens de moradores, proprietários, visitantes, prestadores ou de placas <strong>sem cadastro</strong>. No campo <strong>Unidade</strong>, digite a unidade (por exemplo, "19" ou "019"; as unidades do condomínio aparecem como sugestão). Vale o cadastro que a placa tinha <strong>na hora da passagem</strong>, o mesmo que aparece na coluna "Tipo": um carro que era de prestador na segunda e passou a ser de morador na quarta conta como prestador só até a troca. Também dá para clicar no tipo (na legenda dos números do dia, na lista ou nos detalhes) ou na unidade para filtrar por eles.</p>
 
     <h3>Etiquetas dos filtros ativos</h3>
     <ul>
-        <li>Cada filtro escolhido vira uma <strong>etiqueta</strong> abaixo da barra. Clique no <strong>✕</strong> da etiqueta para tirar só aquele filtro.</li>
+        <li>Logo abaixo da barra aparecem o período ("Hoje" com a data, por exemplo "Sexta, 23/10"), o total de passagens e cada filtro escolhido como uma <strong>etiqueta</strong>. Clique no <strong>✕</strong> da etiqueta para tirar só aquele filtro.</li>
         <li>Para voltar ao padrão de uma vez, clique em <strong>"Limpar tudo"</strong>.</li>
     </ul>
 
     <h3>Clique para filtrar</h3>
-    <p>Você também pode filtrar clicando direto no que vê na tela: na <strong>placa</strong>, na <strong>câmera</strong>, no aviso <strong>"ALERTA"</strong> ou no <strong>veículo</strong> (marca e modelo). O painel aplica aquele filtro na hora.</p>
+    <p>Você também pode filtrar clicando direto no que vê na tela: na <strong>placa</strong>, na <strong>lombada</strong>, na <strong>velocidade acima do limite</strong>, no <strong>veículo</strong> (marca e modelo), no <strong>tipo</strong>, na <strong>unidade</strong>, no ícone de uma <strong>câmera</strong> ou num número da semana. O painel aplica aquele filtro na hora.</p>
 
     <h3>O que os filtros mudam (e o que não muda)</h3>
     <ul>
-        <li>Os filtros valem para <strong>tudo junto</strong>: a lista de passagens, o gráfico, os indicadores e o Top 10 de placas.</li>
-        <li>Os números do topo e as fotos recentes ficam sob o título <strong>"Agora · hoje"</strong> e <strong>não mudam</strong> com os filtros: mostram sempre o movimento de hoje, ao vivo.</li>
+        <li>Os filtros valem para <strong>tudo junto</strong>: a lista de passagens, os indicadores e o ranking "Mais passagens".</li>
+        <li>Os números do dia, as fotos das últimas passagens e a semana <strong>não mudam</strong> com os filtros: mostram sempre o movimento real, ao vivo.</li>
         <li>"Hoje" é o <strong>dia inteiro</strong>, da meia-noite até agora (no horário local).</li>
     </ul>
 
     <h3>Guardar ou enviar o filtro por link</h3>
     <p>O filtro escolhido fica gravado no <strong>endereço da página</strong>. Por isso, se você recarregar a página, o mesmo filtro continua. E você pode <strong>copiar o endereço e enviar para a administração</strong>: quem abrir o link (com seu acesso) verá exatamente a mesma consulta.</p>
 
-    <h3>Filtros no celular</h3>
-    <p>No celular, o botão <strong>"Filtros"</strong> abre um painel que sobe da parte de baixo da tela, com a câmera, "Todas | Acima do limite" e os demais campos. Ao terminar, toque em <strong>"Ver N passagens"</strong> (o N é o número de resultados).</p>
+    <h3>No celular, no tablet e no monitor grande</h3>
+    <p>O painel se reorganiza conforme o tamanho da tela. No monitor grande cabe mais coisa lado a lado; no tablet os quadros ficam um embaixo do outro; no celular os números ficam em duas colunas, as fotos passam com o dedo e cada passagem vira um cartão de três linhas (placa, hora e velocidade; veículo, cor e ano; tipo, nome e unidade). No celular, o botão <strong>"Filtros"</strong> abre um painel que sobe da parte de baixo da tela, com a câmera, "Acima do limite" e os demais campos; ao terminar, toque em <strong>"Ver N passagens"</strong>. O botão "Veículos" fica no menu da conta.</p>
 
     <h3>Lista de passagens</h3>
     <ul>
-        <li>A lista mostra <strong>todas as passagens do período</strong>, página por página, com o total exato no rodapé (ex.: "1–10 de 595 passagens"). Não há mais o limite de 300.</li>
-        <li>Colunas: <strong>Foto, Placa, Velocidade, Hora, Radar, Veículo, Tipo, Nome e Unidade</strong>. Tipo, Nome e Unidade são do cadastro que a placa tinha <strong>na hora da passagem</strong>. Clique no tipo ou na unidade para filtrar por eles.</li>
-        <li>A lista mostra só a <strong>hora</strong>; o dia aparece numa linha de título (ex.: "Sexta, 23 de outubro") sempre que muda.</li>
-        <li>Passagem <strong>acima do limite</strong> tem a linha com fundo vermelho claro e "▲" antes da velocidade.</li>
-        <li>O selo <strong>"2ª hoje"</strong> (ou "13ª hoje") ao lado da placa mostra que o mesmo veículo já tinha passado naquele dia, e quantas vezes.</li>
-        <li>Placa <strong>sem cadastro</strong> mostra o botão <strong>"+ Cadastrar"</strong> (para quem pode cadastrar veículos): ele abre o detalhe da passagem já no formulário de cadastro, com a placa da passagem.</li>
-        <li>Em telas com menos de 1.200 px de largura (como o tablet da portaria), cada passagem ocupa duas linhas, sem cortar nada.</li>
-        <li>Com o filtro "Sem cadastro" (ou "Não cadastrados") num período muito movimentado, o painel confere o cadastro de cada passagem; se o período for grande demais para conferir tudo, aparece um aviso e a lista mostra as mais recentes conferidas.</li>
-        <li>Passagens <strong>sem velocidade</strong> (sem leitura do radar) ficam escondidas. No rodapé aparece o link <strong>"N passagens sem velocidade ocultas · Mostrar"</strong>; clique para vê-las (e em "Ocultar" para esconder de novo). Nada é apagado: elas continuam nos relatórios.</li>
-        <li><strong>"Exportar"</strong> fica junto da lista e oferece Excel (.xlsx) ou PDF com <strong>todas as passagens do período filtrado</strong>, não só as que aparecem na lista. O Excel e o PDF trazem as colunas <strong>Tipo, Nome e Unidade</strong> (o cadastro na hora da passagem), e o Excel traz também Marca, Modelo, Cor (cadastro) e Ano. Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
+        <li>A lista mostra <strong>todas as passagens do período</strong>, da mais nova para a mais antiga, página por página, com o total exato no rodapé (ex.: "1–10 de 595 passagens"). O cabeçalho das colunas fica fixo ao rolar.</li>
+        <li>Colunas: <strong>Foto, Placa, Veloc., Hora, Lombada, Veículo, Cor, Ano, Tipo, Nome e Unidade</strong>. A placa aparece no padrão Mercosul. Tipo, Nome e Unidade são do cadastro que a placa tinha <strong>na hora da passagem</strong>. Clique no tipo ou na unidade para filtrar por eles. Passe o mouse em "Unidade" para ver o que o número representa no seu condomínio (por exemplo, "Número da FIP").</li>
+        <li>Período de um dia (Hoje, Ontem ou uma data): a data aparece junto das etiquetas. Período de vários dias: o dia aparece numa linha de título (ex.: "Sexta, 23 de outubro") sempre que muda.</li>
+        <li>Passagem <strong>acima do limite</strong> tem a linha com fundo vermelho claro, uma faixa vermelha à esquerda e "▲" antes da velocidade.</li>
+        <li>O selo <strong>"2ª"</strong> (ou "13ª") ao lado da placa mostra que o mesmo veículo já tinha passado naquele dia, e quantas vezes.</li>
+        <li>Placa <strong>sem cadastro</strong> mostra <strong>"+ Cadastrar"</strong> na coluna Nome ao passar o mouse na linha (no celular e no tablet, sempre), para quem pode cadastrar veículos: ele abre o detalhe da passagem já no formulário de cadastro, com a placa da passagem.</li>
+        <li>Em telas com menos de 1.280 px de largura a coluna Foto sai; em telas com menos de 1.024 px (como o tablet da portaria), cada passagem vira um cartão de três linhas, sem cortar nada.</li>
+        <li>Com o filtro "Sem cadastro" num período muito movimentado, o painel confere o cadastro de cada passagem; se o período for grande demais para conferir tudo, aparece um aviso e a lista mostra as mais recentes conferidas.</li>
+        <li>Passagens <strong>sem velocidade</strong> (abaixo de 10 km/h, a lombada não mede) ficam escondidas. Junto das etiquetas aparece <strong>"N passagens abaixo de 10 km/h ocultas · Mostrar"</strong>; clique para vê-las (e em "Ocultar" para esconder de novo). Nada é apagado: elas continuam nos relatórios.</li>
+        <li><strong>"Exportar"</strong> oferece Excel (.xlsx) ou PDF com <strong>todas as passagens do período filtrado</strong>, não só as que aparecem na lista, com as mesmas colunas da lista: Lombada, Veículo, Cor, Ano, Tipo, Nome e Unidade (o cadastro na hora da passagem). Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
     </ul>
 
     <h3>Dados do veículo (marca, modelo, cor e ano)</h3>
     <p>Cada placa nova que passa pela lombada é <strong>consultada automaticamente</strong>, e o painel mostra a marca, o modelo, a cor e o ano do carro:</p>
     <ul>
-        <li>na lista, na coluna <strong>"Veículo"</strong>;</li>
-        <li>numa linha logo abaixo de cada foto;</li>
+        <li>na lista, nas colunas <strong>"Veículo"</strong>, <strong>"Cor"</strong> e <strong>"Ano"</strong>;</li>
+        <li>na legenda de cada foto das últimas passagens;</li>
         <li>no quadro <strong>"Veículo"</strong>, dentro do detalhe da passagem;</li>
         <li>na notificação em PDF, na linha <strong>"Veículo: …"</strong>.</li>
     </ul>
@@ -667,7 +665,7 @@
 
     <h3>Detalhes da captura e foto ampliada</h3>
     <ul>
-        <li>Clique (ou toque) num card ou numa linha da tabela para abrir os detalhes. Pelo teclado, use <strong>Tab</strong> até a captura e aperte <strong>Enter</strong>.</li>
+        <li>Clique (ou toque) numa foto ou numa linha da lista para abrir os detalhes. Pelo teclado, use <strong>Tab</strong> até a hora da passagem (ou a foto) e aperte <strong>Enter</strong>.</li>
         <li>No celular, os detalhes abrem como um painel que sobe da parte de baixo da tela. Para fechar, <strong>arraste o painel para baixo</strong> pela alça no topo, ou toque no ✕.</li>
         <li>Clique na foto para ampliá-la. Um clique na foto ampliada aproxima <strong>no ponto clicado</strong>; com a foto aproximada, arraste para ver outras partes. Sem aproximação, puxar a foto para baixo fecha.</li>
         <li>A tecla <strong>Esc</strong> fecha a foto ampliada, o menu Exportar e as janelas abertas, uma de cada vez.</li>
@@ -677,24 +675,25 @@
 
     <!-- Section 5 -->
     <h2 id="status-das-cameras">5. Status das Câmeras</h2>
-    <p>Abaixo dos cards de estatísticas, badges coloridos indicam o status de cada câmera:</p>
+    <p>Na barra do topo, cada câmera aparece como um ícone na cor do status. Passe o mouse (ou chegue com a tecla Tab) para ver o local e a última leitura:</p>
     <ul>
         <li><span class="color-dot" style="background:#4ade80"></span> <strong>Online (verde):</strong> A câmera enviou dados nos últimos 30 minutos</li>
-        <li><span class="color-dot" style="background:#facc15"></span> <strong>Alerta (amarelo):</strong> A câmera está sem enviar dados entre 30 minutos e 6 horas. Em condomínio isso costuma ser só falta de movimento: a câmera registra quando passa um veículo</li>
-        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Offline (vermelho):</strong> A câmera não enviou dados há mais de 6 horas — vale verificar energia e rede</li>
+        <li><span class="color-dot" style="background:#facc15"></span> <strong>Sem leitura recente (amarelo):</strong> A câmera está sem enviar dados entre 30 minutos e 6 horas. Em condomínio isso costuma ser só falta de movimento: a câmera registra quando passa um veículo</li>
+        <li><span class="color-dot" style="background:#ef4444"></span> <strong>Sem leitura (vermelho):</strong> A câmera não enviou dados há mais de 6 horas — vale verificar energia e rede</li>
         <li><span class="color-dot" style="background:#3b82f6"></span> <strong>Aguardando (azul):</strong> A câmera foi cadastrada recentemente e ainda não enviou sua primeira captura</li>
     </ul>
 
-    <blockquote><p>Se uma câmera aparece como offline, verifique a conexão de internet e energia no local. Se o problema persistir, entre em contato com o suporte técnico.</p></blockquote>
+    <blockquote><p>Se uma câmera aparece em vermelho, verifique a conexão de internet e energia no local. Se o problema persistir, entre em contato com o suporte técnico.</p></blockquote>
 
     <hr>
+
 
     <!-- Section 6 -->
     <h2 id="gerenciar-veiculos">6. Gerenciar Veículos</h2>
     <p>O cadastro de veículos permite que o sistema identifique os moradores e inclua o nome/unidade nas notificações de velocidade.</p>
 
     <h3>Abrir o módulo de veículos</h3>
-    <p>Clique no botão <strong>"Veículos (X)"</strong> na barra superior (onde X é o total cadastrado).</p>
+    <p>Clique no botão <strong>"Veículos · X"</strong> na barra superior (onde X é o total cadastrado). No celular, ele fica no menu da conta (círculo com a sua inicial).</p>
 
     <h3>Aba "Lista"</h3>
     <p>Mostra todos os veículos cadastrados com:</p>
@@ -998,7 +997,7 @@
     <hr>
 
     <p style="text-align:center; color:var(--text-muted); font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.14.0 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.15.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 
