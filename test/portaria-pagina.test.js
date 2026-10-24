@@ -347,16 +347,16 @@ caso('com captcha ligado, o porteiro entra mandando o token', async () => {
 });
 
 caso('captcha falhou → mensagem anti-robô, botão volta e não chama o Supabase', async () => {
-  const { chamadas, els } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => { throw new Error('x'); } });
+  const { chamadas, els } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => { throw new Error('x'); }, ultimoErro: () => 'tempo' });
   assert.strictEqual(chamadas.length, 0);
-  assert.strictEqual(els['login-erro'].textContent, captchaLib.MSG_FALHA);
+  assert.strictEqual(els['login-erro'].textContent, `${captchaLib.MSG_FALHA} (código tempo)`);
   assert.strictEqual(els['botao-entrar'].disabled, false);
 });
 
 caso('Supabase recusou o captcha → mensagem anti-robô', async () => {
-  const { els, perfis } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok', parar() {} },
+  const { els, perfis } = await rodarEntrar('jose.castelo', 'segredo1', { obterToken: async () => 'tok', parar() {}, ultimoErro: () => null },
     { data: {}, error: { code: 'captcha_failed', message: 'captcha protection: request disallowed' } });
-  assert.strictEqual(els['login-erro'].textContent, captchaLib.MSG_FALHA);
+  assert.strictEqual(els['login-erro'].textContent, `${captchaLib.MSG_FALHA} (código recusado)`);
   assert.strictEqual(perfis.length, 0);
 });
 

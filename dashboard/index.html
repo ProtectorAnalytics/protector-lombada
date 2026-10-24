@@ -2078,7 +2078,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.75rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.16.0 &middot; 2026-10-24
+        v1.16.1 &middot; 2026-10-24
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.75rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2349,7 +2349,7 @@
     </main>
 
     <footer class="rodape-painel">
-      Protector Traffic Control &middot; v1.16.0
+      Protector Traffic Control &middot; v1.16.1
       <br>
       <div class="rodape-links">
         <a href="/dashboard/manual.html" class="rodape-manual">
@@ -2772,10 +2772,10 @@
         // Porteiro entra com o usuário (sem "@"): vira o e-mail técnico do Auth
         const email = usuarioPortariaLib.paraLogin(entrada);
         let captchaToken;
-        try { captchaToken = await captcha.obterToken(); } catch { errorEl.textContent = captchaLib.MSG_FALHA; return; }
+        try { captchaToken = await captcha.obterToken(); } catch { errorEl.textContent = captchaLib.mensagemFalha(captcha.ultimoErro()); return; }
         const { data, error } = await sb.auth.signInWithPassword(captchaLib.credenciais({ email, password }, captchaToken));
         if (error) {
-          errorEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Usuário (ou e-mail) ou senha incorretos.';
+          errorEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.mensagemFalha(captcha.ultimoErro() || 'recusado') : 'Usuário (ou e-mail) ou senha incorretos.';
           console.error('Login error:', error);
           return;
         }
@@ -2905,7 +2905,7 @@
         let captchaToken;
         try { captchaToken = await captcha.obterToken(); } catch {
           msgEl.style.color = 'var(--red)';
-          msgEl.textContent = captchaLib.MSG_FALHA;
+          msgEl.textContent = captchaLib.mensagemFalha(captcha.ultimoErro());
           return;
         }
         const { error } = await sb.auth.resetPasswordForEmail(email, captchaLib.opcoes({
@@ -2914,7 +2914,7 @@
 
         if (error) {
           msgEl.style.color = 'var(--red)';
-          msgEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Erro ao enviar. Tente novamente.';
+          msgEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.mensagemFalha(captcha.ultimoErro() || 'recusado') : 'Erro ao enviar. Tente novamente.';
           return;
         }
 

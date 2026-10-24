@@ -14,16 +14,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.16.0',
+    versao: '1.16.1',
     data: '2026-10-24',
-    titulo: 'Painel mais enxuto: resumo do dia ao lado e lista logo abaixo das fotos',
+    titulo: 'Entrada com o quadro "não sou um robô" à vista',
     itens: Object.freeze([
-      'Em telas a partir de 1024 px, o lado direito virou um quadro só: a semana no alto, os números do dia no meio e os rankings embaixo; a lista de passagens subiu para logo abaixo das últimas passagens',
-      'Hoje, Ontem e 7 dias saíram do topo e ficaram ao lado da busca; o botão escolhido mostra a data ("Hoje · 24/10") e o calendário abre a escolha de outras datas',
-      'Câmeras, "só acima do limite", filtros e exportar viraram ícones; parando o mouse em cima aparece o nome',
-      'Números do dia mais diretos: veículos, alertas, velocidade máxima, dentro do limite, pico e reincidentes juntos, com a diferença para ontem ao lado ("▼14"); os detalhes aparecem ao parar o mouse em cima',
-      'Lista mais limpa: velocidade centralizada, tipo de cadastro só com o ícone e cor só com o ponto colorido (o nome aparece ao parar o mouse)',
-      'O aviso das passagens abaixo de 10 km/h ocultas foi para o rodapé da lista, com o atalho "mostrar"',
+      'Na tela de entrada, o quadro "não sou um robô" agora aparece sempre; na maioria das vezes ele confirma sozinho e, quando pedir, basta um clique',
+      'Se a confirmação falhar, a mensagem mostra um código (ex.: "código 600010"); mande uma foto da tela para o suporte, que o código indica a causa',
     ]),
   });
 });
