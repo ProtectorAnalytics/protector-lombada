@@ -22,6 +22,7 @@
       'Semana de segunda a domingo: "Veículos por dia" mostra a semana por tipo de cadastro, com setas para as semanas anteriores; clique num número para ver aquelas passagens na lista',
       'Câmeras no topo: cada câmera vira um ícone na cor do status, com o local e a última leitura ao passar o mouse; o topo fica fixo ao rolar, com Hoje, Ontem, 7 dias ou Escolher…',
       'Funciona do celular ao monitor grande: os quadros se reorganizam em cada tamanho de tela, as fotos passam com o dedo no celular e cada passagem vira um cartão',
+      'O gráfico "Passagens por hora" saiu da tela; a hora de pico continua nos Indicadores, ao lado dos números do dia',
     ]),
   });
 });
