@@ -33,6 +33,16 @@ caso('todo arquivo de api/ tem rota no vercel.json (ou está na lista de exceç�
   assert.deepStrictEqual(semRota, [], `sem rota: ${semRota.join(', ')}`);
 });
 
+caso('endereço antigo (protector-lombada.vercel.app) manda painel/admin/portaria para o domínio oficial, nunca as câmeras', () => {
+  const red = routes.filter((r) => r.status === 308 && (r.has || []).some((h) => h.type === 'host' && h.value === 'protector-lombada.vercel.app'));
+  assert.strictEqual(red.length, 1);
+  const re = new RegExp(red[0].src);
+  ['/dashboard', '/dashboard/', '/admin', '/admin/manual-usuario.html', '/portaria', '/portaria/'].forEach((u) => assert.ok(re.test(u), u));
+  ['/placa', '/placa/x', '/api/heartbeat', '/api/captura', '/api/config', '/', '/js/captcha.js', '/dashboardx'].forEach((u) => assert.ok(!re.test(u), u));
+  assert.strictEqual(red[0].headers.Location, 'https://lombada.appps.com.br/$1$2');
+  assert.strictEqual(routes.indexOf(red[0]), 0, 'antes de qualquer rota');
+});
+
 caso('/api/admin/avisos aponta para o handler', () => {
   assert.ok(routes.some((r) => r.src === '/api/admin/avisos' && r.dest === '/api/admin/avisos.js'));
 });
