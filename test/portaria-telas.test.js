@@ -81,10 +81,19 @@ caso('admin: unidade atual fora da lista aparece no select como "(removida)"', (
 // ---- M7: a caixa de texto de unidades/porteiros virou o editor (test/editor-unidades.test.js)
 
 // ---- I2/I3: colunas pedidas pelo navegador = colunas concedidas
+// Grant base (migration-portaria-base) + colunas concedidas depois em outras migrations
+const MIGRATIONS_GRANT = fs.readdirSync(path.join(__dirname, '..', 'sql'))
+  .filter((f) => f.startsWith('migration-') && f !== 'migration-portaria-base.sql')
+  .map((f) => ler(`sql/${f}`));
 const colunasDoGrant = (tabela) => {
+  const re = new RegExp(`grant select \\(([^)]*)\\)\\s+on public\\.${tabela} to authenticated`, 'g');
   const m = MIGRATION.match(new RegExp(`grant select \\(([^)]*)\\)\\s+on public\\.${tabela} to authenticated`));
   assert.ok(m, `grant por coluna de ${tabela} não encontrado na migration`);
-  return new Set(m[1].split(',').map((c) => c.trim()));
+  const colunas = new Set(m[1].split(',').map((c) => c.trim()));
+  for (const sqlExtra of MIGRATIONS_GRANT) {
+    for (const x of sqlExtra.matchAll(re)) x[1].split(',').forEach((c) => colunas.add(c.trim()));
+  }
+  return colunas;
 };
 
 caso('navegador não faz select("*") em clientes nem cameras', () => {

@@ -2079,7 +2079,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.75rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.15.1 &middot; 2026-10-23
+        v1.15.2 &middot; 2026-10-23
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.75rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2353,7 +2353,7 @@
     </main>
 
     <footer class="rodape-painel">
-      Protector Traffic Control &middot; v1.15.1
+      Protector Traffic Control &middot; v1.15.2
       <br>
       <div class="rodape-links">
         <a href="/dashboard/manual.html" class="rodape-manual">
@@ -3847,7 +3847,7 @@
     async function loadCamerasList() {
       const sessao = marcaDaSessao();
       const { data, error } = await sb.from('cameras')
-        .select('id, nome, nome_exibicao, serial_number, modelo, firmware')
+        .select('id, nome, nome_exibicao, serial_number, modelo, firmware, foto_enquadramento')
         .eq('cliente_id', currentCliente.id)
         .eq('ativa', true);
       if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
@@ -4731,7 +4731,7 @@
       const podeCadastrar = podeEditarVeiculos() && placaLib.ehPlaca(placaLib.limpar(c.placa))
         && !vinculoPlacaLib.vinculoVigente(indiceVinculos, c.placa);
       const nome = podeCadastrar
-        ? `<button type="button" class="btn-cadastrar" data-acao="cadastrar-passagem" data-indice="${pi}" aria-label="${esc(`Cadastrar a placa ${c.placa}`)}">+ Cadastrar</button>`
+        ? `<span class="sem-dado em-repouso">—</span><button type="button" class="btn-cadastrar" data-acao="cadastrar-passagem" data-indice="${pi}" aria-label="${esc(`Cadastrar a placa ${c.placa}`)}">+ Cadastrar</button>`
         : '<span class="sem-dado">—</span>';
       return tipo + `<td class="c-nome">${nome}</td><td class="c-unid"><span class="sem-dado">—</span></td>`;
     }

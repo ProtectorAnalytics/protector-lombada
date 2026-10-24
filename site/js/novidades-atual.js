@@ -14,7 +14,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.15.1',
+    versao: '1.15.2',
     data: '2026-10-23',
     titulo: 'Visual novo do painel',
     itens: Object.freeze([
@@ -24,6 +24,8 @@
       'Funciona do celular ao monitor grande: os quadros se reorganizam em cada tamanho de tela, as fotos passam com o dedo no celular e cada passagem vira um cartão',
       'O gráfico "Passagens por hora" saiu da tela; a hora de pico continua nos Indicadores, ao lado dos números do dia',
       'Logo da Protector visível no topo também em notebook',
+      'Fotos das últimas passagens enquadradas câmera a câmera: o carro aparece grande e centralizado',
+      'Placa sem cadastro mostra "—" no Nome, igual à Unidade; o "+ Cadastrar" aparece ao passar o mouse',
     ]),
   });
 });

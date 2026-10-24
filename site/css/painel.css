@@ -404,9 +404,11 @@ button.dd.dd-placa:hover { text-decoration: none; }
 .tb .un:hover, .tb .un:focus-visible { text-decoration: none; border-color: var(--azul); }
 .tb .sem-dado { color: var(--text-muted); }
 /* "+ Cadastrar" só ao passar o mouse ou focar a linha; no toque, sempre (em texto) */
-.tb .btn-cadastrar { border: 0; padding: 4px 0; background: none; color: var(--azul); font: 700 0.8125rem/1 var(--font-sans); cursor: pointer; opacity: 0; }
-.table-row:hover .btn-cadastrar, .table-row:focus-within .btn-cadastrar { opacity: 1; }
-@media (hover: none), (pointer: coarse) { .tb .btn-cadastrar { opacity: 1; } }
+/* Sem cadastro: em repouso a coluna Nome mostra "—" (igual à Unidade); com o mouse ou o foco na linha o "—" dá lugar a "+ Cadastrar" */
+.tb .btn-cadastrar { border: 0; padding: 4px 0; background: none; color: var(--azul); font: 700 0.8125rem/1 var(--font-sans); cursor: pointer; display: none; }
+.table-row:hover .btn-cadastrar, .table-row:focus-within .btn-cadastrar { display: inline; }
+.table-row:hover .em-repouso, .table-row:focus-within .em-repouso { display: none; }
+@media (hover: none), (pointer: coarse) { .tb .btn-cadastrar { display: inline; } .tb .em-repouso { display: none; } }
 .tb .btn-cadastrar:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
 .table-empty { padding: 30px; text-align: center; color: var(--text-secondary); }
 .table-pagination {

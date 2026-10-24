@@ -102,13 +102,19 @@ caso('anel "Dentro do limite" e selo curto da lista', () => {
   assert.strictEqual(lib.ordinalCurto(undefined), '');
 });
 
-caso('foto limpa + zoom no carro: padrão, ajuste por modelo/id e valores inválidos', () => {
-  assert.deepStrictEqual(lib.recorteDaFoto(null, 'mini'), { zoom: 1.9, x: 47, y: 26 });
-  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c1' }, 'destaque'), { zoom: 1.35, x: 47, y: 22 });
+caso('foto limpa + zoom no carro: padrão, ajuste do banco > id > modelo e valores inválidos', () => {
+  assert.deepStrictEqual(lib.recorteDaFoto(null, 'mini'), { zoom: 2.2, x: 45, y: 14 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c1' }, 'destaque'), { zoom: 1.6, x: 42, y: 18 });
   const ajustes = { 'MOD-A': { mini: { y: 30 } }, c9: { mini: { zoom: 1.5 } }, ruim: { mini: { zoom: 9, x: -5, y: 'a' } } };
-  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c1', modelo: 'MOD-A' }, 'mini', ajustes), { zoom: 1.9, x: 47, y: 30 });
-  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c9', modelo: 'MOD-A' }, 'mini', ajustes), { zoom: 1.5, x: 47, y: 30 });
-  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'ruim' }, 'mini', ajustes), { zoom: 1.9, x: 47, y: 26 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c1', modelo: 'MOD-A' }, 'mini', ajustes), { zoom: 2.2, x: 45, y: 30 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c9', modelo: 'MOD-A' }, 'mini', ajustes), { zoom: 1.5, x: 45, y: 30 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'ruim' }, 'mini', ajustes), { zoom: 2.2, x: 45, y: 14 });
+  // cameras.foto_enquadramento (banco) vence tudo; tamanho que falta usa o padrão
+  const doBanco = { id: 'c9', modelo: 'MOD-A', foto_enquadramento: { mini: { zoom: 2.2, x: 59, y: 79 } } };
+  assert.deepStrictEqual(lib.recorteDaFoto(doBanco, 'mini', ajustes), { zoom: 2.2, x: 59, y: 79 });
+  assert.deepStrictEqual(lib.recorteDaFoto(doBanco, 'destaque', ajustes), { zoom: 1.6, x: 42, y: 18 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ foto_enquadramento: 'lixo' }, 'mini'), { zoom: 2.2, x: 45, y: 14 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ foto_enquadramento: { mini: { zoom: 4, y: 150 } } }, 'mini'), { zoom: 2.2, x: 45, y: 14 });
   assert.strictEqual(lib.estiloRecorte({ zoom: 1.9, x: 47, y: 26 }), '--zoom:1.9;--ox:47%;--oy:26%');
 });
 
