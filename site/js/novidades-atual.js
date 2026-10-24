@@ -14,14 +14,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.19.0',
+    versao: '1.19.1',
     data: '2026-10-24',
-    titulo: 'Quadro da portaria mais fácil de usar',
+    titulo: 'Baixar o quadro pelo site e ícone novo',
     itens: Object.freeze([
-      'O quadro agora arrasta segurando em qualquer lugar da janela, e clicar nele não abre mais o site sem querer',
-      'Para abrir o painel completo, use o novo botão ↗ no topo do quadro (ou o menu ⋮)',
-      'Tela de entrada do quadro renovada: o usuário já vem preenchido e dá para ver a senha digitada',
-      'O programa do quadro (Windows e Mac) passa a se atualizar sozinho; quem já instalou precisa baixar uma última vez pelo painel',
+      'O quadro da portaria agora também pode ser baixado no rodapé do site lombada.appps.com.br, com um link para Windows e outro para Mac',
+      'Ícone novo na aba do navegador: o escudo da Protector, legível em abas claras e escuras',
     ]),
   });
 });
