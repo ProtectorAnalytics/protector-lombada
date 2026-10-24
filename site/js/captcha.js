@@ -9,9 +9,9 @@
  * nada é carregado e obterToken() devolve null — o login fica como antes.
  *
  * Com site key: carrega o script do Turnstile só quando preciso, desenha o
- * widget no container (invisível, só aparece se a Cloudflare pedir um
- * clique), entrega um token por vez e reseta o widget a cada uso (token é
- * de uso único). Tudo inline, sem pop-up: funciona no PWA da portaria.
+ * widget no container (quadro "não sou robô" sempre visível; na maioria
+ * das vezes confirma sozinho, às vezes pede um clique), entrega um token por vez e reseta o widget a
+ * cada uso (token é de uso único). Tudo inline, sem pop-up: funciona no PWA da portaria.
  *
  * Carregado no browser (window.captchaLib) e no Node (require) para testes.
  */
@@ -31,6 +31,7 @@
     obterToken: () => Promise.resolve(null),
     resetar() {},
     parar() {},
+    ultimoErro: () => null,
   });
   const LARGURA_MINIMA = 300; // 'flexible'/'normal' pedem 300 px; abaixo disso, 'compact'
 
@@ -39,6 +40,17 @@
     if (typeof chave !== 'string') return null;
     const limpa = chave.trim();
     return limpa ? limpa : null;
+  }
+
+  /**
+   * Mensagem anti-robô com o código do erro, para diagnosticar pela foto da
+   * tela (ex.: "(código 600010)" = navegador recusado pela Cloudflare;
+   * "tempo" = desafio não respondeu; "script" = Cloudflare bloqueada na rede;
+   * "recusado" = o servidor recusou o token).
+   */
+  function mensagemFalha(codigo) {
+    const limpo = String(codigo == null ? '' : codigo).replace(/[^A-Za-z0-9-]/g, '').slice(0, 24);
+    return limpo ? `${MSG_FALHA} (código ${limpo})` : MSG_FALHA;
   }
 
   /** Credenciais do signInWithPassword com o token (sem token, devolve as mesmas). */
@@ -94,6 +106,7 @@
     let token = null;
     let iniciando = null;
     let espera = [];
+    let erro = null;
 
     function resetar() {
       token = null;
@@ -108,6 +121,7 @@
     }
 
     function aoReceber(novo) {
+      erro = null;
       const proximo = espera.shift();
       if (!proximo) { token = novo; return; }
       clearTimeout(proximo.timer);
@@ -124,18 +138,19 @@
 
     function desenhar(ts) {
       const el = typeof cfg.container === 'string' ? doc.getElementById(cfg.container) : cfg.container;
-      if (!el) throw new Error(MSG_FALHA);
+      if (!el) { erro = 'tela'; throw new Error(MSG_FALHA); }
       widgetId = ts.render(el, {
         sitekey: siteKey,
-        appearance: 'interaction-only',
+        appearance: 'always',
         language: 'pt-br',
         size: tamanho(el),
         'refresh-expired': 'auto',
         callback: aoReceber,
         'expired-callback': () => { token = null; },
         'timeout-callback': () => { token = null; },
-        'error-callback': () => {
+        'error-callback': (codigo) => {
           token = null;
+          erro = codigo ? String(codigo) : 'desconhecido';
           falhar();
           // Próxima tentativa já ganha um desafio novo (sem esperar o limite)
           setTimeout(resetar, 0);
@@ -165,7 +180,7 @@
     async function obterToken() {
       // Script bloqueado/sem rede: segue sem token. Se o Supabase exigir o
       // captcha, a recusa dele vira a mensagem anti-robô na tela.
-      try { await iniciar(); } catch (_) { return null; }
+      try { await iniciar(); } catch (_) { if (!erro) erro = 'script'; return null; }
       if (token) {
         const pronto = token;
         resetar();
@@ -175,6 +190,7 @@
         const pedido = { resolve, reject, timer: null };
         pedido.timer = setTimeout(() => {
           espera = espera.filter((p) => p !== pedido);
+          erro = 'tempo';
           resetar();
           reject(new Error(MSG_FALHA));
         }, esperaMs);
@@ -182,11 +198,14 @@
       });
     }
 
-    return Object.freeze({ ativo: true, iniciar, obterToken, resetar, parar });
+    /** Código do último erro (Cloudflare, 'tempo', 'script', 'tela') ou null. */
+    function ultimoErro() { return erro; }
+
+    return Object.freeze({ ativo: true, iniciar, obterToken, resetar, parar, ultimoErro });
   }
 
   return Object.freeze({
     SCRIPT_URL, MSG_FALHA, ESPERA_MS,
-    normalizarChave, credenciais, opcoes, ehErroDeCaptcha, criarCaptcha,
+    normalizarChave, mensagemFalha, credenciais, opcoes, ehErroDeCaptcha, criarCaptcha,
   });
 });

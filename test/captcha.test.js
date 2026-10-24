@@ -8,7 +8,7 @@
 const assert = require('node:assert');
 const captchaLib = require('../site/js/captcha');
 
-const { criarCaptcha, credenciais, opcoes, ehErroDeCaptcha, normalizarChave, MSG_FALHA, SCRIPT_URL } = captchaLib;
+const { criarCaptcha, credenciais, opcoes, ehErroDeCaptcha, normalizarChave, mensagemFalha, MSG_FALHA, SCRIPT_URL } = captchaLib;
 
 let passou = 0;
 let falhou = 0;
@@ -79,7 +79,7 @@ caso('com site key: injeta o script do Turnstile (render explícito) uma vez só
   assert.strictEqual(ts.el.id, 'captcha-login');
   assert.strictEqual(ts.params.sitekey, '0xCHAVE');
   assert.strictEqual(ts.params.language, 'pt-br');
-  assert.strictEqual(ts.params.appearance, 'interaction-only');
+  assert.strictEqual(ts.params.appearance, 'always', 'quadro "não sou robô" sempre visível');
 });
 
 caso('token é de uso único: entrega e reseta o widget a cada uso', async () => {
@@ -222,6 +222,54 @@ caso('todo login e "esqueci a senha" do navegador manda o token do captcha', () 
     const resets = [...h.matchAll(/auth\.resetPasswordForEmail\(([\s\S]*?)\);/g)].map((m) => m[1]);
     resets.forEach((a) => assert.ok(a.includes('captchaLib.opcoes('), `${arq}: ${a}`));
     assert.ok(!/auth\.(signUp|signInWithOtp|signInAnonymously)\(/.test(h), `${arq}: chamada nova do Auth sem captcha`);
+  }
+});
+
+caso('mensagem de falha mostra o código do erro (para diagnosticar pela foto da tela)', () => {
+  assert.strictEqual(mensagemFalha(null), MSG_FALHA);
+  assert.strictEqual(mensagemFalha(''), MSG_FALHA);
+  assert.strictEqual(mensagemFalha('110200'), `${MSG_FALHA} (código 110200)`);
+  assert.strictEqual(mensagemFalha(300030), `${MSG_FALHA} (código 300030)`);
+  assert.strictEqual(mensagemFalha('<b>x</b>"; y'), `${MSG_FALHA} (código bxby)`, 'só letras, números e hífen');
+  assert.strictEqual(mensagemFalha('a'.repeat(40)).length, MSG_FALHA.length + ' (código )'.length + 24, 'até 24 caracteres');
+});
+
+caso('ultimoErro guarda o código da Cloudflare, do tempo esgotado e do script bloqueado; limpa ao receber token', async () => {
+  const inerte = criarCaptcha({});
+  assert.strictEqual(inerte.ultimoErro(), null);
+
+  const ts = turnstileFalso();
+  const c = criarCaptcha({ siteKey: 'k', container: 'c', win: { turnstile: ts }, doc: docFalso(), esperaMs: 10 });
+  await c.iniciar();
+  assert.strictEqual(c.ultimoErro(), null);
+  const p = c.obterToken();
+  await tick();
+  ts.params['error-callback']('600010');
+  await assert.rejects(p, { message: MSG_FALHA });
+  assert.strictEqual(c.ultimoErro(), '600010');
+  ts.params['error-callback']();
+  assert.strictEqual(c.ultimoErro(), 'desconhecido');
+  await assert.rejects(c.obterToken(), { message: MSG_FALHA });
+  assert.strictEqual(c.ultimoErro(), 'tempo');
+  const p2 = c.obterToken();
+  ts.params.callback('tok');
+  assert.strictEqual(await p2, 'tok');
+  assert.strictEqual(c.ultimoErro(), null);
+
+  const doc = docFalso();
+  const b = criarCaptcha({ siteKey: 'k', container: 'c', win: {}, doc });
+  const pb = b.obterToken();
+  doc.scripts[0].onerror();
+  assert.strictEqual(await pb, null);
+  assert.strictEqual(b.ultimoErro(), 'script');
+});
+
+caso('telas de login mostram a mensagem com o código (nunca só a fixa)', () => {
+  for (const arq of PAGINAS) {
+    const h = ler(arq);
+    assert.ok(!/textContent = captchaLib\.MSG_FALHA/.test(h), `${arq}: mensagem sem código`);
+    assert.ok(!/\? captchaLib\.MSG_FALHA :/.test(h), `${arq}: recusa do servidor sem código`);
+    assert.ok(/captchaLib\.mensagemFalha\(captcha\.ultimoErro\(\)/.test(h), `${arq}: sem mensagemFalha`);
   }
 });
 

@@ -667,10 +667,10 @@
       // Porteiro entra com o usuário (sem "@"): vira o e-mail técnico do Auth
       const email = usuarioPortariaLib.paraLogin(entrada);
       let captchaToken;
-      try { captchaToken = await captcha.obterToken(); } catch (_) { erro.textContent = captchaLib.MSG_FALHA; return; }
+      try { captchaToken = await captcha.obterToken(); } catch (_) { erro.textContent = captchaLib.mensagemFalha(captcha.ultimoErro()); return; }
       const { data, error } = await sb.auth.signInWithPassword(captchaLib.credenciais({ email, password: senha }, captchaToken));
       if (error) {
-        erro.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Usuário (ou e-mail) ou senha incorretos.';
+        erro.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.mensagemFalha(captcha.ultimoErro() || 'recusado') : 'Usuário (ou e-mail) ou senha incorretos.';
         return;
       }
       captcha.parar();

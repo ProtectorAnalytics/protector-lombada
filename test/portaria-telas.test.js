@@ -190,14 +190,14 @@ pendentes.push(['painel: com captcha ligado, o login manda o token', async () =>
   assert.deepStrictEqual(chamadas, [{ email: 'sindica@exemplo.com', password: 'segredo1', options: { captchaToken: 'tok-1' } }]);
 }]);
 pendentes.push(['painel: captcha falhou no aparelho → mensagem anti-robô e não chama o Supabase', async () => {
-  const { chamadas, els } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => { throw new Error('x'); } });
+  const { chamadas, els } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => { throw new Error('x'); }, ultimoErro: () => '600010' });
   assert.strictEqual(chamadas.length, 0);
-  assert.strictEqual(els['login-error'].textContent, captchaLib.MSG_FALHA);
+  assert.strictEqual(els['login-error'].textContent, `${captchaLib.MSG_FALHA} (código 600010)`);
 }]);
 pendentes.push(['painel: Supabase recusou o captcha → mensagem anti-robô', async () => {
-  const { els, perfis } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok', parar() {} },
+  const { els, perfis } = await loginDoPainel('sindica@exemplo.com', { obterToken: async () => 'tok', parar() {}, ultimoErro: () => null },
     { data: {}, error: { code: 'captcha_failed', message: 'captcha protection: request disallowed' } });
-  assert.strictEqual(els['login-error'].textContent, captchaLib.MSG_FALHA);
+  assert.strictEqual(els['login-error'].textContent, `${captchaLib.MSG_FALHA} (código recusado)`);
   assert.strictEqual(perfis, 0);
 }]);
 pendentes.push(['painel: login vazio não chama o Supabase', async () => {

@@ -1268,7 +1268,7 @@ async function doResetPassword() {
     let captchaToken;
     try { captchaToken = await captcha.obterToken(); } catch {
       msgEl.style.color = 'var(--red)';
-      msgEl.textContent = captchaLib.MSG_FALHA;
+      msgEl.textContent = captchaLib.mensagemFalha(captcha.ultimoErro());
       return;
     }
     const { error } = await sb.auth.resetPasswordForEmail(email, captchaLib.opcoes({
@@ -1277,7 +1277,7 @@ async function doResetPassword() {
 
     if (error) {
       msgEl.style.color = 'var(--red)';
-      msgEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'Erro ao enviar. Tente novamente.';
+      msgEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.mensagemFalha(captcha.ultimoErro() || 'recusado') : 'Erro ao enviar. Tente novamente.';
       return;
     }
 
@@ -1354,10 +1354,10 @@ async function entrar() {
   if (!email || !password) { errorEl.textContent = 'Preencha e-mail e senha.'; return; }
 
   let captchaToken;
-  try { captchaToken = await captcha.obterToken(); } catch { errorEl.textContent = captchaLib.MSG_FALHA; return; }
+  try { captchaToken = await captcha.obterToken(); } catch { errorEl.textContent = captchaLib.mensagemFalha(captcha.ultimoErro()); return; }
   const { data, error } = await sb.auth.signInWithPassword(captchaLib.credenciais({ email, password }, captchaToken));
   if (error) {
-    errorEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.MSG_FALHA : 'E-mail ou senha incorretos.';
+    errorEl.textContent = captchaLib.ehErroDeCaptcha(error) ? captchaLib.mensagemFalha(captcha.ultimoErro() || 'recusado') : 'E-mail ou senha incorretos.';
     return;
   }
   captcha.parar();
