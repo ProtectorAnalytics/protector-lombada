@@ -53,11 +53,11 @@ function contexto(extra) {
   return ctx;
 }
 
-caso('topo fixo: período segmentado (Escolher… abre o seletor), câmeras, ao vivo, Veículos e tema', () => {
+caso('topo fixo: câmeras, ao vivo, Veículos e tema (o período mudou para a linha da busca na v1.16)', () => {
   const topo = PAINEL.slice(PAINEL.indexOf('<header class="topbar" id="topo">'), PAINEL.indexOf('</header>'));
-  ['data-periodo="hoje"', 'data-periodo="ontem"', 'data-periodo="7d"', 'id="btn-periodo" data-periodo="escolher"', 'aria-controls="painel-periodo"',
-    'id="cameras-status"', 'id="ultima-atualizacao"', 'id="btn-topbar-veiculos"', 'data-seletor-tema', 'id="conta-btn"']
+  ['id="cameras-status"', 'id="ultima-atualizacao"', 'id="btn-topbar-veiculos"', 'data-seletor-tema', 'id="conta-btn"']
     .forEach((t) => assert.ok(topo.includes(t), t));
+  assert.ok(!topo.includes('data-periodo'), 'v1.16: sem seletor de período no topo');
   assert.ok(/\.topbar \{\s*position: sticky; top: 0;/.test(CSS));
   assert.ok(CSS.includes('backdrop-filter: blur(16px)') && CSS.includes('prefers-reduced-transparency'));
   assert.ok(PAINEL.includes("rotulo.textContent = (ok ? 'Ao vivo · ' : 'Falha ao atualizar às ') + hora;"));
@@ -81,20 +81,22 @@ caso('câmeras no topo: ícone na cor do status, balão no mouse e no teclado, c
   assert.ok(!extrair('async function loadCamerasStatus(').includes('agoraRecolhido()'));
 });
 
-caso('números do dia num quadro: veículos + barra + legenda clicável, alertas, máxima (placa e hora), anel', () => {
-  ['id="stat-veiculos"', 'id="stat-passagens"', 'id="barra-tipos"', 'id="faixa-tipos-chips"', 'id="stat-alertas"', 'id="stat-limite"',
-    'id="stat-maxvel"', 'id="stat-maxvel-quem"', 'id="stat-conformidade"', 'id="anel-limite"', 'id="stat-media"',
+caso('números do dia (faixa v1.16): veículos + barra + legenda clicável, alertas, máxima, dentro do limite', () => {
+  ['id="stat-veiculos"', 'id="barra-tipos"', 'id="faixa-tipos-chips"', 'id="stat-alertas"',
+    'id="stat-maxvel"', 'id="stat-conformidade"',
     'id="cmp-alertas"', 'id="cmp-maxvel"', 'id="cmp-dentro"'].forEach((id) => assert.ok(PAINEL.includes(id), id));
-  assert.ok(PAINEL.includes('<section class="cartao numeros-dia c-dia" aria-label="Números do dia">'));
+  // v1.16: o apoio (passagens, limite, placa·hora, média) foi para a dica; o anel saiu
+  ['id="stat-passagens"', 'id="stat-limite"', 'id="stat-maxvel-quem"', 'id="anel-limite"', 'id="stat-media"']
+    .forEach((id) => assert.ok(!PAINEL.includes(id), id));
+  assert.ok(PAINEL.includes('<section class="cartao faixa" id="faixa-numeros" aria-label="Números do dia">'));
   // Os números do topo são do dia inteiro, sem os filtros da lista
   assert.ok(PAINEL.includes('veiculosDoDia.resumoDoDia(capturas, indiceVinculos)'));
   assert.ok(PAINEL.includes('escreverDentroDoLimite(veiculosDoDia.indicadoresDeVelocidade(data, limite), limite);'));
-  assert.ok(PAINEL.includes("anel.setAttribute('stroke-dasharray', painelVisualLib.tracoDoAnel(pct === null ? 0 : pct));"));
   // Comparação com ontem no MESMO horário (00:00 até agora − 24 h), guardada 5 min
   assert.ok(PAINEL.includes('const ate = new Date(Date.now() - DIA_MS).toISOString();'));
-  assert.ok(PAINEL.includes('painelVisualLib.comparacaoComOntem(hoje, ontem)'));
-  // Indicadores usam o mesmo padrão de célula (sem caixas internas)
-  assert.ok(PAINEL.includes('<section class="cartao numeros-dia indicadores lado c-ind"'));
+  assert.ok(PAINEL.includes('painelVisualLib.comparacaoCurta(hoje, ontem)'));
+  // Pico e reincidentes entraram na mesma faixa (sem o quadro de indicadores à parte)
+  assert.ok(!PAINEL.includes('c-ind'));
   assert.ok(PAINEL.includes('id="ind-hora-pico"') && PAINEL.includes('id="ind-reincidentes"'));
 });
 
@@ -132,7 +134,8 @@ caso('legenda de tipos: clicar filtra, clicar no ativo tira; tipo zerado some (m
   faixa.escreverFaixaTipos();
   assert.deepStrictEqual([...el.innerHTML.matchAll(/data-tipo="([a-z]+)"/g)].map((m) => m[1]), ['morador', 'visitante', 'prestador', 'sem']);
   assert.ok(el.innerHTML.includes('data-tipo="prestador" aria-pressed="true"'));
-  assert.ok(el.innerHTML.includes('<use href="#ic-casa"/>'), 'ícone do tipo na legenda');
+  // v1.16: legenda por extenso com o ponto na cor do tipo (sem ícone)
+  assert.ok(el.innerHTML.includes('style="--c:var(--tipo-morador)"') && !el.innerHTML.includes('<use href='), 'ponto do tipo na legenda');
 });
 
 caso('últimas passagens: destaque + 4, fotos 16:9 com recorte por câmera, nada por cima da foto', () => {
@@ -158,7 +161,8 @@ caso('lista em tabela: 11 colunas na ordem, cabeçalho fixo, "Lombada" com dica'
   assert.ok(!cab.includes('Radar') && !cab.includes('Cadastro'));
   assert.ok(/\.tb th \{\s*position: sticky; top: var\(--topo-h, 64px\);/.test(CSS));
   // Uma regra de alinhamento: números à direita, o resto à esquerda
-  assert.ok(CSS.includes('.tb .c-vel, .tb .c-hora, .tb .c-ano { text-align: right; }'));
+  assert.ok(CSS.includes('.tb .c-hora, .tb .c-ano { text-align: right; }'));
+  assert.ok(CSS.includes('.tb .c-vel { text-align: center; }'), 'v1.16: Veloc. centralizada');
   assert.ok(CSS.includes('.ord { display: inline-block; width: 26px;'));
   // Nada some à direita: Lombada, Veículo e Nome quebram linha; se ainda não couber, a caixa rola
   assert.ok(CSS.includes('.tb td.c-radar, .tb td.c-veic, .tb td.c-nome { white-space: normal;'));
@@ -211,9 +215,10 @@ caso('linha: Mercosul + "Nª", alerta com ▲ e faixa vermelha, nova com faixa a
   assert.ok(alerta.startsWith('<tr class="table-row alerta novo"'));
   assert.strictEqual((alerta.match(/<td /g) || []).length, 11);
   assert.ok(alerta.includes('<span class="mer"><i></i><b>TST1A11</b></span>'));
-  assert.ok(alerta.includes('<span class="seta" aria-hidden="true">▲</span><span>41</span>'));
+  assert.ok(alerta.includes('<span class="v"><i class="v-seta" aria-hidden="true">▲</i><span>41</span></span>'));
   assert.ok(alerta.includes('acima do limite — filtrar só acima do limite'));
   assert.ok(alerta.includes('>3ª<span class="visualmente-oculto"> hoje</span></span>'));
+  assert.ok(alerta.includes('title="3ª passagem desta placa hoje"'));
   assert.ok(alerta.includes('Filtrar pela lombada LOMBADA TESTE'));
   assert.ok(/>\d{2}:\d{2}:\d{2}<\/button>/.test(alerta), 'só a hora (HH:MM:SS)');
   const ok = ctx.htmlLinhaDaLista({ id: 'b', placa: 'TST1A11', velocidade: 20, camera_id: 'r1', timestamp: '2026-10-23T20:00:00Z' },
@@ -223,7 +228,6 @@ caso('linha: Mercosul + "Nª", alerta com ▲ e faixa vermelha, nova com faixa a
   // Linha do dia só quando a lista passa de um dia; período de um dia leva a data às etiquetas
   assert.ok(PAINEL.includes('veiculosDoDia.comCabecalhosDeDia(pageData)'));
   assert.ok(PAINEL.includes("return umDia ? '' : cabecalhoDoDia(item);"));
-  assert.ok(PAINEL.includes('${diaDoResumo()}${textoResultado(lista.total, lista.incompleta)}'));
   // Passagem nova: só as mais recentes que a mais nova já vista (página 1, mesmos filtros)
   const novas = vm.createContext({ chaveFiltros: () => 'k', filtrosAtivos: {}, currentPage: 1, listaVista: { chave: null, ids: null } });
   vm.runInContext(extrair('function passagensNovas('), novas);
@@ -239,7 +243,7 @@ caso('veículo, cor e ano em colunas; sem dado do veículo: estado + "—"', () 
   ctx.infoVeiculo = () => ({ estado: 'consultado', nome: 'VW NIVUS', modelo: 'NIVUS', cor: 'Cinza', hex: '#9ca3af', ano: '2027' });
   const c = ctx.celulaVeiculoTabela('TST1A11', '2026-10-23T12:00:00Z');
   assert.ok(c.startsWith('<td class="c-veic">') && c.includes('<b>VW NIVUS</b>') && c.includes('data-filtro="modelo"'));
-  assert.ok(c.includes('<td class="c-cor"><span class="cor">') && c.includes('Cinza') && c.includes('<td class="c-ano">2027</td>'));
+  assert.ok(c.includes('<td class="c-cor"><span class="cor" title="Cinza">') && c.includes('<span class="tx">Cinza</span>') && c.includes('<td class="c-ano">2027</td>'));
   ctx.infoVeiculo = () => ({ estado: 'consultando' });
   const espera = ctx.celulaVeiculoTabela('TST1A11', '2026-10-23T12:00:00Z');
   assert.ok(espera.includes('consultando…') && (espera.match(/<span class="sem-dado">—<\/span>/g) || []).length === 2);
@@ -251,7 +255,8 @@ caso('barra de comando: busca ("/"), câmera, Acima do limite, Filtros, Exportar
     .forEach((t) => assert.ok(barra.includes(t), t));
   assert.ok(PAINEL.includes("if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || !painelAtivo) return;"));
   assert.ok(PAINEL.includes("document.getElementById('btn-acima').addEventListener('click', () => mudarFiltros({ soAlertas: !filtrosAtivos.soAlertas }));"));
-  assert.ok(PAINEL.includes('id="chip-periodo"') && PAINEL.includes('id="chips-filtros"') && PAINEL.includes('id="resumo-lista"'));
+  // v1.16: a linha de etiquetas só traz filtros removíveis ("Hoje", data e contagem saíram)
+  assert.ok(PAINEL.includes('id="chips-filtros"') && !PAINEL.includes('id="chip-periodo"') && !PAINEL.includes('id="resumo-lista"'));
 });
 
 caso('semana seg–dom em mapa de calor: ‹ ›, célula filtra dia + tipo, futuro "—"', () => {
@@ -276,13 +281,15 @@ caso('semana seg–dom em mapa de calor: ‹ ›, célula filtra dia + tipo, fut
   assert.ok(!PAINEL.includes('const DIAS_POR_DIA = 8;') && !PAINEL.includes('id="por-dia-legenda"'));
 });
 
-caso('lateral: até 1.699 px semana e rankings num quadro com abas; rankings com 3 + "Ver os 10"', () => {
-  assert.ok(PAINEL.includes("window.matchMedia('(min-width: 1024px) and (max-width: 1699px)')"));
-  ['id="aba-lado-semana"', 'id="aba-lado-mais"', 'id="aba-lado-recordes"', 'id="aba-rank-mais"', 'id="aba-rank-recordes"',
-    'data-ver10="ranking-list"', 'data-ver10="recordes-list"'].forEach((t) => assert.ok(PAINEL.includes(t), t));
+caso('rankings: abas Mais passagens | Recordes; no tablet/celular 3 + "Ver os 10"', () => {
+  // v1.16: sem o quadro com abas Semana | Mais | Recordes (a lateral única mostra tudo)
+  assert.ok(!PAINEL.includes("window.matchMedia('(min-width: 1024px) and (max-width: 1699px)')"));
+  assert.ok(!PAINEL.includes('id="aba-lado-semana"') && !PAINEL.includes('id="abas-lado"'));
+  ['id="aba-rank-mais"', 'id="aba-rank-recordes"', 'data-ver10="ranking-list"', 'data-ver10="recordes-list"']
+    .forEach((t) => assert.ok(PAINEL.includes(t), t));
   assert.ok(CSS.includes('.rk:not(.aberta) > li:nth-child(n+4), .rec:not(.aberta) > li:nth-child(n+4) { display: none; }'));
-  // A lista fica sozinha na parte de baixo, largura inteira
-  assert.ok(CSS.includes('.c-lista { grid-column: 1 / -1; grid-row: 3; }'));
+  // A lista fica logo abaixo das fotos, na coluna da esquerda
+  assert.ok(CSS.includes('.c-lista { grid-column: 1; grid-row: 2; }'));
 });
 
 caso('fim do limite de 300: total exato, página pelo servidor, conferência honesta', () => {

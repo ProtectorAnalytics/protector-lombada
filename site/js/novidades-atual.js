@@ -14,18 +14,16 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.15.2',
-    data: '2026-10-23',
-    titulo: 'Visual novo do painel',
+    versao: '1.16.0',
+    data: '2026-10-24',
+    titulo: 'Painel mais enxuto: resumo do dia ao lado e lista logo abaixo das fotos',
     itens: Object.freeze([
-      'Visual novo do painel: os números do dia num quadro só, com a comparação com ontem no mesmo horário; a última passagem em destaque; uma barra de filtros sem botões repetidos; e a lista com a placa no padrão Mercosul e colunas para lombada, veículo, cor, ano, tipo, nome e unidade',
-      'Semana de segunda a domingo: "Veículos por dia" mostra a semana por tipo de cadastro, com setas para as semanas anteriores; clique num número para ver aquelas passagens na lista',
-      'Câmeras no topo: cada câmera vira um ícone na cor do status, com o local e a última leitura ao passar o mouse; o topo fica fixo ao rolar, com Hoje, Ontem, 7 dias ou Escolher…',
-      'Funciona do celular ao monitor grande: os quadros se reorganizam em cada tamanho de tela, as fotos passam com o dedo no celular e cada passagem vira um cartão',
-      'O gráfico "Passagens por hora" saiu da tela; a hora de pico continua nos Indicadores, ao lado dos números do dia',
-      'Logo da Protector visível no topo também em notebook',
-      'Fotos das últimas passagens enquadradas câmera a câmera: o carro aparece grande e centralizado',
-      'Placa sem cadastro mostra "—" no Nome, igual à Unidade; o "+ Cadastrar" aparece ao passar o mouse',
+      'Em telas a partir de 1024 px, o lado direito virou um quadro só: a semana no alto, os números do dia no meio e os rankings embaixo; a lista de passagens subiu para logo abaixo das últimas passagens',
+      'Hoje, Ontem e 7 dias saíram do topo e ficaram ao lado da busca; o botão escolhido mostra a data ("Hoje · 24/10") e o calendário abre a escolha de outras datas',
+      'Câmeras, "só acima do limite", filtros e exportar viraram ícones; parando o mouse em cima aparece o nome',
+      'Números do dia mais diretos: veículos, alertas, velocidade máxima, dentro do limite, pico e reincidentes juntos, com a diferença para ontem ao lado ("▼14"); os detalhes aparecem ao parar o mouse em cima',
+      'Lista mais limpa: velocidade centralizada, tipo de cadastro só com o ícone e cor só com o ponto colorido (o nome aparece ao parar o mouse)',
+      'O aviso das passagens abaixo de 10 km/h ocultas foi para o rodapé da lista, com o atalho "mostrar"',
     ]),
   });
 });

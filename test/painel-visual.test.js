@@ -133,4 +133,28 @@ caso('comparação com ontem no mesmo horário: setas, p.p. e verde quando melho
   assert.strictEqual(lib.comparacaoComOntem(null, null).alertas.texto, '');
 });
 
+caso('comparação curta (faixa v1.16): "▼14" ao lado do número e o resto na dica', () => {
+  const c = lib.comparacaoCurta({ alertas: 28, maxVel: 46, dentroPct: 95 }, { alertas: 42, maxVel: 48, dentroPct: 92 });
+  assert.deepStrictEqual(c.alertas, { texto: '▼14', bom: true, ruim: false, dica: 'ontem 42 no mesmo horário' });
+  assert.deepStrictEqual(c.maxVel, { texto: '▼2', bom: true, ruim: false, dica: 'ontem 48 km/h' });
+  assert.deepStrictEqual(c.dentro, { texto: '▲3', bom: true, ruim: false, dica: 'ontem 92%' });
+  const pior = lib.comparacaoCurta({ alertas: 5, maxVel: 60, dentroPct: 80 }, { alertas: 2, maxVel: 50, dentroPct: 90.4 });
+  assert.deepStrictEqual([pior.alertas.texto, pior.alertas.ruim], ['▲3', true]);
+  assert.deepStrictEqual([pior.maxVel.texto, pior.maxVel.ruim], ['▲10', true]);
+  assert.deepStrictEqual([pior.dentro.texto, pior.dentro.ruim, pior.dentro.dica], ['▼10', true, 'ontem 90%']);
+  const igual = lib.comparacaoCurta({ alertas: 2, maxVel: 0, dentroPct: null }, { alertas: 2, maxVel: 0, dentroPct: 90 });
+  assert.deepStrictEqual([igual.alertas.texto, igual.alertas.bom, igual.alertas.ruim], ['=', false, false]);
+  assert.deepStrictEqual(igual.maxVel, { texto: '', bom: false, ruim: false, dica: 'ontem sem velocidade medida' });
+  assert.strictEqual(igual.dentro.texto, '');
+  assert.strictEqual(lib.comparacaoCurta(null, null).alertas.texto, '');
+});
+
+caso('botão de período: o ativo leva a data ("Hoje · 24/10"), os outros só o nome', () => {
+  assert.strictEqual(lib.rotuloBotaoPeriodo('hoje', true, '2026-10-24'), 'Hoje · 24/10');
+  assert.strictEqual(lib.rotuloBotaoPeriodo('ontem', true, '2026-10-23'), 'Ontem · 23/10');
+  assert.strictEqual(lib.rotuloBotaoPeriodo('hoje', false, '2026-10-24'), 'Hoje');
+  assert.strictEqual(lib.rotuloBotaoPeriodo('7d', true, '2026-10-24'), '7 dias');
+  assert.strictEqual(lib.rotuloBotaoPeriodo('hoje', true, 'lixo'), 'Hoje');
+});
+
 console.log(`\n${passou} casos ok`);

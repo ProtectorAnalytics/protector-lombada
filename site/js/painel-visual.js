@@ -7,7 +7,8 @@
  *    futuros sem número ("—"), hoje marcado e o maior total destacado;
  *  - intensidade da cor da célula (0 a 22%: o texto claro segue legível);
  *  - status da câmera → estado do ícone no topo (cor e texto da dica);
- *  - anel "Dentro do limite" (traço do SVG).
+ *  - anel "Dentro do limite" (traço do SVG; fora da tela desde a v1.16);
+ *  - comparação curta com ontem ("▼14") e rótulo do botão de período (v1.16).
  *
  * Nada aqui toca no DOM. Carregado no browser (window.painelVisualLib) e no
  * Node (require). Datas são 'AAAA-MM-DD' de calendário (dia de São Paulo).
@@ -235,13 +236,52 @@
     return { alertas, maxVel, dentro };
   }
 
+  /**
+   * Comparação CURTA com ontem no mesmo horário, para a faixa de números
+   * (v1.16): "▼14" / "▲3" / "=" ao lado do número; o resto vai na dica.
+   * `bom` = melhor que ontem (verde); `ruim` = pior (vermelho).
+   */
+  function comparacaoCurta(hoje, ontem) {
+    const vazio = { texto: '', bom: false, ruim: false, dica: '' };
+    if (!hoje || !ontem) return { alertas: vazio, maxVel: vazio, dentro: vazio };
+    const seta = (d) => (d === 0 ? '=' : `${d < 0 ? '▼' : '▲'}${Math.abs(d)}`);
+    const aOntem = Number(ontem.alertas) || 0;
+    const dA = (Number(hoje.alertas) || 0) - aOntem;
+    const alertas = { texto: seta(dA), bom: dA < 0, ruim: dA > 0, dica: `ontem ${aOntem} no mesmo horário` };
+    const mOntem = Number(ontem.maxVel) || 0;
+    let maxVel = { texto: '', bom: false, ruim: false, dica: 'ontem sem velocidade medida' };
+    if (mOntem > 0) {
+      const dM = (Number(hoje.maxVel) || 0) - mOntem;
+      maxVel = { texto: seta(dM), bom: dM < 0, ruim: dM > 0, dica: `ontem ${mOntem} km/h` };
+    }
+    let dentro = vazio;
+    const temPct = (v) => v !== null && v !== undefined && Number.isFinite(Number(v));
+    if (temPct(hoje.dentroPct) && temPct(ontem.dentroPct)) {
+      const dD = Math.round(Number(hoje.dentroPct) - Number(ontem.dentroPct));
+      dentro = { texto: seta(dD), bom: dD > 0, ruim: dD < 0, dica: `ontem ${Math.round(Number(ontem.dentroPct))}%` };
+    }
+    return { alertas, maxVel, dentro };
+  }
+
+  /**
+   * Texto do botão de período na linha da busca: o ativo leva a data do dia
+   * ("Hoje · 24/10", "Ontem · 23/10"); os outros, só o nome.
+   */
+  function rotuloBotaoPeriodo(periodo, ativo, dia) {
+    const nomes = { hoje: 'Hoje', ontem: 'Ontem', '7d': '7 dias' };
+    const nome = nomes[periodo] || '';
+    if (!ativo || (periodo !== 'hoje' && periodo !== 'ontem') || !valido(dia)) return nome;
+    const { m, d } = partes(dia);
+    return `${nome} · ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+  }
+
   /** "8ª" (o selo curto da lista); só da 2ª passagem do dia em diante. */
   function ordinalCurto(n) {
     return Number.isInteger(n) && n >= 2 ? `${n}ª` : '';
   }
 
   return Object.freeze({
-    CALOR_MIN_PCT, CALOR_FAIXA_PCT, ANEL_RAIO, RECORTE_PADRAO, recorteDaFoto, estiloRecorte, comparacaoComOntem,
+    CALOR_MIN_PCT, CALOR_FAIXA_PCT, ANEL_RAIO, RECORTE_PADRAO, recorteDaFoto, estiloRecorte, comparacaoComOntem, comparacaoCurta, rotuloBotaoPeriodo,
     somarDias, diaDaSemana, inicioDaSemana, diasDaSemana, rotuloSemana, rotuloSemanaLongo, podeAvancar,
     colunasDaSemana, diasComDados, intensidadeCalor, tabelaDaSemana, estadoIconeCamera, tracoDoAnel, ordinalCurto,
   });

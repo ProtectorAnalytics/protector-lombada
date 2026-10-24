@@ -922,7 +922,6 @@
     }
     .table-pagination { gap: 6px 12px; flex-wrap: wrap; }
     .table-pagination .pg-esq { display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; min-width: 0; }
-    .table-pagination.sem-paginas .pg-info,
     .table-pagination.sem-paginas .pg-controls { display: none; }
     .rodape-sem-vel[hidden] { display: none; }
     .btn-link {
@@ -2079,7 +2078,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.75rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.15.2 &middot; 2026-10-23
+        v1.16.0 &middot; 2026-10-24
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.75rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2089,7 +2088,7 @@
 
   <!-- ===== DASHBOARD ===== -->
   <div id="dashboard-screen">
-    <!-- Topo de vidro (fixo ao rolar): marca, condomínio, período, câmeras, ao vivo, Veículos, tema, conta -->
+    <!-- Topo de vidro (fixo ao rolar): marca, condomínio, câmeras, ao vivo, Veículos, tema, conta (o período mora na linha da busca desde a v1.16) -->
     <header class="topbar" id="topo">
       <div class="topbar-id">
         <img class="topbar-logo" src="https://appps.com.br/assets/logo-protector.png" alt="Protector">
@@ -2097,13 +2096,6 @@
           <span class="topbar-sobrelinha">Lombada Educativa</span>
           <h1 class="topbar-titulo" id="topbar-cliente">Seu condomínio</h1>
         </div>
-      </div>
-      <!-- Período: Hoje · Ontem · 7 dias · Escolher… (abre o seletor de datas) -->
-      <div class="seg-periodo" id="seg-periodo" role="group" aria-label="Período">
-        <button type="button" data-periodo="hoje" aria-pressed="true">Hoje</button>
-        <button type="button" data-periodo="ontem" aria-pressed="false">Ontem</button>
-        <button type="button" data-periodo="7d" aria-pressed="false">7 dias</button>
-        <button type="button" id="btn-periodo" data-periodo="escolher" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-periodo"><span class="visualmente-oculto">Período: </span><span id="rotulo-periodo">Escolher…</span></button>
       </div>
       <div class="topbar-espaco"></div>
       <!-- Câmeras: só o ícone, na cor do status; o local e a última leitura no balão (mouse e teclado) -->
@@ -2139,59 +2131,11 @@
       <a class="btn-link faixa-admin-voltar" href="/admin">Voltar ao admin</a>
     </div>
 
-    <!-- Grade única: blocos da esquerda e cartões da lateral nas mesmas linhas
-         (topos e bases alinhados). Linha 1: números do dia | indicadores.
-         Linha 2: últimas passagens | veículos por dia. Linha 3: lista | rankings. -->
+    <!-- Grade (v1.16): coluna esquerda = últimas passagens + lista de passagens;
+         coluna direita (≥1.024 px) = um quadro lateral único da altura da esquerda,
+         com a semana no alto, os números do dia no meio e os rankings embaixo.
+         Abaixo de 1.024 px a lateral desmonta: fotos, números, lista, semana/rankings. -->
     <main class="painel" id="painel">
-      <!-- Números do dia (00:00–23:59, sem os filtros da lista). Padrão único de
-           cada número: rótulo / número / apoio / comparação com ontem no mesmo horário -->
-      <section class="cartao numeros-dia c-dia" aria-label="Números do dia">
-        <div class="nd-bloco nd-veiculos">
-          <h2 class="rot">Veículos hoje</h2>
-          <div class="nd-num"><b class="mono nd-grande" id="stat-veiculos">0</b><span class="nd-apoio-forte" id="stat-passagens" title="Cada veículo conta uma vez no dia, mesmo passando por várias lombadas; passagens contam cada leitura">passagens</span></div>
-          <div class="barra-tipos" id="barra-tipos" role="img" aria-label="Veículos de hoje por tipo de cadastro"></div>
-          <!-- Legenda por tipo: clicar filtra a lista (clicar de novo tira o filtro) -->
-          <div class="legenda-tipos" id="faixa-tipos-chips" role="group" aria-label="Veículos de hoje por tipo de cadastro"></div>
-        </div>
-        <div class="nd-bloco" id="card-alertas">
-          <h2 class="rot" id="label-alertas">Alertas hoje</h2>
-          <div class="nd-num"><b class="mono" id="stat-alertas">0</b></div>
-          <small class="nd-apoio">acima de <span id="stat-limite">30</span> km/h</small>
-          <span class="cmp" id="cmp-alertas"></span>
-        </div>
-        <div class="nd-bloco">
-          <h2 class="rot">Velocidade máxima</h2>
-          <div class="nd-num"><b class="mono"><span id="stat-maxvel">0</span><span class="nd-unid">km/h</span></b></div>
-          <small class="nd-apoio mono" id="stat-maxvel-quem">—</small>
-          <span class="cmp" id="cmp-maxvel"></span>
-        </div>
-        <div class="nd-bloco nd-limite">
-          <h2 class="rot">Dentro do limite</h2>
-          <div class="nd-num">
-            <b class="mono" id="stat-conformidade">--</b>
-            <svg class="anel" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle class="anel-trilho" cx="32" cy="32" r="26"/><circle class="anel-valor" id="anel-limite" cx="32" cy="32" r="26" stroke-dasharray="0 163.4" transform="rotate(-90 32 32)"/></svg>
-          </div>
-          <small class="nd-apoio" id="stat-media" title="Média só das passagens que a lombada mediu (a partir de 10 km/h)">média -- km/h</small>
-          <span class="cmp" id="cmp-dentro"></span>
-        </div>
-      </section>
-
-      <!-- Indicadores do período: o mesmo padrão dos números do dia, duas células -->
-      <section class="cartao numeros-dia indicadores lado c-ind" id="sidebar-indicators" aria-labelledby="title-indicators">
-        <h2 class="visualmente-oculto" id="title-indicators">Indicadores · hoje</h2>
-        <div class="nd-bloco">
-          <h3 class="rot" id="lbl-hora-pico">Hora de pico</h3>
-          <div class="nd-num"><b class="mono ambar" id="ind-hora-pico">--</b></div>
-          <small class="nd-apoio" id="sub-hora-pico">maior fluxo do período</small>
-          <p class="card-falha" id="falha-indicators" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
-        </div>
-        <div class="nd-bloco">
-          <h3 class="rot">Reincidentes</h3>
-          <div class="nd-num"><b class="mono ambar" id="ind-reincidentes">--</b></div>
-          <small class="nd-apoio">2+ alertas no período</small>
-        </div>
-      </section>
-
       <!-- Últimas passagens: a mais nova em destaque + 4 menores (fotos sempre 16:9) -->
       <section class="cartao c-rec" id="card-recentes" aria-labelledby="titulo-recentes">
         <div class="cab">
@@ -2203,68 +2147,111 @@
         </div>
       </section>
 
-      <!-- Ao lado das fotos: semana (mapa de calor) e rankings. De 1.024 a 1.699 px
-           ficam num quadro só, com abas; no monitor grande e no tablet, dois quadros. -->
-      <div class="col c-lado2" id="lado2">
-        <section class="cartao lado c-vpd" id="card-semana" aria-labelledby="titulo-semana">
-          <div class="cab">
-            <h2 class="rot" id="titulo-semana">Veículos por dia</h2>
-            <div class="abas" id="abas-lado" role="tablist" aria-label="Semana e rankings" hidden>
-              <button type="button" role="tab" id="aba-lado-semana" data-painel="semana" aria-controls="painel-por-dia" aria-selected="true">Semana</button>
-              <button type="button" role="tab" id="aba-lado-mais" data-painel="mais" aria-controls="painel-mais" aria-selected="false" tabindex="-1">Mais passagens</button>
-              <button type="button" role="tab" id="aba-lado-recordes" data-painel="recordes" aria-controls="painel-recordes" aria-selected="false" tabindex="-1">Recordes</button>
+      <!-- Quadro lateral (≥1.024 px): semana · números do dia · rankings -->
+      <aside class="lateral" id="lateral" aria-label="Resumo do dia">
+        <div class="col c-lado2" id="lado2">
+          <section class="cartao lado c-vpd" id="card-semana" aria-labelledby="titulo-semana">
+            <div class="cab">
+              <h2 class="rot" id="titulo-semana">Veículos por dia</h2>
+              <div class="nav-semana" id="nav-semana">
+                <button type="button" class="nav-b" id="semana-ant" aria-label="Semana anterior">‹</button>
+                <span class="mono" id="semana-rotulo" aria-live="polite"></span>
+                <button type="button" class="nav-b" id="semana-prox" aria-label="Próxima semana" disabled>›</button>
+              </div>
             </div>
-            <div class="nav-semana" id="nav-semana">
-              <button type="button" class="nav-b" id="semana-ant" aria-label="Semana anterior">‹</button>
-              <span class="mono" id="semana-rotulo" aria-live="polite"></span>
-              <button type="button" class="nav-b" id="semana-prox" aria-label="Próxima semana" disabled>›</button>
+            <div class="painel-lado" id="painel-por-dia">
+              <p class="card-falha" id="falha-por-dia" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" data-acao="recarregar-por-dia">Tentar de novo</button></p>
+              <!-- Clicar numa célula filtra a lista por aquele dia e tipo -->
+              <div class="mapa" id="veiculos-por-dia" role="group" aria-label="Veículos diferentes por dia: carregando"></div>
             </div>
-          </div>
-          <div class="painel-lado" id="painel-por-dia" role="tabpanel" aria-labelledby="titulo-semana">
-            <p class="card-falha" id="falha-por-dia" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" data-acao="recarregar-por-dia">Tentar de novo</button></p>
-            <!-- Clicar numa célula filtra a lista por aquele dia e tipo -->
-            <div class="mapa" id="veiculos-por-dia" role="group" aria-label="Veículos diferentes por dia: carregando"></div>
-          </div>
-        </section>
+          </section>
 
-        <section class="cartao c-rk" id="card-rankings" aria-label="Rankings">
-          <div class="abas" id="abas-rank" role="tablist" aria-label="Rankings">
-            <button type="button" role="tab" id="aba-rank-mais" data-painel="mais" aria-controls="painel-mais" aria-selected="true">Mais passagens · <span id="rotulo-rank-periodo">hoje</span></button>
-            <button type="button" role="tab" id="aba-rank-recordes" data-painel="recordes" aria-controls="painel-recordes" aria-selected="false" tabindex="-1">Recordes · 6 meses</button>
+          <section class="cartao c-rk" id="card-rankings" aria-label="Rankings">
+            <div class="abas" id="abas-rank" role="tablist" aria-label="Rankings">
+              <button type="button" role="tab" id="aba-rank-mais" data-painel="mais" aria-controls="painel-mais" aria-selected="true">Mais passagens · <span id="rotulo-rank-periodo">hoje</span></button>
+              <button type="button" role="tab" id="aba-rank-recordes" data-painel="recordes" aria-controls="painel-recordes" aria-selected="false" tabindex="-1">Recordes · 6 meses</button>
+            </div>
+            <!-- Top 10 do período: na lateral, as linhas que couberem ("Ver todos" rola o resto);
+                 no tablet e no celular, 3 à vista e "Ver os 10" abre o resto -->
+            <div class="painel-lado" id="painel-mais" role="tabpanel" aria-labelledby="aba-rank-mais">
+              <h3 class="visualmente-oculto" id="title-ranking">Mais passagens · hoje</h3>
+              <p class="card-falha" id="falha-ranking" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
+              <ol class="rk" id="ranking-list">
+                <li class="rk-msg">Carregando...</li>
+              </ol>
+              <button type="button" class="btn-link ver10" data-ver10="ranking-list" aria-expanded="false" hidden>Ver os 10 →</button>
+            </div>
+            <!-- Recordes: maior velocidade de cada veículo nos últimos 6 meses (não segue o período) -->
+            <div class="painel-lado" id="painel-recordes" role="tabpanel" aria-labelledby="aba-rank-recordes" hidden>
+              <h3 class="visualmente-oculto" id="title-recordes">Maiores velocidades · 6 meses</h3>
+              <p class="card-falha" id="falha-recordes" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="loadMaioresVelocidades()">Tentar de novo</button></p>
+              <ol class="rec" id="recordes-list">
+                <li class="rk-msg">Carregando...</li>
+              </ol>
+              <button type="button" class="btn-link ver10" data-ver10="recordes-list" aria-expanded="false" hidden>Ver os 10 →</button>
+            </div>
+            <!-- Alertas 7 dias escondido (fora da vista desde a v1.10) -->
+            <canvas id="chart-alerts-7d" style="display:none"></canvas>
+            <span id="title-alerts7d" style="display:none"></span>
+          </section>
+        </div>
+
+        <!-- Números do dia + indicadores num bloco compacto (faixa). Veículos,
+             alertas, máxima e "dentro do limite" são do dia inteiro (00:00–23:59,
+             sem os filtros da lista), com a comparação curta com ontem no mesmo
+             horário; pico e reincidentes seguem o período. Os textos de apoio
+             ficam na dica (mouse e foco) e no texto lido pelo leitor de tela. -->
+        <section class="cartao faixa" id="faixa-numeros" aria-label="Números do dia">
+          <h2 class="visualmente-oculto" id="title-indicators">Indicadores · hoje</h2>
+          <div class="fx fx-vei" id="fx-veiculos" tabindex="0">
+            <h3 class="rot">Veículos hoje</h3>
+            <div class="fx-lin"><b class="mono" id="stat-veiculos">0</b>
+              <!-- Legenda por tipo: clicar filtra a lista (clicar de novo tira o filtro) -->
+              <div class="fx-leg legenda-tipos" id="faixa-tipos-chips" role="group" aria-label="Veículos de hoje por tipo de cadastro"></div>
+            </div>
+            <div class="barra-tipos pilha" id="barra-tipos" role="img" aria-label="Veículos de hoje por tipo de cadastro"></div>
+            <span class="visualmente-oculto fx-dica"></span>
           </div>
-          <!-- Top 10 do período (3 à vista; "Ver os 10" abre o resto) -->
-          <div class="painel-lado" id="painel-mais" role="tabpanel" aria-labelledby="aba-rank-mais">
-            <h3 class="visualmente-oculto" id="title-ranking">Mais passagens · hoje</h3>
-            <p class="card-falha" id="falha-ranking" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
-            <ol class="rk" id="ranking-list">
-              <li class="rk-msg">Carregando...</li>
-            </ol>
-            <button type="button" class="btn-link ver10" data-ver10="ranking-list" aria-expanded="false" hidden>Ver os 10 →</button>
+          <div class="fx" id="fx-alertas" tabindex="0">
+            <h3 class="rot" id="label-alertas">Alertas</h3>
+            <div class="fx-lin"><b class="mono" id="stat-alertas">0</b><span class="fx-cmp" id="cmp-alertas"></span></div>
+            <span class="visualmente-oculto fx-dica"></span>
           </div>
-          <!-- Recordes: maior velocidade de cada veículo nos últimos 6 meses (não segue o período) -->
-          <div class="painel-lado" id="painel-recordes" role="tabpanel" aria-labelledby="aba-rank-recordes" hidden>
-            <h3 class="visualmente-oculto" id="title-recordes">Maiores velocidades · 6 meses</h3>
-            <p class="card-falha" id="falha-recordes" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="loadMaioresVelocidades()">Tentar de novo</button></p>
-            <ol class="rec" id="recordes-list">
-              <li class="rk-msg">Carregando...</li>
-            </ol>
-            <button type="button" class="btn-link ver10" data-ver10="recordes-list" aria-expanded="false" hidden>Ver os 10 →</button>
+          <div class="fx" id="fx-maxvel" tabindex="0">
+            <h3 class="rot">Máxima</h3>
+            <div class="fx-lin"><b class="mono"><span id="stat-maxvel">0</span><small>km/h</small></b><span class="fx-cmp" id="cmp-maxvel"></span></div>
+            <span class="visualmente-oculto fx-dica"></span>
           </div>
-          <!-- Alertas 7 dias escondido (fora da vista desde a v1.10) -->
-          <canvas id="chart-alerts-7d" style="display:none"></canvas>
-          <span id="title-alerts7d" style="display:none"></span>
+          <div class="fx" id="fx-dentro" tabindex="0">
+            <h3 class="rot">Dentro do limite</h3>
+            <div class="fx-lin"><b class="mono" id="stat-conformidade">--</b><span class="fx-cmp" id="cmp-dentro"></span></div>
+            <span class="visualmente-oculto fx-dica"></span>
+          </div>
+          <div class="fx fx-periodo" id="fx-pico" tabindex="0">
+            <h3 class="rot" id="lbl-hora-pico">Pico</h3>
+            <div class="fx-lin"><b class="mono ambar" id="ind-hora-pico">--</b></div>
+            <span class="visualmente-oculto fx-dica"></span>
+          </div>
+          <div class="fx fx-periodo" id="fx-reincidentes" tabindex="0">
+            <h3 class="rot">Reincidentes</h3>
+            <div class="fx-lin"><b class="mono ambar" id="ind-reincidentes">--</b></div>
+            <span class="visualmente-oculto fx-dica"></span>
+          </div>
+          <p class="card-falha fx-falha" id="falha-indicators" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
         </section>
-      </div>
+      </aside>
 
       <!-- Barra de comando + lista de passagens -->
       <div class="col c-lista">
         <section class="filtros" id="filtros" aria-label="Filtros do período">
           <h2 class="visualmente-oculto" id="titulo-tabela">Passagens</h2>
+          <!-- Linha da busca (v1.16): busca · período · câmeras · acima do limite · filtros · exportar.
+               Os botões são ícones de 44 × 44 com dica (mouse e foco) e nome acessível. -->
           <div class="barra-filtros comando" id="barra-filtros">
             <div class="busca-wrap" id="busca-wrap">
               <svg class="busca-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
               <label for="busca" class="visualmente-oculto">Buscar placa, modelo ou marca</label>
-              <input type="text" id="busca" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="busca-lista" aria-describedby="busca-dica" aria-keyshortcuts="/" placeholder="Buscar placa, modelo ou marca" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+              <input type="text" id="busca" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="busca-lista" aria-describedby="busca-dica" aria-keyshortcuts="/" placeholder="Buscar placa, modelo, marca…" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
               <kbd class="busca-atalho" aria-hidden="true">/</kbd>
               <span id="busca-dica" class="visualmente-oculto">Atalho: tecla barra. Digite 2 letras ou mais para ver sugestões. Enter busca placa se houver número; senão, modelo.</span>
               <div class="busca-pop" id="busca-pop" hidden>
@@ -2273,27 +2260,37 @@
               </div>
             </div>
 
-            <div class="barra-grupo" id="grupo-camera">
+            <!-- Período: Hoje · Ontem · 7 dias aplicam direto (o ativo leva a data); o calendário abre o seletor de datas -->
+            <div class="seg-periodo" id="seg-periodo" role="group" aria-label="Período">
+              <button type="button" data-periodo="hoje" aria-pressed="true">Hoje</button>
+              <button type="button" data-periodo="ontem" aria-pressed="false">Ontem</button>
+              <button type="button" data-periodo="7d" aria-pressed="false">7 dias</button>
+              <button type="button" id="btn-periodo" data-periodo="escolher" class="seg-ic" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-periodo" aria-label="Escolher período" data-dica="Escolher período"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>
+            </div>
+
+            <!-- Câmeras: ícone + ▾ por cima da lista nativa (o menu e a escolha seguem os mesmos) -->
+            <div class="barra-grupo sel-ic" id="grupo-camera" data-dica="Câmeras: todas">
               <label for="filter-camera" class="visualmente-oculto">Câmera</label>
+              <span class="sel-ic-cara" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg><span class="seta">▾</span></span>
               <select id="filter-camera" class="barra-select">
                 <option value="">Todas as câmeras</option>
               </select>
             </div>
 
             <div class="barra-grupo" id="grupo-alerta">
-              <button type="button" class="barra-btn btn-acima" id="btn-acima" aria-pressed="false">Acima do limite</button>
+              <button type="button" class="barra-btn btn-acima ic ic-al" id="btn-acima" aria-pressed="false" aria-label="Só acima do limite" data-dica="Só acima do limite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span class="rot-ic">Só acima do limite</span></button>
             </div>
 
-            <button type="button" class="barra-btn" id="btn-mais-filtros" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-filtros">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
-              <span>Filtros</span>
+            <button type="button" class="barra-btn ic" id="btn-mais-filtros" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-filtros" data-dica="Filtros: tipo, unidade, veículo, velocidade">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+              <span class="rot-ic">Filtros</span>
               <span class="contador-filtros" id="contador-filtros" hidden></span>
             </button>
 
             <div class="export-wrap">
-              <button type="button" class="barra-btn" onclick="toggleExportMenu()" id="btn-exportar" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-                <span class="rotulo-exportar">Exportar</span>
+              <button type="button" class="barra-btn ic" onclick="toggleExportMenu()" id="btn-exportar" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu" aria-label="Exportar" data-dica="Exportar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+                <span class="rotulo-exportar rot-ic">Exportar</span>
               </button>
               <div id="export-menu" class="export-menu">
                 <button type="button" onclick="exportExcel();closeExportMenu()">
@@ -2306,34 +2303,28 @@
             </div>
           </div>
 
-          <!-- Filtros ativos (etiquetas) · total · abaixo de 10 km/h ocultas -->
-          <div class="chips-linha">
-            <span class="chip chip-fixo" id="chip-periodo">Hoje</span>
+          <!-- Filtros ativos (etiquetas removíveis): a linha só aparece com filtro além do padrão -->
+          <div class="chips-linha" id="chips-linha" hidden>
             <div class="chips-filtros" id="chips-filtros" hidden></div>
-            <span class="resumo-lista" id="resumo-lista"></span>
-            <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
-              <span id="sem-vel-texto"></span>
-              <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="A lombada só mede a partir de 10 km/h. Passagens mais lentas chegam sem velocidade e ficam ocultas na lista por padrão. Nada é removido: continuam nos indicadores e nos relatórios.">Mostrar</button>
-            </div>
           </div>
           <p class="aviso-filtros" id="fv-aviso" role="status" aria-live="polite"></p>
           <p class="visualmente-oculto" id="anuncio-resultado" aria-live="polite"></p>
         </section>
 
-        <!-- Lista em tabela: colunas pelo conteúdo, tudo centralizado, nada cortado; cabeçalho fixo ao rolar -->
+        <!-- Lista em tabela: colunas pelo conteúdo, nada cortado; cabeçalho fixo ao rolar. Veloc. centralizada; ≥1.024 px Tipo só com o ícone e Cor só com o ponto -->
         <div class="table-container">
           <table class="tb" id="tabela-passagens" aria-label="Passagens">
             <thead>
               <tr>
                 <th scope="col" class="c-foto">Foto</th>
                 <th scope="col" class="c-placa">Placa</th>
-                <th scope="col" class="c-vel" title="Velocidade (km/h)">Veloc.</th>
+                <th scope="col" class="c-vel cen" title="Velocidade (km/h)">Veloc.</th>
                 <th scope="col" class="c-hora">Hora</th>
                 <th scope="col" class="c-radar" title="Lombada Educativa">Lombada</th>
                 <th scope="col" class="c-veic">Veículo</th>
-                <th scope="col" class="c-cor">Cor</th>
+                <th scope="col" class="c-cor c-ic" title="Cor do veículo">Cor</th>
                 <th scope="col" class="c-ano">Ano</th>
-                <th scope="col" class="c-tipo">Tipo</th>
+                <th scope="col" class="c-tipo c-ic" title="Tipo de cadastro">Tipo</th>
                 <th scope="col" class="c-nome">Nome</th>
                 <th scope="col" class="c-unid" id="th-unidade">Unidade</th>
               </tr>
@@ -2342,9 +2333,14 @@
               <tr class="tr-msg"><td colspan="11"><div class="table-empty">Carregando...</div></td></tr>
             </tbody>
           </table>
-          <!-- Barra de baixo: "1–8 de 543 passagens" · páginas -->
+          <!-- Barra de baixo: "1–8 de 543 passagens · 72 abaixo de 10 km/h ocultas · mostrar" · páginas -->
           <div class="table-pagination sem-paginas" id="table-pagination" style="display:none">
-            <span class="pg-info" id="pg-info"></span>
+            <div class="pg-esq">
+              <span class="pg-info" id="pg-info"></span>
+              <span class="rodape-sem-vel" id="rodape-sem-vel" hidden>
+                <span aria-hidden="true">·</span><span id="sem-vel-texto"></span><span aria-hidden="true" id="sem-vel-sep">·</span><button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="A lombada só mede a partir de 10 km/h. Passagens mais lentas chegam sem velocidade e ficam ocultas na lista por padrão. Nada é removido: continuam nos indicadores e nos relatórios.">mostrar</button>
+              </span>
+            </div>
             <div class="pg-controls" id="pg-controls"></div>
           </div>
         </div>
@@ -2353,7 +2349,7 @@
     </main>
 
     <footer class="rodape-painel">
-      Protector Traffic Control &middot; v1.15.2
+      Protector Traffic Control &middot; v1.16.0
       <br>
       <div class="rodape-links">
         <a href="/dashboard/manual.html" class="rodape-manual">
@@ -2654,7 +2650,9 @@
       loadRecentCards();
     }
 
-    // Rodapé da tabela: "N passagens sem velocidade ocultas · Mostrar" / "Ocultar"
+    // Rodapé da lista (v1.16): "1–8 de 543 passagens · 72 abaixo de 10 km/h ocultas · mostrar".
+    // A contagem é a base (uma página só: "543 passagens"); escreverPaginacao
+    // troca pela faixa quando há páginas. Sem ocultas, o aviso some.
     function atualizarRodapeSemVel() {
       const semVel = lista.semVel;
       const naBusca = buscaPorVeiculo(filtrosAtivos);
@@ -2663,33 +2661,25 @@
       document.getElementById('rodape-sem-vel').hidden = semVel === 0;
       // Na busca por veículo elas sempre aparecem: sem botão de ocultar
       document.getElementById('btn-sem-vel').hidden = naBusca;
+      document.getElementById('sem-vel-sep').hidden = naBusca;
       document.getElementById('sem-vel-texto').textContent = naBusca
-        ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h incluída' : 'passagens abaixo de 10 km/h incluídas'} na busca`
-        : mostrando
-        ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h aparece' : 'passagens abaixo de 10 km/h aparecem'} na lista ·`
-        : `${semVel} ${uma ? 'passagem abaixo de 10 km/h oculta' : 'passagens abaixo de 10 km/h ocultas'} ·`;
-      document.getElementById('btn-sem-vel').textContent = mostrando ? 'Ocultar' : 'Mostrar';
-      // Ao lado das etiquetas: "543 passagens" (o que a lista mostra)
-      document.getElementById('resumo-lista').textContent = lista.consulta
-        ? `${diaDoResumo()}${textoResultado(lista.total, lista.incompleta)}${semVel ? ' ·' : ''}` : '';
+        ? `${semVel} abaixo de 10 km/h ${uma ? 'incluída' : 'incluídas'} na busca`
+        : `${semVel} abaixo de 10 km/h ${mostrando ? (uma ? 'aparece' : 'aparecem') : (uma ? 'oculta' : 'ocultas')}`;
+      document.getElementById('btn-sem-vel').textContent = mostrando ? 'ocultar' : 'mostrar';
+      document.getElementById('pg-info').textContent = lista.consulta ? textoResultado(lista.total, lista.incompleta) : '';
       sincronizarBarraRodape();
     }
-    // Período de um dia só: a data vai na linha das etiquetas ("Sexta, 23/10 · ")
-    // e a lista fica sem a linha do dia
-    function diaDoResumo() {
-      const f = getActiveFilters();
-      if (!f.isSingleDay) return '';
-      const semana = veiculosDoDia.rotuloDiaLongo(f.dataInicio).split(',')[0];
-      return `${semana}, ${f.dataInicio.slice(8, 10)}/${f.dataInicio.slice(5, 7)} · `;
-    }
-    // A barra de baixo aparece se houver páginas ou o aviso de sem velocidade
+    // A barra de baixo aparece com passagens na lista ou com o aviso das ocultas;
+    // os botões de página, só com mais de uma página
     function mostrarPaginas(sim) {
       document.getElementById('table-pagination').classList.toggle('sem-paginas', !sim);
       sincronizarBarraRodape();
     }
     function sincronizarBarraRodape() {
       const pg = document.getElementById('table-pagination');
-      const visivel = !pg.classList.contains('sem-paginas') || !document.getElementById('rodape-sem-vel').hidden;
+      const temLista = Boolean(lista.consulta && lista.total) && !tabelaEmErro;
+      document.getElementById('pg-info').hidden = !temLista && document.getElementById('rodape-sem-vel').hidden;
+      const visivel = temLista || !document.getElementById('rodape-sem-vel').hidden;
       pg.style.display = visivel ? 'flex' : 'none';
     }
     let camerasMap = {}; // camera_id -> nome_exibicao (curto, p/ dashboard)
@@ -3241,6 +3231,7 @@
       tabelaEmErro = false;
       listaVista = { chave: null, ids: null };
       document.getElementById('rodape-sem-vel').hidden = true;
+      lista = { modo: 'servidor', total: 0, semVel: 0, incompleta: false, consulta: null, conferidas: null };
       mostrarPaginas(false);
       html('recent-cards', CARREGANDO_CARTOES_HTML);
       html('cameras-status', '');
@@ -3248,13 +3239,12 @@
       html('recordes-list', '<li class="rk-msg">Carregando...</li>');
       ['stat-veiculos', 'stat-alertas', 'stat-maxvel', 'stat-conformidade', 'ind-hora-pico', 'ind-reincidentes']
         .forEach((id) => texto(id, '--'));
-      ['cmp-alertas', 'cmp-maxvel', 'cmp-dentro', 'resumo-lista'].forEach((id) => texto(id, ''));
-      texto('stat-maxvel-quem', '—');
-      document.getElementById('anel-limite').setAttribute('stroke-dasharray', painelVisualLib.tracoDoAnel(0));
+      ['cmp-alertas', 'cmp-maxvel', 'cmp-dentro', 'pg-info'].forEach((id) => texto(id, ''));
+      ['fx-veiculos', 'fx-alertas', 'fx-maxvel', 'fx-dentro', 'fx-pico', 'fx-reincidentes'].forEach((id) => escreverDica(id, ''));
       ontemCache = null;
+      numerosHoje = null;
+      ultimoCmp = null;
       semanaDesloc = 0;
-      texto('stat-passagens', 'passagens');
-      texto('stat-media', 'média -- km/h');
       html('barra-tipos', '');
       html('faixa-tipos-chips', '');
       html('veiculos-por-dia', '');
@@ -3305,7 +3295,6 @@
       aplicarPermissaoVeiculos();
       aplicarModoAdmin();
       sincronizarSeletores(); // o seletor do topo só tem tamanho depois de visível
-      document.getElementById('stat-limite').textContent = currentCliente.limite_velocidade;
 
       // Filtro guardado na URL (recarregar a página mantém); inválido é ignorado
       filtrosAtivos = deQueryString(window.location.search, todayLocalISO(), new Date().getFullYear());
@@ -3699,7 +3688,8 @@
         return `<td class="c-veic">${estadoVeiculoHtml(info)}</td><td class="c-cor">${vazio}</td><td class="c-ano">${vazio}</td>`;
       }
       const nome = info.nome || '—';
-      const cor = info.cor ? `<span class="cor">${bolinhaCor(info.hex)}${esc(info.cor)}</span>` : vazio;
+      // Cor: ponto + nome (≥1.024 px só o ponto; o nome no title e no leitor de tela)
+      const cor = info.cor ? `<span class="cor" title="${esc(info.cor)}">${bolinhaCor(info.hex)}<span class="tx">${esc(info.cor)}</span></span>` : vazio;
       return `<td class="c-veic">${botaoModelo(info, `<b>${esc(nome)}</b>`, nome)}</td>`
         + `<td class="c-cor">${cor}</td><td class="c-ano">${info.ano ? esc(info.ano) : vazio}</td>`;
     }
@@ -4130,8 +4120,9 @@
 
       const limite = currentCliente.limite_velocidade;
       const n = numerosDoDia(data, limite);
+      numerosHoje = { n, limite };
 
-      document.getElementById('stat-passagens').textContent = plural(data.length, 'passagem', 'passagens');
+      escreverDica('fx-veiculos', `${plural(data.length, 'passagem', 'passagens')} hoje · cada veículo conta uma vez no dia`);
       const valAlertas = document.getElementById('stat-alertas');
       valAlertas.textContent = n.alertas;
       // Vermelho só no número (o cartão não fica vermelho inteiro); zero em verde
@@ -4140,10 +4131,8 @@
       const maxEl = document.getElementById('stat-maxvel');
       maxEl.textContent = n.maxVel;
       maxEl.classList.toggle('red', acimaDoLimite(n.maxVel, limite));
-      document.getElementById('stat-maxvel-quem').textContent = n.maior && n.maxVel > 0
-        ? `${n.maior.placa || '—'} · ${new Date(n.maior.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
-        : 'sem velocidade medida';
       escreverDentroDoLimite(veiculosDoDia.indicadoresDeVelocidade(data, limite), limite);
+      escreverDicasDoDia(ultimoCmp);
       escreverComparacaoComOntem(sessao, n, limite).catch((err) => console.error('Erro na comparação com ontem:', err));
 
       // O tipo de cada veículo depende do cadastro: espera os vínculos carregarem
@@ -4159,11 +4148,31 @@
       const classe = pct === null ? '' : pct >= 80 ? 'green' : pct >= 50 ? 'laranja' : 'red';
       el.textContent = pct === null ? '--' : `${pct}%`;
       ['green', 'laranja', 'red'].forEach((c) => el.classList.toggle(c, c === classe));
-      el.title = ind.validas ? `${plural(ind.validas, 'passagem', 'passagens')} hoje; limite ${limite} km/h` : '';
-      const anel = document.getElementById('anel-limite');
-      anel.setAttribute('stroke-dasharray', painelVisualLib.tracoDoAnel(pct === null ? 0 : pct));
-      ['laranja', 'red'].forEach((c) => anel.classList.toggle(c, c === classe));
-      document.getElementById('stat-media').textContent = ind.media === null ? 'média -- km/h' : `média ${ind.media} km/h`;
+      mediaHoje = ind.media;
+    }
+
+    // ---------- Dica de cada número da faixa (mouse e foco) + o mesmo texto para o leitor de tela
+    let numerosHoje = null; // { n, limite } do último loadStats
+    let mediaHoje = null;
+    let ultimoCmp = null; // última comparação com ontem (a dica não pisca no polling)
+    function escreverDica(id, texto) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (texto) el.dataset.dica = texto; else delete el.dataset.dica;
+      const sr = el.querySelector('.fx-dica');
+      if (sr) sr.textContent = texto ? ` (${texto})` : '';
+    }
+    // Apoio dos números do dia: limite, placa·hora da máxima, média e o "ontem"
+    function escreverDicasDoDia(cmp) {
+      if (!numerosHoje) return;
+      const { n, limite } = numerosHoje;
+      const junta = (...partes) => partes.filter(Boolean).join(' · ');
+      const quem = n.maior && n.maxVel > 0
+        ? `${n.maior.placa || '—'} · ${new Date(n.maior.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+        : 'sem velocidade medida';
+      escreverDica('fx-alertas', junta(`acima de ${limite} km/h`, cmp && cmp.alertas.dica));
+      escreverDica('fx-maxvel', junta(quem, cmp && cmp.maxVel.dica));
+      escreverDica('fx-dentro', junta(mediaHoje === null ? 'média -- km/h' : `média ${mediaHoje} km/h`, `limite ${limite} km/h`, cmp && cmp.dentro.dica));
     }
 
     // ---------- Comparação com ontem no mesmo horário (00:00 até agora − 24 h)
@@ -4195,13 +4204,16 @@
     async function escreverComparacaoComOntem(sessao, hoje, limite) {
       const ontem = await numerosDeOntem(sessao, limite);
       if (!sessaoValida(sessao)) return;
-      const cmp = painelVisualLib.comparacaoComOntem(hoje, ontem);
+      // Curta ao lado do número ("▼14"); o valor de ontem vai para a dica
+      const cmp = painelVisualLib.comparacaoCurta(hoje, ontem);
       [['cmp-alertas', cmp.alertas], ['cmp-maxvel', cmp.maxVel], ['cmp-dentro', cmp.dentro]].forEach(([id, c]) => {
         const el = document.getElementById(id);
         el.textContent = c.texto;
         el.classList.toggle('bom', c.bom);
-        el.title = c.texto ? 'Comparado com ontem até este mesmo horário' : '';
+        el.classList.toggle('ruim', c.ruim);
       });
+      ultimoCmp = cmp;
+      escreverDicasDoDia(cmp);
     }
 
     // ---------- Veículos hoje: número, barra por tipo e legenda clicável
@@ -4236,7 +4248,7 @@
         const rotulo = `${t.rotulo}: ${n === null ? 'carregando' : plural(n, 'veículo', 'veículos')} hoje — `
           + (pressionado ? 'tirar o filtro' : 'filtrar a lista');
         return `<button type="button" class="leg-tipo" data-tipo="${esc(t.id)}" aria-pressed="${pressionado}"`
-          + ` style="--c:var(${esc(t.cor)})" aria-label="${esc(rotulo)}">${icoTipo(t)}${esc(t.rotulo)} <b>${n === null ? '—' : n}</b></button>`;
+          + ` style="--c:var(${esc(t.cor)})" aria-label="${esc(rotulo)}">${esc(t.rotulo)} <b>${n === null ? '—' : n}</b></button>`;
       }).join('');
     }
 
@@ -4681,8 +4693,8 @@
       const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const dataHora = `${ts.toLocaleDateString('pt-BR')} ${hora}`;
       const kmh = '<span class="visualmente-oculto"> km/h</span>';
-      // Seta numa posição fixa e o número alinhado à direita (caixa de largura mínima)
-      const caixaVel = (seta, num) => `<span class="vbox"><span class="seta" aria-hidden="true">${seta}</span><span>${num}</span></span>`;
+      // Número centralizado na coluna; a seta ▲ fica fora do eixo (não desloca o número)
+      const caixaVel = (seta, num) => `<span class="v">${seta ? `<i class="v-seta" aria-hidden="true">${seta}</i>` : ''}<span>${num}</span></span>`;
       const velHtml = isAlert
         ? botaoFiltro('alerta', '1', `${caixaVel('▲', Number(c.velocidade))}${kmh}`, `${c.velocidade} km/h, acima do limite — filtrar só acima do limite`)
         : velMedida ? `${caixaVel('', Number(c.velocidade))}${kmh}` : `<span title="Abaixo de 10 km/h: a lombada não mede">${caixaVel('', '—')}${kmh}</span>`;
@@ -4697,7 +4709,7 @@
       const n = ordinais.get(c.id);
       const ordinal = veiculosDoDia.textoOrdinal(n, veiculosDoDia.diaDe(c.timestamp), hoje);
       const selo = ordinal
-        ? `<span class="ord" title="${esc(`${ordinal.replace('ª', 'ª passagem')}: a placa já tinha passado neste dia`)}">${esc(painelVisualLib.ordinalCurto(n))}<span class="visualmente-oculto"> ${esc(ordinal.split(' ').slice(1).join(' '))}</span></span>`
+        ? `<span class="ord" title="${esc(`${n}ª passagem desta placa ${ordinal.endsWith('hoje') ? 'hoje' : 'no dia'}`)}">${esc(painelVisualLib.ordinalCurto(n))}<span class="visualmente-oculto"> ${esc(ordinal.split(' ').slice(1).join(' '))}</span></span>`
         : '<span class="ord" aria-hidden="true"></span>'; // vaga fixa: as placas não andam
       const classes = ['table-row', isAlert ? 'alerta' : '', novo ? 'novo' : ''].filter(Boolean).join(' ');
       // A linha não é botão (teria botões dentro): o detalhe abre pela hora,
@@ -4720,7 +4732,7 @@
       const m = vinculoDaPassagem(c.placa, c.timestamp);
       const t = vinculoPlacaLib.tipoPessoa(m ? m.tipo_pessoa : null);
       const tipo = `<td class="c-tipo">${botaoFiltro('tipoCadastro', t.id,
-        `<span class="tp${m ? '' : ' sem'}" style="color:var(${esc(t.cor)})">${icoTipo(t)}${esc(t.rotulo)}</span>`,
+        `<span class="tp${m ? '' : ' sem'}" style="color:var(${esc(t.cor)})" title="${esc(t.rotulo)}">${icoTipo(t)}<span class="tx">${esc(t.rotulo)}</span></span>`,
         `${t.rotulo} — filtrar por tipo de cadastro`, 'dd-cadastro')}</td>`;
       if (m) {
         const nome = m.nome_morador || '';
@@ -4737,9 +4749,14 @@
     }
 
     function escreverPaginacao(faixa) {
-      if (faixa.totalPaginas <= 1) { mostrarPaginas(false); return; }
-      mostrarPaginas(true);
       const pgInfo = document.getElementById('pg-info');
+      if (faixa.totalPaginas <= 1) {
+        pgInfo.textContent = textoResultado(lista.total, lista.incompleta);
+        document.getElementById('pg-controls').innerHTML = '';
+        mostrarPaginas(false);
+        return;
+      }
+      mostrarPaginas(true);
       pgInfo.textContent = textoFaixa(faixa, lista.total, lista.incompleta);
       const p = faixa.pagina;
       const n = faixa.totalPaginas;
@@ -4942,7 +4959,7 @@
     const MOVIMENTO_REDUZIDO_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
     let barraMontada = false;
     let recargaSeq = 0;
-    const REGIOES_RECARGA = '.table-container, .c-ind, #card-rankings, #painel-mais';
+    const REGIOES_RECARGA = '.table-container, .fx-periodo, #card-rankings, #painel-mais';
 
     function atualizarTitulosPeriodo() {
       const f = getActiveFilters();
@@ -5048,12 +5065,18 @@
       if (!f || !barraMontada) return;
       const hoje = todayLocalISO();
       const atalho = atalhoDoPeriodo(f, hoje);
-      // "Escolher…" mostra o período personalizado quando ele está valendo
-      document.getElementById('rotulo-periodo').textContent = atalho ? 'Escolher…' : rotuloDoPeriodo(f, hoje);
+      // O atalho ativo leva a data ("Hoje · 24/10"); o calendário diz o período
+      // personalizado quando ele está valendo (nome acessível e dica)
       document.querySelectorAll('#seg-periodo [data-periodo]').forEach((b) => {
         const p = b.dataset.periodo;
         b.setAttribute('aria-pressed', String(p === 'escolher' ? !atalho : p === atalho));
+        if (p !== 'escolher') b.textContent = painelVisualLib.rotuloBotaoPeriodo(p, p === atalho, f.dataInicio);
       });
+      const cal = document.getElementById('btn-periodo');
+      const personalizado = atalho ? '' : rotuloDoPeriodo(f, hoje);
+      cal.setAttribute('aria-label', personalizado ? `Período: ${personalizado} — escolher outro` : 'Escolher período');
+      cal.dataset.dica = personalizado ? `Período: ${personalizado}` : 'Escolher período';
+      escreverCameraNaBarra(f.cameraId);
       escreverCampos(f);
       escreverSegmentado(f.soAlertas);
       escreverContador(f);
@@ -5086,6 +5109,14 @@
       definir('filter-unidade', f.unidade);
     }
 
+    // Câmeras (ícone): dica com a câmera escolhida; destacado quando filtra
+    function escreverCameraNaBarra(cameraId) {
+      const g = document.getElementById('grupo-camera');
+      const nome = cameraId ? (camerasMap[cameraId] || 'escolhida') : '';
+      g.dataset.dica = cameraId ? `Câmera: ${nome}` : 'Câmeras: todas';
+      g.classList.toggle('ativo', Boolean(cameraId));
+    }
+
     // "Acima do limite": um botão que liga e desliga (aria-pressed)
     function escreverSegmentado(soAlertas) {
       document.getElementById('btn-acima').setAttribute('aria-pressed', String(Boolean(soAlertas)));
@@ -5104,11 +5135,13 @@
     }
 
     function renderChips(f, hoje) {
-      const chips = chipsDosFiltros(f, hoje, { nomeCamera: (id) => camerasMap[id] || '', nomeCor: corExibicao });
+      // Ontem e 7 dias já aparecem pressionados no seletor: etiqueta só para o período escolhido no calendário
+      const atalho = atalhoDoPeriodo(f, hoje);
+      const chips = chipsDosFiltros(f, hoje, { nomeCamera: (id) => camerasMap[id] || '', nomeCor: corExibicao })
+        .filter((c) => c.chave !== 'periodo' || !atalho);
       const el = document.getElementById('chips-filtros');
       el.hidden = chips.length === 0;
-      // "Hoje" (o padrão) é uma etiqueta fixa; outro período vira etiqueta removível
-      document.getElementById('chip-periodo').hidden = atalhoDoPeriodo(f, hoje) !== 'hoje';
+      document.getElementById('chips-linha').hidden = chips.length === 0;
       el.innerHTML = chips.length === 0 ? '' : `<ul class="chips-lista" aria-label="Filtros ativos">${chips.map((c) =>
         `<li class="chip"><span>${esc(c.rotulo)}</span><button type="button" class="chip-x" data-remover="${esc(c.chave)}"`
         + ` aria-label="${esc(`Remover filtro ${c.rotulo}`)}">✕</button></li>`).join('')}</ul>`
@@ -5410,7 +5443,7 @@
 
     function ligarPeriodo() {
       const overlay = document.getElementById('painel-periodo');
-      // Hoje · Ontem · 7 dias aplicam direto; "Escolher…" abre o seletor de datas
+      // Hoje · Ontem · 7 dias aplicam direto; o calendário abre o seletor de datas
       document.getElementById('seg-periodo').addEventListener('click', (e) => {
         const b = e.target.closest('[data-periodo]');
         if (!b || b.dataset.periodo === 'escolher') return;
@@ -7977,72 +8010,55 @@
       return r;
     }
 
-    // ---------- Ao lado das fotos: semana (mapa de calor) e rankings
-    // De 1.024 a 1.699 px ficam num quadro só, com abas Semana | Mais passagens |
-    // Recordes; no monitor grande e no tablet, dois quadros (o de rankings com as
-    // abas Mais passagens | Recordes). Os painéis dos rankings mudam de quadro
-    // sem ser redesenhados. A escolha fica lembrada no computador.
-    const LADO_UNICO_MQ = window.matchMedia('(min-width: 1024px) and (max-width: 1699px)');
+    // ---------- Quadro lateral: semana (mapa de calor), números do dia e rankings
+    // (v1.16). O quadro tem a altura da coluna da esquerda: ≥1.024 px os
+    // rankings mostram as linhas que couberem (até 10) e "Ver todos" rola o
+    // resto dentro do quadro; abaixo disso, 3 à vista e "Ver os 10". A aba dos
+    // rankings (Mais passagens | Recordes) fica lembrada no computador.
+    const LATERAL_MQ = window.matchMedia('(min-width: 1024px)');
     const ABA_LADO_KEY = 'lombada_aba_lado';
-    const ABAS_LADO = ['semana', 'mais', 'recordes'];
-    let abaLado = 'semana';
-    try { const salva = localStorage.getItem(ABA_LADO_KEY); if (ABAS_LADO.includes(salva)) abaLado = salva; } catch { /* sem storage */ }
-    let abaRank = abaLado === 'recordes' ? 'recordes' : 'mais';
+    const ABAS_RANK = ['mais', 'recordes'];
+    let abaRank = 'mais';
+    try { const salva = localStorage.getItem(ABA_LADO_KEY); if (ABAS_RANK.includes(salva)) abaRank = salva; } catch { /* sem storage */ }
 
     function aplicarLado({ foco = false } = {}) {
-      const unico = LADO_UNICO_MQ.matches;
-      document.getElementById('lado2').classList.toggle('unico', unico);
-      const mais = document.getElementById('painel-mais');
-      const rec = document.getElementById('painel-recordes');
-      const destino = document.getElementById(unico ? 'card-semana' : 'card-rankings');
-      if (mais.parentElement !== destino) destino.append(mais, rec);
-      document.getElementById('abas-lado').hidden = !unico;
-      const vendo = unico ? abaLado : abaRank;
-      document.getElementById('painel-por-dia').hidden = unico && vendo !== 'semana';
-      document.getElementById('nav-semana').hidden = unico && vendo !== 'semana';
-      mais.hidden = vendo !== 'mais';
-      rec.hidden = vendo !== 'recordes';
-      document.getElementById('painel-por-dia').setAttribute('aria-labelledby', unico ? 'aba-lado-semana' : 'titulo-semana');
-      mais.setAttribute('aria-labelledby', unico ? 'aba-lado-mais' : 'aba-rank-mais');
-      rec.setAttribute('aria-labelledby', unico ? 'aba-lado-recordes' : 'aba-rank-recordes');
-      const lista = document.getElementById(unico ? 'abas-lado' : 'abas-rank');
-      [['abas-lado', abaLado], ['abas-rank', abaRank]].forEach(([id, ativa]) => {
-        document.querySelectorAll(`#${id} [role="tab"]`).forEach((b) => {
-          const sel = b.dataset.painel === ativa;
-          b.setAttribute('aria-selected', String(sel));
-          b.tabIndex = sel ? 0 : -1;
-        });
+      document.getElementById('painel-mais').hidden = abaRank !== 'mais';
+      document.getElementById('painel-recordes').hidden = abaRank !== 'recordes';
+      const lista = document.getElementById('abas-rank');
+      lista.querySelectorAll('[role="tab"]').forEach((b) => {
+        const sel = b.dataset.painel === abaRank;
+        b.setAttribute('aria-selected', String(sel));
+        b.tabIndex = sel ? 0 : -1;
       });
       if (foco) {
         const alvo = lista.querySelector('[aria-selected="true"]');
         if (alvo) alvo.focus();
       }
+      ['ranking-list', 'recordes-list'].forEach((id) => atualizarVer10(id));
     }
 
-    function escolherAbaLado(painel, deQual, opts) {
-      if (deQual === 'abas-lado') abaLado = painel;
-      if (painel !== 'semana') abaRank = painel;
-      try { localStorage.setItem(ABA_LADO_KEY, abaLado); } catch { /* sem storage */ }
+    function escolherAbaLado(painel, opts) {
+      if (!ABAS_RANK.includes(painel)) return;
+      abaRank = painel;
+      try { localStorage.setItem(ABA_LADO_KEY, abaRank); } catch { /* sem storage */ }
       aplicarLado(opts);
     }
 
     function ligarAbasLado() {
-      ['abas-lado', 'abas-rank'].forEach((id) => {
-        const lista = document.getElementById(id);
-        lista.addEventListener('click', (e) => {
-          const b = e.target.closest('[data-painel]');
-          if (b) escolherAbaLado(b.dataset.painel, id);
-        });
-        // Setas, Home e End trocam de aba (padrão de abas do WAI-ARIA)
-        lista.addEventListener('keydown', (e) => {
-          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-          e.preventDefault();
-          const ids = [...lista.querySelectorAll('[role="tab"]')].map((b) => b.dataset.painel);
-          const atual = ids.indexOf(id === 'abas-lado' ? abaLado : abaRank);
-          const i = e.key === 'Home' ? 0 : e.key === 'End' ? ids.length - 1
-            : (atual + (e.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length;
-          escolherAbaLado(ids[i], id, { foco: true });
-        });
+      const lista = document.getElementById('abas-rank');
+      lista.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-painel]');
+        if (b) escolherAbaLado(b.dataset.painel);
+      });
+      // Setas, Home e End trocam de aba (padrão de abas do WAI-ARIA)
+      lista.addEventListener('keydown', (e) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+        e.preventDefault();
+        const ids = [...lista.querySelectorAll('[role="tab"]')].map((b) => b.dataset.painel);
+        const atual = ids.indexOf(abaRank);
+        const i = e.key === 'Home' ? 0 : e.key === 'End' ? ids.length - 1
+          : (atual + (e.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length;
+        escolherAbaLado(ids[i], { foco: true });
       });
       document.querySelector('[data-acao="recarregar-por-dia"]').addEventListener('click', () => {
         porDiaCache = null;
@@ -8051,27 +8067,44 @@
       document.getElementById('semana-ant').addEventListener('click', () => trocarSemana(-1));
       document.getElementById('semana-prox').addEventListener('click', () => trocarSemana(1));
       document.getElementById('veiculos-por-dia').addEventListener('click', aoClicarSemana);
-      // "Ver os 10 →": abre o resto do ranking (3 ficam à vista)
+      // "Ver os 10 →" / "Ver todos →": abre o resto do ranking
       document.getElementById('lado2').addEventListener('click', (e) => {
         const b = e.target.closest('[data-ver10]');
         if (!b) return;
         const lista = document.getElementById(b.dataset.ver10);
         const aberta = lista.classList.toggle('aberta');
         b.setAttribute('aria-expanded', String(aberta));
-        b.textContent = aberta ? 'Mostrar só 3' : `Ver os ${lista.children.length} →`;
+        b.textContent = textoVer10(lista, aberta);
       });
-      LADO_UNICO_MQ.addEventListener('change', () => aplicarLado());
+      LATERAL_MQ.addEventListener('change', () => aplicarLado());
+      // O quadro lateral muda de altura com a lista da esquerda: confere o que cabe
+      if (typeof ResizeObserver === 'function') {
+        new ResizeObserver(() => ['ranking-list', 'recordes-list'].forEach((id) => atualizarVer10(id, undefined, { manter: true })))
+          .observe(document.getElementById('card-rankings'));
+      }
       aplicarLado();
     }
 
-    // Depois de desenhar um ranking: "Ver os N" só se houver mais de 3
-    function atualizarVer10(idLista, n) {
+    function textoVer10(lista, aberta) {
+      if (LATERAL_MQ.matches) return aberta ? 'Recolher' : 'Ver todos →';
+      return aberta ? 'Mostrar só 3' : `Ver os ${lista.children.length} →`;
+    }
+
+    // Depois de desenhar um ranking (ou mudar a altura do quadro): o botão só
+    // aparece se houver linha escondida — na lateral, as que não couberem;
+    // no tablet e no celular, as depois da 3ª. `manter`: não fecha a lista aberta.
+    function atualizarVer10(idLista, n, opts) {
       const b = document.querySelector(`[data-ver10="${idLista}"]`);
       const lista = document.getElementById(idLista);
-      lista.classList.remove('aberta');
-      b.hidden = n <= 3;
-      b.setAttribute('aria-expanded', 'false');
-      b.textContent = `Ver os ${n} →`;
+      const total = n === undefined ? lista.querySelectorAll(':scope > li:not(.rk-msg)').length : n;
+      if (!(opts && opts.manter)) lista.classList.remove('aberta');
+      const aberta = lista.classList.contains('aberta');
+      const escondidas = LATERAL_MQ.matches
+        ? aberta || lista.scrollHeight > lista.clientHeight + 1
+        : total > 3;
+      b.hidden = total === 0 || !escondidas;
+      b.setAttribute('aria-expanded', String(aberta));
+      b.textContent = textoVer10(lista, aberta);
     }
 
     // ============================================
@@ -8086,8 +8119,9 @@
       const { f, data } = r;
       // Título só muda com dados novos: em erro, dados velhos não ganham título novo
       document.getElementById('title-indicators').textContent = `Indicadores · ${f.label}`;
-      document.getElementById('lbl-hora-pico').textContent = f.isSingleDay ? 'Hora de pico' : 'Dia de pico';
-      document.getElementById('sub-hora-pico').textContent = f.isSingleDay ? 'maior fluxo do dia' : 'maior fluxo do período';
+      document.getElementById('lbl-hora-pico').textContent = f.isSingleDay ? 'Pico' : 'Dia de pico';
+      escreverDica('fx-pico', f.isSingleDay ? `hora de maior fluxo · ${f.label.toLowerCase()}` : `dia de maior fluxo · ${f.label.toLowerCase()}`);
+      escreverDica('fx-reincidentes', `placas com 2 ou mais alertas · ${f.label.toLowerCase()}`);
 
       if (!data || data.length === 0) {
         document.getElementById('ind-hora-pico').textContent = '--';
