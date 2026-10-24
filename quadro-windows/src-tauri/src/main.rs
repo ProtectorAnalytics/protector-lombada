@@ -4,19 +4,21 @@
 //! remota https://lombada.appps.com.br/quadro (o conteúdo se atualiza sozinho
 //! por ser do site). A barra, o Fixar e o menu vivem na própria página; aqui
 //! só ficam: janela, posição/tamanho lembrados, abrir com o Windows (ligado na
-//! primeira vez), instância única e a página local de espera (sem internet
-//! no boot, ela tenta de novo até o site responder).
+//! primeira vez), instância única, a página local de espera (sem internet
+//! no boot, ela tenta de novo até o site responder) e a atualização sozinha
+//! do próprio programa (só versões assinadas com a chave da Protector).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod navegacao;
 
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use tauri::webview::NewWindowResponse;
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_opener::OpenerExt;
+use tauri_plugin_updater::UpdaterExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 const ROTULO: &str = "quadro";
@@ -27,6 +29,9 @@ const LARGURA_MIN: f64 = 320.0;
 const ALTURA_MIN: f64 = 220.0;
 const MARCA_AUTOSTART: &str = "autostart-configurado";
 const SALVAR_A_CADA_MS: u64 = 750;
+/// Primeira procura por versão nova logo depois de abrir; depois, a cada 6 h.
+const ATUALIZAR_PRIMEIRA: Duration = Duration::from_secs(60);
+const ATUALIZAR_A_CADA: Duration = Duration::from_secs(6 * 60 * 60);
 
 /// Só posição e tamanho: moldura e "sempre por cima" são fixos do programa.
 fn flags_estado() -> StateFlags {
@@ -98,10 +103,69 @@ fn ligar_autostart_na_primeira_vez(app: &AppHandle) {
     }
 }
 
+/// Baixa e instala a versão nova, se houver. O plugin confere a assinatura
+/// (chave pública no tauri.conf.json) antes de instalar; sem assinatura
+/// válida, nada muda. Devolve true quando instalou.
+async fn instalar_versao_nova(app: &AppHandle) -> tauri_plugin_updater::Result<bool> {
+    let Some(versao) = app.updater()?.check().await? else {
+        return Ok(false);
+    };
+    versao.download_and_install(|_, _| {}, || {}).await?;
+    Ok(true)
+}
+
+/// O programa se atualiza sozinho: procura ao abrir e a cada 6 h; achou,
+/// instala e reabre (no Windows o instalador reabre; no Mac, restart).
+/// O conteúdo do quadro já vem do site; isto é só para a casca.
+fn atualizar_sozinho(app: &AppHandle) {
+    // Build de desenvolvimento nunca se atualiza.
+    if cfg!(debug_assertions) {
+        return;
+    }
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(ATUALIZAR_PRIMEIRA);
+        loop {
+            // Falha de rede ou de assinatura: tenta de novo na próxima volta.
+            if let Ok(true) = tauri::async_runtime::block_on(instalar_versao_nova(&app)) {
+                app.restart();
+            }
+            std::thread::sleep(ATUALIZAR_A_CADA);
+        }
+    });
+}
+
 /// Endereço recusado: não abre na janela; https vai ao navegador padrão.
 fn desviar_para_o_navegador(app: &AppHandle, u: &url::Url) {
     if navegacao::abrir_no_navegador(u) {
         let _ = app.opener().open_url(u.as_str(), None::<&str>);
+    }
+}
+
+/// Retângulo de um monitor: (x, y, largura, altura) em pixels físicos.
+type Retangulo = (i32, i32, u32, u32);
+
+/// O topo da janela (onde se segura para arrastar) está em algum monitor?
+fn topo_visivel(x: i32, y: i32, largura: u32, monitores: &[Retangulo]) -> bool {
+    let cx = x.saturating_add((largura / 2) as i32);
+    let cy = y.saturating_add(10);
+    monitores.iter().any(|&(mx, my, mw, mh)| {
+        cx >= mx && cx < mx.saturating_add(mw as i32) && cy >= my && cy < my.saturating_add(mh as i32)
+    })
+}
+
+/// Posição lembrada num monitor que não existe mais (desligado, trocado):
+/// a janela abriria fora da tela, então volta para o centro.
+fn trazer_para_a_tela(j: &tauri::WebviewWindow) {
+    let (Ok(pos), Ok(tam), Ok(lista)) = (j.outer_position(), j.outer_size(), j.available_monitors()) else {
+        return;
+    };
+    let monitores: Vec<Retangulo> = lista
+        .iter()
+        .map(|m| (m.position().x, m.position().y, m.size().width, m.size().height))
+        .collect();
+    if !monitores.is_empty() && !topo_visivel(pos.x, pos.y, tam.width, &monitores) {
+        let _ = j.center();
     }
 }
 
@@ -132,6 +196,9 @@ fn criar_janela(app: &AppHandle) -> tauri::Result<()> {
         .maximizable(false)
         .shadow(true)
         .build()?;
+    if let Some(j) = app.get_webview_window(ROTULO) {
+        trazer_para_a_tela(&j);
+    }
     relatorio_de_teste(app);
     Ok(())
 }
@@ -208,11 +275,13 @@ fn main() {
             None,
         ))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let handle = app.handle();
             capability_de_teste(handle)?;
             criar_janela(handle)?;
             ligar_autostart_na_primeira_vez(handle);
+            atualizar_sozinho(handle);
             Ok(())
         })
         .on_window_event(ao_evento_da_janela)
@@ -223,6 +292,17 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn topo_visivel_confere_os_monitores() {
+        let um = [(0, 0, 1920, 1080)];
+        assert!(topo_visivel(100, 100, 400, &um));
+        assert!(!topo_visivel(2300, 70, 640, &um), "monitor que sumiu");
+        assert!(!topo_visivel(-900, 100, 400, &um));
+        let dois = [(0, 0, 1920, 1080), (1920, 0, 2560, 1440)];
+        assert!(topo_visivel(2300, 70, 640, &dois), "segundo monitor ligado");
+        assert!(!topo_visivel(100, 1075, 400, &um), "topo abaixo da tela");
+    }
 
     #[test]
     fn url_de_teste_aceita_http_e_https() {

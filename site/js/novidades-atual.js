@@ -14,13 +14,14 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.18.0',
+    versao: '1.19.0',
     data: '2026-10-24',
-    titulo: 'Quadro da portaria também no Mac',
+    titulo: 'Quadro da portaria mais fácil de usar',
     itens: Object.freeze([
-      'O quadro da portaria agora também funciona no Mac: a mesma janela pequena, sempre por cima, com a última passagem na lombada ao vivo',
-      'Para instalar, abra o menu da conta no painel, clique em "Quadro para o PC da portaria" e depois em "Baixar para Mac"',
-      'A opção do menu do quadro agora se chama "Abrir ao ligar o computador" e vale para Windows e Mac',
+      'O quadro agora arrasta segurando em qualquer lugar da janela, e clicar nele não abre mais o site sem querer',
+      'Para abrir o painel completo, use o novo botão ↗ no topo do quadro (ou o menu ⋮)',
+      'Tela de entrada do quadro renovada: o usuário já vem preenchido e dá para ver a senha digitada',
+      'O programa do quadro (Windows e Mac) passa a se atualizar sozinho; quem já instalou precisa baixar uma última vez pelo painel',
     ]),
   });
 });

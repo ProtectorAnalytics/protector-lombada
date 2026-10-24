@@ -29,8 +29,31 @@ caso('marcação essencial: barra de arrastar, Fixar, minimizar, menu, login, qu
   ].forEach((trecho) => assert.ok(html.includes(trecho), `falta ${trecho}`));
 });
 
-caso('a passagem é um botão (clique abre o painel) e as setas têm nome acessível', () => {
-  assert.match(html, /<button type="button" class="passagem" id="passagem"/);
+caso('a passagem não é botão (clicar para arrastar não abre o site); o painel abre pelo botão da barra', () => {
+  assert.match(html, /<div class="passagem" id="passagem" role="group">/);
+  assert.ok(!app.includes("$('passagem').addEventListener('click'"), 'passagem sem clique');
+  assert.match(html, /<button type="button" class="ic-btn" id="botao-painel" hidden[^>]*aria-label="Abrir o painel completo de hoje"/);
+  assert.ok(app.includes("$('botao-painel').addEventListener('click', abrirPainel)"));
+  assert.ok(app.includes("$('botao-painel').hidden = id !== 'tela-quadro';"), 'botão só na tela do quadro');
+});
+
+caso('a janela toda arrasta (barra e conteúdo em "deep") e o Fixar desliga tudo', () => {
+  assert.match(html, /<header class="barra" id="barra" data-arrastar="deep" data-tauri-drag-region="deep">/);
+  assert.match(html, /<main class="conteudo" data-arrastar="deep" data-tauri-drag-region="deep">/);
+  assert.ok(casca.includes("raiz.querySelectorAll('[data-arrastar]')"));
+  assert.ok(casca.includes("el.setAttribute('data-tauri-drag-region', el.getAttribute('data-arrastar'))"));
+  assert.ok(app.includes('casca.aplicarFixado(fixado, document)'));
+});
+
+caso('login: marca, ícones, mostrar senha e usuário lembrado (nunca a senha)', () => {
+  ['class="marca"', 'id="titulo-login"', 'id="botao-ver-senha"', 'aria-controls="login-senha"', 'id="ic-pessoa"', 'id="ic-cadeado"', 'class="botao primario botao-entrar"']
+    .forEach((t) => assert.ok(html.includes(t), t));
+  assert.ok(app.includes("gravarLocal(CHAVE_USUARIO, entrada)"));
+  assert.ok(!/gravarLocal\([^)]*senha/i.test(app), 'senha nunca vai ao localStorage');
+  assert.ok(app.includes("$('login-senha').type = mostrar ? 'text' : 'password'"));
+});
+
+caso('as setas têm nome acessível', () => {
   assert.match(html, /id="botao-voltar" aria-label="Passagem anterior"/);
   assert.match(html, /id="botao-avancar" aria-label="Passagem seguinte"/);
 });

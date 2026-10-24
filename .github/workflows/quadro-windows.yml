@@ -3,6 +3,11 @@
 # .dmg universal do Mac (Quadro-Lombada-Mac.dmg, Intel + Apple Silicon) e anexa
 # os dois (com .sha256) ao Release da tag. O painel baixa por
 # /baixar/quadro-windows e /baixar/quadro-macos → releases/latest/download/….
+# Atualização automática: os pacotes saem assinados (TAURI_SIGNING_PRIVATE_KEY
+# e _PASSWORD, segredos do repositório; a chave pública está no
+# tauri.conf.json) e o Release ganha latest.json, que o programa instalado
+# consulta (releases/latest/download/latest.json) para se atualizar sozinho.
+# A tag precisa bater com a versão do tauri.conf.json (quadro-vX.Y.Z).
 # workflow_dispatch → só compila e guarda os instaladores como artefatos do run.
 # A compilação roda só com leitura; quem publica (escrita) só baixa os
 # artefatos prontos, sem rodar código do repositório.
@@ -62,7 +67,10 @@ jobs:
         working-directory: quadro-windows/src-tauri
         run: cargo test --locked
 
-      - name: Compilar instalador NSIS
+      - name: Compilar instalador NSIS (assinado para a atualização)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npx tauri build --bundles nsis -- --locked
 
       - name: Nome estável e SHA256 do instalador
@@ -70,6 +78,7 @@ jobs:
           $exe = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
           if (-not $exe) { throw 'instalador NSIS não encontrado' }
           Copy-Item $exe.FullName -Destination Quadro-Lombada-Setup.exe
+          Copy-Item "$($exe.FullName).sig" -Destination Quadro-Lombada-Setup.exe.sig
           $hash = (Get-FileHash Quadro-Lombada-Setup.exe -Algorithm SHA256).Hash.ToLower()
           "$hash  Quadro-Lombada-Setup.exe" | Out-File -FilePath Quadro-Lombada-Setup.exe.sha256 -Encoding ascii -NoNewline
           Get-Content Quadro-Lombada-Setup.exe.sha256
@@ -80,6 +89,7 @@ jobs:
           path: |
             quadro-windows/Quadro-Lombada-Setup.exe
             quadro-windows/Quadro-Lombada-Setup.exe.sha256
+            quadro-windows/Quadro-Lombada-Setup.exe.sig
           if-no-files-found: error
 
   compilar-macos:
@@ -108,6 +118,12 @@ jobs:
           rustup default "$RUST_VERSAO"
           rustc --version
 
+      - name: Tag igual à versão do programa
+        if: startsWith(github.ref, 'refs/tags/quadro-v')
+        run: |
+          versao=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          [ "quadro-v$versao" = "$GITHUB_REF_NAME" ] || { echo "tag $GITHUB_REF_NAME ≠ versão $versao do tauri.conf.json"; exit 1; }
+
       - name: Dependências (versões travadas)
         run: npm ci
 
@@ -115,14 +131,21 @@ jobs:
         working-directory: quadro-windows/src-tauri
         run: cargo test --locked
 
-      - name: Compilar .dmg universal (Intel + Apple Silicon)
-        run: npx tauri build --target universal-apple-darwin --bundles dmg -- --locked
+      - name: Compilar .dmg e pacote de atualização (universal, assinado)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npx tauri build --target universal-apple-darwin --bundles app,dmg -- --locked
 
       - name: Nome estável e SHA256 do .dmg
         run: |
           dmg=$(ls src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg | head -n 1)
           [ -n "$dmg" ] || { echo '.dmg não encontrado'; exit 1; }
           cp "$dmg" Quadro-Lombada-Mac.dmg
+          pacote=$(ls src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz | head -n 1)
+          [ -n "$pacote" ] || { echo 'pacote de atualização não encontrado'; exit 1; }
+          cp "$pacote" Quadro-Lombada-Mac.app.tar.gz
+          cp "$pacote.sig" Quadro-Lombada-Mac.app.tar.gz.sig
           shasum -a 256 Quadro-Lombada-Mac.dmg | tr -d '\n' > Quadro-Lombada-Mac.dmg.sha256
           cat Quadro-Lombada-Mac.dmg.sha256
 
@@ -132,6 +155,8 @@ jobs:
           path: |
             quadro-windows/Quadro-Lombada-Mac.dmg
             quadro-windows/Quadro-Lombada-Mac.dmg.sha256
+            quadro-windows/Quadro-Lombada-Mac.app.tar.gz
+            quadro-windows/Quadro-Lombada-Mac.app.tar.gz.sig
           if-no-files-found: error
 
   publicar:
@@ -156,6 +181,21 @@ jobs:
         working-directory: instalador
         run: sha256sum -c Quadro-Lombada-Setup.exe.sha256 Quadro-Lombada-Mac.dmg.sha256
 
+      - name: latest.json (o programa instalado lê para se atualizar)
+        working-directory: instalador
+        env:
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          base="https://github.com/$GH_REPO/releases/download/$TAG"
+          jq -n --arg v "${TAG#quadro-v}" --arg d "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg b "$base" \
+            --rawfile win Quadro-Lombada-Setup.exe.sig --rawfile mac Quadro-Lombada-Mac.app.tar.gz.sig \
+            '{version: $v, notes: "Quadro da portaria \($v)", pub_date: $d, platforms: {
+               "windows-x86_64": {signature: ($win | rtrimstr("\n")), url: ($b + "/Quadro-Lombada-Setup.exe")},
+               "darwin-aarch64": {signature: ($mac | rtrimstr("\n")), url: ($b + "/Quadro-Lombada-Mac.app.tar.gz")},
+               "darwin-x86_64":  {signature: ($mac | rtrimstr("\n")), url: ($b + "/Quadro-Lombada-Mac.app.tar.gz")}}}' > latest.json
+          cat latest.json
+
       - name: Release da tag (cria ou atualiza)
         working-directory: instalador
         env:
@@ -169,4 +209,5 @@ jobs:
               --latest
           fi
           gh release upload "$TAG" Quadro-Lombada-Setup.exe Quadro-Lombada-Setup.exe.sha256 \
-            Quadro-Lombada-Mac.dmg Quadro-Lombada-Mac.dmg.sha256 --clobber
+            Quadro-Lombada-Mac.dmg Quadro-Lombada-Mac.dmg.sha256 \
+            Quadro-Lombada-Mac.app.tar.gz Quadro-Lombada-Mac.app.tar.gz.sig latest.json --clobber

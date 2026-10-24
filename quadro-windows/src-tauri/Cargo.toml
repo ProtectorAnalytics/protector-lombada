@@ -1,6 +1,6 @@
 [package]
 name = "quadro-lombada"
-version = "1.1.0"
+version = "1.2.0"
 description = "Quadro da portaria (Lombada Educativa): janela pequena, sempre por cima, com a última passagem"
 authors = ["Protector Sistemas de Segurança"]
 license = "UNLICENSED"
@@ -18,6 +18,7 @@ tauri-plugin-opener = "=2.7.0"
 tauri-plugin-window-state = "=2.5.0"
 tauri-plugin-autostart = "=2.7.0"
 tauri-plugin-single-instance = "=2.5.2"
+tauri-plugin-updater = "=2.13.3"
 url = "2"
 serde_json = "1"
 

@@ -28,13 +28,15 @@
 
   const ehApp = Boolean(janela());
 
-  // Fixar = a barra deixa de arrastar e a janela deixa de mudar de tamanho.
-  function aplicarFixado(fixado, barra) {
+  // Fixar = a janela deixa de arrastar e de mudar de tamanho. As áreas de
+  // arrastar levam data-arrastar (o valor que o Tauri usa: "deep" = o elemento
+  // e tudo dentro dele, menos botões, campos e links).
+  function aplicarFixado(fixado, raiz) {
     const j = janela();
     if (!j) return Promise.resolve();
-    barra.querySelectorAll('[data-tauri-drag-region], .barra').forEach((el) => {
+    raiz.querySelectorAll('[data-arrastar]').forEach((el) => {
       if (fixado) el.removeAttribute('data-tauri-drag-region');
-      else el.setAttribute('data-tauri-drag-region', '');
+      else el.setAttribute('data-tauri-drag-region', el.getAttribute('data-arrastar'));
     });
     document.documentElement.classList.toggle('fixado', fixado);
     return j.setResizable(!fixado).catch(() => {});

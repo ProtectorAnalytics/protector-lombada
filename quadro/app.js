@@ -1,5 +1,5 @@
 /**
- * app.js — página /quadro (Quadro no PC da portaria, v1.17.0).
+ * app.js — página /quadro (Quadro no PC da portaria, v1.19.0).
  *
  * Login compacto (usuário de porteiro sem "@" ou e-mail, com o quadro "não
  * sou um robô"), a passagem mais recente ao vivo e as setas ‹ › nas de hoje.
@@ -19,6 +19,7 @@
   const VINCULOS_SEM_CADASTRO_MS = 30 * 1000; // passagem "sem cadastro": confere de novo mais cedo
   const CHAVE_CAMERA = 'quadro.camera';
   const CHAVE_CLIENTE = 'quadro.cliente';
+  const CHAVE_USUARIO = 'quadro.usuario'; // só o usuário (nunca a senha), para vir preenchido
   const COLUNAS_CAPTURA = 'id, placa, timestamp, camera_id, foto_path, velocidade';
 
   let sb = null;
@@ -57,6 +58,12 @@
 
   function mostrarTela(id) {
     ['tela-carregando', 'tela-login', 'tela-escolha', 'tela-aviso', 'tela-quadro'].forEach((t) => { $(t).hidden = t !== id; });
+    $('botao-painel').hidden = id !== 'tela-quadro';
+    // O botão que tinha o foco (Entrar, Abrir) sumiu com a tela: leva o foco
+    // para o primeiro controle da tela nova, senão o teclado fica sem lugar.
+    if (id === 'tela-quadro' && (!document.activeElement || document.activeElement === document.body || document.activeElement.closest('[hidden]'))) {
+      $('botao-painel').focus({ preventScroll: true });
+    }
   }
 
   function marcarEstado(tipo, texto) {
@@ -109,7 +116,21 @@
     marcarEstado('', 'Quadro');
     $('barra-titulo').textContent = '';
     mostrarTela('tela-login');
+    const usuario = lerLocal(CHAVE_USUARIO);
+    if (usuario && !$('login-usuario').value) $('login-usuario').value = usuario;
+    ($('login-usuario').value ? $('login-senha') : $('login-usuario')).focus();
     captcha.iniciar().catch(() => {});
+  }
+
+  function alternarSenha() {
+    const botao = $('botao-ver-senha');
+    const mostrar = botao.getAttribute('aria-pressed') !== 'true';
+    $('login-senha').type = mostrar ? 'text' : 'password';
+    botao.setAttribute('aria-pressed', String(mostrar));
+    const texto = mostrar ? 'Esconder a senha' : 'Mostrar a senha';
+    botao.title = texto;
+    botao.setAttribute('aria-label', texto);
+    botao.querySelector('use').setAttribute('href', mostrar ? '#ic-olho-fechado' : '#ic-olho');
   }
 
   async function entrar(ev) {
@@ -132,7 +153,9 @@
         return;
       }
       captcha.parar();
+      gravarLocal(CHAVE_USUARIO, entrada);
       $('login-senha').value = '';
+      if ($('botao-ver-senha').getAttribute('aria-pressed') === 'true') alternarSenha();
       await carregarPerfil(data.user);
     } catch (e) {
       erro.textContent = 'Erro ao conectar. Tente novamente.';
@@ -371,7 +394,7 @@
     $('p-hora').textContent = d.hora;
     desenharSelo(d);
     const partes = [d.placa, d.velocidade, d.acimaDoLimite ? 'acima do limite' : '', d.tipo.rotulo, d.nome, d.unidade, d.camera, d.hora];
-    $('passagem').setAttribute('aria-label', `${partes.filter(Boolean).join(', ')}. Abrir o painel completo de hoje`);
+    $('passagem').setAttribute('aria-label', partes.filter(Boolean).join(', '));
   }
 
   function desenharNavegacao() {
@@ -487,7 +510,7 @@
     botao.title = texto;
     botao.setAttribute('aria-label', texto);
     botao.querySelector('.rot-fixar').textContent = fixado ? 'Fixo' : 'Fixar';
-    casca.aplicarFixado(fixado, $('barra'));
+    casca.aplicarFixado(fixado, document);
   }
 
   function prepararCasca() {
@@ -502,7 +525,8 @@
     $('form-login').addEventListener('submit', entrar);
     $('botao-tentar').addEventListener('click', iniciar);
     $('botao-escolher').addEventListener('click', () => abrirComoAdmin($('escolha-cliente').value));
-    $('passagem').addEventListener('click', abrirPainel);
+    $('botao-painel').addEventListener('click', abrirPainel);
+    $('botao-ver-senha').addEventListener('click', alternarSenha);
     $('botao-voltar').addEventListener('click', () => navegar(q.voltar));
     $('botao-avancar').addEventListener('click', () => navegar(q.avancar));
     $('botao-ao-vivo').addEventListener('click', () => navegar(q.irAoVivo));
