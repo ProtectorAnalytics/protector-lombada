@@ -480,7 +480,7 @@ button.dd.dd-placa:hover { text-decoration: none; }
 }
 @media (max-width: 1279px) and (min-width: 1024px) {
   .topbar-titulos { display: flex; }
-  .topbar-logo { display: none; }
+  .topbar-logo { height: 24px; } /* logo menor, nunca escondido: a marca fica visível em notebook */
   .topbar-titulos { padding-left: 0; border-left: 0; }
 }
 
