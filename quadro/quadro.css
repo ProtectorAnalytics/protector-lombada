@@ -1,5 +1,5 @@
 /*
- * quadro.css — Quadro no PC da portaria (v1.17.0). Janela pequena, sempre por
+ * quadro.css — Quadro no PC da portaria (v1.19.0). Janela pequena, sempre por
  * cima: padrão 400×280, funciona de 320×220 para cima. Tema escuro do painel
  * (tokens de dashboard/index.html, v1.15+). Nenhum texto abaixo de 11 px.
  */
@@ -49,8 +49,13 @@ button, select, input { font: inherit; color: inherit; }
   flex: none; height: var(--barra-h); display: flex; align-items: center; gap: 4px; padding: 0 4px 0 8px;
   background: var(--bg-card); border-bottom: 1px solid var(--hair); user-select: none; -webkit-user-select: none;
 }
-.app-windows .barra { cursor: grab; }
-.app-windows.fixado .barra { cursor: default; }
+/* No programa do PC a janela toda arrasta: cursor de mão fora dos controles */
+.app-windows [data-tauri-drag-region] { cursor: grab; }
+.app-windows [data-tauri-drag-region] :is(button, input, select, a, label, iframe) { cursor: pointer; }
+.app-windows [data-tauri-drag-region] input { cursor: text; }
+.app-windows.fixado .barra, .app-windows.fixado .conteudo { cursor: default; }
+.app-windows .passagem, .app-windows .tela { user-select: none; -webkit-user-select: none; }
+.app-windows .passagem { cursor: inherit; }
 .estado {
   display: inline-flex; align-items: center; gap: 5px; flex: none; height: 18px; padding: 0 7px; border-radius: 9px;
   font: 800 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); background: var(--s3);
@@ -95,6 +100,40 @@ button, select, input { font: inherit; color: inherit; }
 .tela h1 { margin: 0; font-size: 15px; font-weight: 800; }
 .tela p { margin: 0; }
 .form-login { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------- login (marca + campos com ícone) ---------- */
+.tela-login { gap: 8px; padding: 8px 14px 10px; }
+/* Janela grande: o login fica no meio, com largura de formulário (margens
+   automáticas centralizam sem cortar o topo quando falta altura) */
+.tela-login > * { width: 100%; max-width: 380px; margin-inline: auto; }
+.tela-login > .marca { margin-top: auto; }
+.tela-login > .form-login { margin-bottom: auto; }
+.marca { display: flex; align-items: center; gap: 10px; }
+.marca-logo {
+  flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #fff;
+  background: linear-gradient(135deg, #2563EB 0%, #06089F 100%); box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+}
+.marca-logo svg { width: 18px; height: 18px; }
+.marca-texto { display: flex; flex-direction: column; min-width: 0; }
+.tela-login h1 { font-size: 14.5px; line-height: 1.15; letter-spacing: -0.01em; }
+.marca-sub { color: var(--text-muted); font-size: 11.5px; font-weight: 600; }
+.campo-icone { position: relative; display: block; }
+.campo-icone > svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.campo-icone .campo { height: 34px; padding-left: 34px; border-radius: 9px; transition: border-color .15s, box-shadow .15s; }
+.campo-icone .campo:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px rgba(110,162,255,0.2); }
+.campo-icone:focus-within > svg { color: var(--azul); }
+#login-senha { padding-right: 40px; }
+.ver-senha {
+  position: absolute; right: 3px; top: 50%; transform: translateY(-50%); display: grid; place-items: center;
+  width: 30px; height: 28px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); cursor: pointer;
+}
+.ver-senha:hover { background: var(--s3); color: var(--text-primary); }
+.ver-senha[aria-pressed="true"] { color: var(--azul); }
+.botao-entrar { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; border-radius: 9px; font-weight: 800; }
+.botao-entrar svg { width: 15px; height: 15px; transition: transform .15s; }
+.botao-entrar:hover:not(:disabled) svg { transform: translateX(2px); }
+.botao.primario:focus-visible { outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .campo-icone .campo, .botao-entrar svg { transition: none; } }
 .campo {
   width: 100%; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #4B5568;
   background: var(--bg-input); color: var(--text-primary); font-size: 13px;
@@ -117,9 +156,8 @@ select.campo { padding: 0 6px; }
 .passagem {
   flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 46%) minmax(0, 1fr); gap: 10px; align-items: center;
   width: 100%; padding: 6px; border-radius: 12px; border: 1px solid var(--hair); background: var(--bg-card);
-  text-align: left; cursor: pointer; overflow: hidden;
+  text-align: left; overflow: hidden;
 }
-.passagem:hover { border-color: var(--hair2); background: #101724; }
 .passagem.alerta { border-color: var(--alerta); background: linear-gradient(0deg, var(--alerta-tinta), var(--alerta-tinta)), var(--bg-card); box-shadow: inset 3px 0 0 var(--alerta); }
 @media (prefers-reduced-motion: no-preference) {
   .passagem.nova { animation: chegou 0.6s ease-out; }

@@ -1,5 +1,5 @@
 /**
- * quadro.js — regras puras do Quadro no PC da portaria (v1.17.0, /quadro):
+ * quadro.js — regras puras do Quadro no PC da portaria (/quadro):
  *
  *  - navegação ‹ › nas passagens de hoje com "ao vivo" (a mais recente) e
  *    "histórico" (o porteiro voltou); voltar até a mais nova retoma o ao vivo;
