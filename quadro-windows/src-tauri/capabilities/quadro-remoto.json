@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "quadro-remoto",
+  "description": "Permissões mínimas da página https://lombada.appps.com.br/quadro: arrastar, minimizar, travar o tamanho (Fixar), abrir com o Windows e abrir no navegador só páginas da Lombada. Sem shell, sem arquivos, sem http genérico. A página local de espera (local: false) não tem permissão nenhuma.",
+  "windows": ["quadro"],
+  "local": false,
+  "remote": {
+    "urls": ["https://lombada.appps.com.br/*"]
+  },
+  "permissions": [
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-set-resizable",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "https://lombada.appps.com.br/*" }]
+    }
+  ]
+}

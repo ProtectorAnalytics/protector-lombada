@@ -1,0 +1,78 @@
+# Programa do Windows do Quadro da portaria (quadro-windows/, Tauri v2).
+# Tag quadro-v* → compila o instalador NSIS e anexa Quadro-Lombada-Setup.exe
+# ao Release da tag (o painel baixa por /baixar/quadro-windows →
+# releases/latest/download/Quadro-Lombada-Setup.exe).
+# workflow_dispatch → só compila e guarda o instalador como artefato do run.
+# Sem assinatura de código por enquanto: o Windows mostra o aviso do
+# SmartScreen ("Mais informações → Executar assim mesmo").
+name: Quadro para Windows
+
+on:
+  push:
+    tags: ['quadro-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: quadro-windows-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: quadro-windows
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: quadro-windows/package-lock.json
+
+      - name: Rust estável (rustup do runner)
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustc --version
+
+      - name: Dependências (versões travadas)
+        run: npm ci
+
+      - name: Testes da casca
+        working-directory: quadro-windows/src-tauri
+        run: cargo test --locked
+
+      - name: Compilar instalador NSIS
+        run: npx tauri build --bundles nsis -- --locked
+
+      - name: Nome estável do instalador
+        run: |
+          $exe = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          if (-not $exe) { throw 'instalador NSIS não encontrado' }
+          Copy-Item $exe.FullName -Destination Quadro-Lombada-Setup.exe
+          Get-FileHash Quadro-Lombada-Setup.exe -Algorithm SHA256 | Format-List
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: Quadro-Lombada-Setup
+          path: quadro-windows/Quadro-Lombada-Setup.exe
+          if-no-files-found: error
+
+      - name: Release da tag (cria ou atualiza)
+        if: startsWith(github.ref, 'refs/tags/quadro-v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:TAG --title "Quadro da portaria $env:TAG" --notes "Instalador do Quadro da portaria para Windows. Baixe pelo painel: menu da conta > Quadro para o PC da portaria." --latest
+          }
+          gh release upload $env:TAG Quadro-Lombada-Setup.exe --clobber

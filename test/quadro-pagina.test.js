@@ -93,8 +93,12 @@ caso('links externos só pela regra urlExternaPermitida (https://lombada.appps.c
 });
 
 caso('a casca só usa o que a capability libera (arrastar, minimizar, tamanho, autostart, abrir URL)', () => {
-  const usados = new Set((casca.match(/T\.[a-z]+/g) || []).map((s) => s.slice(2)));
+  const usados = new Set([
+    ...(casca.match(/T\.[a-z]+/g) || []).map((s) => s.slice(2)),
+    ...(casca.match(/plugin\('([a-z]+)'\)/g) || []).map((s) => s.slice(8, -2)),
+  ]);
   assert.deepStrictEqual([...usados].sort(), ['autostart', 'opener', 'window']);
+  ['setResizable', 'minimize', 'isEnabled', 'enable', 'disable', 'openUrl'].forEach((f) => assert.ok(casca.includes(`.${f}(`), f));
   assert.ok(!/invoke\(/.test(casca) && !/invoke\(/.test(app), 'sem invoke genérico');
 });
 

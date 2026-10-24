@@ -1,0 +1,4 @@
+html, body { margin: 0; height: 100%; background: #070A10; color: #B6C0CF; font: 600 13px/1.4 'Segoe UI', system-ui, sans-serif; }
+main { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 0 16px; }
+p { margin: 0; }
+.titulo { color: #EDF1F7; font-weight: 800; font-size: 15px; }

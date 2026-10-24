@@ -1,0 +1,31 @@
+[package]
+name = "quadro-lombada"
+version = "1.0.0"
+description = "Quadro da portaria (Lombada Educativa): janela pequena, sempre por cima, com a última passagem"
+authors = ["Protector Sistemas de Segurança"]
+license = "UNLICENSED"
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "=2.7.1", features = [] }
+
+[dependencies]
+# Versões exatas (publicadas há mais de 2 semanas em 24/10/2026; conferidas no crates.io)
+tauri = { version = "=2.12.2", features = [] }
+tauri-plugin-opener = "=2.7.0"
+tauri-plugin-window-state = "=2.5.0"
+tauri-plugin-autostart = "=2.7.0"
+tauri-plugin-single-instance = "=2.5.2"
+url = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
+
+[dev-dependencies]
+serde_json = "1"

@@ -45,16 +45,20 @@
     return j ? j.minimize().catch(() => {}) : Promise.resolve();
   }
 
-  const autostart = T && T.autostart ? {
-    ligado: () => T.autostart.isEnabled(),
-    ligar: () => T.autostart.enable(),
-    desligar: () => T.autostart.disable(),
+  // Os módulos dos plugins (autostart, opener) podem entrar em window.__TAURI__
+  // depois deste script: consulta na hora de usar, não no carregamento.
+  const plugin = (nome) => (root.__TAURI__ && root.__TAURI__[nome]) || null;
+  const autostart = ehApp ? {
+    ligado: () => (plugin('autostart') ? plugin('autostart').isEnabled() : Promise.reject(new Error('sem autostart'))),
+    ligar: () => plugin('autostart').enable(),
+    desligar: () => plugin('autostart').disable(),
   } : null;
 
   /** Abre no navegador padrão (programa) ou numa aba nova (navegador comum). */
   function abrirExterno(url, permitida) {
     if (!permitida(url)) return Promise.resolve(false);
-    if (T && T.opener && T.opener.openUrl) return T.opener.openUrl(url).then(() => true, () => false);
+    const opener = plugin('opener');
+    if (opener && opener.openUrl) return opener.openUrl(url).then(() => true, () => false);
     root.open(url, '_blank', 'noopener'); // com noopener o retorno é sempre null
     return Promise.resolve(true);
   }
