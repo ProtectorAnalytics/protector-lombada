@@ -8,11 +8,15 @@
 //! no boot, ela tenta de novo até o site responder).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod navegacao;
+
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use tauri::webview::NewWindowResponse;
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
+use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 const ROTULO: &str = "quadro";
@@ -36,33 +40,41 @@ fn url_de_teste(valor: Option<&str>) -> Option<url::Url> {
     matches!(u.scheme(), "http" | "https").then_some(u)
 }
 
+/// QUADRO_URL só vale em build de desenvolvimento.
+fn url_de_teste_ativa() -> Option<url::Url> {
+    if !cfg!(debug_assertions) {
+        return None;
+    }
+    url_de_teste(std::env::var("QUADRO_URL").ok().as_deref())
+}
+
 /// Página que a janela abre: a de espera (local), que segue para o site.
 fn destino() -> WebviewUrl {
-    if cfg!(debug_assertions) {
-        if let Some(u) = url_de_teste(std::env::var("QUADRO_URL").ok().as_deref()) {
-            return WebviewUrl::External(u);
-        }
+    match url_de_teste_ativa() {
+        Some(u) => WebviewUrl::External(u),
+        None => WebviewUrl::App("index.html".into()),
     }
-    WebviewUrl::App("index.html".into())
+}
+
+/// A capability de produção com outra lista de páginas (teste local).
+fn capability_com_urls(urls: &[String]) -> serde_json::Result<String> {
+    let mut cap: serde_json::Value =
+        serde_json::from_str(include_str!("../capabilities/quadro-remoto.json"))?;
+    cap["identifier"] = serde_json::json!("quadro-teste-local");
+    cap["remote"]["urls"] = serde_json::json!(urls);
+    serde_json::to_string(&cap)
 }
 
 /// Em desenvolvimento, a página de teste (ex.: http://localhost:8787) ganha a
 /// mesma permissão mínima que o site tem em produção.
 fn capability_de_teste(app: &AppHandle) -> tauri::Result<()> {
-    if !cfg!(debug_assertions) {
-        return Ok(());
-    }
-    let Some(u) = url_de_teste(std::env::var("QUADRO_URL").ok().as_deref()) else {
+    let Some(u) = url_de_teste_ativa() else {
         return Ok(());
     };
-    let origem = format!("{}://{}/*", u.scheme(), u.host_str().unwrap_or("localhost"));
-    let origem = match u.port() {
-        Some(p) => origem.replacen("/*", &format!(":{p}/*"), 1),
-        None => origem,
-    };
-    let cap = include_str!("../capabilities/quadro-remoto.json")
-        .replace("\"quadro-remoto\"", "\"quadro-teste-local\"")
-        .replace("https://lombada.appps.com.br/*\"]", &format!("{origem}\"]"));
+    let origem = u.origin().ascii_serialization();
+    // Mesma forma da produção: a origem (o IPC é conferido pelo Origin).
+    let urls = [format!("{origem}/*")];
+    let cap = capability_com_urls(&urls).map_err(|e| tauri::Error::Anyhow(e.into()))?;
     app.add_capability(cap)
 }
 
@@ -86,8 +98,31 @@ fn ligar_autostart_na_primeira_vez(app: &AppHandle) {
     }
 }
 
+/// Endereço recusado: não abre na janela; https vai ao navegador padrão.
+fn desviar_para_o_navegador(app: &AppHandle, u: &url::Url) {
+    if navegacao::abrir_no_navegador(u) {
+        let _ = app.opener().open_url(u.as_str(), None::<&str>);
+    }
+}
+
 fn criar_janela(app: &AppHandle) -> tauri::Result<()> {
+    let teste = url_de_teste_ativa();
+    let app_nav = app.clone();
+    let app_janela = app.clone();
     WebviewWindowBuilder::new(app, ROTULO, destino())
+        .on_navigation(move |u| {
+            let ok = navegacao::permitida(u, teste.as_ref());
+            if !ok {
+                desviar_para_o_navegador(&app_nav, u);
+            }
+            ok
+        })
+        .on_new_window(move |u, _recursos| {
+            if navegacao::janela_nova_vai_ao_navegador(&u) {
+                let _ = app_janela.opener().open_url(u.as_str(), None::<&str>);
+            }
+            NewWindowResponse::Deny
+        })
         .title(TITULO)
         .inner_size(LARGURA, ALTURA)
         .min_inner_size(LARGURA_MIN, ALTURA_MIN)
@@ -201,6 +236,18 @@ mod tests {
         assert!(url_de_teste(Some("javascript:alert(1)")).is_none());
         assert!(url_de_teste(Some("")).is_none());
         assert!(url_de_teste(None).is_none());
+    }
+
+    #[test]
+    fn capability_de_teste_troca_so_a_lista_de_paginas() {
+        let urls = ["http://localhost:8787/quadro".to_string()];
+        let cap: serde_json::Value =
+            serde_json::from_str(&capability_com_urls(&urls).unwrap()).unwrap();
+        assert_eq!(cap["identifier"], "quadro-teste-local");
+        assert_eq!(cap["remote"]["urls"], serde_json::json!(urls));
+        let prod: serde_json::Value =
+            serde_json::from_str(include_str!("../capabilities/quadro-remoto.json")).unwrap();
+        assert_eq!(cap["permissions"], prod["permissions"]);
     }
 
     #[test]
