@@ -165,13 +165,77 @@
     return `${(Math.round(c * p) / 100).toFixed(1)} ${c.toFixed(1)}`;
   }
 
+  // Fotos das últimas passagens: "foto limpa + zoom no carro". A câmera
+  // ALPHADIGI grava uma faixa preta no topo (data, placa, VL:xxKM/H, nome da
+  // lombada); o recorte tira a faixa e aproxima o carro, sempre em caixa 16:9.
+  // Os detalhes da passagem continuam com a foto inteira (com a faixa).
+  const RECORTE_PADRAO = Object.freeze({
+    mini: Object.freeze({ zoom: 1.9, x: 47, y: 26 }),
+    destaque: Object.freeze({ zoom: 1.35, x: 47, y: 22 }),
+  });
+  // Ajuste por câmera (id ou modelo) quando o enquadramento for diferente.
+  // Ex.: { 'MODELO-X': { mini: { y: 30 } } }. Vazio = padrão em todas.
+  const RECORTE_POR_CAMERA = Object.freeze({});
+
+  const numeroEntre = (v, min, max, padrao) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= min && n <= max ? n : padrao;
+  };
+
+  /**
+   * Recorte da miniatura da câmera: { zoom, x, y } (x/y = origem em %).
+   * `tamanho`: 'mini' | 'destaque'. Ajustes por id vencem os por modelo;
+   * valor fora da faixa (zoom 1–3, origem 0–100) volta ao padrão.
+   */
+  function recorteDaFoto(camera, tamanho, ajustes) {
+    const base = RECORTE_PADRAO[tamanho === 'destaque' ? 'destaque' : 'mini'];
+    const mapa = ajustes || RECORTE_POR_CAMERA;
+    const c = camera || {};
+    const porModelo = (c.modelo && mapa[c.modelo] && mapa[c.modelo][tamanho]) || {};
+    const porId = (c.id && mapa[c.id] && mapa[c.id][tamanho]) || {};
+    const a = Object.assign({}, porModelo, porId);
+    return {
+      zoom: numeroEntre(a.zoom, 1, 3, base.zoom),
+      x: numeroEntre(a.x, 0, 100, base.x),
+      y: numeroEntre(a.y, 0, 100, base.y),
+    };
+  }
+
+  /** Estilo (variáveis CSS) do recorte, para o atributo style da foto. */
+  function estiloRecorte(r) {
+    return `--zoom:${Number(r.zoom)};--ox:${Number(r.x)}%;--oy:${Number(r.y)}%`;
+  }
+
+  /**
+   * Linha de comparação com ontem no MESMO horário (00:00 até agora − 24 h).
+   * hoje/ontem: { alertas, maxVel, dentroPct (null = sem passagem) }.
+   * `bom` = melhor que ontem (menos alertas, máxima menor, mais dentro do limite).
+   */
+  function comparacaoComOntem(hoje, ontem) {
+    const vazio = { texto: '', bom: false };
+    if (!hoje || !ontem) return { alertas: vazio, maxVel: vazio, dentro: vazio };
+    const seta = (d, sufixo) => (d === 0 ? 'igual a ontem' : `${d < 0 ? '▼' : '▲'} ${Math.abs(d)}${sufixo} vs ontem`);
+    const dA = (Number(hoje.alertas) || 0) - (Number(ontem.alertas) || 0);
+    const alertas = { texto: seta(dA, ''), bom: dA < 0 };
+    const mOntem = Number(ontem.maxVel) || 0;
+    const maxVel = mOntem > 0
+      ? { texto: `ontem ${mOntem} km/h`, bom: (Number(hoje.maxVel) || 0) < mOntem }
+      : { texto: 'ontem sem velocidade medida', bom: false };
+    let dentro = vazio;
+    if (hoje.dentroPct !== null && hoje.dentroPct !== undefined && ontem.dentroPct !== null && ontem.dentroPct !== undefined) {
+      const dD = Math.round(Number(hoje.dentroPct) - Number(ontem.dentroPct));
+      dentro = { texto: seta(dD, ' p.p.'), bom: dD > 0 };
+    }
+    return { alertas, maxVel, dentro };
+  }
+
   /** "8ª" (o selo curto da lista); só da 2ª passagem do dia em diante. */
   function ordinalCurto(n) {
     return Number.isInteger(n) && n >= 2 ? `${n}ª` : '';
   }
 
   return Object.freeze({
-    CALOR_MIN_PCT, CALOR_FAIXA_PCT, ANEL_RAIO,
+    CALOR_MIN_PCT, CALOR_FAIXA_PCT, ANEL_RAIO, RECORTE_PADRAO, recorteDaFoto, estiloRecorte, comparacaoComOntem,
     somarDias, diaDaSemana, inicioDaSemana, diasDaSemana, rotuloSemana, rotuloSemanaLongo, podeAvancar,
     colunasDaSemana, diasComDados, intensidadeCalor, tabelaDaSemana, estadoIconeCamera, tracoDoAnel, ordinalCurto,
   });

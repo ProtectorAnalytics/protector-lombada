@@ -102,4 +102,29 @@ caso('anel "Dentro do limite" e selo curto da lista', () => {
   assert.strictEqual(lib.ordinalCurto(undefined), '');
 });
 
+caso('foto limpa + zoom no carro: padrão, ajuste por modelo/id e valores inválidos', () => {
+  assert.deepStrictEqual(lib.recorteDaFoto(null, 'mini'), { zoom: 1.9, x: 47, y: 26 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c1' }, 'destaque'), { zoom: 1.35, x: 47, y: 22 });
+  const ajustes = { 'MOD-A': { mini: { y: 30 } }, c9: { mini: { zoom: 1.5 } }, ruim: { mini: { zoom: 9, x: -5, y: 'a' } } };
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c1', modelo: 'MOD-A' }, 'mini', ajustes), { zoom: 1.9, x: 47, y: 30 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'c9', modelo: 'MOD-A' }, 'mini', ajustes), { zoom: 1.5, x: 47, y: 30 });
+  assert.deepStrictEqual(lib.recorteDaFoto({ id: 'ruim' }, 'mini', ajustes), { zoom: 1.9, x: 47, y: 26 });
+  assert.strictEqual(lib.estiloRecorte({ zoom: 1.9, x: 47, y: 26 }), '--zoom:1.9;--ox:47%;--oy:26%');
+});
+
+caso('comparação com ontem no mesmo horário: setas, p.p. e verde quando melhora', () => {
+  const c = lib.comparacaoComOntem({ alertas: 28, maxVel: 46, dentroPct: 95 }, { alertas: 42, maxVel: 48, dentroPct: 92 });
+  assert.deepStrictEqual(c.alertas, { texto: '▼ 14 vs ontem', bom: true });
+  assert.deepStrictEqual(c.maxVel, { texto: 'ontem 48 km/h', bom: true });
+  assert.deepStrictEqual(c.dentro, { texto: '▲ 3 p.p. vs ontem', bom: true });
+  const pior = lib.comparacaoComOntem({ alertas: 5, maxVel: 60, dentroPct: 80 }, { alertas: 2, maxVel: 50, dentroPct: 90 });
+  assert.deepStrictEqual(pior.alertas, { texto: '▲ 3 vs ontem', bom: false });
+  assert.strictEqual(pior.maxVel.bom, false);
+  assert.deepStrictEqual(pior.dentro, { texto: '▼ 10 p.p. vs ontem', bom: false });
+  assert.strictEqual(lib.comparacaoComOntem({ alertas: 2, maxVel: 0, dentroPct: null }, { alertas: 2, maxVel: 0, dentroPct: 90 }).alertas.texto, 'igual a ontem');
+  assert.strictEqual(lib.comparacaoComOntem({ alertas: 2, maxVel: 0, dentroPct: null }, { alertas: 2, maxVel: 0, dentroPct: 90 }).dentro.texto, '');
+  assert.strictEqual(lib.comparacaoComOntem({ alertas: 1, maxVel: 30 }, { alertas: 0, maxVel: 0 }).maxVel.texto, 'ontem sem velocidade medida');
+  assert.strictEqual(lib.comparacaoComOntem(null, null).alertas.texto, '');
+});
+
 console.log(`\n${passou} casos ok`);

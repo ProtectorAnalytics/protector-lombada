@@ -384,7 +384,10 @@ caso('painel: campos no "Mais filtros", scripts na ordem e drill-down ligado', (
   assert.ok(PAINEL.includes('`<option value="${esc(r)}"></option>`'));
   // Todos os consumidores do período passam pela conferência do cadastro
   assert.ok(!/soNaoCadastradasSeAtivo\(f, await linhasDe/.test(PAINEL));
-  assert.strictEqual((PAINEL.match(/filtrarNoCliente\(f, await linhasDe\(montar\)\)/g) || []).length, 4);
+  // consultaELinhas (indicadores, Top 10), alertas e exportação; o gráfico
+  // "Passagens por hora" saiu da tela na 1.15.0
+  assert.strictEqual((PAINEL.match(/filtrarNoCliente\(f, await linhasDe\(montar\)\)/g) || []).length, 3);
+  assert.ok(!PAINEL.includes('async function loadHourlyChart('));
   assert.ok(PAINEL.includes("consultaELinhas('placa, velocidade, timestamp')")); // Top 10 precisa da hora
   // Sem `ou` (ou "Sem cadastro") a lista confere no cliente; com `ou` o servidor filtra e pagina
   assert.ok(PAINEL.includes('const conferir = fc.ativo && !fc.ou;'));

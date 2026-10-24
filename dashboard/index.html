@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Protector Traffic Control - Lombada Educativa</title>
   <link rel="icon" type="image/png" href="https://appps.com.br/assets/logo-protector.png">
+  <!-- Manrope (texto) + JetBrains Mono (números e placas) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Manrope:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="/css/portaria-gestao.css">
   <link rel="stylesheet" href="/css/avisos-email.css">
   <script>
@@ -84,16 +88,16 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg-primary: #080C14;
-      --bg-secondary: #0D1421;
-      --bg-card: #111827;
-      --bg-input: #1A2235;
+      --bg-primary: #070A10;
+      --bg-secondary: #0A0E16;
+      --bg-card: #0D121B;
+      --bg-input: #121926;
       --accent: #3B82F6;
       --accent-hover: #2563EB;
       --accent-light: rgba(59,130,246,0.1);
-      --text-primary: #F1F5F9;
-      --text-secondary: #94A3B8;
-      --text-muted: #8A93A6;                    /* ≥4,5:1 nos fundos do escuro (#1A2235: 5,1; #111827: 5,8; #080C14: 6,3) */
+      --text-primary: #EDF1F7;
+      --text-secondary: #B6C0CF;
+      --text-muted: #8B96A8;                    /* ≥4,5:1 nos fundos do escuro (#182131: 4,9; #0D121B: 5,9; #070A10: 6,4) */
       --border: rgba(255,255,255,0.07);
       --green: #22C55E;
       --orange: #F97316;
@@ -115,12 +119,12 @@
       --radius: 10px;
       /* Só propriedades baratas: `all` animava sombra e padding (repaint/layout) */
       --transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s;
-      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      --font-sans: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
       /* Tokens que mudam entre claro e escuro (tema escuro é o padrão) */
       color-scheme: dark;
-      --bg-hover: #1E293B;
+      --bg-hover: #182131;
       --bg-login: linear-gradient(135deg, #0A0E27 0%, #060A12 60%, #0D1A2D 100%);
       --login-box-bg: rgba(13,20,33,0.97);
       --glass-bg: rgba(17,24,39,0.72);          /* barra do topo (material) */
@@ -151,7 +155,24 @@
       --chart-value: #E2E8F0;
       --chart-line-rgb: 59,130,246;
       --chart-alert-rgb: 239,68,68;
-      --chart-dot-ring: #111827;
+      --chart-dot-ring: #0D121B;
+      /* v1.15.0 (visual novo): superfícies, linhas finas e cores de estado */
+      --s3: #182131;
+      --hair: rgba(255,255,255,0.07);
+      --hair2: rgba(255,255,255,0.12);
+      --azul: #6EA2FF;                          /* texto azul ≥4,5:1 em #182131 */
+      --azul-forte: #2563EB;                    /* fundo de botão com texto branco (5,2:1) */
+      --azul-tinta: rgba(76,141,255,0.14);
+      --ok: #34D399;
+      --alerta: #F87171;
+      --ambar: #FBBF24;
+      --alerta-tinta: rgba(248,113,113,0.10);
+      --novo-tinta: rgba(76,141,255,0.09);
+      --vidro: rgba(7,10,16,0.72);
+      --dica-bg: rgba(24,33,49,0.97);
+      --brilho-cartao: linear-gradient(180deg, rgba(255,255,255,0.025), transparent 40%);
+      --sombra-cartao: 0 1px 0 rgba(255,255,255,0.04) inset;
+      --fundo-painel: radial-gradient(1200px 400px at 20% -10%, rgba(76,141,255,0.12), transparent 60%);
     }
 
     /* Tema claro: mesma hierarquia, contraste AA (texto secundário ≥ 4.5:1) */
@@ -216,6 +237,22 @@
       --chart-line-rgb: 37,99,235;
       --chart-alert-rgb: 185,28,28;
       --chart-dot-ring: #FFFFFF;
+      --s3: #E5EAF0;
+      --hair: rgba(15,23,42,0.08);
+      --hair2: rgba(15,23,42,0.14);
+      --azul: #1D4ED8;
+      --azul-forte: #2563EB;
+      --azul-tinta: rgba(37,99,235,0.10);
+      --ok: #15803D;
+      --alerta: #B91C1C;
+      --ambar: #A16207;
+      --alerta-tinta: rgba(220,38,38,0.07);
+      --novo-tinta: rgba(37,99,235,0.08);
+      --vidro: rgba(255,255,255,0.74);
+      --dica-bg: rgba(255,255,255,0.98);
+      --brilho-cartao: linear-gradient(180deg, rgba(255,255,255,0.6), transparent 40%);
+      --sombra-cartao: 0 1px 2px rgba(15,23,42,0.05), 0 1px 3px rgba(15,23,42,0.06);
+      --fundo-painel: radial-gradient(1200px 400px at 20% -10%, rgba(37,99,235,0.07), transparent 60%);
     }
 
     /* Troca de tema sem salto brusco de brilho: cores cruzam em 200 ms */
@@ -376,7 +413,7 @@
       border-left: 1px solid var(--border);
     }
     .topbar-sobrelinha {
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.04em;
       color: var(--text-secondary);
@@ -556,209 +593,38 @@
       right: 16px;
     }
 
-    /* Layout 2 colunas: conteúdo fluido + sidebar unificada */
-    .main-layout {
-      display: grid;
-      grid-template-columns: 1fr clamp(280px, 20vw, 400px);
-      gap: 12px;
-      padding: 12px clamp(12px, 2vw, 48px);
-      height: calc(100vh - 64px);
-      overflow: hidden;
-    }
-
-    /* Coluna esquerda: todo conteúdo em sequência */
-    .left-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    /* Compatibilidade: content-area não é mais usada */
-    .content-area { display: contents; }
-
-    /* Recent Cards — Grade 3×2 uniforme para sala de monitoramento */
-    .recent-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .recent-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 0;
-      cursor: pointer;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-      /* rodapé de 2 linhas fixas: todos os cards com a mesma altura */
-      --rc-info-h: 3.25rem;
-    }
-
-    .recent-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    /* Alert card: colored border glow */
-    .recent-card.alerta {
-      border-color: rgba(239,68,68,0.55);
-      box-shadow: 0 0 0 1px rgba(239,68,68,0.12) inset;
-    }
-
-    /* Image fills card top — dominant para sala de monitoramento */
-    .recent-card .rc-thumb {
-      width: 100%;
-      height: 190px;
-      object-fit: cover;
-      border-radius: 0;
-      margin-bottom: 0;
-      display: block;
-      background: var(--surface-2);
-      filter: brightness(0.9) contrast(1.08);
-    }
-
-    .recent-card .rc-no-photo {
-      width: 100%;
-      height: 190px;
-      border-radius: 0;
-      margin-bottom: 0;
-      background: var(--surface-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 2rem;
-    }
-
-    /* Gradient: cobre terço inferior da imagem para legibilidade */
-    .recent-card::before {
-      content: '';
-      position: absolute;
-      left: 0; right: 0;
-      bottom: var(--rc-info-h); /* altura da info-bar */
-      height: 90px;
-      background: linear-gradient(to top,
-        rgba(0,0,0,0.88) 0%,
-        rgba(0,0,0,0.55) 45%,
-        transparent 100%);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Plate: chip escuro na base da imagem */
-    .recent-card .rc-placa {
-      position: absolute;
-      bottom: calc(var(--rc-info-h) + 6px);
-      left: 8px;
-      font-size: 0.9375rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      font-family: var(--font-mono);
-      color: #FFFFFF;
-      background: rgba(0,0,0,0.8);
-      padding: 4px 9px;
-      border-radius: 4px;
-      margin-bottom: 0;
-      z-index: 2;
-      line-height: 1.3;
-    }
-
-    /* Speed: chip canto superior direito */
-    .recent-card .rc-vel {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      font-size: 1.0625rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      background: rgba(13,22,38,0.92); /* opaco: legível sobre qualquer foto */
-      padding: 4px 10px;
-      border-radius: 4px;
-      margin-bottom: 0;
-      z-index: 2;
-      line-height: 1.3;
-    }
-
-    .recent-card .rc-vel.green { color: #22C55E; }
-    /* Alerta: fundo vermelho opaco + texto branco (não depende só de cor do número) */
-    .recent-card .rc-vel.red { color: #FFFFFF; background: var(--red-dark); }
-    .recent-card .rc-vel.unknown { color: #94A3B8; }
-
-    /* Info bar: linha 1 = nome ↔ horário; linha 2 = veículo (altura fixa) */
-    .recent-card .rc-info {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 2px;
-      padding: 0 10px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-card);
-      height: var(--rc-info-h);
-      box-sizing: border-box;
-      min-width: 0;
-    }
-    .recent-card .rc-linha {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      min-width: 0;
-    }
-    .recent-card .rc-info .rc-name {
-      font-size: 0.6875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
-    }
-    .recent-card .rc-info .rc-time {
-      font-size: 0.6875rem;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
     /* Linha do veículo (cards e tabela): texto corta com reticências */
     .vb-linha {
       display: flex; align-items: center; gap: 5px; min-width: 0;
-      font-size: 0.6875rem; line-height: 1.35; color: var(--text-secondary);
+      font-size: 0.75rem; line-height: 1.35; color: var(--text-secondary);
     }
     .vb-linha .vb-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .vb-linha.vb-vazio { color: var(--text-secondary); }
     .vb-linha.vb-estado { color: var(--text-secondary); font-style: italic; }
     .vb-linha.vb-alerta { color: var(--orange); font-weight: 600; }
     .vb-cor {
-      flex-shrink: 0; width: 0.625rem; height: 0.625rem; border-radius: 50%;
+      flex-shrink: 0; width: 0.75rem; height: 0.75rem; border-radius: 50%;
       box-shadow: 0 0 0 1px rgba(127,127,127,0.55) inset; /* borda: o branco aparece no tema claro */
     }
     .vb-nome {
-      font-size: 0.6875rem; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+      font-size: 0.75rem; font-weight: 600; color: var(--text-primary); line-height: 1.3;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .table-row .veiculo-info, .table-row .morador-info { min-width: 0; }
     .morador-nome {
-      font-size: 0.6875rem; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+      font-size: 0.75rem; font-weight: 600; color: var(--text-primary); line-height: 1.3;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     /* text-secondary: o text-muted do tema escuro fica abaixo de 4.5:1 */
     .morador-sub, .morador-nc {
-      font-size: 0.6875rem; color: var(--text-secondary);
+      font-size: 0.75rem; color: var(--text-secondary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     /* Tipo de pessoa: ícone + rótulo sempre juntos (não depende só da cor) */
     .tipo-pessoa { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; white-space: nowrap; vertical-align: middle; }
     .tipo-pessoa svg, .tipo-ic { width: 14px; height: 14px; flex: none; }
     .tipo-ic { display: inline-block; vertical-align: -2px; margin-right: 3px; }
-    .morador-tipo { font-size: 0.6875rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .morador-tipo { font-size: 0.75rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .morador-nc .tipo-pessoa { font-weight: 500; }
     .vb-form select {
       flex: 1 1 160px; min-width: 0; min-height: 44px; box-sizing: border-box;
@@ -781,11 +647,11 @@
     .vb-quadro p { margin: 0 0 10px; font-size: 0.8125rem; color: var(--text-primary); line-height: 1.45; }
     .vb-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 0.8125rem; }
     .vb-grid span {
-      display: block; color: var(--text-secondary); font-size: 0.6875rem; font-weight: 600;
+      display: block; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.02em;
     }
     .vb-grid strong { color: var(--text-primary); overflow-wrap: anywhere; }
-    .vb-fonte { margin-top: 8px; font-size: 0.6875rem; color: var(--text-muted); }
+    .vb-fonte { margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); }
     .vb-form { display: flex; flex-wrap: wrap; gap: 8px; }
     .vb-form input {
       flex: 1 1 160px; min-width: 0; min-height: 44px; box-sizing: border-box;
@@ -815,109 +681,7 @@
       outline: 2px solid var(--accent); outline-offset: 2px;
     }
 
-    /* Selo OK/ALERTA: fundo opaco (o mesmo da velocidade) colado no canto
-       superior esquerdo, cobrindo a faixa onde a câmera escreve a tag ("R03").
-       Cores fixas: o fundo é escuro nos dois temas (texto ≥ 5:1 no pior pixel) */
-    .recent-card .rc-badge {
-      position: absolute;
-      top: 0;
-      left: 0;
-      font-size: 0.6875rem;
-      line-height: 1.3;
-      padding: 4px 9px 4px 8px;
-      border-radius: 0 0 6px 0; /* arredonda só o lado de dentro da foto */
-      font-weight: 700;
-      text-transform: uppercase;
-      z-index: 3;
-      border: none;
-      background: rgba(13,22,38,0.92);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
 
-    .recent-card .rc-badge.ok-badge { color: #4ADE80; }
-    .recent-card .rc-badge.noradar-badge { color: #CBD5E1; }
-
-    /* Tabela: ocupa o espaço restante da left-panel */
-    .left-panel > .table-container {
-      flex: 1;
-      min-height: 0;
-    }
-
-    /* Indicadores: número grande (tracking negativo), rótulo em caixa normal,
-       unidade ao lado; Passagens e Alertas em destaque. Superfície sólida
-       (sem vidro), tingida só pela semântica. */
-    .stats-row {
-      display: grid;
-      grid-template-columns: 1.25fr 1.25fr 1fr 1fr;
-      gap: 10px;
-    }
-
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 16px 13px;
-      text-align: left;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-    .stat-card.destaque { background: linear-gradient(var(--tint-accent), var(--tint-accent)), var(--bg-card); }
-
-    .stat-card .label {
-      color: var(--text-secondary);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      letter-spacing: 0;
-      line-height: 1.3;
-    }
-
-    .stat-card .valor-linha {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .stat-card .value {
-      font-size: 1.75rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1.05;
-      font-variant-numeric: tabular-nums;
-      color: var(--text-primary);
-    }
-    .stat-card.destaque .value { font-size: 2.125rem; }
-
-    .stat-card .value.red { color: var(--red); }
-    .stat-card .value.green { color: var(--green); }
-
-    /* "Alertas hoje" > 0: tinta vermelha leve (a semântica tinge o card) */
-    .stat-card.alert-active {
-      background: linear-gradient(var(--tint-red), var(--tint-red)), var(--bg-card);
-      border-color: rgba(239,68,68,0.35);
-    }
-
-    .stat-card .unit {
-      color: var(--text-secondary);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-
-    /* Agora · hoje: KPIs e cards ao vivo não seguem os filtros */
-    .secao-titulo {
-      margin: 0;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--text-secondary);
-    }
 
     /* ===== Filtros do período: perguntas prontas, barra de 1 linha, chips ===== */
     .visualmente-oculto {
@@ -969,7 +733,7 @@
     .rotulo-celular { display: none; }
     .contador-filtros {
       min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px;
-      background: var(--accent); color: #fff; font-size: 0.6875rem; line-height: 20px; text-align: center;
+      background: var(--accent); color: #fff; font-size: 0.75rem; line-height: 20px; text-align: center;
     }
     .contador-filtros[hidden] { display: none; }
 
@@ -985,7 +749,7 @@
     .busca-lista:empty { display: none; }
     .busca-rodape {
       margin: 0; padding: 6px 10px 4px; border-top: 1px solid var(--border);
-      font-size: 0.6875rem; color: var(--text-secondary);
+      font-size: 0.75rem; color: var(--text-secondary);
     }
     .busca-lista:empty + .busca-rodape { border-top: none; font-size: 0.8125rem; padding: 10px; }
     .busca-pop {
@@ -996,7 +760,7 @@
     }
     .busca-pop[hidden] { display: none; }
     .busca-grupo-titulo {
-      padding: 8px 10px 4px; font-size: 0.6875rem; font-weight: 700;
+      padding: 8px 10px 4px; font-size: 0.75rem; font-weight: 700;
       letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary);
     }
     .busca-opcao {
@@ -1104,69 +868,6 @@
     button.cam-pill { border: none; font-family: var(--font-sans); cursor: pointer; }
     button.cam-pill:hover { background: var(--bg-input); }
 
-    /* Celular: [Período ▾] [🔍] [Filtros (n)] numa linha; busca expande ao tocar */
-    @media (max-width: 600px) {
-      .visoes { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 0 2px; }
-      .visoes::-webkit-scrollbar { display: none; }
-      .filtros-topo { flex-wrap: wrap; }
-      .filtros-topo .visoes { order: 3; flex-basis: 100%; }
-      /* Câmeras numa linha só, rolando na horizontal (como as perguntas prontas) */
-      .agora-cabecalho .cameras-status {
-        order: 3; flex: 1 1 100%; min-width: 0; flex-wrap: nowrap;
-        overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 0 2px;
-      }
-      .agora-cabecalho .cameras-status::-webkit-scrollbar { display: none; }
-      .cam-pill { flex-shrink: 0; }
-      .visao { min-height: 36px; flex-shrink: 0; }
-      .barra-filtros { flex-wrap: nowrap; padding: 6px; gap: 6px; }
-      .barra-btn, .busca-wrap input { min-height: 44px; }
-      .barra-filtros > .barra-grupo { display: none; }
-      .rotulo-desktop { display: none; }
-      .rotulo-celular { display: inline; }
-      #btn-periodo { flex: 1 1 auto; min-width: 0; overflow: hidden; }
-      #rotulo-periodo { overflow: hidden; text-overflow: ellipsis; }
-      .busca-wrap { flex: 0 0 44px; min-width: 44px; }
-      .busca-wrap input { padding-right: 0; }
-      .busca-wrap input::placeholder { color: transparent; }
-      .busca-wrap:focus-within { flex: 1 1 100%; }
-      .busca-wrap:focus-within input::placeholder { color: var(--placeholder); }
-      .barra-filtros:has(.busca-wrap:focus-within) > .barra-btn { display: none; }
-      .busca-pop { width: 100%; }
-      .chip { max-width: 100%; }
-      .filtros { scroll-margin-top: 100px; } /* topo do celular é mais alto */
-    }
-    /* Tablet / coluna estreita: a barra continua em 1 linha. "Mais filtros" vira
-       ícone (o nome acessível fica no aria-label) e período/câmera encolhem. */
-    @container filtros (max-width: 960px) {
-      .barra-filtros { flex-wrap: nowrap; }
-      #btn-periodo { max-width: 190px; min-width: 0; }
-      #rotulo-periodo { overflow: hidden; text-overflow: ellipsis; }
-      .barra-select { max-width: 160px; }
-      .busca-wrap { flex: 1 1 120px; min-width: 120px; }
-    }
-    @container filtros (max-width: 860px) {
-      .barra-filtros { flex-wrap: nowrap; }
-      #btn-mais-filtros .rotulo-desktop { display: none; }
-      #btn-periodo { max-width: 170px; min-width: 0; }
-      #rotulo-periodo { overflow: hidden; text-overflow: ellipsis; }
-      .barra-select { max-width: 150px; }
-      .busca-wrap { flex: 1 1 100px; min-width: 100px; }
-    }
-    /* Mais estreito: busca vira lupa que expande ao tocar; "Acima do limite" → "Acima" */
-    @container filtros (max-width: 760px) {
-      .seg-longo { display: none; }
-      .busca-wrap { flex: 0 0 44px; min-width: 44px; }
-      .busca-wrap input { padding-right: 0; }
-      .busca-wrap input::placeholder { color: transparent; }
-      .busca-wrap:focus-within { flex: 1 1 100%; }
-      .busca-wrap:focus-within input::placeholder { color: var(--placeholder); }
-      .barra-filtros:has(.busca-wrap:focus-within) > :not(.busca-wrap) { display: none; }
-      .busca-pop { width: 100%; }
-    }
-    @container filtros (max-width: 620px) {
-      #btn-periodo { max-width: 130px; }
-      .barra-select { max-width: 120px; }
-    }
     /* Toque: alvos de 44 px. Fica DEPOIS do bloco do celular para vencer os 36 px dele */
     @media (pointer: coarse) {
       .dd { margin: -12px -6px; padding: 12px 6px; }
@@ -1191,26 +892,6 @@
       outline-offset: 2px;
     }
 
-    /* Linha 1 dos filtros: título da lista (período ativo) · perguntas prontas · Exportar */
-    .filtros-topo {
-      display: flex;
-      align-items: center;
-      gap: 6px 12px;
-      min-width: 0;
-    }
-    .filtros-topo .visoes { flex: 1 1 auto; min-width: 0; }
-    .filtros-topo .export-wrap { margin-left: auto; flex-shrink: 0; }
-    .tabela-titulo {
-      flex: 0 1 auto;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin: 0;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
     .export-wrap { position: relative; }
     .btn-secundario {
       display: inline-flex;
@@ -1261,322 +942,6 @@
     @media (max-width: 600px), (pointer: coarse) {
       .btn-secundario, .btn-link { min-height: 44px; }
     }
-
-    /* Table */
-    .table-container {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
-    }
-
-    .table-header {
-      display: grid;
-      grid-template-columns: var(--colunas-lista);
-      gap: 8px;
-      padding: 10px 14px;
-      /* Cabeçalho discreto: a faixa azul sólida competia com os dados (hierarquia) */
-      background: var(--surface-2);
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.6875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-weight: 600;
-    }
-
-    .table-body {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .table-pagination {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 14px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-input);
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-    .table-pagination .pg-info {
-      font-weight: 500;
-    }
-    .table-pagination .pg-controls {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .table-pagination .pg-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-family: var(--font-sans);
-      font-size: 0.75rem;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: var(--transition);
-    }
-    .table-pagination .pg-btn:hover:not(:disabled) {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .table-pagination .pg-btn:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-    .table-pagination .pg-btn.active {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-    /* Toque e celular: botões da paginação com alvo de 44 px */
-    @media (pointer: coarse), (max-width: 600px) {
-      .table-pagination .pg-btn { min-width: 44px; min-height: 44px; padding: 4px 8px; }
-      .table-pagination .pg-controls { flex-wrap: wrap; justify-content: center; }
-    }
-    .table-pagination .pg-current {
-      font-weight: 600;
-      color: var(--text-primary);
-      padding: 0 6px;
-    }
-
-    .table-row {
-      display: grid;
-      grid-template-columns: var(--colunas-lista);
-      gap: 8px;
-      padding: 6px 14px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: var(--transition);
-      font-size: 0.8125rem;
-      align-items: center;
-    }
-
-    .table-row:hover {
-      background: var(--accent-light);
-    }
-
-    .table-row .row-thumb {
-      width: 40px;
-      height: 28px;
-      object-fit: cover;
-      border-radius: 4px;
-      background: var(--bg-input);
-    }
-
-    .table-row .row-no-thumb {
-      width: 40px;
-      height: 28px;
-      border-radius: 4px;
-      background: var(--bg-input);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 0.75rem;
-    }
-
-    .table-row .placa {
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      font-family: var(--font-mono);
-    }
-
-    .table-row .vel {
-      font-weight: 700;
-      font-size: 0.9375rem;
-      font-family: var(--font-mono);
-      white-space: nowrap;
-    }
-
-    .table-row .vel.green { color: var(--green); }
-    .table-row .vel.red { color: var(--red); font-weight: 800; }
-    .table-row .vel.unknown { color: var(--text-muted); } /* sem opacidade: ≥4,5:1 nos dois temas */
-
-    /* Radar: uma linha com reticências (nome completo no title). A célula
-       ocupa a altura da linha para o alvo do botão não ser cortado */
-    .table-row .celula-radar {
-      align-self: stretch; display: flex; align-items: center;
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      font-size: 0.6875rem; color: var(--text-secondary); font-weight: 500;
-    }
-    .table-row .celula-radar .dd {
-      margin: 0; padding: 4px 2px; min-width: 0; max-width: 100%;
-      overflow: hidden; text-overflow: ellipsis;
-    }
-    .table-row .celula-radar .dd:focus-visible { outline-offset: -2px; }
-    @media (pointer: coarse) { .table-row .celula-radar .dd { padding: 12px 2px; } }
-
-    .table-row .datetime {
-      color: var(--text-secondary);
-      font-size: 0.8125rem;
-    }
-
-    .table-row .morador-info {
-      font-size: 0.6875rem;
-      color: var(--text-muted);
-    }
-
-    .table-empty {
-      padding: 30px;
-      text-align: center;
-      color: var(--text-secondary);
-      font-size: 0.9375rem;
-    }
-    .table-empty p { margin: 0; }
-    .table-empty .btn-secundario { margin-top: 12px; }
-
-    /* Sidebar unificada: altura total, scroll próprio */
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow-y: auto;
-      height: 100%;
-      min-height: 0;
-    }
-
-    .sidebar-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
-      min-height: 0;
-    }
-
-    /* Card que ocupa o espaço restante da sidebar (Top 10) */
-    .sidebar-card.sidebar-card-flex {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .sidebar-card.sidebar-card-flex .ranking-list {
-      flex: 1;
-      overflow-y: auto;
-      min-height: 0;
-      margin-right: -4px;
-      padding-right: 4px;
-    }
-
-    .sidebar-card h3 {
-      color: var(--accent);
-      font-size: 0.6875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 8px;
-    }
-
-    .chart-container {
-      height: 130px;
-      position: relative;
-    }
-
-    /* KPIs compactos na sidebar */
-    .sidebar-kpis {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .sidebar-kpi {
-      background: var(--bg-input);
-      border-radius: 8px;
-      padding: 8px 6px;
-      text-align: center;
-      border: 1px solid transparent;
-      transition: border-color 0.2s;
-    }
-    .sidebar-kpi:hover {
-      border-color: var(--accent);
-    }
-    .sidebar-kpi-label {
-      font-size: 0.6875rem;
-      color: var(--text-secondary); /* muted no claro ficava em 4,31:1 sobre o fundo do KPI */
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      font-weight: 700;
-      margin-bottom: 3px;
-    }
-    .sidebar-kpi-value {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: var(--accent);
-      line-height: 1.1;
-    }
-    .sidebar-kpi-unit {
-      font-size: 0.6875rem;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-
-    .chart-container canvas {
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    .ranking-list { list-style: none; }
-
-    .ranking-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0;
-      margin: 0 -4px;
-      border-bottom: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.8125rem;
-      transition: background 0.15s, color 0.15s;
-    }
-    /* Linha sem botão ("Carregando...", "Sem dados"): texto, não alvo de clique */
-    .ranking-item:not(:has(.ranking-btn)) { padding: 7px 10px; cursor: default; }
-
-    .ranking-item:has(.ranking-btn):hover {
-      color: var(--accent);
-      background: var(--accent-light);
-    }
-    .ranking-item:last-child { border-bottom: none; }
-
-    .ranking-item .pos {
-      color: var(--accent);
-      font-weight: 700;
-      width: 22px;
-      font-size: 0.75rem;
-    }
-
-    .ranking-item .placa {
-      font-weight: 600;
-      flex: 1;
-      letter-spacing: 0.06em;
-      font-family: var(--font-mono);
-    }
-
-    .ranking-item .count {
-      color: var(--text-secondary);
-      font-size: 0.6875rem;
-      background: var(--bg-input);
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
-    /* Recordes: velocidade em destaque, dia do recorde discreto ao lado */
-    .ranking-item .recorde-dia {
-      color: var(--text-muted);
-      font-size: 0.6875rem;
-      margin-right: 8px;
-      font-variant-numeric: tabular-nums;
-    }
-    .ranking-item .count.acima { color: var(--red); }
 
     /* Faixa da equipe Protector no painel de um condomínio */
     .faixa-admin {
@@ -1787,7 +1152,7 @@
     }
 
     .modal-field .label {
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       color: var(--text-secondary); /* muted no claro: 4,31:1 sobre o campo */
       text-transform: uppercase;
       font-weight: 600;
@@ -1828,7 +1193,7 @@
 
     .modal-morador .morador-grid span {
       color: var(--text-secondary);
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
       display: block;
       font-weight: 600;
@@ -1862,7 +1227,7 @@
       padding: 4px 6px;
       text-align: center;
       min-width: 60px;
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       line-height: 1.3;
     }
     /* Acima do limite: ▲ + fundo tingido, não só a cor do número */
@@ -1873,7 +1238,7 @@
 
     .historico-cell .h-date {
       color: var(--text-secondary);
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
     }
 
@@ -1932,7 +1297,7 @@
     /* Pulsa só enquanto loadAll roda: piscar sempre dizia "ao vivo" até com a rede fora */
     .loading-dot.ativo { animation: pulse 1.5s ease-in-out infinite; }
     .ultima-atualizacao {
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       color: var(--text-secondary);
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
@@ -2228,7 +1593,7 @@
       color: var(--red);
       border-radius: 6px;
       padding: 3px 8px;
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       cursor: pointer;
       transition: var(--transition);
       margin-left: 8px;
@@ -2245,7 +1610,7 @@
       color: var(--text-primary);
       border-radius: 6px;
       padding: 3px 8px;
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       font-family: var(--font-sans);
       cursor: pointer;
       transition: var(--transition);
@@ -2256,7 +1621,7 @@
     .vm-lista > .vb-quadro { margin: 8px 0; }
     /* Histórico de alterações */
     .vh-filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
-    .vh-filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 0.6875rem; font-weight: 600; color: var(--text-secondary); flex: 1 1 130px; min-width: 0; }
+    .vh-filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); flex: 1 1 130px; min-width: 0; }
     .vh-filtros input {
       min-height: 40px; box-sizing: border-box; padding: 8px 10px; font-family: var(--font-sans); font-size: 0.8125rem;
       color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; width: 100%;
@@ -2304,268 +1669,6 @@
     .vm-lista-pagination button:disabled {
       opacity: 0.4;
       cursor: default;
-    }
-
-    /* Responsive */
-    /* Ultrawide (2560px+): 6 colunas */
-    @media (min-width: 2560px) {
-      .main-layout { padding: 16px 32px; }
-      .recent-cards { grid-template-columns: repeat(6, 1fr); }
-      .recent-card .rc-thumb { height: 180px; }
-      .stat-card .value { font-size: 2rem; }
-      .stat-card.destaque .value { font-size: 2.375rem; }
-      .topbar { padding: 12px 40px; }
-    }
-
-    /* Super ultrawide (3440px+): 6 colunas maiores */
-    @media (min-width: 3440px) {
-      .main-layout { padding: 20px 48px; max-width: 3200px; margin: 0 auto; }
-      .recent-card .rc-thumb { height: 220px; }
-      .stat-card .value { font-size: 2.25rem; }
-      .stat-card.destaque .value { font-size: 2.625rem; }
-      body { font-size: 0.9375rem; }
-    }
-
-    /* Telas menores */
-    @media (max-width: 1200px) {
-      .recent-cards { grid-template-columns: repeat(3, 1fr); } /* mantém 3 colunas */
-    }
-
-    /* Compressão pra laptops 1366×768 e telas com pouca altura.
-       Mantém o layout 2 colunas; só comprime densidade pra a tabela
-       de capturas ganhar altura útil sem precisar de zoom out. */
-    @media (max-width: 1440px), (max-height: 820px) {
-      .topbar { min-height: 48px; padding: 6px 20px; }
-      .topbar-logo { height: 30px; }
-      .topbar-titulo { font-size: 1.0625rem; }
-      .main-layout {
-        padding: 8px clamp(8px, 1.4vw, 24px);
-        gap: 8px;
-        height: calc(100vh - 48px);
-      }
-      .left-panel { gap: 8px; }
-      .sidebar { gap: 8px; }
-      .stats-row { gap: 6px; }
-      .stat-card { padding: 8px 12px; gap: 2px; }
-      .stat-card .value { font-size: 1.375rem; }
-      .stat-card.destaque .value { font-size: 1.625rem; }
-      .stat-card .label, .stat-card .unit { font-size: 0.75rem; }
-      .recent-cards { gap: 8px; }
-      .recent-card .rc-thumb,
-      .recent-card .rc-no-photo { height: 108px; }
-      .sidebar-card { padding: 8px 10px; }
-      .sidebar-card h3 { font-size: 0.6875rem; margin-bottom: 6px; letter-spacing: 0.05em; }
-      .chart-container { height: 100px; }
-      .sidebar-kpis { gap: 4px; }
-      .sidebar-kpi { padding: 6px 8px; }
-      .sidebar-kpi-value { font-size: 1rem; }
-      .sidebar-kpi-label { font-size: 0.6875rem; } /* nenhum texto abaixo de 11 px */
-    }
-    @media (max-width: 900px) {
-      .main-layout { height: auto; overflow: auto; }
-      .main-layout { grid-template-columns: 1fr; }
-      .sidebar { height: auto; overflow: visible; }
-      .recent-cards { grid-template-columns: repeat(2, 1fr); }
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
-      .modal-details { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 600px) {
-      /* Primeira passagem perto do topo: KPIs 2×2 e cartões em 2 colunas com
-         foto baixa (mesmo desenho da faixa compacta do desktop) */
-      .recent-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-      .recent-card { --rc-info-h: 2.5rem; }
-      .recent-card .rc-thumb,
-      .recent-card .rc-no-photo { height: 96px; }
-      .recent-card::before { height: 46px; }
-      .recent-card .rc-info { padding: 0 8px; gap: 1px; }
-      .recent-card .rc-placa { font-size: 0.8125rem; padding: 3px 7px; bottom: calc(var(--rc-info-h) + 4px); left: 6px; }
-      .recent-card .dd.rc-placa { padding: 3px 7px; }
-      .recent-card .rc-vel { font-size: 0.875rem; padding: 3px 5px; top: 0; right: 0; border-radius: 0 0 0 6px; }
-      .recent-card .rc-vel > span { font-size: 0.6875rem !important; }
-      .recent-card .rc-badge, .recent-card .dd.rc-badge { padding: 3px 6px 3px 5px; }
-      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-      .stat-card { padding: 8px 12px; gap: 2px; }
-      .stat-card .value, .stat-card.destaque .value { font-size: 1.375rem; }
-      .stat-card .label, .stat-card .unit { font-size: 0.75rem; }
-      /* Topo em duas linhas: identidade em cima, ações embaixo (sem amontoar) */
-      .topbar { grid-template-columns: 1fr; gap: 8px; padding: 8px 12px; }
-      .topbar-acoes { justify-content: space-between; flex-wrap: wrap; row-gap: 6px; }
-      .topbar-status { order: 5; flex-basis: 100%; justify-content: flex-start; }
-      .topbar-logo { height: 26px; }
-      .topbar-titulos { padding-left: 10px; }
-      /* Mobile: font mínimo legível */
-      body { font-size: 1rem; }
-      .modal-details { grid-template-columns: 1fr 1fr; }
-      .modal-actions { flex-direction: column; }
-      .btn-pdf { width: 100%; }
-    }
-
-    /* ===== Lista dinâmica: "Agora" adaptável e recolhível, linha baixa ===== */
-    .agora-cabecalho { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; }
-    .agora-cabecalho .secao-titulo { flex: none; }
-    .agora-cabecalho .cameras-status { flex: 1 1 auto; min-width: 0; }
-    .btn-recolher { font-size: 0.75rem; padding: 0 2px; margin-left: auto; }
-    .left-panel.agora-recolhido #recent-cards,
-    .left-panel.agora-recolhido #cameras-status { display: none; }
-
-    /* v1.14.0: as últimas passagens são sempre uma faixa só de 6 cartões com
-       foto baixa (antes, 2 linhas de 3 em tela alta); o espaço vai para a
-       faixa de tipos e para a lista. */
-    @media (min-width: 601px) {
-      /* altura do cartão já reservada no "Carregando…": a lista não muda de tamanho ao chegar a foto */
-      .recent-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; min-height: calc(76px + 2.5rem + 2px); }
-      .recent-card { --rc-info-h: 2.5rem; }
-      .recent-card .rc-thumb,
-      .recent-card .rc-no-photo { height: 76px; }
-      .recent-card::before { height: 46px; }
-      .recent-card .rc-info { padding: 0 8px; gap: 1px; }
-      .recent-card .rc-placa { font-size: 0.8125rem; padding: 3px 7px; bottom: calc(var(--rc-info-h) + 4px); left: 6px; }
-      .recent-card .dd.rc-placa { padding: 3px 7px; }
-      .recent-card .rc-vel { font-size: 0.875rem; padding: 3px 5px; top: 6px; right: 5px; }
-      .recent-card .rc-vel > span { font-size: 0.6875rem !important; } /* "km/h" (estilo inline) */
-      .recent-card .rc-badge, .recent-card .dd.rc-badge { font-size: 0.6875rem; padding: 3px 6px 3px 5px; top: 0; left: 0; }
-      /* 4 números do topo mais baixos; Passagens e Alertas seguem maiores */
-      .stats-row { gap: 6px; }
-      .stat-card { padding: 5px 12px 6px; gap: 0; border-radius: 10px; }
-      .stat-card .label, .stat-card .unit { font-size: 0.75rem; }
-      .stat-card .value { font-size: 1.25rem; }
-      .stat-card.destaque .value { font-size: 1.5rem; }
-      .table-header { padding-top: 7px; padding-bottom: 7px; }
-      .table-pagination { padding-top: 5px; padding-bottom: 5px; }
-    }
-    /* Mouse: Exportar e "Mostrar" na altura dos chips/paginação (toque segue com 44 px) */
-    @media (min-width: 601px) and (pointer: fine) {
-      .filtros-topo .btn-secundario { min-height: 30px; padding: 3px 12px; }
-      .table-pagination .btn-link, .btn-recolher { min-height: 24px; }
-    }
-    /* Tela estreita (abaixo de 1.200 px): ficam os 3 mais recentes, com a
-       mesma foto baixa */
-    @media (max-width: 1199px) {
-      .recent-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .recent-cards > .recent-card:nth-child(n+4) { display: none; }
-    }
-
-    /* Desktop: linha de 38 px, veículo e morador numa linha só com reticências */
-    @media (min-width: 601px) {
-      .table-row { height: 38px; padding-top: 0; padding-bottom: 0; box-sizing: border-box; }
-      .table-row .row-thumb, .table-row .row-no-thumb { height: 26px; }
-      .table-row .veiculo-info, .table-row .morador-info {
-        display: flex; align-items: baseline; gap: 6px; overflow: hidden; white-space: nowrap;
-      }
-      .table-row .veiculo-info > *, .table-row .morador-info > * { min-width: 0; flex: 0 1 auto; }
-      .table-row .veiculo-info > .vb-linha:not(:first-child),
-      .table-row .morador-info > .morador-sub { flex: 1 1 0; }
-    }
-    /* Toque: a linha não fica abaixo de 44 px (alvos dos dados clicáveis) */
-    @media (pointer: coarse) {
-      .table-row { height: auto; min-height: 44px; }
-    }
-    /* Lista ficaria com menos de 5 linhas: a página rola e a lista garante 5 */
-    .main-layout.lista-rolante { height: auto; overflow: visible; }
-    .main-layout.lista-rolante .left-panel { overflow: visible; align-self: start; }
-    .main-layout.lista-rolante .sidebar { height: auto; overflow: visible; align-self: start; }
-    .main-layout.lista-rolante .table-body { flex: none; overflow: visible; min-height: calc(5 * 38px); }
-
-    /* ===== v1.14.0: veículos do dia, faixa de tipos e lista (opção B) ===== */
-    :root { --colunas-lista: 48px 8.25rem 5.75rem 4.75rem minmax(80px, 0.8fr) minmax(130px, 1.3fr) 7.5rem minmax(100px, 1fr) minmax(56px, 0.55fr); }
-    .stat-sub { color: var(--text-secondary); font-size: 0.75rem; font-weight: 500; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .stat-card .value.laranja { color: var(--orange); }
-    /* Barra fina por tipo (Veículos hoje): proporção, sem rótulo (o rótulo está na faixa de tipos) */
-    .barra-tipos { display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: var(--border); margin-top: 4px; }
-    .barra-tipos:empty { visibility: hidden; }
-    .barra-tipos > i { display: block; height: 100%; }
-    .faixa-tipos {
-      display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px;
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
-      padding: 5px 8px; box-shadow: var(--shadow-sm);
-    }
-    .faixa-tipos-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .faixa-tipos-dica { margin-left: auto; color: var(--text-secondary); font-size: 0.75rem; }
-    .tipo-chip {
-      display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 3px 11px 3px 9px;
-      border: 1px solid var(--border); border-radius: 999px; background: var(--chip-bg);
-      color: var(--text-primary); font: 600 0.8125rem/1.2 var(--font-sans); cursor: pointer; white-space: nowrap;
-    }
-    .tipo-chip::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--c); flex: none; }
-    .tipo-chip b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-    .tipo-chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-light); box-shadow: 0 0 0 1px var(--accent) inset; }
-    @media (hover: hover) { .tipo-chip:hover { border-color: var(--accent); } }
-    @media (pointer: coarse), (max-width: 600px) { .tipo-chip { min-height: 44px; } }
-
-    /* Lista: linha em alerta com fundo vermelho leve (sem coluna Status) */
-    .table-row.alerta { background: var(--tint-red); }
-    .table-row.alerta:hover { background: linear-gradient(var(--accent-light), var(--accent-light)), var(--tint-red); }
-    .table-row .hora { color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .table-row .c-placa { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
-    .selo-dia {
-      flex: none; font: 700 0.6875rem/1 var(--font-sans); color: var(--text-secondary);
-      border: 1px solid var(--border); border-radius: 999px; padding: 3px 6px; letter-spacing: 0;
-    }
-    .table-row .c-tipo, .table-row .c-nome, .table-row .c-unid { min-width: 0; font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .table-row .c-nome { font-weight: 600; color: var(--text-primary); }
-    .table-row .c-unid .dd { font-family: var(--font-mono); font-weight: 700; }
-    .table-row .sem-dado { color: var(--text-secondary); }
-    .btn-cadastrar {
-      font: 600 0.75rem/1 var(--font-sans); color: var(--accent); background: none; cursor: pointer;
-      border: 1px solid var(--accent); border-radius: 6px; padding: 4px 8px; white-space: nowrap;
-    }
-    @media (hover: hover) { .btn-cadastrar:hover { background: var(--accent-light); } }
-    @media (pointer: coarse) { .btn-cadastrar { min-height: 44px; } }
-    /* Cabeçalho do dia ("Sexta, 23 de outubro") sempre que o dia muda */
-    .linha-dia {
-      padding: 5px 14px; background: var(--surface-2); color: var(--text-secondary);
-      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-    }
-
-    /* Gráfico com abas: "Por hora" (passagens do período) e "Por dia" (veículos, 8 dias) */
-    .abas-grafico { display: flex; gap: 4px; margin-bottom: 8px; }
-    .abas-grafico [role="tab"] {
-      font: 600 0.75rem/1.2 var(--font-sans); color: var(--text-secondary); background: none; cursor: pointer;
-      border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
-    }
-    .abas-grafico [role="tab"][aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
-    @media (pointer: coarse) { .abas-grafico [role="tab"] { min-height: 44px; } }
-    .por-dia { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; align-items: end; height: 120px; }
-    .por-dia .dia { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; min-width: 0; }
-    .por-dia .pilha { width: 100%; max-width: 30px; display: flex; flex-direction: column-reverse; border-radius: 3px 3px 0 0; overflow: hidden; min-height: 1px; }
-    .por-dia .pilha > i { display: block; width: 100%; }
-    .por-dia .n { font: 700 0.6875rem/1 var(--font-mono); color: var(--text-primary); font-variant-numeric: tabular-nums; }
-    .por-dia .d { font-size: 0.6875rem; line-height: 1.15; text-align: center; color: var(--text-secondary); white-space: nowrap; }
-    .por-dia .dia.pico .n { color: var(--orange); }
-    .por-dia .dia.parcial .pilha { opacity: 0.5; }
-    .por-dia-legenda { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 0.6875rem; color: var(--text-secondary); }
-    .por-dia-legenda span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--c); margin-right: 4px; vertical-align: -1px; }
-
-    /* Abaixo de 1.200 px: cada passagem em duas linhas, nada cortado (opção C) */
-    @media (max-width: 1199px) {
-      .table-header, .table-row {
-        grid-template-columns: 44px 8.25rem 5.25rem 4.5rem minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.7fr);
-        grid-template-areas: "foto placa vel hora radar radar radar" "foto veic veic veic tipo nome unid";
-        row-gap: 2px;
-      }
-      .table-header { grid-template-areas: "foto placa vel hora radar radar radar"; }
-      .table-header .c-veic, .table-header .c-tipo, .table-header .c-nome, .table-header .c-unid { display: none; }
-      .table-row { height: auto; padding-top: 6px; padding-bottom: 6px; }
-      .c-foto { grid-area: foto; } .c-placa { grid-area: placa; } .c-vel { grid-area: vel; } .c-hora { grid-area: hora; }
-      .c-radar { grid-area: radar; } .c-veic { grid-area: veic; } .c-tipo { grid-area: tipo; } .c-nome { grid-area: nome; } .c-unid { grid-area: unid; }
-      .table-row > div, .table-row .veiculo-info, .table-row .vb-nome, .table-row .vb-linha .vb-txt,
-      .table-row .celula-radar, .table-row .celula-radar .dd, .table-row .c-tipo, .table-row .c-nome, .table-row .c-unid {
-        white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
-      }
-      .table-row .veiculo-info { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
-      .table-row .dd.dd-veiculo, .table-row .dd.dd-cadastro { white-space: normal; overflow: visible; max-width: none; }
-    }
-    /* Celular: três linhas (placa · velocidade · hora / radar · veículo / cadastro) */
-    @media (max-width: 600px) {
-      .table-header, .table-row {
-        grid-template-columns: 40px minmax(0, 1fr) auto auto;
-        grid-template-areas: "foto placa vel hora" "foto radar radar radar" "foto veic veic veic" "foto tipo nome unid";
-        column-gap: 8px; padding-left: 10px; padding-right: 10px;
-      }
-      .table-header { grid-template-areas: "foto placa vel hora"; }
-      .table-header .c-radar { display: none; }
-      .table-row .c-nome { text-align: left; }
     }
 
     /* ===== UX / ACESSIBILIDADE ===== */
@@ -2616,42 +1719,6 @@
     .skeleton-row { height: 38px; border-radius: 6px; margin-bottom: 2px; }
     .skeleton-text { height: 14px; border-radius: 4px; }
 
-    /* Fix: recent-card scale pode causar overflow em grids apertados */
-    .recent-card:hover {
-      transform: translateY(-3px);
-    }
-
-
-    /* Status das câmeras: chip discreto com ponto colorido, sem borda pesada */
-    .cameras-status { display: flex; gap: 6px; flex-wrap: wrap; }
-    .cam-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 5px 11px 5px 9px;
-      border-radius: 999px;
-      background: var(--chip-bg);
-      font-size: 0.8125rem;
-      line-height: 1.2;
-      white-space: nowrap;
-      color: var(--text-primary);
-    }
-    .cam-pill .cam-nome { font-weight: 600; }
-    .cam-pill .cam-estado { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-    .cam-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      background: var(--text-muted);
-    }
-    .cam-pill.cam-online .cam-dot { background: var(--green); }
-    .cam-pill.cam-alerta .cam-dot { background: var(--amber); }
-    .cam-pill.cam-alerta .cam-estado { color: var(--amber); }
-    .cam-pill.cam-offline .cam-dot { background: var(--red); }
-    .cam-pill.cam-offline .cam-estado { color: var(--red); }
-    .cam-pill.cam-aguardando .cam-dot { background: var(--accent); }
-
 
     /* Velocidade: tag com fundo colorido no modal */
     .vel-tag {
@@ -2664,21 +1731,6 @@
     .vel-tag.red { background: rgba(239,68,68,0.15); color: var(--red); }
     .vel-tag.green { background: rgba(34,197,94,0.15); color: var(--green); }
 
-    /* Linha de tabela: left-border indicator sem layout shift */
-    .table-row {
-      border-left: 3px solid transparent;
-      padding-left: 11px;
-    }
-    .table-row:hover {
-      border-left-color: var(--accent);
-    }
-    /* Botão de detalhe: a foto do card e a data/hora da linha */
-    .rc-foto-btn {
-      display: block; width: 100%; padding: 0; margin: 0; border: none;
-      background: none; color: inherit; font: inherit; cursor: pointer;
-    }
-    .rc-foto-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
-    .dd.dd-detalhe { font-variant-numeric: tabular-nums; }
 
     /* Toque não tem hover: sem isto o "levantar" fica preso depois do tap */
     @media (hover: none), (pointer: coarse) {
@@ -2943,8 +1995,10 @@
       .cam-pill, .seletor-tema { box-shadow: inset 0 0 0 1px var(--border); }
     }
   </style>
+  <link rel="stylesheet" href="/css/painel.css">
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <script src="/js/camera-status.js"></script>
+  <script src="/js/painel-visual.js"></script>
   <script src="/js/captcha.js"></script>
   <script src="/js/spring.js"></script>
   <script src="/js/grafico-acessivel.js"></script>
@@ -2976,13 +2030,13 @@
   <script src="/js/avisos-painel.js"></script>
 </head>
 <body>
-  <!-- Ícones do tipo de pessoa (os mesmos do admin) -->
+  <!-- Ícones do tipo de pessoa (linha, 24 px, traço 2): casa, chave, crachá, ferramenta, interrogação -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <symbol id="ic-casa" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5.5h4V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-    <symbol id="ic-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12 20 3M16 7l3 3M14 9l2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-    <symbol id="ic-cracha" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 17c.8-2 2.2-3 4-3s3.2 1 4 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-    <symbol id="ic-ferramenta" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0 4.8 4.8L11 19.6a2.1 2.1 0 0 1-3-3l8.3-8.3A4 4 0 0 0 14.5 6.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
-    <symbol id="ic-interrogacao" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ic-casa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/></symbol>
+    <symbol id="ic-chave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12 20 3M16 7l3 3M14 9l2 2"/></symbol>
+    <symbol id="ic-cracha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><circle cx="12" cy="10" r="2.6"/><path d="M8.5 17c.8-1.7 2-2.5 3.5-2.5s2.7.8 3.5 2.5"/><path d="M10 6h4"/></symbol>
+    <symbol id="ic-ferramenta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4Z"/></symbol>
+    <symbol id="ic-interrogacao" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.6-2.4 2.1-2.4 3.4"/><path d="M12 17h.01"/></symbol>
   </svg>
 
   <!-- ===== LOGIN ===== -->
@@ -3024,10 +2078,10 @@
         </div>
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
-      <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.14.0 &middot; 2026-10-23
+      <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.75rem;color:var(--text-muted);letter-spacing:0.04em">
+        v1.15.0 &middot; 2026-10-23
       </div>
-      <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.6875rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
+      <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.75rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
       </a>
     </div>
@@ -3035,7 +2089,8 @@
 
   <!-- ===== DASHBOARD ===== -->
   <div id="dashboard-screen">
-    <header class="topbar">
+    <!-- Topo de vidro (fixo ao rolar): marca, condomínio, período, câmeras, ao vivo, Veículos, tema, conta -->
+    <header class="topbar" id="topo">
       <div class="topbar-id">
         <img class="topbar-logo" src="https://appps.com.br/assets/logo-protector.png" alt="Protector">
         <div class="topbar-titulos">
@@ -3043,25 +2098,33 @@
           <h1 class="topbar-titulo" id="topbar-cliente">Seu condomínio</h1>
         </div>
       </div>
-      <div class="topbar-acoes">
-        <span class="topbar-status">
-          <span class="loading-dot" id="polling-dot" title="Atualiza a cada 30 s" aria-hidden="true"></span>
-          <span class="ultima-atualizacao" id="ultima-atualizacao"></span>
-        </span>
-        <div data-seletor-tema aria-label="Tema"></div>
-        <button type="button" class="btn-veiculos" id="btn-topbar-veiculos" onclick="abrirModalVeiculo()" style="display:none">Veículos</button>
-        <div class="conta">
-          <button type="button" class="conta-btn" id="conta-btn" onclick="toggleContaMenu()" aria-haspopup="true" aria-expanded="false" aria-controls="conta-menu" aria-label="Conta">
-            <span class="conta-avatar" id="conta-inicial" aria-hidden="true">·</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="conta-menu" id="conta-menu">
-            <div class="conta-email" id="topbar-email"></div>
-            <a class="conta-link" id="conta-portaria" href="/portaria" hidden>Abrir a portaria</a>
-            <button type="button" class="conta-link" id="conta-gestao-portaria" onclick="abrirPainelPortaria()" hidden>Portaria: unidades e porteiros</button>
-            <button type="button" class="conta-link" id="conta-avisos-email" onclick="abrirPainelAvisos()" hidden>Avisos por e-mail</button>
-            <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
-          </div>
+      <!-- Período: Hoje · Ontem · 7 dias · Escolher… (abre o seletor de datas) -->
+      <div class="seg-periodo" id="seg-periodo" role="group" aria-label="Período">
+        <button type="button" data-periodo="hoje" aria-pressed="true">Hoje</button>
+        <button type="button" data-periodo="ontem" aria-pressed="false">Ontem</button>
+        <button type="button" data-periodo="7d" aria-pressed="false">7 dias</button>
+        <button type="button" id="btn-periodo" data-periodo="escolher" aria-pressed="false" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-periodo"><span class="visualmente-oculto">Período: </span><span id="rotulo-periodo">Escolher…</span></button>
+      </div>
+      <div class="topbar-espaco"></div>
+      <!-- Câmeras: só o ícone, na cor do status; o local e a última leitura no balão (mouse e teclado) -->
+      <div id="cameras-status" class="cameras-status" role="group" aria-label="Câmeras"></div>
+      <span class="topbar-status">
+        <span class="loading-dot" id="polling-dot" title="Atualiza a cada 30 s" aria-hidden="true"></span>
+        <span class="ultima-atualizacao" id="ultima-atualizacao"></span>
+      </span>
+      <button type="button" class="btn-veiculos" id="btn-topbar-veiculos" onclick="abrirModalVeiculo()" style="display:none">Veículos</button>
+      <div data-seletor-tema aria-label="Tema"></div>
+      <div class="conta">
+        <button type="button" class="conta-btn" id="conta-btn" onclick="toggleContaMenu()" aria-haspopup="true" aria-expanded="false" aria-controls="conta-menu" aria-label="Conta">
+          <span class="conta-avatar" id="conta-inicial" aria-hidden="true">·</span>
+        </button>
+        <div class="conta-menu" id="conta-menu">
+          <div class="conta-email" id="topbar-email"></div>
+          <button type="button" class="conta-link conta-so-celular" onclick="fecharContaMenu();abrirModalVeiculo()">Veículos cadastrados</button>
+          <a class="conta-link" id="conta-portaria" href="/portaria" hidden>Abrir a portaria</a>
+          <button type="button" class="conta-link" id="conta-gestao-portaria" onclick="abrirPainelPortaria()" hidden>Portaria: unidades e porteiros</button>
+          <button type="button" class="conta-link" id="conta-avisos-email" onclick="abrirPainelAvisos()" hidden>Avisos por e-mail</button>
+          <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
         </div>
       </div>
     </header>
@@ -3076,82 +2139,134 @@
       <a class="btn-link faixa-admin-voltar" href="/admin">Voltar ao admin</a>
     </div>
 
-    <div class="main-layout">
-      <!-- LEFT: stats → câmeras → cards → filtros → tabela (fluxo contínuo) -->
-      <div class="left-panel">
-        <div class="agora-cabecalho">
-          <h2 class="secao-titulo" id="titulo-ao-vivo">Agora · hoje</h2>
-          <!-- Status das câmeras: na linha do título, junto do "Agora" -->
-          <div id="cameras-status" class="cameras-status"></div>
-          <button type="button" class="btn-link btn-recolher" id="btn-recolher-agora" aria-expanded="true" aria-controls="recent-cards cameras-status" onclick="alternarAgora()">Recolher</button>
+    <!-- Grade única: blocos da esquerda e cartões da lateral nas mesmas linhas
+         (topos e bases alinhados). Linha 1: números do dia | indicadores.
+         Linha 2: últimas passagens | veículos por dia. Linha 3: lista | rankings. -->
+    <main class="painel" id="painel">
+      <!-- Números do dia (00:00–23:59, sem os filtros da lista). Padrão único de
+           cada número: rótulo / número / apoio / comparação com ontem no mesmo horário -->
+      <section class="cartao numeros-dia c-dia" aria-label="Números do dia">
+        <div class="nd-bloco nd-veiculos">
+          <h2 class="rot">Veículos hoje</h2>
+          <div class="nd-num"><b class="mono nd-grande" id="stat-veiculos">0</b><span class="nd-apoio-forte" id="stat-passagens" title="Cada veículo conta uma vez no dia, mesmo passando por várias lombadas; passagens contam cada leitura">passagens</span></div>
+          <div class="barra-tipos" id="barra-tipos" role="img" aria-label="Veículos de hoje por tipo de cadastro"></div>
+          <!-- Legenda por tipo: clicar filtra a lista (clicar de novo tira o filtro) -->
+          <div class="legenda-tipos" id="faixa-tipos-chips" role="group" aria-label="Veículos de hoje por tipo de cadastro"></div>
         </div>
-        <div class="stats-row">
-          <div class="stat-card destaque">
-            <div class="label">Veículos hoje</div>
-            <div class="valor-linha"><span class="value" id="stat-veiculos">0</span><span class="unit" id="stat-passagens" title="Cada veículo conta uma vez no dia, mesmo passando por vários radares; passagens contam cada leitura">passagens</span></div>
-            <div class="barra-tipos" id="barra-tipos" role="img" aria-label="Veículos de hoje por tipo de cadastro"></div>
-          </div>
-          <div class="stat-card destaque" id="card-alertas">
-            <div class="label" id="label-alertas">Alertas hoje</div>
-            <div class="valor-linha"><span class="value red" id="stat-alertas">0</span><span class="unit">acima do limite</span></div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Velocidade máxima hoje</div>
-            <div class="valor-linha"><span class="value" id="stat-maxvel">0</span><span class="unit">km/h</span></div>
-            <div class="stat-sub">limite <span id="stat-limite">30</span> km/h</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Dentro do limite hoje</div>
-            <div class="valor-linha"><span class="value" id="stat-conformidade">--</span></div>
-            <div class="stat-sub" id="stat-media" title="Média só das passagens que o radar mediu (a partir de 10 km/h)">média -- km/h</div>
-          </div>
+        <div class="nd-bloco" id="card-alertas">
+          <h2 class="rot" id="label-alertas">Alertas hoje</h2>
+          <div class="nd-num"><b class="mono" id="stat-alertas">0</b></div>
+          <small class="nd-apoio">acima de <span id="stat-limite">30</span> km/h</small>
+          <span class="cmp" id="cmp-alertas"></span>
         </div>
+        <div class="nd-bloco">
+          <h2 class="rot">Velocidade máxima</h2>
+          <div class="nd-num"><b class="mono"><span id="stat-maxvel">0</span><span class="nd-unid">km/h</span></b></div>
+          <small class="nd-apoio mono" id="stat-maxvel-quem">—</small>
+          <span class="cmp" id="cmp-maxvel"></span>
+        </div>
+        <div class="nd-bloco nd-limite">
+          <h2 class="rot">Dentro do limite</h2>
+          <div class="nd-num">
+            <b class="mono" id="stat-conformidade">--</b>
+            <svg class="anel" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle class="anel-trilho" cx="32" cy="32" r="26"/><circle class="anel-valor" id="anel-limite" cx="32" cy="32" r="26" stroke-dasharray="0 163.4" transform="rotate(-90 32 32)"/></svg>
+          </div>
+          <small class="nd-apoio" id="stat-media" title="Média só das passagens que a lombada mediu (a partir de 10 km/h)">média -- km/h</small>
+          <span class="cmp" id="cmp-dentro"></span>
+        </div>
+      </section>
 
-        <!-- Veículos de hoje por tipo: clicar filtra a lista (clicar de novo tira o filtro) -->
-        <div class="faixa-tipos" id="faixa-tipos" role="group" aria-label="Veículos de hoje por tipo de cadastro">
-          <div class="faixa-tipos-chips" id="faixa-tipos-chips"></div>
-          <span class="faixa-tipos-dica">veículos hoje · clique filtra</span>
+      <!-- Indicadores do período: o mesmo padrão dos números do dia, duas células -->
+      <section class="cartao numeros-dia indicadores lado c-ind" id="sidebar-indicators" aria-labelledby="title-indicators">
+        <h2 class="visualmente-oculto" id="title-indicators">Indicadores · hoje</h2>
+        <div class="nd-bloco">
+          <h3 class="rot" id="lbl-hora-pico">Hora de pico</h3>
+          <div class="nd-num"><b class="mono ambar" id="ind-hora-pico">--</b></div>
+          <small class="nd-apoio" id="sub-hora-pico">maior fluxo do período</small>
+          <p class="card-falha" id="falha-indicators" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
         </div>
-
-        <!-- 6 Recent Cards -->
-        <div class="recent-cards" id="recent-cards">
-          <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Carregando...</div>
+        <div class="nd-bloco">
+          <h3 class="rot">Reincidentes</h3>
+          <div class="nd-num"><b class="mono ambar" id="ind-reincidentes">--</b></div>
+          <small class="nd-apoio">2+ alertas no período</small>
         </div>
+      </section>
 
-        <!-- Filtros do período: tudo aplica sozinho e atualiza filtrosAtivos (estado único) -->
-        <section class="filtros" id="filtros" aria-label="Filtros do período">
-          <!-- Linha 1: título da lista (período ativo) · perguntas prontas · Exportar (exporta a tabela) -->
-          <div class="filtros-topo">
-            <h2 class="tabela-titulo" id="titulo-tabela">Passagens</h2>
-            <div class="visoes" id="visoes" role="group" aria-label="Perguntas prontas"></div>
-            <div class="export-wrap">
-              <button type="button" class="btn-secundario" onclick="toggleExportMenu()" id="btn-exportar" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-                Exportar
-              </button>
-              <div id="export-menu" class="export-menu">
-                <button type="button" onclick="exportExcel();closeExportMenu()">
-                  <span style="color:#16a34a;font-size:1rem" aria-hidden="true">&#9638;</span> Excel (.xlsx)
-                </button>
-                <button type="button" onclick="exportPDF();closeExportMenu()">
-                  <span style="color:var(--red);font-size:1rem" aria-hidden="true">&#9638;</span> PDF (.pdf)
-                </button>
-              </div>
+      <!-- Últimas passagens: a mais nova em destaque + 4 menores (fotos sempre 16:9) -->
+      <section class="cartao c-rec" id="card-recentes" aria-labelledby="titulo-recentes">
+        <div class="cab">
+          <h2 class="rot" id="titulo-recentes">Últimas passagens</h2>
+          <button type="button" class="btn-link btn-recolher" id="btn-recolher-agora" aria-expanded="true" aria-controls="recent-cards" onclick="alternarAgora()">Recolher</button>
+        </div>
+        <div class="recentes" id="recent-cards">
+          <div class="recentes-msg">Carregando...</div>
+        </div>
+      </section>
+
+      <!-- Ao lado das fotos: semana (mapa de calor) e rankings. De 1.024 a 1.699 px
+           ficam num quadro só, com abas; no monitor grande e no tablet, dois quadros. -->
+      <div class="col c-lado2" id="lado2">
+        <section class="cartao lado c-vpd" id="card-semana" aria-labelledby="titulo-semana">
+          <div class="cab">
+            <h2 class="rot" id="titulo-semana">Veículos por dia</h2>
+            <div class="abas" id="abas-lado" role="tablist" aria-label="Semana e rankings" hidden>
+              <button type="button" role="tab" id="aba-lado-semana" data-painel="semana" aria-controls="painel-por-dia" aria-selected="true">Semana</button>
+              <button type="button" role="tab" id="aba-lado-mais" data-painel="mais" aria-controls="painel-mais" aria-selected="false" tabindex="-1">Mais passagens</button>
+              <button type="button" role="tab" id="aba-lado-recordes" data-painel="recordes" aria-controls="painel-recordes" aria-selected="false" tabindex="-1">Recordes</button>
+            </div>
+            <div class="nav-semana" id="nav-semana">
+              <button type="button" class="nav-b" id="semana-ant" aria-label="Semana anterior">‹</button>
+              <span class="mono" id="semana-rotulo" aria-live="polite"></span>
+              <button type="button" class="nav-b" id="semana-prox" aria-label="Próxima semana" disabled>›</button>
             </div>
           </div>
+          <div class="painel-lado" id="painel-por-dia" role="tabpanel" aria-labelledby="titulo-semana">
+            <p class="card-falha" id="falha-por-dia" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" data-acao="recarregar-por-dia">Tentar de novo</button></p>
+            <!-- Clicar numa célula filtra a lista por aquele dia e tipo -->
+            <div class="mapa" id="veiculos-por-dia" role="group" aria-label="Veículos diferentes por dia: carregando"></div>
+          </div>
+        </section>
 
-          <div class="barra-filtros" id="barra-filtros">
-            <button type="button" class="barra-btn" id="btn-periodo" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-periodo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
-              <span class="visualmente-oculto">Período: </span><span id="rotulo-periodo">Hoje</span>
-              <svg class="barra-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
+        <section class="cartao c-rk" id="card-rankings" aria-label="Rankings">
+          <div class="abas" id="abas-rank" role="tablist" aria-label="Rankings">
+            <button type="button" role="tab" id="aba-rank-mais" data-painel="mais" aria-controls="painel-mais" aria-selected="true">Mais passagens · <span id="rotulo-rank-periodo">hoje</span></button>
+            <button type="button" role="tab" id="aba-rank-recordes" data-painel="recordes" aria-controls="painel-recordes" aria-selected="false" tabindex="-1">Recordes · 6 meses</button>
+          </div>
+          <!-- Top 10 do período (3 à vista; "Ver os 10" abre o resto) -->
+          <div class="painel-lado" id="painel-mais" role="tabpanel" aria-labelledby="aba-rank-mais">
+            <h3 class="visualmente-oculto" id="title-ranking">Mais passagens · hoje</h3>
+            <p class="card-falha" id="falha-ranking" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
+            <ol class="rk" id="ranking-list">
+              <li class="rk-msg">Carregando...</li>
+            </ol>
+            <button type="button" class="btn-link ver10" data-ver10="ranking-list" aria-expanded="false" hidden>Ver os 10 →</button>
+          </div>
+          <!-- Recordes: maior velocidade de cada veículo nos últimos 6 meses (não segue o período) -->
+          <div class="painel-lado" id="painel-recordes" role="tabpanel" aria-labelledby="aba-rank-recordes" hidden>
+            <h3 class="visualmente-oculto" id="title-recordes">Maiores velocidades · 6 meses</h3>
+            <p class="card-falha" id="falha-recordes" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="loadMaioresVelocidades()">Tentar de novo</button></p>
+            <ol class="rec" id="recordes-list">
+              <li class="rk-msg">Carregando...</li>
+            </ol>
+            <button type="button" class="btn-link ver10" data-ver10="recordes-list" aria-expanded="false" hidden>Ver os 10 →</button>
+          </div>
+          <!-- Alertas 7 dias escondido (fora da vista desde a v1.10) -->
+          <canvas id="chart-alerts-7d" style="display:none"></canvas>
+          <span id="title-alerts7d" style="display:none"></span>
+        </section>
+      </div>
 
+      <!-- Barra de comando + lista de passagens -->
+      <div class="col c-lista">
+        <section class="filtros" id="filtros" aria-label="Filtros do período">
+          <h2 class="visualmente-oculto" id="titulo-tabela">Passagens</h2>
+          <div class="barra-filtros comando" id="barra-filtros">
             <div class="busca-wrap" id="busca-wrap">
               <svg class="busca-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
               <label for="busca" class="visualmente-oculto">Buscar placa, modelo ou marca</label>
-              <input type="text" id="busca" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="busca-lista" aria-describedby="busca-dica" placeholder="Placa, modelo ou marca" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
-              <span id="busca-dica" class="visualmente-oculto">Digite 2 letras ou mais para ver sugestões. Enter busca placa se houver número; senão, modelo.</span>
+              <input type="text" id="busca" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="busca-lista" aria-describedby="busca-dica" aria-keyshortcuts="/" placeholder="Buscar placa, modelo ou marca" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+              <kbd class="busca-atalho" aria-hidden="true">/</kbd>
+              <span id="busca-dica" class="visualmente-oculto">Atalho: tecla barra. Digite 2 letras ou mais para ver sugestões. Enter busca placa se houver número; senão, modelo.</span>
               <div class="busca-pop" id="busca-pop" hidden>
                 <div class="busca-lista" id="busca-lista" role="listbox" aria-label="Sugestões"></div>
                 <p class="busca-rodape" id="busca-rodape"></p>
@@ -3166,134 +2281,92 @@
             </div>
 
             <div class="barra-grupo" id="grupo-alerta">
-              <div class="segmentado" id="seg-alerta" role="radiogroup" aria-label="Velocidade">
-                <button type="button" role="radio" data-alerta="0" aria-checked="true">Todas</button>
-                <button type="button" role="radio" data-alerta="1" aria-checked="false" tabindex="-1" aria-label="Acima do limite">Acima<span class="seg-longo"> do limite</span></button>
-              </div>
+              <button type="button" class="barra-btn btn-acima" id="btn-acima" aria-pressed="false">Acima do limite</button>
             </div>
 
             <button type="button" class="barra-btn" id="btn-mais-filtros" aria-haspopup="dialog" aria-expanded="false" aria-controls="painel-filtros">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
-              <span class="rotulo-desktop">Mais filtros</span><span class="rotulo-celular">Filtros</span>
+              <span>Filtros</span>
               <span class="contador-filtros" id="contador-filtros" hidden></span>
             </button>
+
+            <div class="export-wrap">
+              <button type="button" class="barra-btn" onclick="toggleExportMenu()" id="btn-exportar" aria-haspopup="true" aria-expanded="false" aria-controls="export-menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                <span class="rotulo-exportar">Exportar</span>
+              </button>
+              <div id="export-menu" class="export-menu">
+                <button type="button" onclick="exportExcel();closeExportMenu()">
+                  <span style="color:#16a34a;font-size:1rem" aria-hidden="true">&#9638;</span> Excel (.xlsx)
+                </button>
+                <button type="button" onclick="exportPDF();closeExportMenu()">
+                  <span style="color:var(--red);font-size:1rem" aria-hidden="true">&#9638;</span> PDF (.pdf)
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div class="chips-filtros" id="chips-filtros" hidden></div>
+          <!-- Filtros ativos (etiquetas) · total · abaixo de 10 km/h ocultas -->
+          <div class="chips-linha">
+            <span class="chip chip-fixo" id="chip-periodo">Hoje</span>
+            <div class="chips-filtros" id="chips-filtros" hidden></div>
+            <span class="resumo-lista" id="resumo-lista"></span>
+            <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
+              <span id="sem-vel-texto"></span>
+              <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="A lombada só mede a partir de 10 km/h. Passagens mais lentas chegam sem velocidade e ficam ocultas na lista por padrão. Nada é removido: continuam nos indicadores e nos relatórios.">Mostrar</button>
+            </div>
+          </div>
           <p class="aviso-filtros" id="fv-aviso" role="status" aria-live="polite"></p>
           <p class="visualmente-oculto" id="anuncio-resultado" aria-live="polite"></p>
         </section>
 
-          <!-- Table -->
-          <div class="table-container">
-            <div class="table-header">
-              <div class="c-foto">Foto</div>
-              <div class="c-placa">Placa</div>
-              <div class="c-vel">Velocidade</div>
-              <div class="c-hora">Hora</div>
-              <div class="c-radar">Radar</div>
-              <div class="c-veic">Veículo</div>
-              <div class="c-tipo">Tipo</div>
-              <div class="c-nome">Nome</div>
-              <div class="c-unid">Unidade</div>
-            </div>
-            <div class="table-body" id="table-body">
-              <div class="table-empty">Carregando...</div>
-            </div>
-            <!-- Barra de baixo: "1-7 de 111" · sem velocidade ocultas · páginas -->
-            <div class="table-pagination sem-paginas" id="table-pagination" style="display:none">
-              <div class="pg-esq">
-                <span class="pg-info" id="pg-info"></span>
-                <div class="rodape-sem-vel" id="rodape-sem-vel" hidden>
-                  <span id="sem-vel-texto"></span>
-                  <button type="button" class="btn-link" id="btn-sem-vel" aria-describedby="sem-vel-texto" onclick="toggleSemVel(!mostrarSemVel())" title="O radar só mede a partir de 10 km/h. Passagens mais lentas chegam sem velocidade e ficam ocultas na lista por padrão. Nada é removido: continuam nos indicadores e nos relatórios.">Mostrar</button>
-                </div>
-              </div>
-              <div class="pg-controls" id="pg-controls"></div>
-            </div>
+        <!-- Lista em tabela: colunas pelo conteúdo, tudo centralizado, nada cortado; cabeçalho fixo ao rolar -->
+        <div class="table-container">
+          <table class="tb" id="tabela-passagens" aria-label="Passagens">
+            <thead>
+              <tr>
+                <th scope="col" class="c-foto">Foto</th>
+                <th scope="col" class="c-placa">Placa</th>
+                <th scope="col" class="c-vel" title="Velocidade (km/h)">Veloc.</th>
+                <th scope="col" class="c-hora">Hora</th>
+                <th scope="col" class="c-radar" title="Lombada Educativa">Lombada</th>
+                <th scope="col" class="c-veic">Veículo</th>
+                <th scope="col" class="c-cor">Cor</th>
+                <th scope="col" class="c-ano">Ano</th>
+                <th scope="col" class="c-tipo">Tipo</th>
+                <th scope="col" class="c-nome">Nome</th>
+                <th scope="col" class="c-unid" id="th-unidade">Unidade</th>
+              </tr>
+            </thead>
+            <tbody class="table-body" id="table-body">
+              <tr class="tr-msg"><td colspan="11"><div class="table-empty">Carregando...</div></td></tr>
+            </tbody>
+          </table>
+          <!-- Barra de baixo: "1–8 de 543 passagens" · páginas -->
+          <div class="table-pagination sem-paginas" id="table-pagination" style="display:none">
+            <span class="pg-info" id="pg-info"></span>
+            <div class="pg-controls" id="pg-controls"></div>
           </div>
+        </div>
       </div>
 
-      <!-- RIGHT: sidebar unificada — analytics de altura total -->
-      <div class="sidebar">
-        <!-- Hora pico e reincidentes do período, lado a lado (velocidade média e
-             "dentro do limite" de hoje subiram para os cartões do topo) -->
-        <div class="sidebar-card" id="sidebar-indicators">
-          <h3 id="title-indicators">Indicadores do Período</h3>
-          <p class="card-falha" id="falha-indicators" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
-          <div class="sidebar-kpis">
-            <div class="sidebar-kpi">
-              <div class="sidebar-kpi-label" id="lbl-hora-pico">Hora Pico</div>
-              <div class="sidebar-kpi-value" id="ind-hora-pico" style="color:var(--orange)">--</div>
-              <div class="sidebar-kpi-unit">maior fluxo</div>
-            </div>
-            <div class="sidebar-kpi">
-              <div class="sidebar-kpi-label">Reincidentes</div>
-              <div class="sidebar-kpi-value" id="ind-reincidentes" style="color:var(--red)">--</div>
-              <div class="sidebar-kpi-unit">+2 alertas</div>
-            </div>
-          </div>
-        </div>
+    </main>
 
-        <!-- Gráfico: "Por hora" (passagens do período) e "Por dia" (veículos, últimos 8 dias) -->
-        <div class="sidebar-card">
-          <div class="abas-grafico" role="tablist" aria-label="Gráfico">
-            <button type="button" role="tab" id="aba-por-hora" aria-controls="painel-por-hora" aria-selected="true" data-aba="hora">Por hora</button>
-            <button type="button" role="tab" id="aba-por-dia" aria-controls="painel-por-dia" aria-selected="false" tabindex="-1" data-aba="dia">Por dia</button>
-          </div>
-          <div role="tabpanel" id="painel-por-hora" aria-labelledby="aba-por-hora">
-            <h3 id="title-hourly">Passagens por Hora</h3>
-            <div class="chart-container">
-              <canvas id="chart-hourly"></canvas>
-            </div>
-          </div>
-          <div role="tabpanel" id="painel-por-dia" aria-labelledby="aba-por-dia" hidden>
-            <h3 id="title-por-dia">Veículos por dia · últimos 8 dias</h3>
-            <p class="card-falha" id="falha-por-dia" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" data-acao="recarregar-por-dia">Tentar de novo</button></p>
-            <div class="por-dia" id="veiculos-por-dia" role="img" aria-label="Veículos diferentes por dia: carregando"></div>
-            <div class="por-dia-legenda" id="por-dia-legenda" aria-hidden="true"></div>
-          </div>
-        </div>
-
-        <!-- Ranking Top 10 — ocupa todo o espaço restante -->
-        <div class="sidebar-card sidebar-card-flex">
-          <h3 id="title-ranking">Top 10 Placas</h3>
-          <p class="card-falha" id="falha-ranking" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></p>
-          <ul class="ranking-list" id="ranking-list">
-            <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
-          </ul>
-        </div>
-
-        <!-- Recordes: maior velocidade de cada veículo nos últimos 6 meses (não segue o período) -->
-        <div class="sidebar-card sidebar-card-flex">
-          <h3 id="title-recordes">Maiores velocidades · últimos 6 meses</h3>
-          <p class="card-falha" id="falha-recordes" role="alert" hidden>Não foi possível atualizar · <button type="button" class="btn-link" onclick="loadMaioresVelocidades()">Tentar de novo</button></p>
-          <ul class="ranking-list" id="recordes-list">
-            <li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>
-          </ul>
-        </div>
-
-        <!-- Alertas 7 dias escondido (removido da vista para dar espaço ao Top 10) -->
-        <canvas id="chart-alerts-7d" style="display:none"></canvas>
-        <span id="title-alerts7d" style="display:none"></span>
-      </div>
-    </div><!-- fim main-layout -->
-
-    <div style="text-align:center;padding:16px 0 24px;font-size:0.6875rem;color:var(--text-muted);letter-spacing:0.02em">
-      Protector Traffic Control &middot; v1.14.0
+    <footer class="rodape-painel">
+      Protector Traffic Control &middot; v1.15.0
       <br>
-      <div style="margin-top:6px;display:inline-flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
-        <a href="/dashboard/manual.html" style="color:var(--accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <div class="rodape-links">
+        <a href="/dashboard/manual.html" class="rodape-manual">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           Manual do Usuário
         </a>
-        <span style="color:var(--text-muted);opacity:0.4">·</span>
-        <a href="/dashboard/novidades.html" style="color:var(--orange);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6m0 0l-3-3m3 3l3-3"/><path d="M19 10l1 4a7 7 0 1 1-4-4l4 1"/></svg>
+        <span aria-hidden="true" style="opacity:0.4">·</span>
+        <a href="/dashboard/novidades.html" class="rodape-novidades">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v6m0 0l-3-3m3 3l3-3"/><path d="M19 10l1 4a7 7 0 1 1-4-4l4 1"/></svg>
           Novidades
         </a>
       </div>
-    </div>
+    </footer>
 
   </div>
 
@@ -3533,7 +2606,7 @@
     const {
       montarFiltros, filtrosPadrao, intervaloDoPeriodo, chaveFiltros, precisaRecarregarPeriodo, temFiltroAtivo,
       hojeLocal, virarDia, periodoDoAtalho, atalhoDoPeriodo, comMudancas, removerFiltro,
-      contarMaisFiltros, VISOES, estadoDaVisao, visaoAtiva, paraQueryString, deQueryString,
+      contarMaisFiltros, paraQueryString, deQueryString,
       validarPeriodo, buscaPorVeiculo,
     } = estadoFiltrosLib;
     const { rotuloDoPeriodo, chipsDosFiltros, decidirEnter, sugestoesBusca, textoResultado } = barraFiltrosLib;
@@ -3596,7 +2669,18 @@
         ? `${semVel} ${uma ? 'passagem abaixo de 10 km/h aparece' : 'passagens abaixo de 10 km/h aparecem'} na lista ·`
         : `${semVel} ${uma ? 'passagem abaixo de 10 km/h oculta' : 'passagens abaixo de 10 km/h ocultas'} ·`;
       document.getElementById('btn-sem-vel').textContent = mostrando ? 'Ocultar' : 'Mostrar';
+      // Ao lado das etiquetas: "543 passagens" (o que a lista mostra)
+      document.getElementById('resumo-lista').textContent = lista.consulta
+        ? `${diaDoResumo()}${textoResultado(lista.total, lista.incompleta)}${semVel ? ' ·' : ''}` : '';
       sincronizarBarraRodape();
+    }
+    // Período de um dia só: a data vai na linha das etiquetas ("Sexta, 23/10 · ")
+    // e a lista fica sem a linha do dia
+    function diaDoResumo() {
+      const f = getActiveFilters();
+      if (!f.isSingleDay) return '';
+      const semana = veiculosDoDia.rotuloDiaLongo(f.dataInicio).split(',')[0];
+      return `${semana}, ${f.dataInicio.slice(8, 10)}/${f.dataInicio.slice(5, 7)} · `;
     }
     // A barra de baixo aparece se houver páginas ou o aviso de sem velocidade
     function mostrarPaginas(sim) {
@@ -4108,7 +3192,7 @@
     function esquecerDadosDoCliente() {
       sessaoSeq++;
       clearTimeout(timerLinhas); // ajuste de linhas pendente não desenha o condomínio anterior
-      capturasSeq++; graficoSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recordesSeq++; recargaSeq++; renderSeq++;
+      capturasSeq++; semanaSeq++; indicadoresSeq++; alertasSeq++; rankingSeq++; recordesSeq++; recargaSeq++; renderSeq++;
       recordesEm = 0; // condomínio novo: o ranking recarrega já
       camerasList = [];
       camerasMap = {};
@@ -4153,25 +3237,30 @@
       const html = (id, v) => { document.getElementById(id).innerHTML = v; };
       const texto = (id, v) => { document.getElementById(id).textContent = v; };
       fecharJanelasDoPainel();
-      html('table-body', '<div class="table-empty">Carregando...</div>');
+      html('table-body', linhaMensagem('<div class="table-empty">Carregando...</div>'));
       tabelaEmErro = false;
+      listaVista = { chave: null, ids: null };
       document.getElementById('rodape-sem-vel').hidden = true;
       mostrarPaginas(false);
       html('recent-cards', CARREGANDO_CARTOES_HTML);
       html('cameras-status', '');
-      html('ranking-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
-      html('recordes-list', '<li class="ranking-item" style="color:var(--text-muted)">Carregando...</li>');
+      html('ranking-list', '<li class="rk-msg">Carregando...</li>');
+      html('recordes-list', '<li class="rk-msg">Carregando...</li>');
       ['stat-veiculos', 'stat-alertas', 'stat-maxvel', 'stat-conformidade', 'ind-hora-pico', 'ind-reincidentes']
         .forEach((id) => texto(id, '--'));
+      ['cmp-alertas', 'cmp-maxvel', 'cmp-dentro', 'resumo-lista'].forEach((id) => texto(id, ''));
+      texto('stat-maxvel-quem', '—');
+      document.getElementById('anel-limite').setAttribute('stroke-dasharray', painelVisualLib.tracoDoAnel(0));
+      ontemCache = null;
+      semanaDesloc = 0;
       texto('stat-passagens', 'passagens');
       texto('stat-media', 'média -- km/h');
       html('barra-tipos', '');
       html('faixa-tipos-chips', '');
       html('veiculos-por-dia', '');
-      html('por-dia-legenda', '');
+      texto('semana-rotulo', '');
       texto('titulo-tabela', 'Passagens');
-      texto('title-hourly', 'Passagens por Hora');
-      texto('title-ranking', 'Top 10 Placas');
+      texto('title-ranking', 'Mais passagens');
       limparGraficos();
       texto('btn-topbar-veiculos', 'Veículos');
       texto('vm-count', '');
@@ -4185,12 +3274,10 @@
 
     function limparGraficos() {
       ultimosGraficos.clear();
-      ['chart-hourly', 'chart-alerts-7d'].forEach((id) => {
+      ['chart-alerts-7d'].forEach((id) => {
         const canvas = document.getElementById(id);
         canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
         canvas.removeAttribute('aria-label');
-        const tabela = document.getElementById(`${id}-dados`);
-        if (tabela) tabela.innerHTML = '';
       });
     }
 
@@ -4261,9 +3348,10 @@
 
     function marcarAtualizacao(ok) {
       const rotulo = document.getElementById('ultima-atualizacao');
-      const hora = new Date().toLocaleTimeString('pt-BR');
+      const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       rotulo.classList.toggle('falha', !ok);
-      rotulo.textContent = (ok ? 'Atualizado às ' : 'Falha ao atualizar às ') + hora;
+      rotulo.textContent = (ok ? 'Ao vivo · ' : 'Falha ao atualizar às ') + hora;
+      document.getElementById('polling-dot').title = ok ? `Ao vivo: atualiza a cada 30 s (última às ${hora})` : `Falha ao atualizar às ${hora}`;
     }
 
     // Período filtrado (tabela, gráfico, indicadores, alertas, Top 10), sempre
@@ -4277,7 +3365,6 @@
       }
       const r = await Promise.allSettled([
         loadCapturas({ resetPage }),
-        loadHourlyChart(),
         loadRanking(),
         loadIndicators(),
         loadAlerts7d(),
@@ -4422,6 +3509,19 @@
       if (!lista) return;
       const rotulos = [...new Set(unidadesLista.map((u) => unidadeLib.rotuloUnidade(u)).filter(Boolean))];
       lista.innerHTML = rotulos.map((r) => `<option value="${esc(r)}"></option>`).join('');
+      escreverCabecalhoUnidade();
+    }
+
+    // Coluna "Unidade": a dica diz o que é o número no condomínio ("Número da FIP")
+    const DICA_UNIDADE = {
+      apartamento: 'Número do apartamento', casa: 'Número da casa', sala: 'Número da sala',
+      loja: 'Número da loja', lote: 'Número do lote', fip: 'Número da FIP',
+    };
+    function escreverCabecalhoUnidade() {
+      const contagem = new Map();
+      unidadesLista.forEach((u) => contagem.set(u.tipo, (contagem.get(u.tipo) || 0) + 1));
+      const [tipo] = [...contagem.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+      document.getElementById('th-unidade').title = DICA_UNIDADE[tipo] || 'Unidade do cadastro na hora da passagem';
     }
 
     // <option>s do tipo de pessoa; sem seleção padrão (quem cadastra escolhe)
@@ -4589,14 +3689,18 @@
       return `<div class="vb-linha" title="${esc(texto)}">${bolinhaCor(info.hex)}${botaoModelo(info, `<span class="vb-txt">${esc(texto)}</span>`, texto)}</div>`;
     }
 
-    // Tabela: linha 1 = marca + nome (negrito); linha 2 = cor · ano (cinza)
+    // Tabela: três colunas — Veículo (marca + modelo, filtra pelo modelo) ·
+    // Cor (bolinha + nome) · Ano. Sem dado: o estado na coluna Veículo e "—".
     function celulaVeiculoTabela(placa, capturaTs) {
       const info = infoVeiculo(placa, capturaTs);
-      if (!info || info.estado !== 'consultado') return estadoVeiculoHtml(info);
-      const sub = [info.cor, info.ano].filter(Boolean).join(' · ');
+      const vazio = '<span class="sem-dado">—</span>';
+      if (!info || info.estado !== 'consultado') {
+        return `<td class="c-veic">${estadoVeiculoHtml(info)}</td><td class="c-cor">${vazio}</td><td class="c-ano">${vazio}</td>`;
+      }
       const nome = info.nome || '—';
-      return `<div class="vb-nome" title="${esc(nome)}">${botaoModelo(info, esc(nome), nome)}</div>`
-        + (sub ? `<div class="vb-linha" title="${esc(sub)}">${bolinhaCor(info.hex)}<span class="vb-txt">${esc(sub)}</span></div>` : '');
+      const cor = info.cor ? `<span class="cor">${bolinhaCor(info.hex)}${esc(info.cor)}</span>` : vazio;
+      return `<td class="c-veic">${botaoModelo(info, `<b>${esc(nome)}</b>`, nome)}</td>`
+        + `<td class="c-cor">${cor}</td><td class="c-ano">${info.ano ? esc(info.ano) : vazio}</td>`;
     }
 
     // Vínculo que valia no instante da passagem (não o de hoje)
@@ -4846,6 +3950,7 @@
     // Busca mais registros e filtra para não mostrar o mesmo veículo
     // repetidas vezes quando passa várias vezes em sequência.
     // ============================================
+    const RECENTES_QTD = 5; // a mais nova em destaque + 4 menores
     async function loadRecentCards() {
       if (agoraRecolhido()) return; // recolhido: sem consulta nem fotos (volta ao mostrar)
       const sessao = marcaDaSessao();
@@ -4862,11 +3967,11 @@
       const container = document.getElementById('recent-cards');
 
       if (error) {
-        container.innerHTML = '<div role="alert" style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="loadRecentCards()">Tentar de novo</button></div>';
+        container.innerHTML = '<div class="recentes-msg" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="loadRecentCards()">Tentar de novo</button></div>';
         return;
       }
       if (!rawData || rawData.length === 0) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Nenhuma captura recente</div>';
+        container.innerHTML = '<div class="recentes-msg">Nenhuma captura recente</div>';
         return;
       }
 
@@ -4876,7 +3981,7 @@
       const fonte = verSemVel ? rawData : rawData.filter(c => c.velocidade > 0);
 
       if (fonte.length === 0) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">Nenhuma captura com velocidade recente</div>';
+        container.innerHTML = '<div class="recentes-msg">Nenhuma captura com velocidade recente</div>';
         return;
       }
 
@@ -4888,19 +3993,17 @@
         if (!key || vistas.has(key)) continue;
         vistas.add(key);
         data.push(c);
-        if (data.length === 6) break;
+        if (data.length === RECENTES_QTD) break;
       }
 
-      // Se tiver menos de 6 placas distintas no último lote, completa com
+      // Menos placas distintas que o necessário no último lote: completa com
       // as próximas capturas mesmo repetindo (fallback)
-      if (data.length < 6) {
+      if (data.length < RECENTES_QTD) {
         for (const c of fonte) {
-          if (data.length === 6) break;
+          if (data.length === RECENTES_QTD) break;
           if (!data.includes(c)) data.push(c);
         }
       }
-
-      const limite = currentCliente.limite_velocidade;
 
       // Fotos e dados da base de veículos em paralelo; a suspeita só é
       // perguntada à API para placas em 'suspeita' (e fica guardada na sessão)
@@ -4911,72 +4014,100 @@
       if (!sessaoValida(sessao)) return;
 
       recentCardsData = data;
-      container.innerHTML = data.map((c, i) => {
-        const velMedida = velocidadeMedida(c.velocidade);
-        const isAlert = acimaDoLimite(c.velocidade, limite);
-        const velClass = classeVelocidade(c.velocidade, limite); // unknown | green | red
-        const ts = new Date(c.timestamp);
-        const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const data_str = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        const veiculo = vinculoDaPassagem(c.placa, c.timestamp);
-        const morador = veiculo
-          ? veiculo.nome_morador || nomeUnidade(veiculo) || vinculoPlacaLib.tipoPessoa(veiculo.tipo_pessoa).rotulo : '';
+      const limite = currentCliente.limite_velocidade;
+      container.innerHTML = data.map((c, i) => htmlCartaoRecente(c, i, fotos, limite)).join('');
+    }
 
-        // Cartões ficam no topo: só os que podem estar fora da tela (ou
-        // ocultos pelo CSS, 4º em diante na largura média) são adiados
-        const foto = c.foto_path ? fotos[c.foto_path] : null;
-        const photoHtml = foto
-          ? htmlFotoLista(foto, {
-            classe: 'rc-thumb', alt: `Passagem da placa ${c.placa} às ${hora}`,
-            largura: 640, altura: 360, semFoto: 'cartao',
-            adiada: i >= 3 || (i >= 2 && ESTREITO_MQ.matches),
-          })
-          : `<span class="rc-no-photo">&#128663;</span>`;
+    // Velocidade da legenda: número + km/h; acima do limite em vermelho e filtrável
+    function htmlVelocidadeLegenda(c, limite) {
+      if (!velocidadeMedida(c.velocidade)) return '<span class="vel-legenda" title="Abaixo de 10 km/h: a lombada não mede">— km/h</span>';
+      const texto = `${c.velocidade} km/h`;
+      return acimaDoLimite(c.velocidade, limite)
+        ? `<span class="vel-legenda red">${botaoFiltro('alerta', '1', esc(`▲ ${texto}`), `${texto}, acima do limite — filtrar só acima do limite`)}</span>`
+        : `<span class="vel-legenda">${esc(texto)}</span>`;
+    }
 
-        // Badge: ícone redundante + texto (não depende só de cor — daltonismo).
-        const badgeClass = isAlert ? 'alert-badge' : (!velMedida ? 'noradar-badge' : 'ok-badge');
-        const badgeText = isAlert ? '▲ ALERTA' : (!velMedida ? '⊘ SEM RADAR' : '✓ OK');
+    // "Visitante · Ricardo P. · 036" (cadastro da hora); sem cadastro: "Sem cadastro"
+    function textoCadastroCurto(vinculo) {
+      if (!vinculo) return vinculoPlacaLib.tipoPessoa(null).rotulo;
+      return [vinculoPlacaLib.tipoPessoa(vinculo.tipo_pessoa).rotulo, nomeUnidade(vinculo)].filter(Boolean).join(' · ');
+    }
 
-        // Exibição da velocidade: — se não medida, senão valor + unidade.
-        // Em alerta, prefixa ▲ para reforçar o excesso sem depender da cor.
-        const velHtml = velMedida
-          ? `${isAlert ? '▲ ' : ''}${c.velocidade} <span style="font-size:0.8125rem">km/h</span>`
-          : `<span class="vel-dash">—</span> <span style="font-size:0.8125rem">km/h</span>`;
+    // Foto da passagem: caixa 16:9 com recorte por câmera (sem a faixa preta do
+    // topo e com zoom no carro). O botão abre os detalhes (foto inteira).
+    function htmlFotoRecente(c, i, fotos, destaque) {
+      const ts = new Date(c.timestamp);
+      const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const foto = c.foto_path ? fotos[c.foto_path] : null;
+      const camera = camerasList.find((x) => x.id === c.camera_id) || null;
+      const recorte = painelVisualLib.recorteDaFoto(camera, destaque ? 'destaque' : 'mini');
+      const img = foto
+        ? htmlFotoLista(foto, {
+          classe: 'rc-thumb', alt: `Passagem da placa ${c.placa} às ${hora}`,
+          largura: 640, altura: 360, semFoto: 'cartao', adiada: i >= 3,
+        })
+        : '<span class="rc-no-photo">&#128663;</span>';
+      return `<div class="foto" style="${painelVisualLib.estiloRecorte(recorte)}">`
+        + `<button type="button" class="rc-foto-btn" aria-label="${esc(`Ver detalhes da passagem ${c.placa} às ${hora}`)}">${img}</button></div>`;
+    }
 
+    function htmlCartaoRecente(c, i, fotos, limite) {
+      const ts = new Date(c.timestamp);
+      const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const vinculo = vinculoDaPassagem(c.placa, c.timestamp);
+      const placaHtml = botaoFiltro('placa', c.placa, `<span class="mono">${esc(c.placa)}</span>`, `Filtrar pela placa ${c.placa}`);
+      const info = infoVeiculo(c.placa, c.timestamp);
+      const nomeVeic = info && info.estado === 'consultado' ? (info.nome || '') : '';
+      const isAlert = acimaDoLimite(c.velocidade, limite);
+      // O cartão não é botão (teria botões dentro): o detalhe abre pela foto,
+      // que é um <button>; clicar na área vazia é só atalho de mouse
+      if (i === 0) {
+        const minutos = (Date.now() - ts.getTime()) / 60000;
+        const tag = minutos <= 2 ? 'Agora' : 'Última';
+        const sub = info && info.estado === 'consultado' ? [info.cor, info.ano].filter(Boolean).join(' · ') : '';
         const radarNome = camerasMap[c.camera_id] || '';
-        const badgeHtml = isAlert
-          ? botaoFiltro('alerta', '1', badgeText, `${badgeText} — filtrar só acima do limite`, `rc-badge ${badgeClass}`)
-          : `<div class="rc-badge ${badgeClass}">${badgeText}</div>`;
-        // Sem morador, o nome mostrado é o do radar: vira "filtrar pela câmera"
-        const nomeHtml = morador ? `${iconeTipoPessoa(veiculo.tipo_pessoa)}${esc(morador)}`
-          : radarNome ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`)
-          : '<span style="color:var(--text-muted)">N/C</span>';
-        // O card não é botão (teria botões dentro): o detalhe abre pela foto,
-        // que é um <button>; clicar na área vazia do card é só atalho de mouse
-        return `<div class="recent-card ${isAlert ? 'alerta' : ''}" onclick="openModal(recentCardsData[${i}])">
-          ${badgeHtml}
-          <button type="button" class="rc-foto-btn" aria-label="${esc(`Ver detalhes da passagem ${c.placa}`)}">${photoHtml}</button>
-          ${botaoFiltro('placa', c.placa, esc(c.placa), `Filtrar pela placa ${c.placa}`, 'rc-placa')}
-          <div class="rc-vel ${velClass}">${velHtml}</div>
-          <div class="rc-info">
-            <div class="rc-linha">
-              <span class="rc-name" title="${esc(morador || radarNome)}">${nomeHtml}</span>
-              <span class="rc-time">${hora}&nbsp;·&nbsp;${data_str}</span>
-            </div>
-            ${linhaVeiculoCard(c.placa, c.timestamp)}
+        const podeCadastrar = !vinculo && podeEditarVeiculos() && placaLib.ehPlaca(placaLib.limpar(c.placa))
+          && !vinculoPlacaLib.vinculoVigente(indiceVinculos, c.placa);
+        return `<div class="destaque${isAlert ? ' alerta' : ''}" onclick="openModal(recentCardsData[0])">
+          ${htmlFotoRecente(c, 0, fotos, true)}
+          <div class="det">
+            <span class="tag-novo">${tag}</span>
+            <strong>${placaHtml} · ${htmlVelocidadeLegenda(c, limite)}</strong>
+            ${nomeVeic ? `<strong>${esc(nomeVeic)}</strong>` : ''}${sub ? `<span>${esc(sub)}</span>` : ''}
+            <span>${radarNome ? `${esc(radarNome)} · ` : ''}<span class="mono">${esc(hora)}</span></span>
+            ${vinculo ? `<span>${esc([textoCadastroCurto(vinculo), vinculo.nome_morador].filter(Boolean).join(' · '))}</span>`
+              : podeCadastrar ? `<button type="button" class="btn-add" data-acao="cadastrar-recente" data-indice="0" aria-label="${esc(`Cadastrar a placa ${c.placa}`)}">+ Cadastrar placa</button>`
+              : `<span>${esc(textoCadastroCurto(null))}</span>`}
           </div>
         </div>`;
-      }).join('');
+      }
+      const linha2 = [nomeVeic, isAlert ? 'acima do limite' : textoCadastroCurto(vinculo)].filter(Boolean).join(' · ');
+      return `<div class="mini-p${isAlert ? ' alerta' : ''}" onclick="openModal(recentCardsData[${i}])">
+          ${htmlFotoRecente(c, i, fotos, false)}
+          <div class="legf"><strong>${placaHtml} · ${htmlVelocidadeLegenda(c, limite)}</strong><span class="mono">${esc(hora)}</span></div>
+          <div class="legf2" title="${esc(linha2)}">${esc(linha2)}</div>
+        </div>`;
     }
 
     // ============================================
     // STATS
     // ============================================
-    // "Agora · hoje": veículos (placa normalizada, uma vez no dia, qualquer
+    // "Números do dia": veículos (placa normalizada, uma vez no dia, qualquer
     // radar), alertas, velocidade máxima e "dentro do limite" do dia inteiro
     // (00:00–23:59), sem os filtros da lista. O tipo de cada veículo é o do
     // cadastro na primeira passagem do dia (site/js/veiculos-do-dia.js).
+    // Embaixo de cada número: a comparação com ontem no mesmo horário.
     const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+    const COLUNAS_DO_DIA = 'id, placa, velocidade, velocidade_invalida, timestamp';
+    const DIA_MS = 86400000;
+
+    // Números de um conjunto de passagens (hoje ou ontem até a mesma hora)
+    function numerosDoDia(capturas, limite) {
+      const alertas = capturas.filter(c => acimaDoLimite(c.velocidade, limite)).length;
+      const maior = capturas.reduce((m, c) => ((c.velocidade || 0) > (m ? m.velocidade || 0 : -1) ? c : m), null);
+      const ind = veiculosDoDia.indicadoresDeVelocidade(capturas, limite);
+      return { alertas, maxVel: maior ? maior.velocidade || 0 : 0, maior, ind, dentroPct: ind.dentroPct };
+    }
 
     async function loadStats() {
       const todayStart = new Date();
@@ -4987,7 +4118,7 @@
       let data;
       try {
         data = await coletarPaginado((de, ate) => sb.from('capturas')
-          .select('id, placa, velocidade, velocidade_invalida, timestamp')
+          .select(COLUNAS_DO_DIA)
           .eq('cliente_id', currentCliente.id)
           .gte('timestamp', todayStart.toISOString())
           .order('timestamp', { ascending: false }).order('id').range(de, ate));
@@ -4997,30 +4128,22 @@
       capturasHoje = data;
 
       const limite = currentCliente.limite_velocidade;
-      const alertas = data.filter(c => acimaDoLimite(c.velocidade, limite)).length;
-      const maxVel = data.length > 0 ? Math.max(...data.map(c => c.velocidade || 0)) : 0;
+      const n = numerosDoDia(data, limite);
 
       document.getElementById('stat-passagens').textContent = plural(data.length, 'passagem', 'passagens');
-      document.getElementById('stat-alertas').textContent = alertas;
-      const maxEl = document.getElementById('stat-maxvel');
-      maxEl.textContent = maxVel;
-      maxEl.classList.toggle('red', acimaDoLimite(maxVel, limite));
-      escreverDentroDoLimite(veiculosDoDia.indicadoresDeVelocidade(data, limite), limite);
-
-      // Realce do card "Alertas Hoje": crítico (vermelho + ⚠) quando > 0,
-      // tranquilo (verde + ✓) quando zero — diferencia estado vazio de crítico.
-      const cardAlertas = document.getElementById('card-alertas');
-      const labelAlertas = document.getElementById('label-alertas');
       const valAlertas = document.getElementById('stat-alertas');
-      if (alertas > 0) {
-        cardAlertas.classList.add('alert-active');
-        labelAlertas.textContent = '⚠ Alertas hoje';
-        valAlertas.classList.remove('green'); valAlertas.classList.add('red');
-      } else {
-        cardAlertas.classList.remove('alert-active');
-        labelAlertas.textContent = '✓ Alertas hoje';
-        valAlertas.classList.remove('red'); valAlertas.classList.add('green');
-      }
+      valAlertas.textContent = n.alertas;
+      // Vermelho só no número (o cartão não fica vermelho inteiro); zero em verde
+      valAlertas.classList.toggle('red', n.alertas > 0);
+      valAlertas.classList.toggle('green', n.alertas === 0);
+      const maxEl = document.getElementById('stat-maxvel');
+      maxEl.textContent = n.maxVel;
+      maxEl.classList.toggle('red', acimaDoLimite(n.maxVel, limite));
+      document.getElementById('stat-maxvel-quem').textContent = n.maior && n.maxVel > 0
+        ? `${n.maior.placa || '—'} · ${new Date(n.maior.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+        : 'sem velocidade medida';
+      escreverDentroDoLimite(veiculosDoDia.indicadoresDeVelocidade(data, limite), limite);
+      escreverComparacaoComOntem(sessao, n, limite).catch((err) => console.error('Erro na comparação com ontem:', err));
 
       // O tipo de cada veículo depende do cadastro: espera os vínculos carregarem
       await veiculosCachePronto;
@@ -5032,15 +4155,49 @@
     function escreverDentroDoLimite(ind, limite) {
       const el = document.getElementById('stat-conformidade');
       const pct = ind.dentroPct;
+      const classe = pct === null ? '' : pct >= 80 ? 'green' : pct >= 50 ? 'laranja' : 'red';
       el.textContent = pct === null ? '--' : `${pct}%`;
-      el.classList.toggle('green', pct !== null && pct >= 80);
-      el.classList.toggle('laranja', pct !== null && pct >= 50 && pct < 80);
-      el.classList.toggle('red', pct !== null && pct < 50);
+      ['green', 'laranja', 'red'].forEach((c) => el.classList.toggle(c, c === classe));
       el.title = ind.validas ? `${plural(ind.validas, 'passagem', 'passagens')} hoje; limite ${limite} km/h` : '';
+      const anel = document.getElementById('anel-limite');
+      anel.setAttribute('stroke-dasharray', painelVisualLib.tracoDoAnel(pct === null ? 0 : pct));
+      ['laranja', 'red'].forEach((c) => anel.classList.toggle(c, c === classe));
       document.getElementById('stat-media').textContent = ind.media === null ? 'média -- km/h' : `média ${ind.media} km/h`;
     }
 
-    // ---------- Veículos hoje: número, barra fina por tipo e faixa de tipos clicável
+    // ---------- Comparação com ontem no mesmo horário (00:00 até agora − 24 h)
+    // Guardada por ONTEM_TTL_MS: o polling de 30 s não relê ontem a cada ciclo
+    const ONTEM_TTL_MS = 5 * 60 * 1000;
+    let ontemCache = null; // { clienteId, em, numeros }
+    async function numerosDeOntem(sessao, limite) {
+      if (ontemCache && ontemCache.clienteId === sessao.clienteId && Date.now() - ontemCache.em < ONTEM_TTL_MS) return ontemCache.numeros;
+      const inicioHoje = new Date();
+      inicioHoje.setHours(0, 0, 0, 0);
+      const desde = new Date(inicioHoje.getTime() - DIA_MS).toISOString();
+      const ate = new Date(Date.now() - DIA_MS).toISOString();
+      const linhas = await coletarPaginado((de, fim) => sb.from('capturas')
+        .select(COLUNAS_DO_DIA)
+        .eq('cliente_id', sessao.clienteId)
+        .gte('timestamp', desde).lte('timestamp', ate)
+        .order('timestamp', { ascending: false }).order('id').range(de, fim));
+      const numeros = numerosDoDia(linhas, limite);
+      if (sessaoValida(sessao)) ontemCache = { clienteId: sessao.clienteId, em: Date.now(), numeros };
+      return numeros;
+    }
+
+    async function escreverComparacaoComOntem(sessao, hoje, limite) {
+      const ontem = await numerosDeOntem(sessao, limite);
+      if (!sessaoValida(sessao)) return;
+      const cmp = painelVisualLib.comparacaoComOntem(hoje, ontem);
+      [['cmp-alertas', cmp.alertas], ['cmp-maxvel', cmp.maxVel], ['cmp-dentro', cmp.dentro]].forEach(([id, c]) => {
+        const el = document.getElementById(id);
+        el.textContent = c.texto;
+        el.classList.toggle('bom', c.bom);
+        el.title = c.texto ? 'Comparado com ontem até este mesmo horário' : '';
+      });
+    }
+
+    // ---------- Veículos hoje: número, barra por tipo e legenda clicável
     const TIPOS_DA_FAIXA = veiculosDoDia.TIPOS.map((id) => vinculoPlacaLib.tipoPessoa(id));
     let resumoHoje = null;
 
@@ -5060,17 +4217,19 @@
       escreverFaixaTipos();
     }
 
-    // Chips com os veículos de hoje por tipo; o pressionado é o filtro de tipo da lista
+    // Legenda com os veículos de hoje por tipo; a pressionada é o filtro de tipo da
+    // lista. Tipo sem veículo hoje sai da legenda (a não ser que seja o filtro ativo).
     function escreverFaixaTipos() {
       const el = document.getElementById('faixa-tipos-chips');
       const ativo = filtrosAtivos ? filtrosAtivos.tipoCadastro : '';
       el.innerHTML = TIPOS_DA_FAIXA.map((t) => {
         const n = resumoHoje ? resumoHoje.porTipo[t.id] : null;
         const pressionado = ativo === t.id;
+        if (n === 0 && !pressionado) return '';
         const rotulo = `${t.rotulo}: ${n === null ? 'carregando' : plural(n, 'veículo', 'veículos')} hoje — `
           + (pressionado ? 'tirar o filtro' : 'filtrar a lista');
-        return `<button type="button" class="tipo-chip" data-tipo="${esc(t.id)}" aria-pressed="${pressionado}"`
-          + ` style="--c:var(${esc(t.cor)})" aria-label="${esc(rotulo)}">${esc(t.rotulo)} <b>${n === null ? '—' : n}</b></button>`;
+        return `<button type="button" class="leg-tipo" data-tipo="${esc(t.id)}" aria-pressed="${pressionado}"`
+          + ` style="--c:var(${esc(t.cor)})" aria-label="${esc(rotulo)}">${icoTipo(t)}${esc(t.rotulo)} <b>${n === null ? '—' : n}</b></button>`;
       }).join('');
     }
 
@@ -5079,19 +4238,20 @@
       const b = e.target.closest('[data-tipo]');
       if (!b || !filtrosAtivos) return;
       const id = b.dataset.tipo;
-      // No desktop a lista já está logo abaixo; na tela estreita (página rola) leva até ela
+      // Na tela larga a lista está logo abaixo; na estreita (página longa) leva até ela
       mudarFiltros({ tipoCadastro: filtrosAtivos.tipoCadastro === id ? '' : id }, { rolar: ESTREITO_MQ.matches });
     }
 
-    // ---------- Veículos por dia (últimos 8 dias, empilhado por tipo)
+    // ---------- Veículos por dia: semana de segunda a domingo, por tipo (mapa de calor)
     // Os dias anteriores mudam pouco: ficam guardados (por condomínio e dias)
     // por PORDIA_TTL_MS; hoje sai de capturasHoje, já carregado. Com a função
     // do banco (primeiras_passagens_por_dia) vem uma linha por veículo e dia;
     // sem ela (migration ainda não aplicada), o navegador agrupa as passagens.
-    const DIAS_POR_DIA = 8;
     const PORDIA_TTL_MS = 30 * 60 * 1000;
     let porDiaCache = null; // { chave, em, primeiras }
     let porDiaSemRpc = false;
+    let semanaDesloc = 0;   // 0 = esta semana; -1 = a anterior…
+    let semanaSeq = 0;
 
     const MAX_PAGINAS_PORDIA = 50;
     async function primeirasPelaRpc(clienteId, desde, ate) {
@@ -5133,51 +4293,91 @@
     }
 
     async function loadVeiculosPorDia(sessao) {
+      const seq = ++semanaSeq;
       const hoje = veiculosDoDia.diaDe(new Date());
-      const dias = veiculosDoDia.ultimosDias(hoje, DIAS_POR_DIA);
+      const dias = painelVisualLib.diasDaSemana(hoje, semanaDesloc);
+      const comDados = painelVisualLib.diasComDados(dias, hoje);
+      const passados = comDados.filter((d) => d < hoje);
+      escreverNavSemana(dias);
       const falha = document.getElementById('falha-por-dia');
-      let anteriores;
+      let anteriores = [];
       try {
-        anteriores = await primeirasDosDiasAnteriores(sessao, dias.slice(0, -1));
+        if (passados.length) anteriores = await primeirasDosDiasAnteriores(sessao, passados);
       } catch (err) {
-        if (sessaoValida(sessao)) falha.hidden = false;
+        if (sessaoValida(sessao) && seq === semanaSeq) falha.hidden = false;
         throw err;
       }
-      if (!sessaoValida(sessao)) return;
+      if (!sessaoValida(sessao) || seq !== semanaSeq) return;
       falha.hidden = true;
-      const deHoje = veiculosDoDia.primeirasDoDia(capturasHoje).filter((p) => p.dia === hoje);
-      desenharVeiculosPorDia(veiculosDoDia.serieVeiculosPorDia(anteriores.concat(deHoje), indiceVinculos, dias, hoje));
+      const deHoje = comDados.includes(hoje) ? veiculosDoDia.primeirasDoDia(capturasHoje).filter((p) => p.dia === hoje) : [];
+      desenharVeiculosPorDia(veiculosDoDia.serieVeiculosPorDia(anteriores.concat(deHoje), indiceVinculos, comDados, hoje), dias, hoje);
     }
 
-    function htmlDiaDoGrafico(d, max, cadastroOk) {
-      const pilha = cadastroOk
-        ? TIPOS_DA_FAIXA.filter((t) => d.porTipo[t.id] > 0)
-          .map((t) => `<i style="flex:${Number(d.porTipo[t.id])};background:var(${esc(t.cor)})"></i>`).join('')
-        : '<i style="flex:1;background:var(--accent)"></i>';
-      // "sex" em cima, "23" embaixo: 8 colunas cabem na lateral estreita
-      const [semana, numero] = veiculosDoDia.rotuloDiaCurto(d.dia).split(' ');
-      return `<div class="dia${d.pico ? ' pico' : ''}${d.parcial ? ' parcial' : ''}">`
-        + `<span class="n">${Number(d.total)}</span>`
-        + `<div class="pilha" style="height:${Math.round((d.total / max) * 100)}%">${d.total ? pilha : ''}</div>`
-        + `<span class="d">${esc(semana)}<br>${esc(numero)}${d.parcial ? '*' : ''}</span></div>`;
+    function escreverNavSemana(dias) {
+      const rotulo = document.getElementById('semana-rotulo');
+      rotulo.textContent = painelVisualLib.rotuloSemana(dias);
+      rotulo.setAttribute('aria-label', painelVisualLib.rotuloSemanaLongo(dias));
+      document.getElementById('semana-prox').disabled = !painelVisualLib.podeAvancar(semanaDesloc);
     }
 
-    function desenharVeiculosPorDia(serie) {
-      const max = Math.max(1, ...serie.map((d) => d.total));
+    function trocarSemana(passo) {
+      const novo = semanaDesloc + passo;
+      if (passo > 0 && !painelVisualLib.podeAvancar(semanaDesloc)) return;
+      semanaDesloc = novo;
+      if (currentCliente) loadVeiculosPorDia(marcaDaSessao()).catch(() => {});
+    }
+
+    // Célula pressionada = a lista está filtrada naquele dia inteiro (e tipo)
+    function celulaPressionada(dia, tipo) {
+      const f = filtrosAtivos;
+      if (!f || f.dataInicio !== dia || f.dataFim !== dia || f.horaInicio !== '00:00' || f.horaFim !== '23:59') return false;
+      return (f.tipoCadastro || 'total') === tipo;
+    }
+
+    const ROTULO_LINHA_CURTO = { sem: 'Sem cad.', proprietario: 'Propriet.' };
+    function htmlCelulaSemana(linha, col, v, i, ehPico, tipoInfo) {
+      const quando = `${col.semana} ${col.numero}`;
+      if (v === null) return `<span class="c vz" role="img" aria-label="${esc(`${quando}: o dia ainda não chegou`)}">—</span>`;
+      const nome = linha.tipo === 'total' ? 'Todos os veículos' : tipoInfo.rotulo;
+      const pressionado = celulaPressionada(col.dia, linha.tipo);
+      const rotulo = `${nome}, ${quando}${col.hoje ? ' (hoje, em andamento)' : ''}: ${plural(v, 'veículo', 'veículos')}`
+        + `${ehPico ? ', o maior da semana' : ''} — ${pressionado ? 'tirar o filtro' : 'filtrar a lista'}`;
+      const cor = linha.tipo === 'total' ? '' : `--c:var(${esc(tipoInfo.cor)});--a:${Number(linha.intensidades[i])}%`;
+      return `<button type="button" class="c${ehPico ? ' pk' : ''}${v === 0 ? ' zero' : ''}" data-dia="${esc(col.dia)}" data-tipo="${esc(linha.tipo)}"`
+        + ` aria-pressed="${pressionado}" style="${cor}" aria-label="${esc(rotulo)}">${Number(v)}</button>`;
+    }
+
+    function desenharVeiculosPorDia(serie, dias, hoje) {
       const cadastroOk = cadastro.estado === 'ok';
-      const horaAgora = new Date().getHours();
+      const t = painelVisualLib.tabelaDaSemana(serie, dias, hoje, cadastroOk ? veiculosDoDia.TIPOS : []);
+      const cabecalho = '<span aria-hidden="true"></span>' + t.colunas.map((c) =>
+        `<span class="h${c.hoje ? ' hoje' : ''}" aria-hidden="true">${esc(c.semana)}<br>${esc(c.numero)}${c.hoje ? '*' : ''}</span>`).join('');
+      const linhas = t.linhas.map((l) => {
+        const info = l.tipo === 'total' ? null : vinculoPlacaLib.tipoPessoa(l.tipo);
+        const curto = l.tipo === 'total' ? 'Total' : (ROTULO_LINHA_CURTO[l.tipo] || info.rotulo);
+        const longo = l.tipo === 'total' || l.tipo === 'sem' ? curto : info.rotulo;
+        const titulo = l.tipo === 'total' ? 'Total' : info.rotulo;
+        return `<span class="r${l.tipo === 'total' ? ' t' : ''}" title="${esc(titulo)}"${info ? ` style="--c:var(${esc(info.cor)})"` : ''}><span class="r-longo">${esc(longo)}</span><span class="r-curto">${esc(curto)}</span></span>`
+          + t.colunas.map((c, i) => htmlCelulaSemana(l, c, l.valores[i], i, l.tipo === 'total' && i === t.pico, info)).join('');
+      }).join('');
       const el = document.getElementById('veiculos-por-dia');
-      el.innerHTML = serie.map((d) => htmlDiaDoGrafico(d, max, cadastroOk)).join('');
-      const descricao = serie.map((d) => `${veiculosDoDia.rotuloDiaCurto(d.dia)}: ${d.total}`
-        + (d.parcial ? ` (hoje, até ${horaAgora}h)` : '') + (d.pico ? ', o maior' : '')).join('; ');
-      el.setAttribute('aria-label', `Veículos diferentes por dia, últimos ${serie.length} dias — ${descricao}`);
-      document.getElementById('por-dia-legenda').innerHTML = (cadastroOk
-        ? TIPOS_DA_FAIXA.map((t) => `<span style="--c:var(${esc(t.cor)})">${esc(t.rotulo)}</span>`).join('') : '')
-        + `<span class="sem-cor">* hoje, até ${horaAgora}h</span>`;
+      el.innerHTML = cabecalho + linhas;
+      el.setAttribute('aria-label', `Veículos diferentes por dia, ${painelVisualLib.rotuloSemanaLongo(dias)}, por tipo de cadastro`);
+    }
+
+    function aoClicarSemana(e) {
+      const b = e.target.closest('button[data-dia]');
+      if (!b || !filtrosAtivos) return;
+      const { dia, tipo } = b.dataset;
+      if (b.getAttribute('aria-pressed') === 'true') {
+        mudarFiltros(Object.assign(periodoDoAtalho('hoje', todayLocalISO()), { tipoCadastro: '' }), { rolar: true });
+        return;
+      }
+      mudarFiltros({ dataInicio: dia, dataFim: dia, horaInicio: '00:00', horaFim: '23:59', tipoCadastro: tipo === 'total' ? '' : tipo }, { rolar: true });
     }
 
     // ============================================
-    // STATUS DAS CAMERAS
+    // STATUS DAS CAMERAS (ícones no topo)
     // ============================================
     // cameraStatus vem de /js/camera-status.js (mesma lib usada pelo
     // admin e pelo server). Wrapper preserva a API local.
@@ -5185,18 +4385,28 @@
       return window.cameraStatusLib.cameraStatus(lastSeen);
     }
 
-    // Falha na consulta não pode deixar pílulas antigas na tela: uma câmera
+    const ICONE_CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>';
+
+    // Falha na consulta não pode deixar ícones antigos na tela: uma câmera
     // caída seguiria aparecendo "online".
     function renderCamerasIndisponivel() {
       document.getElementById('cameras-status').innerHTML =
-        `<div class="cam-pill" role="alert" title="Não foi possível consultar o status das câmeras">
-          <span class="cam-dot"></span>
-          <span class="cam-estado">Status indisponível</span>
-        </div>`;
+        `<span class="cam indisponivel" role="img" tabindex="0" aria-label="Status das câmeras indisponível agora">${ICONE_CAMERA}`
+        + '<span class="dica" aria-hidden="true"><b>Câmeras</b>status indisponível agora</span></span>';
+    }
+
+    function htmlIconeCamera(cam) {
+      const st = cameraStatus(cam.last_seen);
+      const icone = painelVisualLib.estadoIconeCamera(st);
+      const nome = cam.nome_exibicao || cam.nome;
+      const quando = cam.last_seen ? new Date(cam.last_seen).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'nunca conectou';
+      // O clique filtra a lista pela câmera (e rola até ela)
+      return `<button type="button" class="cam ${esc(icone.estado)}" data-filtro="camera" data-valor="${esc(cam.id)}"`
+        + ` aria-label="${esc(`${nome}: ${icone.dica}. Filtrar a lista por esta câmera`)}">${ICONE_CAMERA}`
+        + `<span class="dica" aria-hidden="true"><b>${esc(nome)}</b>${esc(icone.dica)}<span>leitura: ${esc(quando)}</span></span></button>`;
     }
 
     async function loadCamerasStatus() {
-      if (agoraRecolhido()) return; // recolhido junto com os cartões
       const sessao = marcaDaSessao();
       try {
         const { data: cameras, error } = await sb.from('cameras')
@@ -5206,22 +4416,7 @@
         if (!sessaoValida(sessao)) return; // resposta de outro condomínio/sessão
 
         if (error || !cameras) { renderCamerasIndisponivel(); return; }
-
-        const container = document.getElementById('cameras-status');
-        if (!cameras.length) { container.innerHTML = ''; return; }
-
-        container.innerHTML = cameras.map(cam => {
-          const st = cameraStatus(cam.last_seen);
-          const displayName = cam.nome_exibicao || cam.nome;
-          const title = (cam.last_seen ? new Date(cam.last_seen).toLocaleString('pt-BR') : 'Nunca conectou') + ' | ' + cam.nome;
-          // Ao vivo, mas o clique filtra a câmera na lista (e rola até ela)
-          return `<button type="button" class="cam-pill cam-${st.status}" title="${escHtml(title)}"
-            data-filtro="camera" data-valor="${escHtml(cam.id)}" aria-label="${escHtml(`Filtrar pela câmera ${displayName} (${st.label})`)}">
-            <span class="cam-dot"></span>
-            <span class="cam-nome">${escHtml(displayName)}</span>
-            <span class="cam-estado">${escHtml(st.label)}</span>
-          </button>`;
-        }).join('');
+        document.getElementById('cameras-status').innerHTML = cameras.map(htmlIconeCamera).join('');
       } catch (err) {
         console.error('Erro câmeras:', err);
         renderCamerasIndisponivel();
@@ -5310,7 +4505,7 @@
 
     // Lista vazia por um motivo (filtro sem resultado ou falha): nada velho fica na tela
     function listaSemDados(html) {
-      document.getElementById('table-body').innerHTML = html;
+      document.getElementById('table-body').innerHTML = html.startsWith('<tr') ? html : linhaMensagem(html);
       tabelaEmErro = false;
       tabelaPaginaData = [];
       lista = { modo: 'servidor', total: 0, semVel: 0, incompleta: false, consulta: null, conferidas: null };
@@ -5320,7 +4515,7 @@
 
     function mostrarErroDaLista() {
       // Erro não é "nenhuma captura": o síndico leria que ninguém passou
-      document.getElementById('table-body').innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></div>';
+      document.getElementById('table-body').innerHTML = linhaMensagem('<div class="table-empty" role="alert">Não foi possível carregar as capturas. <button type="button" class="btn-retry" onclick="recarregarPeriodo({ resetPage: false })">Tentar de novo</button></div>');
       tabelaEmErro = true; // o ajuste de linhas não troca este erro por dados velhos
       document.getElementById('rodape-sem-vel').hidden = true;
       mostrarPaginas(false);
@@ -5384,21 +4579,18 @@
       return renderPage();
     }
 
-    // Linhas por página = o que cabe na altura útil da lista (5 a 50)
+    // Linhas por página = uma tela de lista (a página rola; o cabeçalho fica fixo), 5 a 50
     const LINHAS_MIN = 5;
     const LINHAS_MAX = 50;
-    const ALTURA_LINHA_PADRAO = 38;       // desktop com mouse (CSS .table-row)
-    const ALTURA_LINHA_TOQUE = 44;        // toque: min-height da linha
+    const ALTURA_LINHA_PADRAO = 52;       // CSS .table-row (56 no monitor grande)
+    const ALTURA_LINHA_TOQUE = 52;        // toque: a linha tem no mínimo 52 px
     const TOQUE_MQ = window.matchMedia('(pointer: coarse)');
-    const LINHAS_ESTREITO = 14;           // ≤ 900 px (página rola): como antes
-    const ALTURA_PAGINACAO_PADRAO = 37;
-    const FOLGA_ROLANTE_PX = 24;          // respiro abaixo da lista quando a página rola
+    const LINHAS_ESTREITO = 14;           // ≤ 1.023 px: cartões de 3 linhas, tamanho fixo
+    const ALTURA_PAGINACAO_PADRAO = 56;
+    const FOLGA_ROLANTE_PX = 24;          // respiro abaixo da lista
     const DEBOUNCE_LINHAS_MS = 150;
-    const ESTREITO_MQ = window.matchMedia('(max-width: 900px)');
+    const ESTREITO_MQ = window.matchMedia('(max-width: 1023px)');
     let linhasPorPagina = 14;
-    // Diferença entre o cálculo e o que coube de fato na tela (ver conferirSobraDaLista)
-    let correcaoLinhas = 0;
-    let ultimoCalculo = 14;
     let alturaPaginacao = ALTURA_PAGINACAO_PADRAO;
     let timerLinhas = null;
     // Tabela mostrando "Não foi possível carregar…": o ajuste só recalcula o
@@ -5408,6 +4600,9 @@
     let allThumbUrls = {};
     let renderSeq = 0;
     const MAX_PAGINAS_ORDINAL = 5;
+    // Passagem que acabou de chegar (página 1, mesmos filtros): faixa azul por NOVO_MS
+    const NOVO_MS = 4000;
+    let listaVista = { chave: null, ids: null };
 
     // Passagens da página: do servidor por .range() ou, na conferência, pelos ids conferidos
     async function paginaDaLista(faixa) {
@@ -5454,58 +4649,84 @@
       return veiculosDoDia.ordinaisDasLeituras(leituras);
     }
 
-    // Placa (com o selo "Nª hoje"), velocidade (▲ no alerta), hora, radar,
-    // veículo e o cadastro da hora em três colunas: Tipo, Nome e Unidade
-    function htmlLinhaDaLista(c, pi, ordinais, hoje, limite) {
+    // Lista em tabela (11 colunas): Foto · Placa (Mercosul + "Nª") · Veloc. ·
+    // Hora · Lombada · Veículo · Cor · Ano · Tipo · Nome · Unidade. Tudo
+    // centralizado e sem corte; no tablet/celular cada linha vira um cartão.
+    const COLUNAS_TABELA = 11;
+    function htmlPlacaMercosul(placa, grande) {
+      return `<span class="mer${grande ? ' g' : ''}"><i></i><b>${esc(placa)}</b></span>`;
+    }
+
+    // Ícone de linha do tipo (casa, chave, crachá, ferramenta, interrogação)
+    function icoTipo(t) {
+      return `<svg class="ico" aria-hidden="true" focusable="false"><use href="#ic-${esc(t.icone)}"/></svg>`;
+    }
+
+    // Mensagem (carregando, vazia, erro) ocupando a linha inteira da tabela
+    function linhaMensagem(html) {
+      return `<tr class="tr-msg"><td colspan="${COLUNAS_TABELA}">${html}</td></tr>`;
+    }
+
+    function htmlLinhaDaLista(c, pi, ordinais, hoje, limite, novo) {
       const velMedida = velocidadeMedida(c.velocidade);
       const isAlert = acimaDoLimite(c.velocidade, limite);
       const ts = new Date(c.timestamp);
       const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const dataHora = `${ts.toLocaleDateString('pt-BR')} ${hora}`;
-      const velTexto = velMedida ? `${isAlert ? '▲ ' : ''}${c.velocidade} km/h` : '— km/h';
+      const kmh = '<span class="visualmente-oculto"> km/h</span>';
+      // Seta numa posição fixa e o número alinhado à direita (caixa de largura mínima)
+      const caixaVel = (seta, num) => `<span class="vbox"><span class="seta" aria-hidden="true">${seta}</span><span>${num}</span></span>`;
       const velHtml = isAlert
-        ? botaoFiltro('alerta', '1', esc(velTexto), `${c.velocidade} km/h, acima do limite — filtrar só acima do limite`)
-        : velMedida ? esc(velTexto) : `<span title="Abaixo de 10 km/h: o radar não mede">${esc(velTexto)}</span>`;
+        ? botaoFiltro('alerta', '1', `${caixaVel('▲', Number(c.velocidade))}${kmh}`, `${c.velocidade} km/h, acima do limite — filtrar só acima do limite`)
+        : velMedida ? `${caixaVel('', Number(c.velocidade))}${kmh}` : `<span title="Abaixo de 10 km/h: a lombada não mede">${caixaVel('', '—')}${kmh}</span>`;
       const thumbHtml = c.foto_path && allThumbUrls[c.foto_path]
         ? htmlFotoLista(allThumbUrls[c.foto_path], {
-          classe: 'row-thumb', alt: '', largura: 40, altura: 28, semFoto: 'linha', adiada: ESTREITO_MQ.matches,
+          classe: 'row-thumb', alt: '', largura: 48, altura: 27, semFoto: 'linha', adiada: ESTREITO_MQ.matches,
         })
         : '<div class="row-no-thumb">&#128663;</div>';
       const radarNome = camerasMap[c.camera_id] || '—';
       const radarHtml = camerasMap[c.camera_id]
-        ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela câmera ${radarNome}`) : esc(radarNome);
-      const ordinal = veiculosDoDia.textoOrdinal(ordinais.get(c.id), veiculosDoDia.diaDe(c.timestamp), hoje);
-      const selo = ordinal ? `<span class="selo-dia" title="${esc(`${ordinal}: a placa já tinha passado neste dia`)}">${esc(ordinal)}</span>` : '';
+        ? botaoFiltro('camera', c.camera_id, esc(radarNome), `Filtrar pela lombada ${radarNome}`) : esc(radarNome);
+      const n = ordinais.get(c.id);
+      const ordinal = veiculosDoDia.textoOrdinal(n, veiculosDoDia.diaDe(c.timestamp), hoje);
+      const selo = ordinal
+        ? `<span class="ord" title="${esc(`${ordinal.replace('ª', 'ª passagem')}: a placa já tinha passado neste dia`)}">${esc(painelVisualLib.ordinalCurto(n))}<span class="visualmente-oculto"> ${esc(ordinal.split(' ').slice(1).join(' '))}</span></span>`
+        : '<span class="ord" aria-hidden="true"></span>'; // vaga fixa: as placas não andam
+      const classes = ['table-row', isAlert ? 'alerta' : '', novo ? 'novo' : ''].filter(Boolean).join(' ');
       // A linha não é botão (teria botões dentro): o detalhe abre pela hora,
       // que é um <button>; clicar na área vazia da linha é só atalho de mouse
-      return `<div class="table-row${isAlert ? ' alerta' : ''}" onclick="openModal(tabelaPaginaData[${pi}])">
-          <div class="c-foto">${thumbHtml}</div>
-          <div class="c-placa placa">${botaoFiltro('placa', c.placa, esc(c.placa), `Filtrar pela placa ${c.placa}`)}${selo}</div>
-          <div class="c-vel vel ${classeVelocidade(c.velocidade, limite)}">${velHtml}</div>
-          <div class="c-hora hora"><button type="button" class="dd dd-detalhe" aria-label="${esc(`${dataHora} — ver detalhes da passagem ${c.placa}`)}">${esc(hora)}</button></div>
-          <div class="c-radar celula-radar" title="${esc(radarNome)}">${radarHtml}</div>
-          <div class="c-veic veiculo-info">${celulaVeiculoTabela(c.placa, c.timestamp)}</div>
-          ${celulasCadastro(c, pi)}
-        </div>`;
+      return `<tr class="${classes}" data-id="${esc(c.id)}" onclick="openModal(tabelaPaginaData[${pi}])">`
+        + `<td class="c-foto">${thumbHtml}</td>`
+        + `<td class="c-placa"><span class="pl-cell">${botaoFiltro('placa', c.placa, htmlPlacaMercosul(c.placa), `Filtrar pela placa ${c.placa}`, 'dd-placa')}${selo}</span></td>`
+        + `<td class="c-vel ${classeVelocidade(c.velocidade, limite)}">${velHtml}</td>`
+        + `<td class="c-hora"><button type="button" class="dd dd-detalhe" aria-label="${esc(`${dataHora} — ver detalhes da passagem ${c.placa}`)}">${esc(hora)}</button></td>`
+        + `<td class="c-radar">${radarHtml}</td>`
+        + celulaVeiculoTabela(c.placa, c.timestamp)
+        + celulasCadastro(c, pi)
+        + '</tr>';
     }
 
-    // Tipo · Nome · Unidade do vínculo NA HORA da passagem. Sem cadastro (e
-    // sem vínculo hoje), quem pode editar ganha "+ Cadastrar" no lugar do nome.
+    // Tipo (ícone + rótulo) · Nome · Unidade (selo) do vínculo NA HORA da
+    // passagem. Sem cadastro (e sem vínculo hoje), quem pode editar ganha
+    // "+ Cadastrar" na coluna Nome (aparece ao passar o mouse ou focar a linha).
     function celulasCadastro(c, pi) {
       const m = vinculoDaPassagem(c.placa, c.timestamp);
-      const tipo = `<div class="c-tipo">${botaoTipoCadastro(m ? m.tipo_pessoa : null)}</div>`;
+      const t = vinculoPlacaLib.tipoPessoa(m ? m.tipo_pessoa : null);
+      const tipo = `<td class="c-tipo">${botaoFiltro('tipoCadastro', t.id,
+        `<span class="tp${m ? '' : ' sem'}" style="color:var(${esc(t.cor)})">${icoTipo(t)}${esc(t.rotulo)}</span>`,
+        `${t.rotulo} — filtrar por tipo de cadastro`, 'dd-cadastro')}</td>`;
       if (m) {
-        const nome = m.nome_morador || '—';
+        const nome = m.nome_morador || '';
         const unidade = nomeUnidade(m);
-        return tipo + `<div class="c-nome" title="${esc(nome)}">${esc(nome)}</div>`
-          + `<div class="c-unid">${unidade ? botaoUnidade(unidade) : '<span class="sem-dado">—</span>'}</div>`;
+        return tipo + `<td class="c-nome">${nome ? esc(nome) : '<span class="sem-dado">—</span>'}</td>`
+          + `<td class="c-unid">${unidade ? botaoFiltro('unidade', unidade, esc(unidade), `Unidade ${unidade} — filtrar por unidade`, 'dd-cadastro un') : '<span class="sem-dado">—</span>'}</td>`;
       }
       const podeCadastrar = podeEditarVeiculos() && placaLib.ehPlaca(placaLib.limpar(c.placa))
         && !vinculoPlacaLib.vinculoVigente(indiceVinculos, c.placa);
       const nome = podeCadastrar
         ? `<button type="button" class="btn-cadastrar" data-acao="cadastrar-passagem" data-indice="${pi}" aria-label="${esc(`Cadastrar a placa ${c.placa}`)}">+ Cadastrar</button>`
         : '<span class="sem-dado">—</span>';
-      return tipo + `<div class="c-nome">${nome}</div><div class="c-unid"><span class="sem-dado">—</span></div>`;
+      return tipo + `<td class="c-nome">${nome}</td><td class="c-unid"><span class="sem-dado">—</span></td>`;
     }
 
     function escreverPaginacao(faixa) {
@@ -5515,19 +4736,36 @@
       pgInfo.textContent = textoFaixa(faixa, lista.total, lista.incompleta);
       const p = faixa.pagina;
       const n = faixa.totalPaginas;
-      const botao = (alvo, rotulo, desabilitado, extra) =>
-        `<button class="pg-btn${extra || ''}" onclick="goToPage(${alvo})" ${desabilitado ? 'disabled' : ''}>${rotulo}</button>`;
-      let btns = botao(1, '&laquo;', p === 1) + botao(p - 1, '&lsaquo;', p === 1);
+      const botao = (alvo, rotulo, desabilitado, extra, nome) =>
+        `<button class="pg-btn${extra || ''}" onclick="goToPage(${alvo})" ${desabilitado ? 'disabled' : ''}${nome ? ` aria-label="${nome}"` : ''}${extra ? ' aria-current="page"' : ''}>${rotulo}</button>`;
+      let btns = botao(1, '&laquo;', p === 1, '', 'Primeira página') + botao(p - 1, '&lsaquo;', p === 1, '', 'Página anterior');
       // No máximo 5 números de página
       let pgStart = Math.max(1, p - 2);
       const pgEnd = Math.min(n, pgStart + 4);
       if (pgEnd - pgStart < 4) pgStart = Math.max(1, pgEnd - 4);
-      for (let i = pgStart; i <= pgEnd; i++) btns += botao(i, String(i), false, i === p ? ' active' : '');
-      btns += botao(p + 1, '&rsaquo;', p === n) + botao(n, '&raquo;', p === n);
+      for (let i = pgStart; i <= pgEnd; i++) btns += botao(i, String(i), false, i === p ? ' active' : '', `Página ${i}`);
+      btns += botao(p + 1, '&rsaquo;', p === n, '', 'Próxima página') + botao(n, '&raquo;', p === n, '', 'Última página');
       document.getElementById('pg-controls').innerHTML = btns;
     }
 
-    async function renderPage({ conferida = false } = {}) {
+    // Quais passagens da página acabaram de chegar (página 1, mesmos filtros)
+    // Nova = mais recente que a mais nova já mostrada (página que cresce ao
+    // redimensionar não marca as de baixo como novas)
+    function passagensNovas(pageData) {
+      const chave = chaveFiltros(filtrosAtivos);
+      if (currentPage !== 1) return new Set();
+      const maisNova = pageData.reduce((m, c) => (c.timestamp > m ? c.timestamp : m), '');
+      const anterior = listaVista.chave === chave ? listaVista.ids : null;
+      listaVista = { chave, ids: anterior && anterior > maisNova ? anterior : maisNova };
+      if (!anterior) return new Set();
+      return new Set(pageData.filter((c) => c.timestamp > anterior).map((c) => c.id));
+    }
+
+    function cabecalhoDoDia(item) {
+      return `<tr class="linha-dia"><td colspan="${COLUNAS_TABELA}"><span>${esc(item.rotulo)}</span></td></tr>`;
+    }
+
+    async function renderPage() {
       // Sessão e número da chamada conferidos depois de cada espera, antes de
       // gravar: uma renderPage mais antiga (outro filtro, outra página) não
       // escreve por cima da mais nova
@@ -5573,50 +4811,19 @@
       tabelaEmErro = false;
       tabelaPaginaData = pageData;
       const hoje = veiculosDoDia.diaDe(new Date());
-      tbody.innerHTML = veiculosDoDia.comCabecalhosDeDia(pageData).map((item) => (item.tipo === 'dia'
-        ? `<div class="linha-dia">${esc(item.rotulo)}</div>`
-        : htmlLinhaDaLista(item.linha, item.indice, ordinais, hoje, limite))).join('');
+      const novas = passagensNovas(pageData);
+      // Linha do dia só quando a lista passa de um dia (7 dias, intervalo)
+      const umDia = getActiveFilters().isSingleDay;
+      tbody.innerHTML = veiculosDoDia.comCabecalhosDeDia(pageData).map((item) => {
+        if (item.tipo !== 'dia') return htmlLinhaDaLista(item.linha, item.indice, ordinais, hoje, limite, novas.has(item.linha.id));
+        return umDia ? '' : cabecalhoDoDia(item);
+      }).join('');
+      if (novas.size) {
+        // A faixa azul some depois de alguns segundos (sem redesenhar a lista)
+        setTimeout(() => tbody.querySelectorAll('.table-row.novo').forEach((r) => r.classList.remove('novo')), NOVO_MS);
+      }
 
       escreverPaginacao(faixa);
-      // Página cheia desenhada: confere a sobra real (uma vez por desenho)
-      if (faixa.totalPaginas > 1 && !conferida && pageData.length === linhasPorPagina && conferirSobraDaLista()) {
-        return renderPage({ conferida: true });
-      }
-      return true;
-    }
-
-    // Depois de desenhar: a altura real das linhas pode diferir da usada no
-    // cálculo (fonte, zoom, arredondamento) e deixar uma faixa vazia acima da
-    // paginação ou linhas cortadas. Mede o que ficou e corrige o tamanho da
-    // página (mantendo a primeira passagem visível). true = mudou.
-    // Lista com altura travada na janela (desktop, sem a página rolante)
-    function listaTravada() {
-      return !ESTREITO_MQ.matches && !document.querySelector('.main-layout.lista-rolante');
-    }
-
-    function conferirSobraDaLista() {
-      if (!listaTravada()) return false;
-      const tbody = document.getElementById('table-body');
-      const linhas = tbody.querySelectorAll('.table-row');
-      if (!linhas.length) return false;
-      const primeiroItem = tbody.firstElementChild; // o cabeçalho do dia também ocupa altura
-      // Mede sem a altura que a recarga reserva no #table-body (leitura síncrona)
-      const reservada = tbody.style.minHeight;
-      tbody.style.minHeight = '';
-      let sobra;
-      try {
-        const topo = primeiroItem.getBoundingClientRect().top;
-        const fim = linhas[linhas.length - 1].getBoundingClientRect().bottom;
-        sobra = tbody.clientHeight - (fim - topo);
-      } finally {
-        tbody.style.minHeight = reservada;
-      }
-      const novo = corrigirPelaSobra(linhasPorPagina, sobra, alturaLinhaAtual(), LINHAS_MIN, LINHAS_MAX);
-      if (novo === linhasPorPagina) return false;
-      correcaoLinhas = novo - ultimoCalculo;
-      const primeira = primeiroIndiceDaPagina(currentPage, linhasPorPagina);
-      linhasPorPagina = novo;
-      currentPage = paginaQueContem(primeira, novo);
       return true;
     }
 
@@ -5635,59 +4842,21 @@
       return TOQUE_MQ.matches ? ALTURA_LINHA_TOQUE : ALTURA_LINHA_PADRAO;
     }
 
-    // Altura disponível para as linhas SEM a barra de baixo. Com a altura
-    // travada é a do #table-body; na página que rola (lista mínima) é a da
-    // janela menos o que fica em volta da lista (cabeçalho e respiro).
-    function alturaUtilSemPaginacao(travada) {
-      const tbody = document.getElementById('table-body');
+    // Quantas linhas cabem numa tela: a janela menos o topo fixo, o cabeçalho
+    // fixo da lista, a barra de baixo e um respiro. ≤ 1.023 px: tamanho fixo.
+    function calcularLinhasPorPagina() {
+      if (ESTREITO_MQ.matches) return LINHAS_ESTREITO;
       const pg = document.getElementById('table-pagination');
-      const pgVisivel = pg.style.display !== 'none';
-      if (pgVisivel) alturaPaginacao = pg.offsetHeight || alturaPaginacao;
-      const pgAtual = pgVisivel ? pg.offsetHeight : 0;
-      if (travada) return tbody.clientHeight + pgAtual;
-      const container = tbody.closest('.table-container');
-      const emVolta = container.offsetHeight - tbody.offsetHeight - pgAtual + FOLGA_ROLANTE_PX;
-      return window.innerHeight - emVolta;
-    }
-
-    // Quantas linhas cabem; liga/desliga a página rolante (mínimo de 5 linhas)
-    function calcularLinhasPorPagina(total) {
-      const layout = document.querySelector('.main-layout');
-      const linha = alturaLinhaAtual();
-      // O aviso de sem velocidade mantém a barra de baixo mesmo com uma página
-      const barraFixa = !document.getElementById('rodape-sem-vel').hidden;
-      const cabem = (altura) => {
-        const semPg = linhasQueCabem(altura, linha, 0, LINHAS_MAX);
-        if (!barraFixa && total <= semPg) return semPg; // uma página só: sem barra
-        return linhasQueCabem(altura - alturaPaginacao, linha, 0, LINHAS_MAX);
-      };
-      if (!ESTREITO_MQ.matches) {
-        // Mede como ficaria travada (sem pintar no meio: leitura síncrona),
-        // sem a altura que a recarga reserva no #table-body
-        const tbody = document.getElementById('table-body');
-        const reservada = tbody.style.minHeight;
-        tbody.style.minHeight = '';
-        try {
-          layout.classList.remove('lista-rolante');
-          const n = cabem(alturaUtilSemPaginacao(true));
-          if (n >= LINHAS_MIN) return n;
-          layout.classList.add('lista-rolante');
-          return Math.max(LINHAS_MIN, cabem(alturaUtilSemPaginacao(false)));
-        } finally {
-          tbody.style.minHeight = reservada;
-        }
-      }
-      // ≤ 900 px a página já rola com a lista inteira: tamanho fixo de antes
-      layout.classList.remove('lista-rolante');
-      return LINHAS_ESTREITO;
+      if (pg.style.display !== 'none') alturaPaginacao = pg.offsetHeight || alturaPaginacao;
+      const topo = document.getElementById('topo').offsetHeight || 64;
+      const cab = document.querySelector('#tabela-passagens thead').offsetHeight || 42;
+      const util = window.innerHeight - topo - cab - alturaPaginacao - FOLGA_ROLANTE_PX;
+      return linhasQueCabem(util, alturaLinhaAtual(), LINHAS_MIN, LINHAS_MAX);
     }
 
     // Muda o tamanho da página mantendo a primeira passagem visível na tela
-    function ajustarLinhasPorPagina(total) {
-      const calculado = calcularLinhasPorPagina(total);
-      ultimoCalculo = calculado;
-      // Correção medida na tela (conferirSobraDaLista) vale só com a lista travada
-      const novo = listaTravada() ? Math.max(LINHAS_MIN, Math.min(LINHAS_MAX, calculado + correcaoLinhas)) : calculado;
+    function ajustarLinhasPorPagina() {
+      const novo = calcularLinhasPorPagina();
       if (novo === linhasPorPagina) return false;
       const primeira = primeiroIndiceDaPagina(currentPage, linhasPorPagina);
       linhasPorPagina = novo;
@@ -5703,10 +4872,17 @@
         if (ajustarLinhasPorPagina(total) && total > 0 && !tabelaEmErro) renderPage();
       }, DEBOUNCE_LINHAS_MS);
     }
-    if (window.ResizeObserver) new ResizeObserver(agendarAjusteLinhas).observe(document.getElementById('table-body'));
     window.addEventListener('resize', agendarAjusteLinhas);
 
-    // ---------- "Agora · hoje" recolhível (lembrado por computador)
+    // Topo fixo de altura variável (quebra em duas linhas no tablet): o
+    // cabeçalho da lista fica logo abaixo dele ao rolar
+    function medirTopo() {
+      const h = document.getElementById('topo').offsetHeight;
+      if (h) document.documentElement.style.setProperty('--topo-h', `${h}px`);
+    }
+    if (window.ResizeObserver) new ResizeObserver(medirTopo).observe(document.getElementById('topo'));
+
+    // ---------- "Últimas passagens" recolhível (lembrado por computador)
     // Fonte única em memória: lida do storage uma vez; sem storage funciona igual
     const AGORA_RECOLHIDO_KEY = 'lombada_agora_recolhido';
     let agoraRecolhidoMem = false;
@@ -5715,7 +4891,7 @@
       return agoraRecolhidoMem;
     }
     function aplicarAgoraNaTela(recolhido) {
-      document.querySelector('.left-panel').classList.toggle('agora-recolhido', recolhido);
+      document.getElementById('card-recentes').classList.toggle('recolhido', recolhido);
       const btn = document.getElementById('btn-recolher-agora');
       btn.setAttribute('aria-expanded', recolhido ? 'false' : 'true');
       btn.textContent = recolhido ? 'Mostrar fotos' : 'Recolher';
@@ -5728,9 +4904,7 @@
       if (recolher || !painelAtivo) return;
       // Reabriu: o que estava na tela pode ser velho (fotos com link vencido)
       document.getElementById('recent-cards').innerHTML = CARREGANDO_CARTOES_HTML;
-      document.getElementById('cameras-status').innerHTML = '';
       loadRecentCards();
-      loadCamerasStatus();
     }
     aplicarAgoraNaTela(agoraRecolhido());
 
@@ -5745,14 +4919,17 @@
     const DEBOUNCE_SUGESTAO_MS = 250;
     const DIAS_SUGESTAO_PLACA = 30;
     const SUGESTOES_REMOTAS_LINHAS = 40;
-    const CELULAR_MQ = window.matchMedia('(max-width: 600px)');
+    const CELULAR_MQ = window.matchMedia('(max-width: 640px)');
     const MOVIMENTO_REDUZIDO_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
     let barraMontada = false;
     let recargaSeq = 0;
-    const REGIOES_RECARGA = '#titulo-tabela, .filtros-topo .export-wrap, .table-container, .sidebar';
+    const REGIOES_RECARGA = '.table-container, .c-ind, #card-rankings, #painel-mais';
 
     function atualizarTitulosPeriodo() {
-      document.getElementById('titulo-tabela').textContent = `Passagens · ${getActiveFilters().label}`;
+      const f = getActiveFilters();
+      const periodo = rotuloDoPeriodo(f, todayLocalISO());
+      document.getElementById('titulo-tabela').textContent = `Passagens · ${periodo}`;
+      document.getElementById('rotulo-rank-periodo').textContent = periodo.toLowerCase();
     }
 
     // Ponto único de mudança: estado novo → barra, URL, títulos e recarga
@@ -5851,17 +5028,18 @@
     function escreverEstadoNaBarra(f) {
       if (!f || !barraMontada) return;
       const hoje = todayLocalISO();
-      document.getElementById('rotulo-periodo').textContent = rotuloDoPeriodo(f, hoje);
+      const atalho = atalhoDoPeriodo(f, hoje);
+      // "Escolher…" mostra o período personalizado quando ele está valendo
+      document.getElementById('rotulo-periodo').textContent = atalho ? 'Escolher…' : rotuloDoPeriodo(f, hoje);
+      document.querySelectorAll('#seg-periodo [data-periodo]').forEach((b) => {
+        const p = b.dataset.periodo;
+        b.setAttribute('aria-pressed', String(p === 'escolher' ? !atalho : p === atalho));
+      });
       escreverCampos(f);
       escreverSegmentado(f.soAlertas);
       escreverContador(f);
-      const atalho = atalhoDoPeriodo(f, hoje);
       document.querySelectorAll('#painel-periodo [data-atalho]').forEach((b) => {
         b.setAttribute('aria-pressed', String(b.dataset.atalho === atalho));
-      });
-      const visao = visaoAtiva(f, hoje);
-      document.querySelectorAll('#visoes [data-visao]').forEach((b) => {
-        b.setAttribute('aria-pressed', String(b.dataset.visao === visao));
       });
       renderChips(f, hoje);
       escreverFaixaTipos(); // o tipo pressionado na faixa é o filtro de tipo da lista
@@ -5889,12 +5067,9 @@
       definir('filter-unidade', f.unidade);
     }
 
+    // "Acima do limite": um botão que liga e desliga (aria-pressed)
     function escreverSegmentado(soAlertas) {
-      document.querySelectorAll('#seg-alerta [data-alerta]').forEach((b) => {
-        const marcado = (b.dataset.alerta === '1') === soAlertas;
-        b.setAttribute('aria-checked', String(marcado));
-        b.tabIndex = marcado ? 0 : -1; // Tab entra só na opção marcada
-      });
+      document.getElementById('btn-acima').setAttribute('aria-pressed', String(Boolean(soAlertas)));
     }
 
     // (n): no celular câmera e "Acima do limite" moram no sheet e contam também
@@ -5913,6 +5088,8 @@
       const chips = chipsDosFiltros(f, hoje, { nomeCamera: (id) => camerasMap[id] || '', nomeCor: corExibicao });
       const el = document.getElementById('chips-filtros');
       el.hidden = chips.length === 0;
+      // "Hoje" (o padrão) é uma etiqueta fixa; outro período vira etiqueta removível
+      document.getElementById('chip-periodo').hidden = atalhoDoPeriodo(f, hoje) !== 'hoje';
       el.innerHTML = chips.length === 0 ? '' : `<ul class="chips-lista" aria-label="Filtros ativos">${chips.map((c) =>
         `<li class="chip"><span>${esc(c.rotulo)}</span><button type="button" class="chip-x" data-remover="${esc(c.chave)}"`
         + ` aria-label="${esc(`Remover filtro ${c.rotulo}`)}">✕</button></li>`).join('')}</ul>`
@@ -5944,8 +5121,8 @@
     // Lista vazia com orientação: com filtro ativo, oferece voltar ao padrão
     function htmlListaVazia(msg) {
       const comFiltro = temFiltroAtivo(filtrosAtivos, todayLocalISO());
-      return `<div class="table-empty"><p>${esc(msg)}</p>${comFiltro
-        ? '<button type="button" class="btn-secundario" data-limpar-filtros>Limpar filtros</button>' : ''}</div>`;
+      return linhaMensagem(`<div class="table-empty"><p>${esc(msg)}</p>${comFiltro
+        ? '<button type="button" class="btn-secundario" data-limpar-filtros>Limpar filtros</button>' : ''}</div>`);
     }
 
     // ---------- Painéis "Período" e "Mais filtros": popover no desktop, sheet no celular
@@ -6045,16 +5222,6 @@
           timersCampo.set(id, setTimeout(() => aplicarCampoMais(id), DEBOUNCE_CAMPO_MS));
         });
       });
-    }
-
-    // ---------- "Todas | Acima do limite" (radiogroup: setas trocam e aplicam)
-    function aoTeclarSegmentado(e) {
-      const passo = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      if (!passo) return;
-      e.preventDefault();
-      const soAlertas = !filtrosAtivos.soAlertas;
-      mudarFiltros({ soAlertas });
-      document.querySelector(`#seg-alerta [data-alerta="${soAlertas ? 1 : 0}"]`).focus();
     }
 
     // ---------- Busca tipada (combobox ARIA com sugestões agrupadas)
@@ -6224,6 +5391,12 @@
 
     function ligarPeriodo() {
       const overlay = document.getElementById('painel-periodo');
+      // Hoje · Ontem · 7 dias aplicam direto; "Escolher…" abre o seletor de datas
+      document.getElementById('seg-periodo').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-periodo]');
+        if (!b || b.dataset.periodo === 'escolher') return;
+        mudarFiltros(periodoDoAtalho(b.dataset.periodo, todayLocalISO()));
+      });
       document.getElementById('btn-periodo').addEventListener('click', (e) => abrirPainelFiltro(overlay, e.currentTarget));
       overlay.querySelectorAll('[data-atalho]').forEach((b) => b.addEventListener('click', () => {
         document.getElementById('aviso-periodo').textContent = '';
@@ -6258,27 +5431,27 @@
       mudarFiltros(campos);
     }
 
-    // Uma vez por página: monta as visões e liga todos os controles
+    // Tecla "/" leva à busca (fora de campos de texto e sem janela aberta)
+    function ligarAtalhoBusca() {
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || !painelAtivo) return;
+        const alvo = e.target;
+        if (alvo && (alvo.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(alvo.tagName))) return;
+        if (document.querySelector('.modal-overlay.active, .vm-overlay.active, .lightbox-overlay.active')) return;
+        e.preventDefault();
+        document.getElementById('busca').focus();
+      });
+    }
+
+    // Uma vez por página: liga todos os controles da barra
     function montarBarraFiltros() {
       if (barraMontada) return;
       barraMontada = true;
-      const visoes = document.getElementById('visoes');
-      visoes.innerHTML = VISOES.map((v) =>
-        `<button type="button" class="visao" data-visao="${esc(v.id)}" aria-pressed="false">${esc(v.rotulo)}</button>`).join('');
-      visoes.addEventListener('click', (e) => {
-        const b = e.target.closest('[data-visao]');
-        if (b) aplicarEstado(estadoDaVisao(b.dataset.visao, todayLocalISO()));
-      });
       ligarPeriodo();
       ligarBusca();
       ligarCamposMais();
       document.getElementById('filter-camera').addEventListener('change', (e) => mudarFiltros({ cameraId: e.target.value }));
-      const seg = document.getElementById('seg-alerta');
-      seg.addEventListener('click', (e) => {
-        const b = e.target.closest('[data-alerta]');
-        if (b) mudarFiltros({ soAlertas: b.dataset.alerta === '1' });
-      });
-      seg.addEventListener('keydown', aoTeclarSegmentado);
+      document.getElementById('btn-acima').addEventListener('click', () => mudarFiltros({ soAlertas: !filtrosAtivos.soAlertas }));
       document.getElementById('btn-mais-filtros').addEventListener('click', (e) =>
         abrirPainelFiltro(document.getElementById('painel-filtros'), e.currentTarget));
       document.getElementById('chips-filtros').addEventListener('click', aoClicarChips);
@@ -6293,8 +5466,17 @@
         const captura = tabelaPaginaData[Number(b.dataset.indice)];
         if (captura) openModal(captura, { focoCadastro: true });
       }, true);
+      // "+ Cadastrar placa" da última passagem: o mesmo formulário dos detalhes
+      document.getElementById('recent-cards').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-acao="cadastrar-recente"]');
+        if (!b) return;
+        e.stopPropagation();
+        const captura = recentCardsData[Number(b.dataset.indice)];
+        if (captura) openModal(captura, { focoCadastro: true });
+      }, true);
       document.getElementById('faixa-tipos-chips').addEventListener('click', aoClicarFaixaTipos);
-      ligarAbasGrafico();
+      ligarAbasLado();
+      ligarAtalhoBusca();
       ['painel-periodo', 'painel-filtros'].forEach((id) => document.getElementById(id).addEventListener('keydown', prenderFoco));
       ligarDrillDown('table-body', false);
       ligarDrillDown('modal-body', true, closeModal); // tipo e unidade do cadastro da hora
@@ -6335,7 +5517,7 @@
 
     function renderVeiculos() {
       const btn = document.getElementById('btn-topbar-veiculos');
-      if (btn) btn.textContent = `Veículos (${veiculosList.length})`;
+      if (btn) btn.textContent = `Veículos · ${veiculosList.length}`;
       document.getElementById('vm-count').textContent = `(${veiculosList.length})`;
       vmListaFiltered = [...veiculosList];
       vmListaPage = 1;
@@ -6561,7 +5743,7 @@
       lista.innerHTML = pageData.map(v => {
         const info = [v.nome_morador, nomeUnidade(v), v.marca, v.cor].filter(Boolean).join(' | ');
         return `<div class="vm-lista-item">
-          <span class="vm-li-placa">${esc(v.placa)}</span>
+          <span class="vm-li-placa">${htmlPlacaMercosul(v.placa)}</span>
           <span class="vm-li-info">${seloTipoPessoa(v.tipo_pessoa)} ${esc(info) || '—'}</span>
           ${podeEditarVeiculos() ? `<button type="button" class="vm-li-edit" data-acao="editar-veiculo" data-id="${esc(v.id)}" aria-label="Editar o cadastro da placa ${esc(v.placa)}">Editar</button><button class="vm-li-del" data-id="${esc(v.id)}" data-placa="${esc(v.placa)}" onclick="removerVeiculo(this.dataset.id, this.dataset.placa)" title="Encerrar o vínculo da placa (o histórico fica)">Encerrar vínculo</button>` : ''}
         </div>`;
@@ -6576,10 +5758,10 @@
           btns += `<button class="${p === vmListaPage ? 'active' : ''}" onclick="vmListaGoTo(${p})">${p}</button>`;
         }
         btns += `<button onclick="vmListaGoTo(${vmListaPage + 1})" ${vmListaPage === totalPages ? 'disabled' : ''}>&rsaquo;</button>`;
-        btns += `<span style="margin-left:8px;color:var(--text-muted);font-size:0.6875rem">${data.length} veículos</span>`;
+        btns += `<span style="margin-left:8px;color:var(--text-muted);font-size:0.75rem">${data.length} veículos</span>`;
         pgEl.innerHTML = btns;
       } else {
-        pgEl.innerHTML = `<span style="color:var(--text-muted);font-size:0.6875rem">${data.length} veículos</span>`;
+        pgEl.innerHTML = `<span style="color:var(--text-muted);font-size:0.75rem">${data.length} veículos</span>`;
       }
     }
 
@@ -7142,7 +6324,9 @@
 
       // --- Tabela ---
       y += 16;
-      const cols = exportacaoPassagensLib.COLUNAS_PDF.map((c) => ({ label: c.label, w: usableW * c.w }));
+      const cols = exportacaoPassagensLib.COLUNAS_PDF.map((c) => ({ label: c.label, w: usableW * c.w, alinhar: c.alinhar }));
+      // Mesma regra da lista: texto à esquerda, números à direita (1,5 mm de respiro)
+      const xDoTexto = (x, col) => (col.alinhar === 'right' ? x + col.w - 1.5 : x + 1.5);
       const COL_STATUS = exportacaoPassagensLib.COLUNA_STATUS_PDF;
 
       const rowH = 6;
@@ -7155,7 +6339,7 @@
         doc.setFont(undefined, 'bold');
         let x = margin;
         cols.forEach(col => {
-          doc.text(col.label, x + col.w / 2, yPos + 4, { align: 'center' });
+          doc.text(col.label, xDoTexto(x, col), yPos + 4, { align: col.alinhar });
           x += col.w;
         });
         return yPos + rowH;
@@ -7192,7 +6376,7 @@
             doc.setTextColor(30, 41, 59);
             doc.setFont(undefined, 'normal');
           }
-          doc.text(String(val), x + cols[i].w / 2, y + 4, { align: 'center' });
+          doc.text(String(val), xDoTexto(x, cols[i]), y + 4, { align: cols[i].alinhar });
           x += cols[i].w;
         });
 
@@ -7272,10 +6456,10 @@
         </div>
         <div class="modal-field">
           <div class="label">Velocidade</div>
-          <div class="value ${!velMedidaModal ? '' : (isAlert ? 'red' : 'green')}" style="font-size:1.25rem;${!velMedidaModal ? 'color:var(--text-muted)' : ''}">${velMedidaModal ? `${isAlert ? '▲ ' : ''}${captura.velocidade} km/h` : '— (sem radar)'}</div>
+          <div class="value ${!velMedidaModal ? '' : (isAlert ? 'red' : 'green')}" style="font-size:1.25rem;${!velMedidaModal ? 'color:var(--text-muted)' : ''}">${velMedidaModal ? `${isAlert ? '▲ ' : ''}${captura.velocidade} km/h` : '— (sem medição)'}</div>
         </div>
         <div class="modal-field">
-          <div class="label">Radar</div>
+          <div class="label">Lombada</div>
           <div class="value" style="font-size:0.875rem;font-weight:700">${esc(radarNome)}</div>
         </div>
         <div class="modal-field">
@@ -8326,7 +7510,7 @@
         const partes = [currentCliente.nome];
         const linhaLocalCustom = [currentCliente.local_via, currentCliente.cidade_uf].filter(Boolean).join(' · ');
         if (linhaLocalCustom) partes.push(linhaLocalCustom);
-        if (radarNomePdf) partes.push(`Radar: ${radarNomePdf}`);
+        if (radarNomePdf) partes.push(`Lombada: ${radarNomePdf}`);
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
@@ -8370,7 +7554,7 @@
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(9);
           doc.setTextColor(51, 51, 51);
-          doc.text('Radar: ' + radarNomePdf, pageW / 2, headerY, { align: 'center' });
+          doc.text('Lombada: ' + radarNomePdf, pageW / 2, headerY, { align: 'center' });
         }
 
         doc.setFont('helvetica', 'bold');
@@ -8774,278 +7958,101 @@
       return r;
     }
 
-    // ---------- Abas do gráfico: "Por hora" (passagens do período) | "Por dia"
-    // (veículos dos últimos 8 dias). A escolha fica lembrada no computador.
-    const ABA_GRAFICO_KEY = 'lombada_aba_grafico';
-    function mostrarAbaGrafico(aba, { foco = false } = {}) {
-      const porDia = aba === 'dia';
-      [['aba-por-hora', 'painel-por-hora', !porDia], ['aba-por-dia', 'painel-por-dia', porDia]].forEach(([idAba, idPainel, ativa]) => {
-        const b = document.getElementById(idAba);
-        b.setAttribute('aria-selected', String(ativa));
-        b.tabIndex = ativa ? 0 : -1;
-        document.getElementById(idPainel).hidden = !ativa;
-        if (ativa && foco) b.focus();
+    // ---------- Ao lado das fotos: semana (mapa de calor) e rankings
+    // De 1.024 a 1.699 px ficam num quadro só, com abas Semana | Mais passagens |
+    // Recordes; no monitor grande e no tablet, dois quadros (o de rankings com as
+    // abas Mais passagens | Recordes). Os painéis dos rankings mudam de quadro
+    // sem ser redesenhados. A escolha fica lembrada no computador.
+    const LADO_UNICO_MQ = window.matchMedia('(min-width: 1024px) and (max-width: 1699px)');
+    const ABA_LADO_KEY = 'lombada_aba_lado';
+    const ABAS_LADO = ['semana', 'mais', 'recordes'];
+    let abaLado = 'semana';
+    try { const salva = localStorage.getItem(ABA_LADO_KEY); if (ABAS_LADO.includes(salva)) abaLado = salva; } catch { /* sem storage */ }
+    let abaRank = abaLado === 'recordes' ? 'recordes' : 'mais';
+
+    function aplicarLado({ foco = false } = {}) {
+      const unico = LADO_UNICO_MQ.matches;
+      document.getElementById('lado2').classList.toggle('unico', unico);
+      const mais = document.getElementById('painel-mais');
+      const rec = document.getElementById('painel-recordes');
+      const destino = document.getElementById(unico ? 'card-semana' : 'card-rankings');
+      if (mais.parentElement !== destino) destino.append(mais, rec);
+      document.getElementById('abas-lado').hidden = !unico;
+      const vendo = unico ? abaLado : abaRank;
+      document.getElementById('painel-por-dia').hidden = unico && vendo !== 'semana';
+      document.getElementById('nav-semana').hidden = unico && vendo !== 'semana';
+      mais.hidden = vendo !== 'mais';
+      rec.hidden = vendo !== 'recordes';
+      document.getElementById('painel-por-dia').setAttribute('aria-labelledby', unico ? 'aba-lado-semana' : 'titulo-semana');
+      mais.setAttribute('aria-labelledby', unico ? 'aba-lado-mais' : 'aba-rank-mais');
+      rec.setAttribute('aria-labelledby', unico ? 'aba-lado-recordes' : 'aba-rank-recordes');
+      const lista = document.getElementById(unico ? 'abas-lado' : 'abas-rank');
+      [['abas-lado', abaLado], ['abas-rank', abaRank]].forEach(([id, ativa]) => {
+        document.querySelectorAll(`#${id} [role="tab"]`).forEach((b) => {
+          const sel = b.dataset.painel === ativa;
+          b.setAttribute('aria-selected', String(sel));
+          b.tabIndex = sel ? 0 : -1;
+        });
       });
-      try { localStorage.setItem(ABA_GRAFICO_KEY, porDia ? 'dia' : 'hora'); } catch { /* sem storage */ }
-      // O canvas escondido desenhou sem largura: redesenha ao voltar
-      const redesenhar = !porDia && ultimosGraficos.get('chart-hourly');
-      if (redesenhar) redesenhar();
+      if (foco) {
+        const alvo = lista.querySelector('[aria-selected="true"]');
+        if (alvo) alvo.focus();
+      }
     }
 
-    function ligarAbasGrafico() {
-      const abas = document.querySelector('.abas-grafico');
-      abas.addEventListener('click', (e) => {
-        const b = e.target.closest('[data-aba]');
-        if (b) mostrarAbaGrafico(b.dataset.aba);
-      });
-      // Setas, Home e End trocam de aba (padrão de abas do WAI-ARIA)
-      abas.addEventListener('keydown', (e) => {
-        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-        e.preventDefault();
-        const atual = document.getElementById('aba-por-dia').getAttribute('aria-selected') === 'true' ? 'dia' : 'hora';
-        const proxima = e.key === 'Home' ? 'hora' : e.key === 'End' ? 'dia' : atual === 'dia' ? 'hora' : 'dia';
-        mostrarAbaGrafico(proxima, { foco: true });
+    function escolherAbaLado(painel, deQual, opts) {
+      if (deQual === 'abas-lado') abaLado = painel;
+      if (painel !== 'semana') abaRank = painel;
+      try { localStorage.setItem(ABA_LADO_KEY, abaLado); } catch { /* sem storage */ }
+      aplicarLado(opts);
+    }
+
+    function ligarAbasLado() {
+      ['abas-lado', 'abas-rank'].forEach((id) => {
+        const lista = document.getElementById(id);
+        lista.addEventListener('click', (e) => {
+          const b = e.target.closest('[data-painel]');
+          if (b) escolherAbaLado(b.dataset.painel, id);
+        });
+        // Setas, Home e End trocam de aba (padrão de abas do WAI-ARIA)
+        lista.addEventListener('keydown', (e) => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+          e.preventDefault();
+          const ids = [...lista.querySelectorAll('[role="tab"]')].map((b) => b.dataset.painel);
+          const atual = ids.indexOf(id === 'abas-lado' ? abaLado : abaRank);
+          const i = e.key === 'Home' ? 0 : e.key === 'End' ? ids.length - 1
+            : (atual + (e.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length;
+          escolherAbaLado(ids[i], id, { foco: true });
+        });
       });
       document.querySelector('[data-acao="recarregar-por-dia"]').addEventListener('click', () => {
         porDiaCache = null;
         if (currentCliente) loadVeiculosPorDia(marcaDaSessao()).catch(() => {});
       });
-      let salva = 'hora';
-      try { salva = localStorage.getItem(ABA_GRAFICO_KEY) === 'dia' ? 'dia' : 'hora'; } catch { /* sem storage */ }
-      mostrarAbaGrafico(salva);
+      document.getElementById('semana-ant').addEventListener('click', () => trocarSemana(-1));
+      document.getElementById('semana-prox').addEventListener('click', () => trocarSemana(1));
+      document.getElementById('veiculos-por-dia').addEventListener('click', aoClicarSemana);
+      // "Ver os 10 →": abre o resto do ranking (3 ficam à vista)
+      document.getElementById('lado2').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-ver10]');
+        if (!b) return;
+        const lista = document.getElementById(b.dataset.ver10);
+        const aberta = lista.classList.toggle('aberta');
+        b.setAttribute('aria-expanded', String(aberta));
+        b.textContent = aberta ? 'Mostrar só 3' : `Ver os ${lista.children.length} →`;
+      });
+      LADO_UNICO_MQ.addEventListener('change', () => aplicarLado());
+      aplicarLado();
     }
 
-    // ============================================
-    // HOURLY CHART (Canvas) — respeita filtros
-    // ============================================
-    let graficoSeq = 0;
-    async function loadHourlyChart() {
-      const seq = ++graficoSeq;
-      // Mesmos filtros da tabela; filtro de veículo sem placas = gráfico zerado
-      const { f, montar } = await consultaDoPeriodo('timestamp, placa');
-      const data = filtrarNoCliente(f, await linhasDe(montar));
-      if (seq !== graficoSeq) return; // resposta antiga não redesenha por cima
-
-      if (f.isSingleDay) {
-        // Agrupa por hora
-        const hours = new Array(24).fill(0);
-        if (data) data.forEach(c => { hours[new Date(c.timestamp).getHours()]++; });
-        const titulo = `Passagens por Hora · ${f.label}`;
-        document.getElementById('title-hourly').textContent = titulo;
-        drawAreaChart('chart-hourly', hours);
-        graficoAcessivel.descreverGrafico(document.getElementById('chart-hourly'), {
-          titulo, cabecalho: 'Hora', unidade: 'passagens', valores: hours,
-          rotulos: hours.map((_, h) => `${String(h).padStart(2, '0')}h`),
-        });
-      } else {
-        // Agrupa por dia
-        const d0 = new Date(f.tsStart); d0.setHours(0,0,0,0);
-        const d1 = new Date(f.tsEnd);   d1.setHours(0,0,0,0);
-        const diffDays = Math.round((d1 - d0) / 86400000) + 1;
-        const buckets = new Array(Math.min(diffDays, 60)).fill(0);
-        if (data) {
-          data.forEach(c => {
-            const ts = new Date(c.timestamp); ts.setHours(0,0,0,0);
-            const idx = Math.round((ts - d0) / 86400000);
-            if (idx >= 0 && idx < buckets.length) buckets[idx]++;
-          });
-        }
-        const titulo = `Passagens por Dia · ${f.label}`;
-        document.getElementById('title-hourly').textContent = titulo;
-        drawAreaChart('chart-hourly', buckets);
-        graficoAcessivel.descreverGrafico(document.getElementById('chart-hourly'), {
-          titulo, cabecalho: 'Dia', unidade: 'passagens', valores: buckets,
-          rotulos: buckets.map((_, i) => new Date(d0.getTime() + i * 86400000)
-            .toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
-        });
-      }
-    }
-
-    // Animated area/mountain chart
-    let chartAnimFrame = null;
-
-    function drawAreaChart(canvasId, data, opts) {
-      const canvas = document.getElementById(canvasId);
-      const ctx = canvas.getContext('2d');
-      const cor = coresGrafico();
-      ultimosGraficos.set(canvasId, () => drawAreaChart(canvasId, data, { semAnimacao: true }));
-      const dpr = window.devicePixelRatio || 1;
-
-      canvas.width = canvas.offsetWidth * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
-      ctx.scale(dpr, dpr);
-
-      const w = canvas.offsetWidth;
-      const h = canvas.offsetHeight;
-      const maxVal = Math.max(...data, 1);
-      const padLeft = 28;
-      const padRight = 8;
-      const padTop = 20;
-      const padBottom = 22;
-      const chartW = w - padLeft - padRight;
-      const chartH = h - padTop - padBottom;
-      const stepX = chartW / (data.length - 1);
-
-      // Smooth the data using cardinal spline for mountain effect
-      function getPoints(progress) {
-        return data.map((val, i) => ({
-          x: padLeft + i * stepX,
-          y: padTop + chartH - (val / maxVal) * chartH * progress
-        }));
-      }
-
-      function catmullRom(pts) {
-        const tension = 0.35;
-        const path = [];
-        for (let i = 0; i < pts.length - 1; i++) {
-          const p0 = pts[Math.max(i - 1, 0)];
-          const p1 = pts[i];
-          const p2 = pts[i + 1];
-          const p3 = pts[Math.min(i + 2, pts.length - 1)];
-
-          const cp1x = p1.x + (p2.x - p0.x) * tension;
-          const cp1y = p1.y + (p2.y - p0.y) * tension;
-          const cp2x = p2.x - (p3.x - p1.x) * tension;
-          const cp2y = p2.y - (p3.y - p1.y) * tension;
-
-          path.push({ p1, cp1: {x:cp1x, y:cp1y}, cp2: {x:cp2x, y:cp2y}, p2 });
-        }
-        return path;
-      }
-
-      function drawFrame(progress) {
-        ctx.clearRect(0, 0, w, h);
-
-        // Grid lines (horizontal)
-        ctx.strokeStyle = cor.grade;
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i <= 4; i++) {
-          const gy = padTop + (chartH / 4) * i;
-          ctx.beginPath();
-          ctx.setLineDash([3, 3]);
-          ctx.moveTo(padLeft, gy);
-          ctx.lineTo(w - padRight, gy);
-          ctx.stroke();
-        }
-        ctx.setLineDash([]);
-
-        const pts = getPoints(progress);
-        const segments = catmullRom(pts);
-
-        // Area fill (gradient)
-        const grad = ctx.createLinearGradient(0, padTop, 0, padTop + chartH);
-        grad.addColorStop(0, `rgba(${cor.linhaRgb}, 0.35)`);
-        grad.addColorStop(0.5, `rgba(${cor.linhaRgb}, 0.12)`);
-        grad.addColorStop(1, `rgba(${cor.linhaRgb}, 0.02)`);
-
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, padTop + chartH);
-        ctx.lineTo(pts[0].x, pts[0].y);
-        segments.forEach(s => {
-          ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
-        });
-        ctx.lineTo(pts[pts.length - 1].x, padTop + chartH);
-        ctx.closePath();
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Line stroke
-        const lineGrad = ctx.createLinearGradient(0, padTop, 0, padTop + chartH);
-        lineGrad.addColorStop(0, `rgb(${cor.linhaRgb})`);
-        lineGrad.addColorStop(1, `rgba(${cor.linhaRgb}, 0.85)`);
-
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        segments.forEach(s => {
-          ctx.bezierCurveTo(s.cp1.x, s.cp1.y, s.cp2.x, s.cp2.y, s.p2.x, s.p2.y);
-        });
-        ctx.strokeStyle = lineGrad;
-        ctx.lineWidth = 2.5;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.stroke();
-
-        // Data points (dots) and values
-        pts.forEach((pt, i) => {
-          if (data[i] > 0 && progress > 0.8) {
-            const dotOpacity = Math.min(1, (progress - 0.8) / 0.2);
-
-            // Glow
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${cor.linhaRgb}, ${0.15 * dotOpacity})`;
-            ctx.fill();
-
-            // Dot
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${cor.linhaRgb}, ${dotOpacity})`;
-            ctx.fill();
-            ctx.globalAlpha = dotOpacity;
-            ctx.strokeStyle = cor.anel;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Value label
-            ctx.fillStyle = cor.valor;
-            ctx.font = 'bold 9px system-ui, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(data[i], pt.x, pt.y - 10);
-            ctx.globalAlpha = 1;
-          }
-        });
-
-        // X-axis labels
-        ctx.fillStyle = cor.eixo;
-        ctx.font = '9px system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        data.forEach((_, i) => {
-          if (i % 3 === 0) {
-            const x = padLeft + i * stepX;
-            ctx.fillText(`${i}h`, x, h - 4);
-          }
-        });
-
-        // Y-axis labels
-        ctx.fillStyle = cor.eixo;
-        ctx.font = '8px system-ui, sans-serif';
-        ctx.textAlign = 'right';
-        for (let i = 0; i <= 4; i++) {
-          const val = Math.round((maxVal / 4) * (4 - i));
-          const gy = padTop + (chartH / 4) * i;
-          if (val > 0) ctx.fillText(val, padLeft - 4, gy + 3);
-        }
-
-        // Baseline
-        ctx.strokeStyle = cor.base;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(padLeft, padTop + chartH);
-        ctx.lineTo(w - padRight, padTop + chartH);
-        ctx.stroke();
-      }
-
-      // Animate
-      if (chartAnimFrame) cancelAnimationFrame(chartAnimFrame);
-      // Troca de tema e movimento reduzido: desenha direto o estado final
-      if ((opts && opts.semAnimacao) || Spring.prefersReducedMotion()) {
-        drawFrame(1);
-        return;
-      }
-      const duration = 1200;
-      const start = performance.now();
-
-      function animate(now) {
-        const elapsed = now - start;
-        const rawProgress = Math.min(elapsed / duration, 1);
-        // Ease out cubic
-        const progress = 1 - Math.pow(1 - rawProgress, 3);
-        drawFrame(progress);
-        if (rawProgress < 1) {
-          chartAnimFrame = requestAnimationFrame(animate);
-        }
-      }
-      chartAnimFrame = requestAnimationFrame(animate);
+    // Depois de desenhar um ranking: "Ver os N" só se houver mais de 3
+    function atualizarVer10(idLista, n) {
+      const b = document.querySelector(`[data-ver10="${idLista}"]`);
+      const lista = document.getElementById(idLista);
+      lista.classList.remove('aberta');
+      b.hidden = n <= 3;
+      b.setAttribute('aria-expanded', 'false');
+      b.textContent = `Ver os ${n} →`;
     }
 
     // ============================================
@@ -9060,6 +8067,8 @@
       const { f, data } = r;
       // Título só muda com dados novos: em erro, dados velhos não ganham título novo
       document.getElementById('title-indicators').textContent = `Indicadores · ${f.label}`;
+      document.getElementById('lbl-hora-pico').textContent = f.isSingleDay ? 'Hora de pico' : 'Dia de pico';
+      document.getElementById('sub-hora-pico').textContent = f.isSingleDay ? 'maior fluxo do dia' : 'maior fluxo do período';
 
       if (!data || data.length === 0) {
         document.getElementById('ind-hora-pico').textContent = '--';
@@ -9067,19 +8076,17 @@
         return;
       }
 
-      // Velocidade média e "dentro do limite" são de hoje e ficam nos cartões
-      // do topo (veiculos-do-dia.js: indicadoresDeVelocidade); aqui, o período.
+      // Velocidade média e "dentro do limite" são de hoje e ficam nos números
+      // do dia (veiculos-do-dia.js: indicadoresDeVelocidade); aqui, o período.
       const limite = currentCliente.limite_velocidade;
 
       // Hora/Dia pico
       if (f.isSingleDay) {
-        document.getElementById('lbl-hora-pico').textContent = 'Hora Pico';
         const hourCounts = new Array(24).fill(0);
         data.forEach(c => { hourCounts[new Date(c.timestamp).getHours()]++; });
         const peakHour = hourCounts.indexOf(Math.max(...hourCounts));
         document.getElementById('ind-hora-pico').textContent = `${peakHour}h`;
       } else {
-        document.getElementById('lbl-hora-pico').textContent = 'Dia Pico';
         const dayCounts = {};
         data.forEach(c => {
           const dk = new Date(c.timestamp).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
@@ -9232,7 +8239,7 @@
           ctx.stroke();
 
           ctx.fillStyle = cor.valor;
-          ctx.font = 'bold 9px system-ui, sans-serif';
+          ctx.font = '700 12px "JetBrains Mono", ui-monospace, monospace';
           ctx.textAlign = 'center';
           ctx.fillText(data[i], p.x, p.y - 8);
         }
@@ -9240,7 +8247,7 @@
 
       // Day labels
       ctx.fillStyle = cor.eixo;
-      ctx.font = '9px system-ui, sans-serif';
+      ctx.font = '600 12px Manrope, system-ui, sans-serif';
       ctx.textAlign = 'center';
       labels.forEach((lbl, i) => {
         ctx.fillText(lbl, pts[i].x, h - 4);
@@ -9257,11 +8264,12 @@
         'falha-ranking', () => seq === rankingSeq);
       if (!r) return; // resposta antiga: a mais nova desenha
       const { f, data } = r;
-      document.getElementById('title-ranking').textContent = `Top 10 Placas · ${f.label}`;
+      document.getElementById('title-ranking').textContent = `Mais passagens · ${f.label}`;
+      const listaEl = document.getElementById('ranking-list');
 
       if (!data || data.length === 0) {
-        document.getElementById('ranking-list').innerHTML =
-          '<li class="ranking-item" style="color:var(--text-muted)">Sem dados no período</li>';
+        listaEl.innerHTML = '<li class="rk-msg">Sem dados no período</li>';
+        atualizarVer10('ranking-list', 0);
         return;
       }
 
@@ -9279,20 +8287,22 @@
         .slice(0, 10);
 
       if (sorted.length === 0) {
-        document.getElementById('ranking-list').innerHTML =
-          '<li class="ranking-item" style="color:var(--text-muted)">Nenhuma placa lida no período</li>';
+        listaEl.innerHTML = '<li class="rk-msg">Nenhuma placa lida no período</li>';
+        atualizarVer10('ranking-list', 0);
         return;
       }
 
-      document.getElementById('ranking-list').innerHTML = sorted.map((item, i) => {
-        const hasAlert = (alerts[item[0]] || 0) > 0;
-        const rotulo = `Filtrar pela placa ${item[0]} (${item[1]} passagens${hasAlert ? `, ${alerts[item[0]]} acima do limite` : ''})`;
-        return `<li class="ranking-item"><button type="button" class="ranking-btn" data-filtro="placa" data-valor="${esc(item[0])}" aria-label="${esc(rotulo)}">
-          <span class="pos">${i + 1}.</span>
-          <span class="placa" style="${hasAlert ? 'color:var(--red)' : ''}">${esc(item[0])}</span>
-          <span class="count">${item[1]}x${hasAlert ? ` <span style="color:var(--red);font-size:0.6875rem">${alerts[item[0]]}⚠</span>` : ''}</span>
-        </button></li>`;
+      // Placa Mercosul + barra proporcional ao 1º (vermelha se teve alerta) + "22× ▲2"
+      const maior = sorted[0][1];
+      listaEl.innerHTML = sorted.map(([placa, n], i) => {
+        const nAlertas = alerts[placa] || 0;
+        const rotulo = `Filtrar pela placa ${placa} (${n} passagens${nAlertas ? `, ${nAlertas} acima do limite` : ''})`;
+        return `<li class="${nAlertas ? 'al' : ''}"><button type="button" class="ranking-btn" data-filtro="placa" data-valor="${esc(placa)}" aria-label="${esc(rotulo)}">`
+          + `<span class="i">${i + 1}</span>${htmlPlacaMercosul(placa)}`
+          + `<span class="bar" aria-hidden="true"><i style="width:${Math.max(4, Math.round((n / maior) * 100))}%"></i></span>`
+          + `<span class="x">${n}×${nAlertas ? ` ▲${nAlertas}` : ''}</span></button></li>`;
       }).join('');
+      atualizarVer10('ranking-list', sorted.length);
     }
 
     // Maiores velocidades · últimos 6 meses: um veículo por linha, fixo (não
@@ -9321,22 +8331,22 @@
       recordesEm = Date.now();
       const lista = document.getElementById('recordes-list');
       if (r.length === 0) {
-        lista.innerHTML = '<li class="ranking-item" style="color:var(--text-muted)">Sem velocidades medidas nos últimos 6 meses</li>';
+        lista.innerHTML = '<li class="rk-msg">Sem velocidades medidas nos últimos 6 meses</li>';
+        atualizarVer10('recordes-list', 0);
         return;
       }
       const limite = currentCliente.limite_velocidade;
-      lista.innerHTML = r.map((c, i) => {
+      lista.innerHTML = r.map((c) => {
         const acima = acimaDoLimite(c.velocidade, limite);
-        const dia = new Date(c.passou_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-        const rotulo = `Ver ${c.placa} em ${dia}: ${c.velocidade} km/h${acima ? ', acima do limite' : ''}`;
-        return `<li class="ranking-item"><button type="button" class="ranking-btn" data-filtro="recorde"`
-          + ` data-valor="${esc(maioresVelocidades.valorDoClique(c.placa, c.passou_em))}" aria-label="${esc(rotulo)}">
-          <span class="pos">${i + 1}.</span>
-          <span class="placa">${esc(c.placa)}</span>
-          <span class="recorde-dia">${esc(dia)}</span>
-          <span class="count${acima ? ' acima' : ''}">${Number(c.velocidade)} km/h</span>
-        </button></li>`;
+        const dia = new Date(c.passou_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const diaLongo = new Date(c.passou_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        const rotulo = `Ver ${c.placa} em ${diaLongo}: ${c.velocidade} km/h${acima ? ', acima do limite' : ''}`;
+        return `<li><button type="button" class="ranking-btn" data-filtro="recorde"`
+          + ` data-valor="${esc(maioresVelocidades.valorDoClique(c.placa, c.passou_em))}" aria-label="${esc(rotulo)}">`
+          + `${htmlPlacaMercosul(c.placa)}<span class="d">${esc(dia)}</span>`
+          + `<span class="k${acima ? ' acima' : ''}">${Number(c.velocidade)}</span></button></li>`;
       }).join('');
+      atualizarVer10('recordes-list', r.length);
     }
   </script>
   <div id="aviso" role="status" aria-live="polite"></div>
