@@ -106,4 +106,14 @@ caso('id inválido leva ao /admin', () => {
   assert.strictEqual(urlDoPainel('javascript:alert(1)'), '/admin');
 });
 
+// ---- podeVerQuadroPc: link "Quadro para o PC da portaria" (v1.17)
+caso('síndico, operador e equipe Protector veem o link do quadro; portaria e desconhecido não', () => {
+  const { podeVerQuadroPc } = require('../site/js/acesso-painel');
+  assert.strictEqual(podeVerQuadroPc('admin_cliente'), true);
+  assert.strictEqual(podeVerQuadroPc('operador'), true);
+  assert.strictEqual(podeVerQuadroPc('super_admin'), true);
+  assert.strictEqual(podeVerQuadroPc('portaria'), false);
+  assert.strictEqual(podeVerQuadroPc(undefined), false);
+});
+
 console.log(`\n${passou} casos passaram`);

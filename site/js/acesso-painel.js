@@ -68,5 +68,12 @@
     return PAPEIS_HISTORICO.has(role);
   }
 
-  return { ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel, podeEditarVeiculos, podeVerHistorico };
+  // Quadro do PC da portaria (v1.17): quem instala vê o link no painel
+  // (síndico, operador, equipe Protector); o porteiro só usa o quadro.
+  const PAPEIS_QUADRO_PC = new Set(['super_admin', 'admin_cliente', 'operador']);
+  function podeVerQuadroPc(role) {
+    return PAPEIS_QUADRO_PC.has(role);
+  }
+
+  return { ehUuid, clienteDaUrl, resolverAcesso, comCliente, urlDoPainel, podeEditarVeiculos, podeVerHistorico, podeVerQuadroPc };
 });
