@@ -169,12 +169,15 @@
   // ALPHADIGI grava uma faixa preta no topo (data, placa, VL:xxKM/H, nome da
   // lombada); o recorte tira a faixa e aproxima o carro, sempre em caixa 16:9.
   // Os detalhes da passagem continuam com a foto inteira (com a faixa).
+  // Padrão medido nas câmeras com o carro no terço de cima da imagem (o mais
+  // comum). Origem = ponto fixo do zoom (transform-origin): com zoom s, o
+  // centro visível fica em o + (50 − o)/s; o topo visível corta a faixa preta.
   const RECORTE_PADRAO = Object.freeze({
-    mini: Object.freeze({ zoom: 1.9, x: 47, y: 26 }),
-    destaque: Object.freeze({ zoom: 1.35, x: 47, y: 22 }),
+    mini: Object.freeze({ zoom: 2.2, x: 45, y: 14 }),
+    destaque: Object.freeze({ zoom: 1.6, x: 42, y: 18 }),
   });
-  // Ajuste por câmera (id ou modelo) quando o enquadramento for diferente.
-  // Ex.: { 'MODELO-X': { mini: { y: 30 } } }. Vazio = padrão em todas.
+  // Ajuste por câmera (id ou modelo) no código, quando necessário. O ajuste de
+  // cada câmera fica de preferência no banco: cameras.foto_enquadramento.
   const RECORTE_POR_CAMERA = Object.freeze({});
 
   const numeroEntre = (v, min, max, padrao) => {
@@ -184,7 +187,8 @@
 
   /**
    * Recorte da miniatura da câmera: { zoom, x, y } (x/y = origem em %).
-   * `tamanho`: 'mini' | 'destaque'. Ajustes por id vencem os por modelo;
+   * `tamanho`: 'mini' | 'destaque'. O ajuste do banco (camera.foto_enquadramento)
+   * vence o por id, que vence o por modelo;
    * valor fora da faixa (zoom 1–3, origem 0–100) volta ao padrão.
    */
   function recorteDaFoto(camera, tamanho, ajustes) {
@@ -193,7 +197,9 @@
     const c = camera || {};
     const porModelo = (c.modelo && mapa[c.modelo] && mapa[c.modelo][tamanho]) || {};
     const porId = (c.id && mapa[c.id] && mapa[c.id][tamanho]) || {};
-    const a = Object.assign({}, porModelo, porId);
+    const fe = c.foto_enquadramento;
+    const doBanco = (fe && typeof fe === 'object' && fe[tamanho] && typeof fe[tamanho] === 'object') ? fe[tamanho] : {};
+    const a = Object.assign({}, porModelo, porId, doBanco);
     return {
       zoom: numeroEntre(a.zoom, 1, 3, base.zoom),
       x: numeroEntre(a.x, 0, 100, base.x),

@@ -320,7 +320,7 @@ begin
   perform id, nome from clientes where ativo = true order by nome;
   -- carregar câmeras / status das câmeras
   select count(*) into n from (
-    select id, nome, nome_exibicao, serial_number, modelo, firmware
+    select id, nome, nome_exibicao, serial_number, modelo, firmware, foto_enquadramento
       from cameras where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and ativa = true) x;
   if n <> 1 then raise exception 'FALHOU: portaria não lê câmeras (% linhas)', n; end if;
   select count(*) into n from (
@@ -405,7 +405,7 @@ begin
   perform id, nome from clientes where ativo = true order by nome;
   -- carregar câmeras / status das câmeras
   select count(*) into n from (
-    select id, nome, nome_exibicao, serial_number, modelo, firmware
+    select id, nome, nome_exibicao, serial_number, modelo, firmware, foto_enquadramento
       from cameras where cliente_id = '00000000-0000-0000-0000-00000000aaaa' and ativa = true) x;
   if n <> 1 then raise exception 'FALHOU: admin_cliente não lê câmeras (% linhas)', n; end if;
   select count(*) into n from (

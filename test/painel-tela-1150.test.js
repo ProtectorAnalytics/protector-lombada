@@ -179,7 +179,7 @@ caso('Tipo (ícone) · Nome · Unidade do vínculo da hora; sem cadastro: "+ Cad
   assert.ok(!cadastrado.includes('+ Cadastrar'));
   const sem = ctx.celulasCadastro({ placa: 'XYZ9B87', timestamp: '2026-10-23T12:00:00Z' }, 3);
   assert.ok(sem.includes('Sem cadastro') && sem.includes('<use href="#ic-interrogacao"/>'));
-  assert.ok(sem.includes('<td class="c-nome"><button type="button" class="btn-cadastrar" data-acao="cadastrar-passagem" data-indice="3"'));
+  assert.ok(sem.includes('<td class="c-nome"><span class="sem-dado em-repouso">—</span><button type="button" class="btn-cadastrar" data-acao="cadastrar-passagem" data-indice="3"'));
   assert.ok(sem.includes('aria-label="Cadastrar a placa XYZ9B87"'));
   // Sem cadastro na hora, mas já cadastrada hoje: não oferece cadastrar de novo
   const depois = ctx.celulasCadastro({ placa: 'TST2B22', timestamp: '2026-10-23T12:00:00Z' }, 1);
@@ -189,7 +189,10 @@ caso('Tipo (ícone) · Nome · Unidade do vínculo da hora; sem cadastro: "+ Cad
   const leitor = contexto({ podeEditarVeiculos: () => false });
   assert.ok(!leitor.celulasCadastro({ placa: 'XYZ9B87', timestamp: '2026-10-23T12:00:00Z' }, 0).includes('+ Cadastrar'));
   // "+ Cadastrar" aparece ao passar o mouse/focar; no toque, sempre
-  assert.ok(CSS.includes('.table-row:hover .btn-cadastrar, .table-row:focus-within .btn-cadastrar { opacity: 1; }'));
+  assert.ok(CSS.includes('.table-row:hover .btn-cadastrar, .table-row:focus-within .btn-cadastrar { display: inline; }'));
+  // Em repouso o Nome de quem não tem cadastro mostra "—", igual à Unidade
+  assert.ok(PAINEL.includes('<span class="sem-dado em-repouso">—</span><button type="button" class="btn-cadastrar"'));
+  assert.ok(CSS.includes('.table-row:hover .em-repouso, .table-row:focus-within .em-repouso { display: none; }'));
   // O botão abre o MESMO formulário de cadastro da passagem (sem duplicar)
   assert.ok(PAINEL.includes('if (captura) openModal(captura, { focoCadastro: true });'));
   assert.ok(PAINEL.includes("const form = body.querySelector('form[data-acao=\"cadastrar\"]');\n      if (!form) return;"));
