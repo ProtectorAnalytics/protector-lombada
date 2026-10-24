@@ -13,10 +13,10 @@ function caso(nome, fn) { fn(); passou++; console.log(`ok - ${nome}`); }
 
 const captura = { placa: 'TST1A11', velocidade: 41, timestamp: '2026-10-23T20:24:35Z', tipo_veiculo: 'CARRO', cor_veiculo: 'BRANCO' };
 
-caso('Excel: colunas na ordem, com Tipo, Nome e Unidade', () => {
+caso('Excel: colunas na ordem da lista (Lombada, Veículo, Cor, Ano, Tipo, Nome, Unidade)', () => {
   assert.deepStrictEqual(exp.COLUNAS_EXCEL, [
-    'Placa', 'Velocidade (km/h)', 'Radar', 'Data', 'Hora', 'Status', 'Tipo', 'Nome', 'Unidade',
-    'Tipo (câmera)', 'Cor (câmera)', 'Marca', 'Modelo', 'Cor (cadastro)', 'Ano',
+    'Placa', 'Velocidade (km/h)', 'Status', 'Data', 'Hora', 'Lombada', 'Veículo', 'Cor', 'Ano', 'Tipo', 'Nome', 'Unidade',
+    'Tipo (câmera)', 'Cor (câmera)',
   ]);
 });
 
@@ -34,7 +34,10 @@ caso('Excel: linha com o cadastro da hora', () => {
   assert.strictEqual(l.Nome, 'Fulano de Teste');
   assert.strictEqual(l.Unidade, 'Bloco A · 101');
   assert.strictEqual(l['Tipo (câmera)'], 'CARRO');
-  assert.strictEqual(l.Modelo, 'MODELO X');
+  assert.strictEqual(l.Lombada, 'RADAR TESTE');
+  assert.strictEqual(l['Veículo'], 'MARCA MODELO X');
+  assert.strictEqual(l.Cor, 'Branca');
+  assert.strictEqual(l.Ano, '2024');
 });
 
 caso('Excel: sem vínculo na hora = "Sem cadastro", nome e unidade vazios', () => {
@@ -43,19 +46,25 @@ caso('Excel: sem vínculo na hora = "Sem cadastro", nome e unidade vazios', () =
   assert.strictEqual(l.Nome, '');
   assert.strictEqual(l.Unidade, '');
   assert.strictEqual(l.Status, 'OK');
-  assert.strictEqual(l.Radar, '—');
+  assert.strictEqual(l.Lombada, '—');
+  assert.strictEqual(l['Veículo'], '');
 });
 
-caso('PDF: colunas somam a largura útil e trazem Tipo, Nome e Unidade', () => {
+caso('PDF: colunas somam a largura útil, na ordem da lista, números à direita', () => {
   const soma = exp.COLUNAS_PDF.reduce((s, c) => s + c.w, 0);
   assert.ok(Math.abs(soma - 1) < 1e-9);
   assert.deepStrictEqual(exp.COLUNAS_PDF.map((c) => c.label), [
-    'Placa', 'Velocidade', 'Radar', 'Status', 'Data', 'Hora', 'Tipo', 'Nome', 'Unidade', 'Veículo (câmera)', 'Cor',
+    'Placa', 'Velocidade', 'Status', 'Data', 'Hora', 'Lombada', 'Veículo', 'Cor', 'Ano', 'Tipo', 'Nome', 'Unidade',
   ]);
+  assert.deepStrictEqual(exp.COLUNAS_PDF.filter((c) => c.alinhar === 'right').map((c) => c.label), ['Velocidade', 'Data', 'Hora', 'Ano']);
   assert.strictEqual(exp.COLUNAS_PDF[exp.COLUNA_STATUS_PDF].label, 'Status');
-  const v = exp.valoresPdf({ captura, radar: 'R1', limite: 33, unidade: '036', vinculo: { tipo_pessoa: 'visitante', nome_morador: 'Beltrano' } });
-  assert.deepStrictEqual(v, ['TST1A11', '41 km/h', 'R1', 'ALERTA', '23/10/2026', '17:24:35', 'Visitante', 'Beltrano', '036', 'CARRO', 'BRANCO']);
-  assert.strictEqual(exp.valoresPdf({ captura, limite: 33 })[7], '—');
+  const v = exp.valoresPdf({
+    captura, radar: 'R1', limite: 33, unidade: '036', vinculo: { tipo_pessoa: 'visitante', nome_morador: 'Beltrano' },
+    base: { marca: 'MARCA', modelo: 'MODELO', cor: 'Prata', ano: '2020' },
+  });
+  assert.deepStrictEqual(v, ['TST1A11', '41 km/h', 'ALERTA', '23/10/2026', '17:24:35', 'R1', 'MARCA MODELO', 'Prata', '2020', 'Visitante', 'Beltrano', '036']);
+  assert.strictEqual(exp.valoresPdf({ captura, limite: 33 })[10], '—');
+  assert.strictEqual(exp.valoresPdf({ captura, limite: 33 })[6], '—');
 });
 
 caso('painel usa a lib nos dois formatos', () => {
