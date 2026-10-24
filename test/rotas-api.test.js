@@ -33,18 +33,36 @@ caso('todo arquivo de api/ tem rota no vercel.json (ou está na lista de exceç�
   assert.deepStrictEqual(semRota, [], `sem rota: ${semRota.join(', ')}`);
 });
 
-caso('endereço antigo (protector-lombada.vercel.app) manda painel/admin/portaria para o domínio oficial, nunca as câmeras', () => {
+caso('endereço antigo (protector-lombada.vercel.app) manda painel/admin/portaria/quadro para o domínio oficial, nunca as câmeras', () => {
   const red = routes.filter((r) => r.status === 308 && (r.has || []).some((h) => h.type === 'host' && h.value === 'protector-lombada.vercel.app'));
   assert.strictEqual(red.length, 1);
   const re = new RegExp(red[0].src);
-  ['/dashboard', '/dashboard/', '/admin', '/admin/manual-usuario.html', '/portaria', '/portaria/'].forEach((u) => assert.ok(re.test(u), u));
-  ['/placa', '/placa/x', '/api/heartbeat', '/api/captura', '/api/config', '/', '/js/captcha.js', '/dashboardx'].forEach((u) => assert.ok(!re.test(u), u));
+  ['/dashboard', '/dashboard/', '/admin', '/admin/manual-usuario.html', '/portaria', '/portaria/', '/quadro', '/quadro/app.js'].forEach((u) => assert.ok(re.test(u), u));
+  ['/placa', '/placa/x', '/api/heartbeat', '/api/captura', '/api/config', '/', '/js/captcha.js', '/dashboardx', '/quadrox', '/baixar/quadro-windows'].forEach((u) => assert.ok(!re.test(u), u));
   assert.strictEqual(red[0].headers.Location, 'https://lombada.appps.com.br/$1$2');
   assert.strictEqual(routes.indexOf(red[0]), 0, 'antes de qualquer rota');
 });
 
 caso('/api/admin/avisos aponta para o handler', () => {
   assert.ok(routes.some((r) => r.src === '/api/admin/avisos' && r.dest === '/api/admin/avisos.js'));
+});
+
+caso('/quadro serve a página do quadro, antes do coringa final', () => {
+  const coringa = routes.findIndex((r) => r.src === '/(.*)');
+  const pagina = routes.findIndex((r) => r.src === '/quadro' && r.dest === '/quadro/index.html');
+  const arquivos = routes.findIndex((r) => r.src === '/quadro/(.*)' && r.dest === '/quadro/$1');
+  assert.ok(pagina > 0 && pagina < coringa, 'rota /quadro');
+  assert.ok(arquivos > 0 && arquivos < coringa, 'rota /quadro/(.*)');
+  const { builds } = JSON.parse(fs.readFileSync(path.join(RAIZ, 'vercel.json'), 'utf8'));
+  assert.ok(builds.some((b) => b.src === 'quadro/**' && b.use === '@vercel/static'), 'build estático quadro/**');
+});
+
+caso('/baixar/quadro-windows manda (302) para o instalador do último release no GitHub', () => {
+  const r = routes.find((x) => x.src === '/baixar/quadro-windows');
+  assert.ok(r, 'rota de download');
+  assert.strictEqual(r.status, 302);
+  assert.strictEqual(r.headers.Location, 'https://github.com/ProtectorAnalytics/protector-lombada/releases/latest/download/Quadro-Lombada-Setup.exe');
+  assert.ok(routes.indexOf(r) < routes.findIndex((x) => x.src === '/(.*)'));
 });
 
 caso('rotas de api/ ficam antes do coringa final', () => {

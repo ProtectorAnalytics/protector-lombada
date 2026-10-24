@@ -14,12 +14,14 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.16.1',
+    versao: '1.17.0',
     data: '2026-10-24',
-    titulo: 'Entrada com o quadro "não sou um robô" à vista',
+    titulo: 'Quadro no PC da portaria',
     itens: Object.freeze([
-      'Na tela de entrada, o quadro "não sou um robô" agora aparece sempre; na maioria das vezes ele confirma sozinho e, quando pedir, basta um clique',
-      'Se a confirmação falhar, a mensagem mostra um código (ex.: "código 600010"); mande uma foto da tela para o suporte, que o código indica a causa',
+      'Novo quadro para o PC da portaria: uma janela pequena, sempre por cima das câmeras e do controle de acesso, com a última passagem na lombada ao vivo',
+      'O quadro mostra a foto, a placa, a velocidade e de quem é o carro (Morador, Proprietário, Visitante ou Prestador) ou "Sem cadastro"; acima do limite, fica em vermelho',
+      'As setas voltam nas passagens de hoje e um clique abre o painel completo; o porteiro entra com o próprio login',
+      'Para instalar, abra o menu da conta no painel e clique em "Quadro para o PC da portaria"',
     ]),
   });
 });

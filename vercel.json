@@ -5,10 +5,11 @@
     { "src": "site/**", "use": "@vercel/static" },
     { "src": "dashboard/**", "use": "@vercel/static" },
     { "src": "admin/**", "use": "@vercel/static" },
-    { "src": "portaria/**", "use": "@vercel/static" }
+    { "src": "portaria/**", "use": "@vercel/static" },
+    { "src": "quadro/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "^/(dashboard|admin|portaria)(/.*)?$", "has": [{ "type": "host", "value": "protector-lombada.vercel.app" }], "status": 308, "headers": { "Location": "https://lombada.appps.com.br/$1$2" } },
+    { "src": "^/(dashboard|admin|portaria|quadro)(/.*)?$", "has": [{ "type": "host", "value": "protector-lombada.vercel.app" }], "status": 308, "headers": { "Location": "https://lombada.appps.com.br/$1$2" } },
     { "src": "/api/config", "dest": "/api/config.js" },
     { "src": "/api/captura", "dest": "/api/captura.js" },
     { "src": "/api/heartbeat", "dest": "/api/heartbeat.js" },
@@ -42,6 +43,9 @@
     { "src": "/dashboard/(.*)", "dest": "/dashboard/$1" },
     { "src": "/portaria", "dest": "/portaria/index.html" },
     { "src": "/portaria/(.*)", "dest": "/portaria/$1" },
+    { "src": "/quadro", "dest": "/quadro/index.html" },
+    { "src": "/quadro/(.*)", "dest": "/quadro/$1" },
+    { "src": "/baixar/quadro-windows", "status": 302, "headers": { "Location": "https://github.com/ProtectorAnalytics/protector-lombada/releases/latest/download/Quadro-Lombada-Setup.exe", "Cache-Control": "no-store" } },
     { "src": "/placa(.*)", "dest": "/api/captura.js" },
     { "src": "/privacidade", "dest": "/site/privacidade.html" },
     { "src": "/direitos-titular", "dest": "/site/direitos-titular.html" },

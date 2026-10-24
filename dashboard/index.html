@@ -1325,6 +1325,18 @@
       overflow-y: auto;
     }
     .vm-overlay.active { display: flex; }
+    .vm-box.quadro-pc { max-width: 560px; }
+    .quadro-pc .vm-body p { margin: 0 0 14px; line-height: 1.5; color: var(--text-secondary); }
+    .quadro-pc .vm-body strong { color: var(--text-primary); }
+    .qp-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 4px 0 16px; }
+    .qp-acoes .qp-baixar {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 22px;
+      background: var(--accent); color: #fff; border-radius: 10px; font: 700 0.9375rem/1 var(--font-sans); text-decoration: none;
+    }
+    .qp-acoes .qp-baixar:hover { filter: brightness(1.1); }
+    .qp-acoes .qp-baixar:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+    .qp-navegador, .qp-manual a { color: var(--azul); font-weight: 700; text-underline-offset: 3px; }
+    .quadro-pc .qp-aviso { padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--ambar) 45%, transparent); background: color-mix(in srgb, var(--ambar) 10%, transparent); }
 
     .vm-box {
       background: var(--sheet-bg);
@@ -2078,7 +2090,7 @@
         <div id="nova-senha-message" style="font-size:0.8125rem;margin-top:10px;min-height:20px;" role="status" aria-live="polite"></div>
       </div>
       <div class="app-version" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:0.75rem;color:var(--text-muted);letter-spacing:0.04em">
-        v1.16.1 &middot; 2026-10-24
+        v1.17.0 &middot; 2026-10-24
       </div>
       <a href="/admin/" style="display:block;margin-top:14px;text-align:center;font-size:0.75rem;color:var(--text-muted);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1';this.style.color='var(--accent)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-muted)'">
         Acesso administrativo →
@@ -2114,6 +2126,7 @@
           <div class="conta-email" id="topbar-email"></div>
           <button type="button" class="conta-link conta-so-celular" onclick="fecharContaMenu();abrirModalVeiculo()">Veículos cadastrados</button>
           <a class="conta-link" id="conta-portaria" href="/portaria" hidden>Abrir a portaria</a>
+          <button type="button" class="conta-link" id="conta-quadro" onclick="abrirQuadroPc()" hidden>Quadro para o PC da portaria</button>
           <button type="button" class="conta-link" id="conta-gestao-portaria" onclick="abrirPainelPortaria()" hidden>Portaria: unidades e porteiros</button>
           <button type="button" class="conta-link" id="conta-avisos-email" onclick="abrirPainelAvisos()" hidden>Avisos por e-mail</button>
           <button type="button" class="conta-sair" id="conta-sair" onclick="doLogout()">Sair</button>
@@ -2349,7 +2362,7 @@
     </main>
 
     <footer class="rodape-painel">
-      Protector Traffic Control &middot; v1.16.1
+      Protector Traffic Control &middot; v1.17.0
       <br>
       <div class="rodape-links">
         <a href="/dashboard/manual.html" class="rodape-manual">
@@ -2386,6 +2399,25 @@
         <button type="button" class="modal-close" onclick="fecharPainelAvisos()" aria-label="Fechar">&times;</button>
       </div>
       <div class="vm-body"><div id="painel-avisos-email"></div></div>
+    </div>
+  </div>
+
+  <!-- Quadro para o PC da portaria (síndico, operador, equipe Protector): baixar o programa ou abrir no navegador -->
+  <div class="vm-overlay" id="quadro-overlay" onclick="if(event.target===this)fecharQuadroPc()">
+    <div class="vm-box quadro-pc" role="dialog" aria-modal="true" aria-labelledby="qp-title" aria-describedby="qp-oque">
+      <div class="vm-header">
+        <h3 id="qp-title">Quadro para o PC da portaria</h3>
+        <button type="button" class="modal-close" onclick="fecharQuadroPc()" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="vm-body">
+        <p id="qp-oque">Uma janela pequena que fica <strong>sempre por cima</strong> das câmeras e do controle de acesso e mostra, ao vivo, a última passagem na lombada: foto, placa, velocidade e de quem é o carro (Morador, Proprietário, Visitante, Prestador) ou &ldquo;Sem cadastro&rdquo;. As setas voltam nas passagens de hoje. O porteiro entra com o próprio login.</p>
+        <div class="qp-acoes">
+          <a class="qp-baixar" href="/baixar/quadro-windows" data-foco-inicial>Baixar para Windows</a>
+          <a class="qp-navegador" href="/quadro" target="_blank" rel="noopener">Ou abrir no navegador</a>
+        </div>
+        <p class="qp-aviso" role="note"><strong>Na primeira vez</strong>, o Windows pode mostrar &ldquo;O Windows protegeu o computador&rdquo;: clique em <strong>Mais informações</strong> e depois em <strong>Executar assim mesmo</strong>. O programa é da Protector e ainda não tem assinatura digital.</p>
+        <p class="qp-manual"><a href="/dashboard/manual.html#quadro-pc" target="_blank" rel="noopener">Como instalar e usar (manual)</a></p>
+      </div>
     </div>
   </div>
 
@@ -3099,6 +3131,27 @@
       });
     }
 
+    // ============================================
+    // QUADRO PARA O PC DA PORTARIA (/quadro e o programa do Windows)
+    // ============================================
+    // Link do quadro: quem instala (síndico, operador, Protector); o porteiro só usa
+    function aplicarAcessoQuadroPc() {
+      document.getElementById('conta-quadro').hidden = !acessoPainel.podeVerQuadroPc(currentProfile && currentProfile.role);
+    }
+
+    function abrirQuadroPc() {
+      if (!acessoPainel.podeVerQuadroPc(currentProfile && currentProfile.role)) return;
+      fecharContaMenu({ semFoco: true });
+      abrirOverlay(document.getElementById('quadro-overlay'));
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharQuadroPc() {
+      fecharOverlay(document.getElementById('quadro-overlay'), () => {
+        document.body.style.overflow = '';
+      });
+    }
+
     function aplicarModoAdmin() {
       document.getElementById('faixa-admin').hidden = !modoAdmin;
       document.getElementById('conta-sair').textContent = modoAdmin ? 'Voltar ao admin' : 'Sair';
@@ -3293,6 +3346,7 @@
       document.getElementById('conta-btn').setAttribute('aria-label', 'Conta: ' + currentUser.email);
       document.getElementById('btn-topbar-veiculos').style.display = '';
       aplicarPermissaoVeiculos();
+      aplicarAcessoQuadroPc();
       aplicarModoAdmin();
       sincronizarSeletores(); // o seletor do topo só tem tamanho depois de visível
 
@@ -7322,6 +7376,7 @@
       }
       if (overlayAberto(document.getElementById('portaria-overlay'))) return fecharPainelPortaria();
       if (overlayAberto(document.getElementById('avisos-overlay'))) return fecharPainelAvisos();
+      if (overlayAberto(document.getElementById('quadro-overlay'))) return fecharQuadroPc();
       if (overlayAberto(vm)) return fecharModalVeiculo();
       if (overlayAberto(modal)) closeModal();
     });
