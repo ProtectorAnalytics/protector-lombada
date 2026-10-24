@@ -3394,6 +3394,7 @@
     function virarDiaSeNecessario(agora) {
       const hoje = hojeLocal(agora);
       if (!filtrosAtivos || hoje === hojeDoPainel) return;
+      ontemCache = null; // a comparação passa a ser com o novo ontem
       const novo = virarDia(filtrosAtivos, hojeDoPainel, agora);
       hojeDoPainel = hoje;
       if (novo === filtrosAtivos) return;
@@ -4168,9 +4169,15 @@
     // ---------- Comparação com ontem no mesmo horário (00:00 até agora − 24 h)
     // Guardada por ONTEM_TTL_MS: o polling de 30 s não relê ontem a cada ciclo
     const ONTEM_TTL_MS = 5 * 60 * 1000;
-    let ontemCache = null; // { clienteId, em, numeros }
+    let ontemCache = null; // { clienteId, dia, em, numeros }
+    // Vale só para o mesmo condomínio, o mesmo dia (depois da meia-noite "ontem"
+    // é outro dia) e por ONTEM_TTL_MS
+    function ontemCacheValido(cache, clienteId, dia, agoraMs) {
+      return Boolean(cache && cache.clienteId === clienteId && cache.dia === dia && agoraMs - cache.em < ONTEM_TTL_MS);
+    }
     async function numerosDeOntem(sessao, limite) {
-      if (ontemCache && ontemCache.clienteId === sessao.clienteId && Date.now() - ontemCache.em < ONTEM_TTL_MS) return ontemCache.numeros;
+      const dia = todayLocalISO();
+      if (ontemCacheValido(ontemCache, sessao.clienteId, dia, Date.now())) return ontemCache.numeros;
       const inicioHoje = new Date();
       inicioHoje.setHours(0, 0, 0, 0);
       const desde = new Date(inicioHoje.getTime() - DIA_MS).toISOString();
@@ -4181,7 +4188,7 @@
         .gte('timestamp', desde).lte('timestamp', ate)
         .order('timestamp', { ascending: false }).order('id').range(de, fim));
       const numeros = numerosDoDia(linhas, limite);
-      if (sessaoValida(sessao)) ontemCache = { clienteId: sessao.clienteId, em: Date.now(), numeros };
+      if (sessaoValida(sessao)) ontemCache = { clienteId: sessao.clienteId, dia, em: Date.now(), numeros };
       return numeros;
     }
 
@@ -4824,8 +4831,20 @@
       }
 
       escreverPaginacao(faixa);
+      conferirTransbordo();
       return true;
     }
+
+    // Último recurso: se a tabela não couber (valores muito longos), a caixa
+    // da lista rola na horizontal. Só nesse caso, porque a rolagem própria
+    // desliga o cabeçalho fixo ao rolar a página.
+    function conferirTransbordo() {
+      const caixa = document.querySelector('.table-container');
+      const tabela = document.getElementById('tabela-passagens');
+      caixa.classList.remove('transborda');
+      caixa.classList.toggle('transborda', tabela.scrollWidth > caixa.clientWidth + 1);
+    }
+    window.addEventListener('resize', () => { if (painelAtivo) conferirTransbordo(); });
 
     function goToPage(page) {
       const totalPages = faixaDaPagina(1, linhasPorPagina, lista.total).totalPaginas;

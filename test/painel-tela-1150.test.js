@@ -98,6 +98,18 @@ caso('números do dia num quadro: veículos + barra + legenda clicável, alertas
   assert.ok(PAINEL.includes('id="ind-hora-pico"') && PAINEL.includes('id="ind-reincidentes"'));
 });
 
+caso('comparação com ontem: guardada por condomínio e DIA (meia-noite troca o "ontem")', () => {
+  const ctx = vm.createContext({ ONTEM_TTL_MS: 300000 });
+  vm.runInContext(extrair('function ontemCacheValido('), ctx);
+  const c = { clienteId: 'cli', dia: '2026-10-23', em: 1000 };
+  assert.strictEqual(ctx.ontemCacheValido(c, 'cli', '2026-10-23', 1000 + 60000), true);
+  assert.strictEqual(ctx.ontemCacheValido(c, 'cli', '2026-10-24', 1000 + 60000), false, 'passou da meia-noite');
+  assert.strictEqual(ctx.ontemCacheValido(c, 'outro', '2026-10-23', 1000 + 60000), false);
+  assert.strictEqual(ctx.ontemCacheValido(c, 'cli', '2026-10-23', 1000 + 300001), false, 'venceu os 5 min');
+  assert.strictEqual(ctx.ontemCacheValido(null, 'cli', '2026-10-23', 0), false);
+  assert.ok(extrair('function virarDiaSeNecessario(').includes('ontemCache = null;'));
+});
+
 caso('legenda de tipos: clicar filtra, clicar no ativo tira; tipo zerado some (menos o ativo)', () => {
   const mudancas = [];
   const ctx = vm.createContext({
@@ -148,6 +160,10 @@ caso('lista em tabela: 11 colunas na ordem, cabeçalho fixo, "Lombada" com dica'
   // Uma regra de alinhamento: números à direita, o resto à esquerda
   assert.ok(CSS.includes('.tb .c-vel, .tb .c-hora, .tb .c-ano { text-align: right; }'));
   assert.ok(CSS.includes('.ord { display: inline-block; width: 26px;'));
+  // Nada some à direita: Lombada, Veículo e Nome quebram linha; se ainda não couber, a caixa rola
+  assert.ok(CSS.includes('.tb td.c-radar, .tb td.c-veic, .tb td.c-nome { white-space: normal;'));
+  assert.ok(CSS.includes('.table-container.transborda { overflow-x: auto; }'));
+  assert.ok(PAINEL.includes("caixa.classList.toggle('transborda', tabela.scrollWidth > caixa.clientWidth + 1);"));
 });
 
 caso('Tipo (ícone) · Nome · Unidade do vínculo da hora; sem cadastro: "+ Cadastrar" na coluna Nome', () => {

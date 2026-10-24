@@ -340,6 +340,12 @@ button.dd.dd-placa:hover { text-decoration: none; }
 .tb th:first-child { border-top-left-radius: 18px; }
 .tb th:last-child { border-top-right-radius: 18px; }
 .tb td { height: 52px; padding: 0 16px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+/* Lombada, Veículo e Nome quebram linha (nada cortado); o resto fica numa linha */
+.tb td.c-radar, .tb td.c-veic, .tb td.c-nome { white-space: normal; line-height: 1.25; min-width: 88px; max-width: 22ch; overflow-wrap: anywhere; padding-top: 6px; padding-bottom: 6px; }
+.tb td.c-veic, .tb td.c-radar { min-width: 18ch; max-width: 26ch; }
+.tb td.c-nome { min-width: 14ch; max-width: 24ch; }
+/* Último recurso (conferirTransbordo): a caixa rola na horizontal em vez de esconder colunas */
+.table-container.transborda { overflow-x: auto; }
 .tb .c-vel, .tb .c-hora, .tb .c-ano { text-align: right; }
 .tb td.c-vel, .tb td.c-hora, .tb td.c-ano { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .tb td.c-foto { padding-right: 0; width: 1%; }
@@ -448,7 +454,6 @@ button.dd.dd-placa:hover { text-decoration: none; }
 @media (max-width: 1439px) {
   .tb { font-size: 0.8125rem; }
   .tb th, .tb td { padding: 0 9px; }
-  .tb .c-radar, .tb .c-veic, .tb .c-nome { white-space: normal; line-height: 1.25; min-width: 88px; }
   .tb .mer b { font-size: 0.75rem; padding: 4px 6px 5px; }
 }
 @media (min-width: 2200px) {
@@ -586,3 +591,7 @@ button.dd.dd-placa:hover { text-decoration: none; }
 .indicadores .nd-apoio { white-space: normal; }
 .filtros { scroll-margin-top: calc(var(--topo-h, 64px) + 12px); }
 .tb .c-tipo .dd, .tb .c-unid .dd, .tb .c-placa .dd { vertical-align: middle; }
+@media (max-width: 1279px) {
+  .tb td.c-veic, .tb td.c-radar { min-width: 12ch; }
+  .tb td.c-nome { min-width: 10ch; }
+}
