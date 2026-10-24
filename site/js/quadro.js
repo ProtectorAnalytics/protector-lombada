@@ -6,7 +6,7 @@
  *  - filtro de câmera deste PC (vazio = todas);
  *  - o que a tela mostra de uma passagem: placa, hora, câmera, velocidade,
  *    acima do limite, tipo + nome + unidade de quem estava vinculado NA HORA
- *    (ou "Sem cadastro") e, para visitante/prestador, "cadastrado em … por …";
+ *    (ou "Sem cadastro");
  *  - perfis aceitos, condomínio lembrado da Protector e links externos que o
  *    programa do Windows pode abrir no navegador.
  *
@@ -35,7 +35,6 @@
   const MAX_PASSAGENS = 50;
   const ORIGEM = 'https://lombada.appps.com.br';
   const PAINEL = `${ORIGEM}/dashboard`;
-  const TIPOS_COM_LINHA_CADASTRO = new Set(['visitante', 'prestador']);
   const PAPEIS_DO_CONDOMINIO = new Set(['portaria', 'operador', 'admin_cliente']);
 
   const tempo = (v) => {
@@ -125,12 +124,6 @@
 
   // ---------------------------------------------------------------- passagem
 
-  /** "cadastrado em DD/MM às HH:MM por Fulano" só para visitante/prestador. */
-  function linhaCadastro(vinculo) {
-    if (!vinculo || !TIPOS_COM_LINHA_CADASTRO.has(vinculo.tipo_pessoa)) return '';
-    return vinculoLib.rotuloCadastro(vinculo);
-  }
-
   const formatoHora = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 
   function horaDe(ts) {
@@ -166,7 +159,6 @@
       tipo: Object.freeze({ id: tipo.id, rotulo: tipo.rotulo, icone: tipo.icone, cor: tipo.cor }),
       nome: vinculo ? String(vinculo.nome_morador || '').trim() : '',
       unidade: nomeUnidadeDe(vinculo, unidades),
-      cadastro: linhaCadastro(vinculo),
       recorte: visual.recorteDaFoto(camera, 'mini'),
     });
   }
@@ -217,7 +209,7 @@
 
   return Object.freeze({
     MAX_PASSAGENS, ORIGEM, estadoInicial, receberPassagens, voltar, avancar, irAoVivo, passagemAtual,
-    podeVoltar, podeAvancar, posicao, filtrarPorCamera, cameraValida, nomeCamera, linhaCadastro,
+    podeVoltar, podeAvancar, posicao, filtrarPorCamera, cameraValida, nomeCamera,
     descreverPassagem, inicioDoDia, modoDoPerfil, clienteLembrado, urlDoPainel, urlExternaPermitida,
   });
 });

@@ -367,7 +367,6 @@
     $('p-vel').textContent = d.acimaDoLimite ? `▲ ${d.velocidade}` : d.velocidade;
     $('p-nome').textContent = d.temCadastro ? (d.nome || 'Sem nome') : '';
     $('p-unidade').textContent = d.unidade;
-    $('p-cadastro').textContent = d.cadastro;
     $('p-camera').textContent = d.camera;
     $('p-hora').textContent = d.hora;
     desenharSelo(d);

@@ -1,7 +1,7 @@
 /**
  * Testes de site/js/quadro.js (Quadro no PC da portaria, v1.17.0): navegação
- * ‹ › com "ao vivo", filtro de câmera, linha "cadastrado em … por …",
- * destaque acima do limite, perfis aceitos e links externos permitidos.
+ * ‹ › com "ao vivo", filtro de câmera, o que a passagem mostra, destaque
+ * acima do limite, perfis aceitos e links externos permitidos.
  * Uso: TZ=America/Sao_Paulo node test/quadro.test.js
  */
 const assert = require('node:assert');
@@ -122,20 +122,6 @@ caso('nome da câmera: o curto do painel (nome_exibicao), senão o nome', () => 
   assert.strictEqual(q.nomeCamera(cameras, 'x'), 'Câmera');
 });
 
-// ---------------------------------------------------------------- linha "cadastrado em"
-caso('visitante e prestador mostram "cadastrado em DD/MM às HH:MM por Fulano" (fuso de SP)', () => {
-  const v = { tipo_pessoa: 'visitante', vigente_desde: '2026-10-20T01:15:00Z', cadastrado_por: 'João' };
-  assert.strictEqual(q.linhaCadastro(v), 'cadastrado em 19/10 às 22:15 por João');
-  assert.strictEqual(q.linhaCadastro({ ...v, tipo_pessoa: 'prestador' }), 'cadastrado em 19/10 às 22:15 por João');
-});
-
-caso('sem autor sai só a data; morador, proprietário e sem cadastro não mostram a linha', () => {
-  assert.strictEqual(q.linhaCadastro({ tipo_pessoa: 'visitante', vigente_desde: '2026-10-20T01:15:00Z' }), 'cadastrado em 19/10 às 22:15');
-  assert.strictEqual(q.linhaCadastro({ tipo_pessoa: 'morador', vigente_desde: '2026-10-20T01:15:00Z', cadastrado_por: 'João' }), '');
-  assert.strictEqual(q.linhaCadastro({ tipo_pessoa: 'proprietario', vigente_desde: '2026-10-20T01:15:00Z' }), '');
-  assert.strictEqual(q.linhaCadastro(null), '');
-});
-
 // ---------------------------------------------------------------- o que a tela mostra
 const indice = indexarVinculos([
   { placa: 'AAA1A11', nome_morador: 'Maria Teste', unidade: 'texto antigo', unidade_id: 'u1', tipo_pessoa: 'visitante',
@@ -156,7 +142,7 @@ caso('passagem com cadastro: tipo, nome, unidade da lista, câmera, hora e veloc
   assert.strictEqual(d.tipo.icone, 'cracha');
   assert.strictEqual(d.nome, 'Maria Teste');
   assert.strictEqual(d.unidade, 'Torre 1 · 101');
-  assert.strictEqual(d.cadastro, 'cadastrado em 24/10 às 09:00 por José');
+  assert.strictEqual('cadastro' in d, false, 'sem a linha "cadastrado em … por …" (decisão do CEO)');
   assert.strictEqual(d.temCadastro, true);
 });
 
@@ -184,7 +170,6 @@ caso('placa sem vínculo na hora vira "Sem cadastro" (vínculo encerrado antes n
   assert.strictEqual(d.tipo.icone, 'interrogacao');
   assert.strictEqual(d.nome, '');
   assert.strictEqual(d.unidade, '');
-  assert.strictEqual(d.cadastro, '');
 });
 
 caso('passagem antes do vínculo começar também é "Sem cadastro" (quem estava na hora)', () => {

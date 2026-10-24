@@ -24,7 +24,7 @@ caso('marcação essencial: barra de arrastar, Fixar, minimizar, menu, login, qu
   ['id="barra"', 'data-tauri-drag-region', 'id="botao-fixar"', 'id="botao-minimizar"', 'id="botao-menu"',
     'id="menu-camera"', 'id="menu-autostart"', 'id="login-usuario"', 'id="login-senha"', 'id="captcha-login"',
     'id="tela-escolha"', 'id="passagem"', 'id="foto"', 'class="mer"', 'id="p-tipo"', 'id="p-nome"', 'id="p-unidade"',
-    'id="p-cadastro"', 'id="p-camera"', 'id="p-hora"', 'id="p-vel"', 'id="botao-voltar"', 'id="botao-avancar"',
+    'id="p-camera"', 'id="p-hora"', 'id="p-vel"', 'id="botao-voltar"', 'id="botao-avancar"',
     'id="botao-ao-vivo"', 'id="estado"',
   ].forEach((trecho) => assert.ok(html.includes(trecho), `falta ${trecho}`));
 });
@@ -57,8 +57,14 @@ caso('nada de innerHTML/outerHTML/insertAdjacentHTML/document.write no código d
   assert.ok(!/<script>\s*[^<]/.test(html), 'sem script inline na página');
 });
 
+caso('sem a linha "cadastrado em … por …" (CEO: fica para a futura página de auditoria)', () => {
+  [html, app, ler('site/js/quadro.js')].forEach((t) => {
+    assert.ok(!/cadastrado em|rotuloCadastro|p-cadastro|linhaCadastro/.test(t));
+  });
+});
+
 caso('dado do banco entra por textContent', () => {
-  ['p-placa', 'p-nome', 'p-unidade', 'p-cadastro', 'p-camera', 'p-hora'].forEach((id) => {
+  ['p-placa', 'p-nome', 'p-unidade', 'p-camera', 'p-hora'].forEach((id) => {
     assert.ok(app.includes(`$('${id}').textContent =`), id);
   });
 });
