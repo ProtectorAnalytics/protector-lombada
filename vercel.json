@@ -8,6 +8,7 @@
     { "src": "portaria/**", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "^/(dashboard|admin|portaria)(/.*)?$", "has": [{ "type": "host", "value": "protector-lombada.vercel.app" }], "status": 308, "headers": { "Location": "https://lombada.appps.com.br/$1$2" } },
     { "src": "/api/config", "dest": "/api/config.js" },
     { "src": "/api/captura", "dest": "/api/captura.js" },
     { "src": "/api/heartbeat", "dest": "/api/heartbeat.js" },
