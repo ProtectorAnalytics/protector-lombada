@@ -420,7 +420,6 @@
     <h3>Barra Superior (fica fixa ao rolar a página)</h3>
     <ul>
         <li><strong>Logo e nome do seu condomínio/empresa</strong> em destaque</li>
-        <li><strong>Período:</strong> <strong>Hoje</strong>, <strong>Ontem</strong>, <strong>7 dias</strong> ou <strong>Escolher…</strong> (abre o calendário com data e hora de início e de fim). O período escolhido vale para a lista, os indicadores e o ranking "Mais passagens"</li>
         <li><strong>Câmeras:</strong> um ícone por câmera, na cor do status (veja a seção 5). Passe o mouse (ou chegue com a tecla Tab) para ver o local e a última leitura; clique para ver na lista só as passagens daquela câmera</li>
         <li><strong>"Ao vivo · HH:MM"</strong> - horário da última atualização dos dados</li>
         <li><strong>Botão "Veículos · N"</strong> - acesso rápido ao cadastro de veículos (N é o total cadastrado)</li>
@@ -428,36 +427,35 @@
         <li><strong>Botão da conta</strong> (círculo com a sua inicial) - mostra o e-mail de login e o botão "Sair"</li>
     </ul>
 
+    <h3>Como a tela se organiza</h3>
+    <p>Em telas a partir de 1.024 px de largura, a coluna da esquerda tem as <strong>últimas passagens</strong> (fotos) e, logo abaixo, a busca, o período e a <strong>lista de passagens</strong>. À direita fica um <strong>quadro único</strong>, da mesma altura da coluna da esquerda: a <strong>semana</strong> no alto, os <strong>números do dia</strong> no meio e os <strong>rankings</strong> embaixo. No tablet e no celular, a ordem é: fotos, números do dia, lista e, por último, semana e rankings.</p>
+
     <h3>Números do dia</h3>
-    <p>Um quadro só, com quatro números atualizados automaticamente. Embaixo de cada um, uma linha compara com <strong>ontem no mesmo horário</strong> (por exemplo, "▼ 14 vs ontem"); fica verde quando hoje está melhor que ontem.</p>
+    <p>Um bloco compacto com os números atualizados automaticamente. Ao lado de alertas, máxima e dentro do limite aparece a diferença para <strong>ontem no mesmo horário</strong> (por exemplo, "▼14"): <strong>verde</strong> quando hoje está melhor que ontem e <strong>vermelho</strong> quando está pior. Pare o mouse em cima de um número (ou chegue nele com a tecla Tab) para ver os detalhes: o limite, a placa e a hora da máxima, a média e o valor de ontem.</p>
 
     <table>
         <thead>
             <tr><th>Número</th><th>Descrição</th></tr>
         </thead>
         <tbody>
-            <tr><td><strong>Veículos hoje</strong></td><td>Quantos veículos diferentes passaram hoje (das 00:00 às 23:59). Cada carro conta <strong>uma vez no dia</strong>, mesmo que passe várias vezes ou por várias lombadas; placa antiga e Mercosul do mesmo carro contam como um só, e leituras sem placa ficam de fora. Ao lado aparece o total de passagens, e embaixo uma barra com a proporção de cada tipo de cadastro</td></tr>
-            <tr><td><strong>Alertas hoje</strong></td><td>Quantidade de passagens acima do limite de velocidade (o número fica vermelho quando há alertas)</td></tr>
-            <tr><td><strong>Velocidade máxima</strong></td><td>Maior velocidade registrada no dia, com a placa e a hora dessa passagem</td></tr>
-            <tr><td><strong>Dentro do limite</strong></td><td>Percentual das passagens de hoje dentro do limite, com um anel que mostra a proporção e a velocidade média do dia embaixo (a média conta só as passagens que a lombada mediu)</td></tr>
+            <tr><td><strong>Veículos hoje</strong></td><td>Quantos veículos diferentes passaram hoje (das 00:00 às 23:59). Cada carro conta <strong>uma vez no dia</strong>, mesmo que passe várias vezes ou por várias lombadas; placa antiga e Mercosul do mesmo carro contam como um só, e leituras sem placa ficam de fora. Ao lado, a quantidade de cada tipo de cadastro, e embaixo uma barra fina com a proporção; o total de passagens aparece ao parar o mouse em cima</td></tr>
+            <tr><td><strong>Alertas</strong></td><td>Quantidade de passagens de hoje acima do limite de velocidade (o número fica vermelho quando há alertas)</td></tr>
+            <tr><td><strong>Máxima</strong></td><td>Maior velocidade registrada no dia; a placa e a hora dessa passagem aparecem ao parar o mouse em cima</td></tr>
+            <tr><td><strong>Dentro do limite</strong></td><td>Percentual das passagens de hoje dentro do limite (verde); a velocidade média do dia aparece ao parar o mouse em cima (a média conta só as passagens que a lombada mediu)</td></tr>
+            <tr><td><strong>Pico</strong></td><td>Hora do dia com mais passagens (com mais de um dia no período, o <strong>dia de pico</strong>). Segue o período e os filtros</td></tr>
+            <tr><td><strong>Reincidentes</strong></td><td>Placas com 2 ou mais alertas no período. Segue o período e os filtros</td></tr>
         </tbody>
     </table>
-    <p><strong>Importante:</strong> esses números e as fotos das últimas passagens são sempre os de hoje e <strong>não mudam</strong> quando você usa os filtros.</p>
+    <p><strong>Importante:</strong> veículos, alertas, máxima, dentro do limite e as fotos das últimas passagens são sempre os de hoje e <strong>não mudam</strong> quando você usa os filtros.</p>
     <h3>Veículos de hoje por tipo</h3>
-    <p>Embaixo do número de veículos, a legenda mostra quantos são de <strong>Morador</strong>, <strong>Proprietário</strong>, <strong>Visitante</strong>, <strong>Prestador</strong> e <strong>Sem cadastro</strong>, cada um com o seu ícone (casa, chave, crachá, ferramenta e interrogação). O tipo de cada veículo é o do cadastro que ele tinha <strong>na primeira passagem do dia</strong>. Clique num tipo para ver na lista só as passagens dele; clique de novo no mesmo tipo para tirar o filtro.</p>
+    <p>Embaixo do número de veículos, a legenda mostra quantos são de <strong>Morador</strong>, <strong>Proprietário</strong>, <strong>Visitante</strong>, <strong>Prestador</strong> e <strong>Sem cadastro</strong>, cada um com um ponto na cor do tipo. O tipo de cada veículo é o do cadastro que ele tinha <strong>na primeira passagem do dia</strong>. Clique num tipo para ver na lista só as passagens dele; clique de novo no mesmo tipo para tirar o filtro.</p>
 
     <hr>
 
     <!-- Section 3 -->
     <h2 id="indicadores-de-velocidade">3. Indicadores de Velocidade</h2>
 
-    <p>Ao lado dos números do dia e das fotos ficam os quadros abaixo. "Indicadores" e "Mais passagens" seguem o período e os filtros escolhidos e contam <strong>todas</strong> as passagens do período.</p>
-
-    <h3>Indicadores</h3>
-    <ul>
-        <li><strong>Hora de pico:</strong> hora do dia com mais passagens (com mais de um dia no período, o <strong>dia de pico</strong>)</li>
-        <li><strong>Reincidentes:</strong> placas com 2 ou mais alertas no período</li>
-    </ul>
+    <p>No quadro da direita ficam a semana e os rankings. Pico, reincidentes (nos números do dia) e "Mais passagens" seguem o período e os filtros escolhidos e contam <strong>todas</strong> as passagens do período.</p>
 
     <h3>Veículos por dia (semana de segunda a domingo)</h3>
     <p>Uma tabela da semana, de <strong>segunda a domingo</strong>, com o total de veículos diferentes de cada dia e uma linha para cada tipo de cadastro. Quanto mais forte a cor do número, maior o movimento daquele tipo. O dia de hoje fica marcado com "*" (ainda não terminou), os dias que ainda não chegaram mostram "—" e o maior total da semana ganha uma <strong>borda amarela</strong>.</p>
@@ -468,8 +466,7 @@
     </ul>
 
     <h3>Mais passagens e Recordes</h3>
-    <p><strong>Mais passagens</strong> mostra as placas que mais passaram no período, com uma barra (vermelha quando a placa teve alerta) e o número de alertas com "▲". <strong>Recordes · 6 meses</strong> mostra os veículos mais rápidos dos últimos 6 meses, cada um uma vez, com a maior velocidade medida e o dia; esse quadro <strong>não muda</strong> com o período escolhido, e leituras com defeito ou placas não lidas ficam de fora. Aparecem 3 de cada; clique em <strong>"Ver os 10 →"</strong> para ver todos. Clique numa placa para filtrar as passagens dela (no Recorde, no dia do recorde).</p>
-    <p>Em telas de notebook, "Veículos por dia", "Mais passagens" e "Recordes" ficam num quadro só, com abas; em monitor grande e no tablet, aparecem lado a lado.</p>
+    <p><strong>Mais passagens</strong> mostra as placas que mais passaram no período, com uma barra (vermelha quando a placa teve alerta) e o número de alertas com "▲". <strong>Recordes · 6 meses</strong> mostra os veículos mais rápidos dos últimos 6 meses, cada um uma vez, com a maior velocidade medida e o dia; esse quadro <strong>não muda</strong> com o período escolhido, e leituras com defeito ou placas não lidas ficam de fora. No quadro da direita aparecem até 10 placas, as que couberem; se alguma ficar de fora, clique em <strong>"Ver todos →"</strong> para rolar a lista. No tablet e no celular aparecem 3 de cada; clique em <strong>"Ver os 10 →"</strong> para ver todos. Clique numa placa para filtrar as passagens dela (no Recorde, no dia do recorde).</p>
 
     <hr>
 
@@ -505,14 +502,14 @@
     </ul>
 
     <h3>Filtros: como escolher o que aparece</h3>
-    <p>Acima da lista fica a <strong>barra de filtros</strong>, toda em uma linha. Os filtros <strong>aplicam sozinhos</strong>, assim que você escolhe:</p>
+    <p>Acima da lista fica a <strong>linha da busca</strong>: o campo de busca, o período e os botões em ícone (pare o mouse em cima de um ícone para ver o nome). Os filtros <strong>aplicam sozinhos</strong>, assim que você escolhe:</p>
     <ul>
         <li><strong>Busca "placa, modelo ou marca":</strong> um único campo (atalho: aperte a tecla <strong>/</strong>). Ao digitar 2 letras ou mais, aparecem sugestões separadas por tipo (placas, modelos e marcas). Escolha uma sugestão ou aperte <strong>Enter</strong>.</li>
-        <li><strong>Seletor de câmera:</strong> mostra só as passagens de uma câmera ("Todas as câmeras" volta ao normal).</li>
-        <li><strong>"Acima do limite":</strong> liga e desliga; ligado, mostra só os veículos que passaram acima da velocidade permitida.</li>
-        <li><strong>"Filtros":</strong> abre um quadro com velocidade mínima e máxima, marca, cor, ano (de/até), modelo, tipo de cadastro e unidade. Quando há filtros escolhidos, aparece um <strong>número</strong> com a quantidade de filtros ativos.</li>
-        <li><strong>"Exportar":</strong> Excel ou PDF com todas as passagens do período filtrado (veja abaixo).</li>
-        <li>O <strong>período</strong> (Hoje, Ontem, 7 dias ou Escolher…) fica na barra do topo.</li>
+        <li><strong>Período:</strong> <strong>Hoje</strong>, <strong>Ontem</strong> ou <strong>7 dias</strong>, logo depois da busca. O botão escolhido mostra a data (por exemplo, "Hoje · 24/10"). O ícone de <strong>calendário</strong> abre a escolha de data e hora de início e de fim. O período vale para a lista, o pico, os reincidentes e o ranking "Mais passagens".</li>
+        <li><strong>Câmeras</strong> (ícone de câmera ▾): mostra só as passagens de uma câmera ("Todas as câmeras" volta ao normal). Com uma câmera escolhida, o ícone fica azul.</li>
+        <li><strong>Só acima do limite</strong> (ícone de velocímetro): liga e desliga; ligado, o ícone fica vermelho e a lista mostra só os veículos que passaram acima da velocidade permitida.</li>
+        <li><strong>Filtros</strong> (ícone de funil): abre um quadro com velocidade mínima e máxima, marca, cor, ano (de/até), modelo, tipo de cadastro e unidade. Quando há filtros escolhidos, aparece um <strong>número</strong> pequeno com a quantidade de filtros ativos.</li>
+        <li><strong>Exportar</strong> (ícone de download): Excel ou PDF com todas as passagens do período filtrado (veja abaixo).</li>
     </ul>
 
     <h3>Tipo de cadastro e unidade</h3>
@@ -520,7 +517,7 @@
 
     <h3>Etiquetas dos filtros ativos</h3>
     <ul>
-        <li>Logo abaixo da barra aparecem o período ("Hoje" com a data, por exemplo "Sexta, 23/10"), o total de passagens e cada filtro escolhido como uma <strong>etiqueta</strong>. Clique no <strong>✕</strong> da etiqueta para tirar só aquele filtro.</li>
+        <li>Quando há filtro escolhido, ele aparece logo abaixo da linha da busca como uma <strong>etiqueta</strong> (um período escolhido no calendário também). Clique no <strong>✕</strong> da etiqueta para tirar só aquele filtro.</li>
         <li>Para voltar ao padrão de uma vez, clique em <strong>"Limpar tudo"</strong>.</li>
     </ul>
 
@@ -529,7 +526,7 @@
 
     <h3>O que os filtros mudam (e o que não muda)</h3>
     <ul>
-        <li>Os filtros valem para <strong>tudo junto</strong>: a lista de passagens, os indicadores e o ranking "Mais passagens".</li>
+        <li>Os filtros valem para <strong>tudo junto</strong>: a lista de passagens, o pico, os reincidentes e o ranking "Mais passagens".</li>
         <li>Os números do dia, as fotos das últimas passagens e a semana <strong>não mudam</strong> com os filtros: mostram sempre o movimento real, ao vivo.</li>
         <li>"Hoje" é o <strong>dia inteiro</strong>, da meia-noite até agora (no horário local).</li>
     </ul>
@@ -538,19 +535,19 @@
     <p>O filtro escolhido fica gravado no <strong>endereço da página</strong>. Por isso, se você recarregar a página, o mesmo filtro continua. E você pode <strong>copiar o endereço e enviar para a administração</strong>: quem abrir o link (com seu acesso) verá exatamente a mesma consulta.</p>
 
     <h3>No celular, no tablet e no monitor grande</h3>
-    <p>O painel se reorganiza conforme o tamanho da tela. No monitor grande cabe mais coisa lado a lado; no tablet os quadros ficam um embaixo do outro; no celular os números ficam em duas colunas, as fotos passam com o dedo e cada passagem vira um cartão de três linhas (placa, hora e velocidade; veículo, cor e ano; tipo, nome e unidade). No celular, o botão <strong>"Filtros"</strong> abre um painel que sobe da parte de baixo da tela, com a câmera, "Acima do limite" e os demais campos; ao terminar, toque em <strong>"Ver N passagens"</strong>. O botão "Veículos" fica no menu da conta.</p>
+    <p>O painel se reorganiza conforme o tamanho da tela. No monitor grande cabe mais coisa lado a lado; no tablet os quadros ficam um embaixo do outro; no celular os números ficam em três colunas, as fotos passam com o dedo e cada passagem vira um cartão de três linhas (placa, hora e velocidade; veículo, cor e ano; tipo, nome e unidade). No celular, o botão <strong>"Filtros"</strong> abre um painel que sobe da parte de baixo da tela, com a câmera, "Acima do limite" e os demais campos; ao terminar, toque em <strong>"Ver N passagens"</strong>. O botão "Veículos" fica no menu da conta.</p>
 
     <h3>Lista de passagens</h3>
     <ul>
         <li>A lista mostra <strong>todas as passagens do período</strong>, da mais nova para a mais antiga, página por página, com o total exato no rodapé (ex.: "1–10 de 595 passagens"). O cabeçalho das colunas fica fixo ao rolar.</li>
-        <li>Colunas: <strong>Foto, Placa, Veloc., Hora, Lombada, Veículo, Cor, Ano, Tipo, Nome e Unidade</strong>. A placa aparece no padrão Mercosul. Tipo, Nome e Unidade são do cadastro que a placa tinha <strong>na hora da passagem</strong>. Clique no tipo ou na unidade para filtrar por eles. Passe o mouse em "Unidade" para ver o que o número representa no seu condomínio (por exemplo, "Número da FIP").</li>
-        <li>Período de um dia (Hoje, Ontem ou uma data): a data aparece junto das etiquetas. Período de vários dias: o dia aparece numa linha de título (ex.: "Sexta, 23 de outubro") sempre que muda.</li>
+        <li>Colunas: <strong>Foto, Placa, Veloc., Hora, Lombada, Veículo, Cor, Ano, Tipo, Nome e Unidade</strong>. A placa aparece no padrão Mercosul. A velocidade fica centralizada na coluna. Em telas a partir de 1.024 px, o <strong>Tipo</strong> aparece só com o ícone e a <strong>Cor</strong> só com o ponto colorido; pare o mouse em cima para ver o nome. Tipo, Nome e Unidade são do cadastro que a placa tinha <strong>na hora da passagem</strong>. Clique no tipo ou na unidade para filtrar por eles. Passe o mouse em "Unidade" para ver o que o número representa no seu condomínio (por exemplo, "Número da FIP").</li>
+        <li>Período de um dia (Hoje, Ontem ou uma data): a data aparece no próprio botão do período. Período de vários dias: o dia aparece numa linha de título (ex.: "Sexta, 23 de outubro") sempre que muda.</li>
         <li>Passagem <strong>acima do limite</strong> tem a linha com fundo vermelho claro, uma faixa vermelha à esquerda e "▲" antes da velocidade.</li>
-        <li>O selo <strong>"2ª"</strong> (ou "13ª") ao lado da placa mostra que o mesmo veículo já tinha passado naquele dia, e quantas vezes.</li>
+        <li>O selo <strong>"2ª"</strong> (ou "13ª") ao lado da placa mostra que o mesmo veículo já tinha passado naquele dia, e quantas vezes (pare o mouse em cima: "13ª passagem desta placa hoje").</li>
         <li>Placa <strong>sem cadastro</strong> mostra <strong>"+ Cadastrar"</strong> na coluna Nome ao passar o mouse na linha (no celular e no tablet, sempre), para quem pode cadastrar veículos: ele abre o detalhe da passagem já no formulário de cadastro, com a placa da passagem.</li>
         <li>Em telas com menos de 1.280 px de largura a coluna Foto sai; em telas com menos de 1.024 px (como o tablet da portaria), cada passagem vira um cartão de três linhas, sem cortar nada.</li>
         <li>Com o filtro "Sem cadastro" num período muito movimentado, o painel confere o cadastro de cada passagem; se o período for grande demais para conferir tudo, aparece um aviso e a lista mostra as mais recentes conferidas.</li>
-        <li>Passagens <strong>sem velocidade</strong> (abaixo de 10 km/h, a lombada não mede) ficam escondidas. Junto das etiquetas aparece <strong>"N passagens abaixo de 10 km/h ocultas · Mostrar"</strong>; clique para vê-las (e em "Ocultar" para esconder de novo). Nada é apagado: elas continuam nos relatórios.</li>
+        <li>Passagens <strong>sem velocidade</strong> (abaixo de 10 km/h, a lombada não mede) ficam escondidas. No rodapé da lista, junto da contagem, aparece <strong>"72 abaixo de 10 km/h ocultas · mostrar"</strong>; clique em "mostrar" para vê-las (e em "ocultar" para esconder de novo). Sem passagens ocultas, esse aviso não aparece. Nada é apagado: elas continuam nos relatórios.</li>
         <li><strong>"Exportar"</strong> oferece Excel (.xlsx) ou PDF com <strong>todas as passagens do período filtrado</strong>, não só as que aparecem na lista, com as mesmas colunas da lista: Lombada, Veículo, Cor, Ano, Tipo, Nome e Unidade (o cadastro na hora da passagem). Enquanto o arquivo é montado, o botão mostra <strong>"Gerando…"</strong>.</li>
     </ul>
 
@@ -908,7 +905,7 @@
     <hr>
 
     <p style="text-align:center; color:#888; font-size:0.8125rem; margin-top:40px;">
-        <strong>Protector Traffic Control</strong> - v1.15.2 | Outubro 2026<br>
+        <strong>Protector Traffic Control</strong> - v1.16.0 | Outubro 2026<br>
         <em>Sistema de Lombada Educativa Inteligente</em>
     </p>
 
