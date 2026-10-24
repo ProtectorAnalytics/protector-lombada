@@ -14,7 +14,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   return Object.freeze({
-    versao: '1.15.0',
+    versao: '1.15.1',
     data: '2026-10-23',
     titulo: 'Visual novo do painel',
     itens: Object.freeze([
@@ -23,6 +23,7 @@
       'Câmeras no topo: cada câmera vira um ícone na cor do status, com o local e a última leitura ao passar o mouse; o topo fica fixo ao rolar, com Hoje, Ontem, 7 dias ou Escolher…',
       'Funciona do celular ao monitor grande: os quadros se reorganizam em cada tamanho de tela, as fotos passam com o dedo no celular e cada passagem vira um cartão',
       'O gráfico "Passagens por hora" saiu da tela; a hora de pico continua nos Indicadores, ao lado dos números do dia',
+      'Logo da Protector visível no topo também em notebook',
     ]),
   });
 });
