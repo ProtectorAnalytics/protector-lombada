@@ -162,4 +162,11 @@ caso('manual do painel tem a seção do quadro', () => {
   ['Fixar', 'Abrir ao ligar o computador', 'Mais informações', 'Baixar para Mac', 'Abrir Mesmo Assim'].forEach((t) => assert.ok(manual.includes(t), t));
 });
 
+caso('site: rodapé com os downloads do quadro para Windows e Mac', () => {
+  const site = ler('site/index.html');
+  const rodape = site.slice(site.indexOf('<footer'));
+  assert.ok(rodape.includes('href="/baixar/quadro-windows"') && rodape.includes('Baixar para Windows'));
+  assert.ok(rodape.includes('href="/baixar/quadro-macos"') && rodape.includes('Baixar para Mac'));
+});
+
 console.log(`\n${passou} casos ok`);
