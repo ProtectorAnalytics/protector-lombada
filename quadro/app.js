@@ -59,6 +59,11 @@
   function mostrarTela(id) {
     ['tela-carregando', 'tela-login', 'tela-escolha', 'tela-aviso', 'tela-quadro'].forEach((t) => { $(t).hidden = t !== id; });
     $('botao-painel').hidden = id !== 'tela-quadro';
+    // O botão que tinha o foco (Entrar, Abrir) sumiu com a tela: leva o foco
+    // para o primeiro controle da tela nova, senão o teclado fica sem lugar.
+    if (id === 'tela-quadro' && (!document.activeElement || document.activeElement === document.body || document.activeElement.closest('[hidden]'))) {
+      $('botao-painel').focus({ preventScroll: true });
+    }
   }
 
   function marcarEstado(tipo, texto) {

@@ -191,9 +191,9 @@ jobs:
           jq -n --arg v "${TAG#quadro-v}" --arg d "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg b "$base" \
             --rawfile win Quadro-Lombada-Setup.exe.sig --rawfile mac Quadro-Lombada-Mac.app.tar.gz.sig \
             '{version: $v, notes: "Quadro da portaria \($v)", pub_date: $d, platforms: {
-               "windows-x86_64": {signature: $win, url: ($b + "/Quadro-Lombada-Setup.exe")},
-               "darwin-aarch64": {signature: $mac, url: ($b + "/Quadro-Lombada-Mac.app.tar.gz")},
-               "darwin-x86_64":  {signature: $mac, url: ($b + "/Quadro-Lombada-Mac.app.tar.gz")}}}' > latest.json
+               "windows-x86_64": {signature: ($win | rtrimstr("\n")), url: ($b + "/Quadro-Lombada-Setup.exe")},
+               "darwin-aarch64": {signature: ($mac | rtrimstr("\n")), url: ($b + "/Quadro-Lombada-Mac.app.tar.gz")},
+               "darwin-x86_64":  {signature: ($mac | rtrimstr("\n")), url: ($b + "/Quadro-Lombada-Mac.app.tar.gz")}}}' > latest.json
           cat latest.json
 
       - name: Release da tag (cria ou atualiza)

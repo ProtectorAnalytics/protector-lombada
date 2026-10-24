@@ -56,6 +56,10 @@ button, select, input { font: inherit; color: inherit; }
 .app-windows.fixado .barra, .app-windows.fixado .conteudo { cursor: default; }
 .app-windows .passagem, .app-windows .tela { user-select: none; -webkit-user-select: none; }
 .app-windows .passagem { cursor: inherit; }
+/* A barra de rolagem fica dentro da área de arrastar: segurá-la moveria a
+   janela em vez de rolar. No programa ela some; a roda/trackpad continua rolando. */
+.app-windows .tela { scrollbar-width: none; }
+.app-windows .tela::-webkit-scrollbar { display: none; }
 .estado {
   display: inline-flex; align-items: center; gap: 5px; flex: none; height: 18px; padding: 0 7px; border-radius: 9px;
   font: 800 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); background: var(--s3);

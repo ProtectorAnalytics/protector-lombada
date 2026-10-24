@@ -42,7 +42,7 @@ caso('o programa só procura atualização no build final e reabre depois de ins
 caso('workflow: assina os pacotes, confere a tag e publica latest.json', () => {
   assert.strictEqual((workflow.match(/TAURI_SIGNING_PRIVATE_KEY: \$\{\{ secrets\.TAURI_SIGNING_PRIVATE_KEY \}\}/g) || []).length, 2);
   assert.ok(workflow.includes('[ "quadro-v$versao" = "$GITHUB_REF_NAME" ]'), 'tag = versão');
-  ['"windows-x86_64"', '"darwin-aarch64"', '"darwin-x86_64"', 'latest.json --clobber', 'Quadro-Lombada-Mac.app.tar.gz.sig', 'Quadro-Lombada-Setup.exe.sig']
+  ['"windows-x86_64"', 'rtrimstr("\\n")', '"darwin-aarch64"', '"darwin-x86_64"', 'latest.json --clobber', 'Quadro-Lombada-Mac.app.tar.gz.sig', 'Quadro-Lombada-Setup.exe.sig']
     .forEach((t) => assert.ok(workflow.includes(t), t));
   assert.ok(!/TAURI_SIGNING_PRIVATE_KEY:\s*[^$\s]/.test(workflow), 'chave nunca escrita no arquivo');
 });
